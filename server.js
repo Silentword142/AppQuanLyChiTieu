@@ -80,7 +80,8 @@ app.get('/api/cloud-sync/stream', (req, res) => {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': '*',
+    'X-Accel-Buffering': 'no'
   });
 
   res.write(`data: ${JSON.stringify({ type: 'CONNECTED', email, timestamp: new Date().toISOString() })}\n\n`);

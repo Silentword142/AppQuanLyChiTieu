@@ -1712,11 +1712,20 @@
 
       const handleApplyTransferString = (rawStr) => {
         if (!rawStr || !rawStr.trim()) {
-          showToast("Vui lòng dán mã chuỗi dữ liệu!", "error");
+          showToast("Vui lòng dán mã chuỗi dữ liệu hoặc mã PIN 6 số!", "error");
           return;
         }
         try {
           const cleaned = rawStr.trim();
+          
+          // Support 6-digit Sync PIN
+          if (/^\d{6}$/.test(cleaned)) {
+            showToast("Đang kết nối Cloud bằng mã PIN...", "success");
+            handleRestoreFromGoogle(false, cleaned);
+            setPasteSyncCode("");
+            return;
+          }
+
           let parsed = null;
           if (cleaned.startsWith("LZ:") && window.LZString) {
             const decompressed = window.LZString.decompressFromEncodedURIComponent(cleaned.slice(3));
@@ -4116,20 +4125,20 @@
                     {/* Paste string section on mobile */}
                     <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-2.5">
                       <h4 className="text-xs font-bold text-theme-textPrimary flex items-center gap-1.5">
-                        <Icon name="clipboard-paste" className="w-4 h-4 text-blue-500" /> Nhập chuỗi mã nhận được từ thiết bị khác
+                        <Icon name="clipboard-paste" className="w-4 h-4 text-blue-500" /> Nhập mã PIN 6 số hoặc chuỗi LZ
                       </h4>
                       <textarea 
                         value={pasteSyncCode} 
                         onChange={e => setPasteSyncCode(e.target.value)} 
                         rows={2} 
-                        placeholder="Dán chuỗi LZ:... hoặc JSON tại đây..." 
+                        placeholder="Nhập mã PIN 6 số hoặc dán chuỗi LZ..." 
                         className="w-full bg-theme-surface border border-theme-border rounded-xl p-2.5 text-xs text-theme-textPrimary font-mono focus:border-theme-primary"
                       />
                       <button 
                         onClick={() => handleApplyTransferString(pasteSyncCode)}
                         disabled={!pasteSyncCode.trim()}
                         className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-40 shadow-md">
-                        <Icon name="zap" className="w-4 h-4" /> Khôi phục dữ liệu ngay từ mã
+                        <Icon name="zap" className="w-4 h-4" /> Kết nối & Khôi phục dữ liệu
                       </button>
                     </div>
                   </div>
