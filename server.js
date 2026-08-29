@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.DEFAULT_APP_PORT || process.env.PORT || 3000;
 
 // Enable CORS for all origins and methods so cross-domain & cross-device requests work seamlessly
 app.use((req, res, next) => {
