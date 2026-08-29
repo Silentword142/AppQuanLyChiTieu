@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 1. Glowing Security Shield Outer Border -->
+    <path
+        android:pathData="M 54,23 L 78,32 Q 78,53 54,83 Q 30,53 30,32 Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#00E676"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="78"
+                android:endY="83"
+                android:startX="30"
+                android:startY="23"
+                android:type="linear">
+                <item
+                    android:color="#001F1A"
+                    android:offset="0.0" />
+                <item
+                    android:color="#0E332A"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 2. Inner Shield with Neon Turquoise Radial Shimmer -->
+    <path android:pathData="M 54,27 L 74,34 Q 74,51 54,77 Q 34,51 34,34 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="54"
+                android:centerY="50"
+                android:gradientRadius="35"
+                android:type="radial">
+                <item
+                    android:color="#1AFFFFFF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#051210"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 3. Futuristic Growth Wave / Grid Underneath -->
+    <path
+        android:pathData="M 38,62 C 45,55 50,58 55,52 C 60,46 65,48 70,42"
+        android:strokeWidth="2.5"
+        android:strokeColor="#4D00E676"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round" />
+
+    <path
+        android:pathData="M 38,67 C 45,60 50,63 55,57 C 60,51 65,53 70,47"
+        android:strokeWidth="1.0"
+        android:strokeColor="#3300B0FF"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round" />
+
+    <!-- 4. Floating Tilted Glassmorphic Credit Card -->
+    <path android:pathData="M 34,44 L 64,36 C 66,35.5 68,36.5 68.5,38.5 L 74,58 C 74.5,60 73.5,62 71.5,62.5 L 41.5,70.5 C 39.5,71 37.5,70 37,68 L 31.5,48 C 31,46 32,44.5 34,44 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="74"
+                android:endY="70.5"
+                android:startX="31.5"
+                android:startY="36"
+                android:type="linear">
+                <item
+                    android:color="#E000E676"
+                    android:offset="0.0" />
+                <item
+                    android:color="#B300B0FF"
+                    android:offset="0.5" />
+                <item
+                    android:color="#CC004D40"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- 5. Card Stripe Highlight -->
+    <path
+        android:pathData="M 32.5,50 L 71,40"
+        android:strokeWidth="3.0"
+        android:strokeColor="#26000000"
+        android:fillColor="#00000000" />
+
+    <!-- 6. Golden Electronic Chip on the Card -->
+    <path android:pathData="M 38,55 L 45,53 L 47,59 L 40,61 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="47"
+                android:endY="61"
+                android:startX="38"
+                android:startY="53"
+                android:type="linear">
+                <item
+                    android:color="#FFE082"
+                    android:offset="0.0" />
+                <item
+                    android:color="#FFB300"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:pathData="M 41.5,54.5 L 41.5,59.5 M 39,57 L 44,55.5"
+        android:strokeWidth="0.5"
+        android:strokeColor="#7F5D00"
+        android:fillColor="#00000000" />
+
+    <!-- 7. Small Spark of Success (Top-Right Accent) -->
+    <path
+        android:pathData="M 77,29 L 81,29 M 79,27 L 79,31"
+        android:strokeWidth="1.2"
+        android:strokeColor="#FFD54F"
+        android:strokeLineCap="round" />
+
+</vector>

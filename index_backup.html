@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VinaSpends - Web App</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    :root {
+      --primary: #8ED1FC;
+      --background: #09121A;
+      --surface: #121E2A;
+      --text-primary: #F0F5FA;
+      --text-secondary: #8CA1B3;
+      --variant: #1A2A38;
+      --border: #2E4456;
+      --expense: #D32F2F;
+      --expense-light: #FFAEAE;
+      --income: #2E7D32;
+      --income-light: #69F0AE;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            theme: {
+              primary: 'var(--primary)',
+              background: 'var(--background)',
+              surface: 'var(--surface)',
+              textPrimary: 'var(--text-primary)',
+              textSecondary: 'var(--text-secondary)',
+              variant: 'var(--variant)',
+              border: 'var(--border)'
+            },
+            expense: 'var(--expense)',
+            expenseLight: 'var(--expense-light)',
+            income: 'var(--income)',
+            incomeLight: 'var(--income-light)'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const THEMES = {
+      ocean: { name: "Đại dương Cổ điển", colors: { primary: "#8ED1FC", background: "#09121A", surface: "#121E2A", textPrimary: "#F0F5FA", textSecondary: "#8CA1B3", variant: "#1A2A38", border: "#2E4456" } },
+      emerald: { name: "Lục bảo Ngọc", colors: { primary: "#69F0AE", background: "#051206", surface: "#0C240E", textPrimary: "#E8F5E9", textSecondary: "#81C784", variant: "#143B17", border: "#1B5E20" } },
+      terracotta: { name: "Đất nung Ấm áp", colors: { primary: "#FFAB91", background: "#140D09", surface: "#221611", textPrimary: "#FFEBE3", textSecondary: "#BCAAA4", variant: "#332019", border: "#5C382C" } },
+      purple: { name: "Thạch anh Hoàng gia", colors: { primary: "#E040FB", background: "#12091A", surface: "#1F122A", textPrimary: "#FBE9FF", textSecondary: "#CE93D8", variant: "#2F1B3E", border: "#5A2A7B" } },
+      minimalist: { name: "Tối giản Đen Trắng", colors: { primary: "#FFFFFF", background: "#111111", surface: "#1A1A1A", textPrimary: "#FFFFFF", textSecondary: "#888888", variant: "#262626", border: "#444444" } },
+    };
+
+    const BANK_LOGOS = [
+      { name: "Vietcombank", url: "https://api.vietqr.io/img/VCB.png" },
+      { name: "Techcombank", url: "https://api.vietqr.io/img/TCB.png" },
+      { name: "MB Bank", url: "https://api.vietqr.io/img/MB.png" },
+      { name: "TPBank", url: "https://api.vietqr.io/img/TPB.png" },
+      { name: "VPBank", url: "https://api.vietqr.io/img/VPB.png" },
+      { name: "Agribank", url: "https://api.vietqr.io/img/AGR.png" },
+      { name: "BIDV", url: "https://api.vietqr.io/img/BIDV.png" },
+      { name: "VietinBank", url: "https://api.vietqr.io/img/ICB.png" },
+      { name: "Sacombank", url: "https://api.vietqr.io/img/STB.png" },
+      { name: "ACB", url: "https://api.vietqr.io/img/ACB.png" },
+      { name: "VIB", url: "https://api.vietqr.io/img/VIB.png" },
+      { name: "Shinhan Bank", url: "https://api.vietqr.io/img/SHB.png" },
+      { name: "Ví MoMo", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-MoMo-Square.png" },
+      { name: "ZaloPay", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ZaloPay-Square.png" },
+      { name: "Ví ShopeePay", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ShopeePay-Orange.png" },
+      { name: "Viettel Money", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-Viettel-Money.png" },
+      { name: "Tiền mặt", url: null, icon: "banknote" }
+    ];
+
+    const getBankLogo = (bankName) => {
+      const norm = bankName.toLowerCase().replace(/ /g, '');
+      if(norm.includes("vietcombank") || norm.includes("vcb")) return BANK_LOGOS[0].url;
+      if(norm.includes("techcombank") || norm.includes("tcb")) return BANK_LOGOS[1].url;
+      if(norm.includes("mbbank") || norm.includes("mbb") || (norm.includes("mb") && !norm.includes("momo"))) return BANK_LOGOS[2].url;
+      if(norm.includes("tpbank") || norm.includes("tpb")) return BANK_LOGOS[3].url;
+      if(norm.includes("vpbank") || norm.includes("vpb")) return BANK_LOGOS[4].url;
+      if(norm.includes("agribank") || norm.includes("agr")) return BANK_LOGOS[5].url;
+      if(norm.includes("bidv")) return BANK_LOGOS[6].url;
+      if(norm.includes("vietinbank") || norm.includes("ctg") || norm.includes("icb")) return BANK_LOGOS[7].url;
+      if(norm.includes("sacombank") || norm.includes("stb")) return BANK_LOGOS[8].url;
+      if(norm.includes("acb")) return BANK_LOGOS[9].url;
+      if(norm.includes("vib")) return BANK_LOGOS[10].url;
+      if(norm.includes("shinhan")) return BANK_LOGOS[11].url;
+      if(norm.includes("momo")) return BANK_LOGOS[12].url;
+      if(norm.includes("zalopay") || norm.includes("zalo")) return BANK_LOGOS[13].url;
+      if(norm.includes("shopeepay") || norm.includes("spp")) return BANK_LOGOS[14].url;
+      if(norm.includes("viettelmoney") || norm.includes("vtm")) return BANK_LOGOS[15].url;
+      return null;
+    }
+
+    const getCategoryIcon = (category) => {
+        switch (category) {
+            case "Ăn uống": return "coffee";
+            case "Di chuyển": return "bike";
+            case "Mua sắm": return "shopping-bag";
+            case "Giải trí": return "gamepad-2";
+            case "Lương": return "banknote";
+            case "Nhà cửa": return "home";
+            case "Sức khỏe": return "heart";
+            case "Học tập": return "book";
+            case "Hóa đơn": return "file-text";
+            case "Đầu tư": return "trending-up";
+            case "Tiết kiệm": return "piggy-bank";
+            case "Du lịch": return "compass";
+            case "Làm đẹp": return "flower";
+            case "Quà tặng": return "gift";
+            case "Gia đình": return "users";
+            case "Thú cưng": return "paw-print";
+            case "Mua xe": return "car";
+            case "Bảo hiểm": return "shield";
+            case "Thuế": return "file";
+            case "Thể thao": return "activity";
+            case "Từ thiện": return "heart-handshake";
+            case "Thiết bị số": return "smartphone";
+            case "Sửa chữa": return "wrench";
+            case "Ăn vặt": return "ice-cream";
+            default: return "tag";
+        }
+    }
+
+    const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
+
+    const Icon = ({ name, className }) => {
+      // Small wrapper to ensure Lucide renders reliably
+      return <span dangerouslySetInnerHTML={{ __html: `<i data-lucide="${name}" class="${className}"></i>` }} />;
+    };
+
+    function App() {
+      // Data States
+      const [accounts, setAccounts] = useState(() => JSON.parse(localStorage.getItem("vina_accounts")) || [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }]);
+      const [transactions, setTransactions] = useState(() => JSON.parse(localStorage.getItem("vina_transactions")) || []);
+      const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem("vina_categories")) || ["Ăn uống", "Di chuyển", "Mua sắm", "Giải trí", "Lương", "Nhà cửa", "Sức khỏe", "Học tập", "Hóa đơn", "Đầu tư", "Tiết kiệm", "Du lịch", "Làm đẹp", "Quà tặng", "Gia đình", "Thú cưng", "Mua xe", "Bảo hiểm", "Thuế", "Khác"]);
+      const [debts, setDebts] = useState(() => JSON.parse(localStorage.getItem("vina_debts")) || []);
+      const [theme, setTheme] = useState(() => localStorage.getItem("vina_theme") || "ocean");
+
+      // UI States
+      const [activeTab, setActiveTab] = useState("overview"); 
+      const [subTab, setSubTab] = useState("wallet"); // wallet, debts
+      const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false);
+      const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
+      const [showThemeDialog, setShowThemeDialog] = useState(false);
+      const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+      
+      const [googleClientId, setGoogleClientId] = useState(() => localStorage.getItem("vina_google_client_id") || "");
+      const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem("vina_gemini_key") || "");
+      const [accessToken, setAccessToken] = useState(null);
+      const [syncStatus, setSyncStatus] = useState("Chưa đồng bộ");
+
+      const [aiInputText, setAiInputText] = useState("");
+      const [isAiProcessing, setIsAiProcessing] = useState(false);
+
+      useEffect(() => {
+        const rootStyle = document.documentElement.style;
+        const c = THEMES[theme].colors;
+        Object.keys(c).forEach(k => rootStyle.setProperty(`--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`, c[k]));
+        localStorage.setItem("vina_theme", theme);
+      }, [theme]);
+
+      useEffect(() => {
+        localStorage.setItem("vina_accounts", JSON.stringify(accounts));
+        localStorage.setItem("vina_transactions", JSON.stringify(transactions));
+        localStorage.setItem("vina_categories", JSON.stringify(categories));
+        localStorage.setItem("vina_debts", JSON.stringify(debts));
+        localStorage.setItem("vina_google_client_id", googleClientId);
+        localStorage.setItem("vina_gemini_key", geminiApiKey);
+      }, [accounts, transactions, categories, debts, googleClientId, geminiApiKey]);
+
+      useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
+
+      // Calculate totals
+      const totalOwned = accounts.reduce((sum, acc) => sum + (Number(acc.balance)||0), 0);
+      const totalIncome = transactions.filter(t => t.type === "INCOME").reduce((sum, t) => sum + t.amount, 0);
+      const totalExpense = transactions.filter(t => t.type === "EXPENSE").reduce((sum, t) => sum + t.amount, 0);
+      const totalDebtLent = debts.filter(d => d.type === "CHO_VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
+      const totalDebtBorrowed = debts.filter(d => d.type === "VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
+
+      const updateData = (newAcc, newTx, newCat, newDebts) => {
+        if(newAcc) setAccounts(newAcc);
+        if(newTx) setTransactions(newTx);
+        if(newCat) setCategories(newCat);
+        if(newDebts) setDebts(newDebts);
+        setTimeout(() => window.lucide && window.lucide.createIcons(), 50);
+      };
+
+      const handleAddTx = (e) => {
+        e.preventDefault();
+        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: new Date().toISOString() };
+        const newTx = [tx, ...transactions];
+        const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? tx.amount : -tx.amount) } : a);
+        updateData(newAcc, newTx, null, null);
+        setIsAddTxModalOpen(false);
+      };
+
+      const handleDeleteTx = (id) => {
+        if(!confirm("Xóa giao dịch này?")) return;
+        const tx = transactions.find(t => t.id === id);
+        const newTx = transactions.filter(t => t.id !== id);
+        const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? -tx.amount : tx.amount) } : a);
+        updateData(newAcc, newTx, null, null);
+      };
+
+      const handleAddDebt = (e) => {
+        e.preventDefault();
+        const d = { id: Date.now(), title: e.target.title.value, type: e.target.type.value, amount: Number(e.target.amount.value) || 0, note: e.target.note.value, date: new Date().toISOString(), isPaid: false };
+        updateData(null, null, null, [d, ...debts]);
+      };
+
+      const handleToggleDebt = (id) => {
+        updateData(null, null, null, debts.map(d => d.id === id ? {...d, isPaid: !d.isPaid} : d));
+      };
+      
+      const handleDeleteDebt = (id) => {
+        if(confirm("Xóa khoản nợ này?")) updateData(null, null, null, debts.filter(d => d.id !== id));
+      };
+
+      const handleAddBank = (e) => {
+        e.preventDefault();
+        const b = { id: Date.now(), name: e.target.bankName.value, balance: Number(e.target.balance.value) || 0, accountNo: "N/A" };
+        updateData([...accounts, b], null, null, null);
+        setIsAddBankModalOpen(false);
+      };
+
+      const handleParseAI = async () => {
+        if (!geminiApiKey) return alert("Vui lòng cấu hình Gemini API Key bằng nút Cài đặt ở góc phải trên cùng!");
+        setIsAiProcessing(true);
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+          const prompt = `Trích xuất JSON từ nội dung này (amount:number, type:"EXPENSE"|"INCOME", category:"text", note:"text", bankName:"text"). Nội dung: ${aiInputText}`;
+          const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
+          const data = await res.json();
+          if(data.error) throw new Error(data.error.message);
+          const raw = data.candidates[0].content.parts[0].text;
+          const result = JSON.parse(raw.replace(/```json/g, "").replace(/```/g, "").trim());
+          
+          if (confirm(`AI Phát hiện: ${formatVND(result.amount)} - ${result.type}\nLưu ngay?`)) {
+             handleAddTx({ target: { type: { value: result.type }, amount: { value: result.amount }, category: { value: result.category || categories[0] }, bankName: { value: accounts.find(a => a.name.includes(result.bankName))?.name || accounts[0].name }, note: { value: result.note || "AI Scan" } }, preventDefault: ()=>{} });
+             setAiInputText("");
+          }
+        } catch(e) { alert("Lỗi AI: " + e.message); }
+        setIsAiProcessing(false);
+      };
+
+      // Tab Definitions
+      const TABS = [
+        { id: "overview", icon: "layout-dashboard", label: "Tổng quan" },
+        { id: "report", icon: "bar-chart-2", label: "Báo cáo" },
+        { id: "category", icon: "tags", label: "Hạng mục" },
+        { id: "wallet_ai", icon: "sparkles", label: "Ví & Liên kết" }
+      ];
+
+      return (
+        <div className="flex flex-col h-screen md:flex-row pb-16 md:pb-0 font-sans">
+          
+          {/* HEADER MOBILE */}
+          <header className="md:hidden bg-theme-surface border-b border-theme-border px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-theme-primary flex items-center justify-center shadow-lg shadow-theme-primary/20">
+                <Icon name="wallet" className="w-4 h-4 text-theme-background" />
+              </div>
+              <h1 className="font-bold text-lg text-theme-textPrimary">VinaSpends</h1>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={()=>setShowThemeDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="palette" className="w-5 h-5" /></button>
+              <button onClick={()=>setShowSettingsDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="settings" className="w-5 h-5" /></button>
+            </div>
+          </header>
+
+          {/* SIDEBAR DESKTOP */}
+          <aside className="hidden md:flex w-64 bg-theme-surface border-r border-theme-border flex-col p-4 shadow-lg z-10">
+             <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-theme-primary flex items-center justify-center shadow-lg shadow-theme-primary/20">
+                    <Icon name="wallet" className="w-4 h-4 text-theme-background" />
+                  </div>
+                  <h1 className="font-bold text-xl text-theme-textPrimary">VinaSpends</h1>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={()=>setShowThemeDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="palette" className="w-4 h-4" /></button>
+                  <button onClick={()=>setShowSettingsDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="settings" className="w-4 h-4" /></button>
+                </div>
+            </div>
+            <nav className="flex-1 space-y-2">
+              {TABS.map(t => (
+                <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-200 ${activeTab===t.id ? 'bg-theme-primary text-theme-background shadow-md shadow-theme-primary/20 scale-[1.02]' : 'text-theme-textSecondary hover:bg-theme-variant hover:text-theme-textPrimary'}`}>
+                  <Icon name={t.icon} className="w-5 h-5" />
+                  {t.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 bg-theme-background relative">
+            
+            {/* TAB: TỔNG QUAN */}
+            {activeTab === "overview" && (
+              <div className="max-w-3xl mx-auto space-y-6">
+                <div className="relative p-[1px] rounded-[24px] overflow-hidden bg-gradient-to-br from-theme-primary to-theme-surface shadow-2xl">
+                  <div className="p-6 rounded-[23px] bg-gradient-to-br from-theme-surface to-theme-variant h-full w-full">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-widest flex items-center gap-1.5"><Icon name="shield-check" className="w-3.5 h-3.5" /> TỔNG TÀI SẢN THỰC TẾ</h3>
+                        <h2 className="text-[32px] md:text-4xl font-extrabold text-theme-primary mt-2 leading-none">{formatVND(totalOwned - totalDebtBorrowed)}</h2>
+                      </div>
+                      <div className="bg-white/10 px-2.5 py-1.5 rounded-lg font-mono text-[9px] text-white tracking-wider uppercase font-bold shadow-inner">AES-256 MÃ HOÁ</div>
+                    </div>
+                    
+                    <div className="flex gap-4 mt-6 pt-6 border-t border-theme-border/50">
+                      <div className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner">
+                        <p className="text-[11px] font-bold text-theme-textSecondary uppercase flex items-center gap-1.5"><Icon name="piggy-bank" className="w-3.5 h-3.5 text-incomeLight" /> TÀI SẢN SỞ HỮU</p>
+                        <p className="font-bold text-theme-textPrimary mt-1.5 text-sm md:text-base">{formatVND(totalOwned)}</p>
+                      </div>
+                      <div className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner">
+                        <p className="text-[11px] font-bold text-theme-textSecondary uppercase flex items-center gap-1.5"><Icon name="credit-card" className="w-3.5 h-3.5 text-expenseLight" /> TỔNG NỢ ĐI VAY</p>
+                        <p className="font-bold text-theme-textPrimary mt-1.5 text-sm md:text-base">{formatVND(totalDebtBorrowed)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                   <button onClick={()=>setIsAddTxModalOpen(true)} className="flex-1 py-4 bg-theme-primary text-theme-background font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:brightness-110 active:scale-95 transition-all">
+                     <Icon name="plus-circle" className="w-5 h-5" /> THÊM GIAO DỊCH
+                   </button>
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-theme-textPrimary"><Icon name="history" className="w-5 h-5" /> Giao dịch gần đây</h3>
+                  <div className="space-y-3">
+                    {transactions.slice(0, 8).map(tx => (
+                      <div key={tx.id} className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center group transition-colors hover:bg-theme-variant hover:border-theme-primary/50 shadow-sm">
+                        <div className="flex items-center gap-4">
+                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${tx.type==="INCOME"?'bg-income/20 text-incomeLight':'bg-expense/20 text-expenseLight'}`}>
+                             <Icon name={getCategoryIcon(tx.category)} className="w-6 h-6" />
+                           </div>
+                           <div>
+                             <p className="font-bold text-theme-textPrimary text-[15px]">{tx.category}</p>
+                             <p className="text-xs text-theme-textSecondary mt-1 font-medium">{tx.bankName} • {new Date(tx.date).toLocaleDateString()}</p>
+                           </div>
+                        </div>
+                        <p className={`font-bold text-base ${tx.type==="INCOME"?'text-incomeLight':'text-expenseLight'}`}>
+                          {tx.type==="INCOME"?'+':'-'}{formatVND(tx.amount)}
+                        </p>
+                      </div>
+                    ))}
+                    {transactions.length === 0 && (
+                      <div className="text-center p-8 bg-theme-surface/50 border border-theme-border border-dashed rounded-2xl">
+                         <Icon name="inbox" className="w-8 h-8 text-theme-textSecondary mx-auto mb-2 opacity-50" />
+                         <p className="text-sm text-theme-textSecondary font-medium">Chưa có giao dịch nào gần đây.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: BÁO CÁO */}
+            {activeTab === "report" && (
+              <div className="max-w-3xl mx-auto space-y-6">
+                <h2 className="text-2xl font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="bar-chart-2" className="w-6 h-6" /> Báo cáo & Thống kê</h2>
+                
+                <div className="bg-theme-surface border border-theme-border p-6 rounded-3xl shadow-sm">
+                  <h3 className="text-xs font-bold text-theme-textSecondary uppercase mb-4 tracking-wider">Tỷ lệ Thu / Chi</h3>
+                  <div className="w-full h-5 bg-theme-background rounded-full overflow-hidden flex ring-1 ring-white/10 shadow-inner">
+                    <div style={{width: `${totalIncome===0?0:(totalIncome/(totalIncome+totalExpense))*100}%`}} className="h-full bg-incomeLight transition-all"></div>
+                    <div style={{width: `${totalExpense===0?0:(totalExpense/(totalIncome+totalExpense))*100}%`}} className="h-full bg-expenseLight transition-all"></div>
+                  </div>
+                  <div className="flex justify-between mt-4 text-sm font-bold">
+                    <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-incomeLight shadow-[0_0_8px_var(--income-light)]"></span><span className="text-theme-textPrimary">Thu: {formatVND(totalIncome)}</span></div>
+                    <div className="flex items-center gap-2"><span className="text-theme-textPrimary">Chi: {formatVND(totalExpense)}</span><span className="w-2.5 h-2.5 rounded-full bg-expenseLight shadow-[0_0_8px_var(--expense-light)]"></span></div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mt-6">
+                   <h3 className="font-bold text-theme-textSecondary uppercase text-xs tracking-wider mb-4 flex items-center gap-2"><Icon name="list" className="w-4 h-4" /> Danh sách tất cả giao dịch</h3>
+                   {transactions.map(tx => (
+                      <div key={tx.id} className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center group transition-colors hover:bg-theme-variant">
+                        <div className="flex items-center gap-4">
+                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type==="INCOME"?'bg-income/20 text-incomeLight':'bg-expense/20 text-expenseLight'}`}>
+                             <Icon name={getCategoryIcon(tx.category)} className="w-5 h-5" />
+                           </div>
+                           <div className="flex flex-col">
+                              <p className="font-bold text-theme-textPrimary text-[15px]">{tx.category}</p>
+                              <p className="text-[11px] text-theme-textSecondary mt-0.5">{tx.note || "Không có ghi chú"} • {new Date(tx.date).toLocaleDateString()}</p>
+                           </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className={`font-bold ${tx.type==="INCOME"?'text-incomeLight':'text-expenseLight'}`}>
+                            {tx.type==="INCOME"?'+':'-'}{formatVND(tx.amount)}
+                          </p>
+                          <button onClick={()=>handleDeleteTx(tx.id)} className="text-theme-textSecondary hover:text-expenseLight p-2 bg-theme-background rounded-full transition-colors opacity-80 hover:opacity-100">
+                            <Icon name="trash-2" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {transactions.length === 0 && <p className="text-center text-sm text-theme-textSecondary">Chưa có giao dịch.</p>}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: HẠNG MỤC */}
+            {activeTab === "category" && (
+              <div className="max-w-3xl mx-auto space-y-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="tags" className="w-6 h-6" /> Hạng mục</h2>
+                  <button onClick={()=>{ const n = prompt("Tên hạng mục mới:"); if(n) updateData(null, null, [...categories, n], null); }} className="text-sm bg-theme-primary/10 text-theme-primary px-4 py-2 rounded-xl font-bold hover:bg-theme-primary/20 transition-colors flex items-center gap-2"><Icon name="plus" className="w-4 h-4" /> Thêm mới</button>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {categories.map((c, i) => (
+                    <div key={i} className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center group hover:border-theme-primary transition-colors shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-theme-background flex items-center justify-center text-theme-primary">
+                          <Icon name={getCategoryIcon(c)} className="w-4 h-4" />
+                        </div>
+                        <span className="font-bold text-theme-textPrimary text-sm">{c}</span>
+                      </div>
+                      <button className="text-theme-textSecondary hover:text-expenseLight p-1.5 bg-theme-background rounded-full opacity-50 group-hover:opacity-100 transition-all" onClick={()=>{ if(confirm("Xóa hạng mục này?")) updateData(null, null, categories.filter(cat=>cat!==c), null); }}>
+                        <Icon name="trash-2" className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB: VÍ & TRỢ LÝ AI */}
+            {activeTab === "wallet_ai" && (
+              <div className="max-w-3xl mx-auto space-y-6 flex flex-col h-full">
+                
+                {/* Segmented Control */}
+                <div className="flex bg-theme-surface/50 border border-theme-border p-1 rounded-2xl shadow-sm">
+                  <button onClick={()=>setSubTab("wallet")} className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${subTab==="wallet" ? 'bg-theme-primary text-theme-background shadow-md' : 'text-theme-textSecondary hover:text-theme-textPrimary'}`}>
+                    <Icon name="wallet" className="w-4 h-4" /> Ví & Liên kết
+                  </button>
+                  <button onClick={()=>setSubTab("debts")} className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${subTab==="debts" ? 'bg-theme-primary text-theme-background shadow-md' : 'text-theme-textSecondary hover:text-theme-textPrimary'}`}>
+                    <Icon name="contact" className="w-4 h-4" /> Sổ vay nợ cá nhân
+                  </button>
+                </div>
+
+                {/* SUBTAB: VÍ & LIÊN KẾT */}
+                {subTab === "wallet" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center mt-2">
+                      <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" className="w-5 h-5" /> Quản lý Tài khoản</h3>
+                      <button onClick={()=>setIsAddBankModalOpen(true)} className="text-xs bg-theme-primary/10 text-theme-primary px-3 py-2 rounded-lg font-bold flex items-center gap-1"><Icon name="plus" className="w-3 h-3" /> Liên kết ví</button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {accounts.map(acc => {
+                        const logo = getBankLogo(acc.name);
+                        return (
+                        <div key={acc.id} className="bg-gradient-to-br from-theme-surface to-theme-background border border-theme-border p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden group hover:border-theme-primary/50 transition-colors shadow-lg">
+                          <div className="flex justify-between items-start z-10">
+                             <div className="flex items-center gap-3">
+                               {logo ? (
+                                 <img src={logo} alt={acc.name} className="w-10 h-10 rounded-lg bg-white p-1 object-contain shadow-sm" />
+                               ) : (
+                                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shadow-sm">
+                                   <Icon name="wallet" className="w-5 h-5 text-theme-primary" />
+                                 </div>
+                               )}
+                               <p className="font-bold text-base text-theme-textSecondary">{acc.name}</p>
+                             </div>
+                             <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary opacity-0 group-hover:opacity-100 transition-opacity hover:text-expenseLight bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
+                          </div>
+                          <p className="text-2xl font-black text-theme-textPrimary z-10 tracking-tight mt-1">{formatVND(acc.balance)}</p>
+                          <Icon name="credit-card" className="w-32 h-32 absolute -bottom-8 -right-6 text-theme-primary opacity-[0.03] group-hover:opacity-[0.08] transition-opacity rotate-[-15deg]" />
+                        </div>
+                      )})}
+                    </div>
+
+                    <div className="bg-theme-surface border border-theme-border p-6 rounded-3xl space-y-4 mt-6 relative overflow-hidden shadow-sm">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-theme-primary/10 blur-3xl rounded-full"></div>
+                      <h3 className="font-bold text-theme-primary flex items-center gap-2 text-lg"><Icon name="sparkles" className="w-5 h-5" /> Trợ lý AI Phân Tích</h3>
+                      <p className="text-xs text-theme-textSecondary leading-relaxed">Dán nội dung tin nhắn SMS hoặc thông báo biến động số dư để AI tự động trích xuất thông tin, số tiền và phân loại vào hạng mục tương ứng.</p>
+                      <textarea rows={4} placeholder="Ví dụ: MB Bank: +4,500,000 VND vao 08/06/2026. ND: CHUYEN KHOAN LUONG..." value={aiInputText} onChange={e=>setAiInputText(e.target.value)} className="w-full bg-theme-background border border-theme-border rounded-2xl p-4 text-sm text-theme-textPrimary focus:border-theme-primary focus:ring-1 focus:ring-theme-primary transition-all shadow-inner" />
+                      <button onClick={handleParseAI} disabled={isAiProcessing || !aiInputText} className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-theme-primary/20">
+                        {isAiProcessing ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <><Icon name="wand-2" className="w-5 h-5" /> Phân tích tự động</>}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUBTAB: SỔ NỢ */}
+                {subTab === "debts" && (
+                  <div className="space-y-6">
+                    <form onSubmit={handleAddDebt} className="bg-theme-surface border border-theme-border p-6 rounded-3xl space-y-5 shadow-lg relative overflow-hidden">
+                      <h3 className="font-bold text-theme-textPrimary flex items-center gap-2 text-base"><Icon name="book-open" className="w-5 h-5 text-theme-primary" /> Ghi sổ vay mượn</h3>
+                      <div className="flex gap-3">
+                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-expenseLight/50 bg-expenseLight/10 text-expenseLight font-bold cursor-pointer transition-colors shadow-inner">
+                          <input type="radio" name="type" value="VAY" defaultChecked className="hidden peer" />
+                          <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-down-left" className="w-4 h-4" /> Tôi đi vay</span>
+                        </label>
+                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-incomeLight/50 bg-incomeLight/10 text-incomeLight font-bold cursor-pointer transition-colors shadow-inner">
+                          <input type="radio" name="type" value="CHO_VAY" className="hidden peer" />
+                          <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-up-right" className="w-4 h-4" /> Tôi cho vay</span>
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input name="title" type="text" placeholder="Tên người..." required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner" />
+                        <input name="amount" type="number" placeholder="Số tiền..." required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner" />
+                      </div>
+                      <input name="note" type="text" placeholder="Ghi chú thêm..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner" />
+                      <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all"><Icon name="save" className="w-5 h-5" /> GHI SỔ</button>
+                    </form>
+
+                    <div className="space-y-3">
+                      {debts.map(d => (
+                        <div key={d.id} className={`bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center transition-all shadow-sm ${d.isPaid ? 'opacity-50 grayscale' : 'hover:bg-theme-variant'}`}>
+                          <div className="flex flex-col">
+                             <p className="font-bold text-theme-textPrimary text-[15px] flex items-center gap-2">
+                               {d.type === "VAY" ? <span className="text-expenseLight text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-expenseLight/20">ĐI VAY</span> : <span className="text-incomeLight text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-incomeLight/20">CHO VAY</span>}
+                               {d.title}
+                             </p>
+                             <p className="text-[11px] font-medium text-theme-textSecondary mt-1.5">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex items-center gap-5">
+                            <p className="font-bold text-theme-textPrimary text-base tracking-tight">{formatVND(d.amount)}</p>
+                            <div className="flex items-center gap-2 border-l border-theme-border pl-4">
+                              <button onClick={()=>handleToggleDebt(d.id)} className={`p-2.5 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-4 h-4" /></button>
+                              <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2.5 rounded-full text-theme-textSecondary border border-theme-border hover:bg-expenseLight/20 hover:text-expenseLight transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {debts.length === 0 && <p className="text-center text-sm text-theme-textSecondary p-6">Chưa có khoản nợ nào được ghi.</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+
+          {/* BOTTOM NAV MOBILE */}
+          <nav className="fixed bottom-0 w-full md:hidden flex justify-around items-center pt-2 pb-5 px-2 z-30 bg-theme-surface/90 backdrop-blur-xl border-t border-theme-border">
+             {TABS.map(item => (
+               <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex flex-col items-center p-2 min-w-[75px] transition-all duration-300 ${activeTab === item.id ? "text-theme-primary" : "text-theme-textSecondary"}`}>
+                 <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === item.id ? "bg-theme-primary/20 scale-110 shadow-sm" : ""}`}>
+                   <Icon name={item.icon} className="w-5 h-5" />
+                 </div>
+                 <span className="text-[10px] font-bold mt-1 tracking-wider">{item.label}</span>
+               </button>
+             ))}
+          </nav>
+
+          {/* ADD TRANSACTION MODAL */}
+          {isAddTxModalOpen && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+               <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
+                  <div className="flex justify-between items-center mb-5">
+                    <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="edit-3" className="w-5 h-5 text-theme-primary" /> Giao Dịch Mới</h3>
+                    <button onClick={()=>setIsAddTxModalOpen(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
+                  </div>
+                  <form onSubmit={handleAddTx} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex justify-center p-3 rounded-xl border border-expenseLight/50 bg-expenseLight/10 text-expenseLight font-bold cursor-pointer transition-colors shadow-inner">
+                        <input type="radio" name="type" value="EXPENSE" defaultChecked className="hidden peer" />
+                        <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-down-left" className="w-4 h-4" /> Chi Tiền</span>
+                      </label>
+                      <label className="flex justify-center p-3 rounded-xl border border-incomeLight/50 bg-incomeLight/10 text-incomeLight font-bold cursor-pointer transition-colors shadow-inner">
+                        <input type="radio" name="type" value="INCOME" className="hidden peer" />
+                        <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-up-right" className="w-4 h-4" /> Thu Tiền</span>
+                      </label>
+                    </div>
+                    <input name="amount" type="number" placeholder="Số tiền (VND)" required className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary focus:ring-1 focus:ring-theme-primary text-base font-bold shadow-inner transition-all" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <select name="category" required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
+                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <select name="bankName" required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
+                        {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                      </select>
+                    </div>
+                    <input name="note" type="text" placeholder="Ghi chú thêm..." className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                    <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-4 flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg"><Icon name="check" className="w-5 h-5" /> Hoàn Thành</button>
+                  </form>
+               </div>
+            </div>
+          )}
+
+          {/* ADD BANK MODAL */}
+          {isAddBankModalOpen && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+               <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
+                  <div className="flex justify-between items-center mb-5">
+                    <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" className="w-5 h-5 text-theme-primary" /> Liên kết Ví / Ngân hàng</h3>
+                    <button onClick={()=>setIsAddBankModalOpen(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
+                  </div>
+                  <form onSubmit={handleAddBank} className="space-y-4">
+                    <div className="mb-2">
+                       <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Chọn thương hiệu</label>
+                       <div className="grid grid-cols-4 gap-2 max-h-[160px] overflow-y-auto no-scrollbar p-1">
+                         {BANK_LOGOS.map(b => (
+                           <label key={b.name} className="cursor-pointer relative group">
+                             <input type="radio" name="bankName" value={b.name} required className="peer hidden" defaultChecked={b.name === "Vietcombank"} />
+                             <div className="p-2 border border-theme-border rounded-xl bg-theme-background peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 flex items-center justify-center h-[52px] transition-all">
+                               {b.url ? <img src={b.url} alt={b.name} className="max-h-full max-w-full object-contain rounded-md" /> : <Icon name="banknote" className="w-6 h-6 text-theme-textPrimary" />}
+                             </div>
+                           </label>
+                         ))}
+                       </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Số dư hiện tại</label>
+                      <input name="balance" type="number" placeholder="Số dư ban đầu..." required className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary focus:ring-1 focus:ring-theme-primary text-base font-bold shadow-inner transition-all" />
+                    </div>
+                    <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-2 flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg"><Icon name="link" className="w-5 h-5" /> Liên kết ngay</button>
+                  </form>
+               </div>
+            </div>
+          )}
+
+          {/* THEME SWITCHER DIALOG */}
+          {showThemeDialog && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="palette" className="w-5 h-5 text-theme-primary" /> Giao diện & Chủ đề</h3>
+                  <button onClick={()=>setShowThemeDialog(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(THEMES).map(([id, t]) => (
+                    <button key={id} onClick={() => setTheme(id)} className={`w-full flex items-center justify-between p-4 rounded-xl border ${theme === id ? 'border-theme-primary bg-theme-primary/10' : 'border-theme-border bg-theme-background'} transition-all`}>
+                      <span className={`font-bold ${theme === id ? 'text-theme-primary' : 'text-theme-textPrimary'}`}>{t.name}</span>
+                      <div className="flex gap-1 border border-white/10 rounded-full p-1 bg-black/20">
+                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.primary}}></span>
+                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.surface}}></span>
+                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.background}}></span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SETTINGS (GEMINI API) DIALOG */}
+          {showSettingsDialog && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="settings" className="w-5 h-5 text-theme-primary" /> Cấu hình Hệ thống</h3>
+                  <button onClick={()=>setShowSettingsDialog(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
+                </div>
+                <div className="space-y-5">
+                  <div>
+                    <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cpu" className="w-4 h-4 text-theme-primary" /> Gemini API Key</h4>
+                    <p className="text-xs text-theme-textSecondary mb-3">Sử dụng để phân tích tin nhắn và hình ảnh tự động. Cấu hình sẽ được lưu cục bộ trên trình duyệt.</p>
+                    <input type="password" placeholder="AIzaSy..." value={geminiApiKey} onChange={e=>setGeminiApiKey(e.target.value)} className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-sm text-theme-textPrimary focus:border-theme-primary transition-all shadow-inner" />
+                  </div>
+                  <hr className="border-theme-border" />
+                  <div>
+                    <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cloud-off" className="w-4 h-4 text-theme-primary" /> Chế độ Offline</h4>
+                    <p className="text-xs text-theme-textSecondary leading-relaxed">Web app hiện hoạt động ở chế độ ngoại tuyến (sử dụng Local Storage) và dùng để demo nhanh. Để đồng bộ đám mây và bảo vệ AES-256, vui lòng cài đặt ứng dụng Android qua file APK.</p>
+                  </div>
+                  <button onClick={()=>setShowSettingsDialog(false)} className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-4 hover:brightness-110 transition-all shadow-lg">Lưu & Đóng</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

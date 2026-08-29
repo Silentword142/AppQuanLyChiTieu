@@ -1,0 +1,8 @@
+{
+  "name": "Remix VinaSpends web",
+  "description": "Ứng dụng quản lý chi tiêu tối ưu hỗ trợ liên kết giao dịch và tự động phân tích biến động số dư ngân hàng qua AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

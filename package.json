@@ -1,0 +1,18 @@
+{
+  "name": "vinaspends-web",
+  "version": "1.0.0",
+  "description": "VinaSpends - Smart Financial Management Web App with Gemini AI",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/standalone": "^8.0.4",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
