@@ -2155,8 +2155,12 @@
           for (let i = 0; i < lines.length; i++) {
              const line = lines[i].toLowerCase();
              if (line.includes("nội dung") || line.includes("lời nhắn") || line.includes("thông điệp")) {
-                note = lines[i].replace(/^.*(nội dung|lời nhắn|thông điệp)[\s:]*/i, '').trim();
-                if (!note && i + 1 < lines.length) note = lines[i+1].trim();
+                let extractedNote = lines[i].replace(/^.*(nội dung|lời nhắn|thông điệp)[\s:]*/i, '').trim();
+                let subsequentLines = lines.slice(i + 1).map(l => l.trim()).filter(l => l.length > 0);
+                let allNoteParts = [];
+                if (extractedNote) allNoteParts.push(extractedNote);
+                allNoteParts = allNoteParts.concat(subsequentLines);
+                note = allNoteParts.join(' ');
                 break;
              }
           }
