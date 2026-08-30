@@ -23,7 +23,6 @@ class MainActivity : Activity() {
         }
         
         val webView = WebView(this)
-        webView.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null)
         setContentView(webView)
         
         val webSettings: WebSettings = webView.settings
