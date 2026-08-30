@@ -869,7 +869,7 @@
         return [];
       });
       
-      const [googleClientId, setGoogleClientId] = useState(() => localStorage.getItem("vina_google_client_id") || "266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com");
+      const [googleClientId, setGoogleClientId] = useState("266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com");
       const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem("vina_gemini_key") || "");
       const [googleUser, setGoogleUser] = useState(() => {
         try {
@@ -971,7 +971,6 @@
         localStorage.setItem("vina_report_period", reportPeriod);
         localStorage.setItem("vina_report_hview", reportHierarchyView);
         localStorage.setItem("vina_debts", JSON.stringify(debts));
-        localStorage.setItem("vina_google_client_id", googleClientId);
         localStorage.setItem("vina_gemini_key", geminiApiKey);
         if (googleUser) localStorage.setItem("vina_google_user", JSON.stringify(googleUser));
         else localStorage.removeItem("vina_google_user");
