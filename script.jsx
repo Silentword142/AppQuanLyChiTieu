@@ -889,7 +889,6 @@
       const [syncStatusDetail, setSyncStatusDetail] = useState("");
       const [syncModalTab, setSyncModalTab] = useState("drive"); // "drive", "cloud", "qr", "json"
       const [pasteSyncCode, setPasteSyncCode] = useState("");
-      const [showClientIdInput, setShowClientIdInput] = useState(false);
       const [showSyncDialog, setShowSyncDialog] = useState(false);
       const lastLocalEditTime = React.useRef(0);
       const isApplyingRemoteUpdate = React.useRef(false);
@@ -3836,8 +3835,28 @@
                   </button>
                 </div>
 
+                {/* Tab Navigation */}
+                <div className="grid grid-cols-3 bg-theme-background border border-theme-border p-1 rounded-2xl gap-1">
+                  <button 
+                    onClick={() => setSyncModalTab("drive")} 
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "drive" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
+                    <Icon name="cloud" className="w-3.5 h-3.5" /> Google / Cloud
+                  </button>
+                  <button 
+                    onClick={() => setSyncModalTab("qr")} 
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "qr" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
+                    <Icon name="qr-code" className="w-3.5 h-3.5" /> Quét QR / Mã
+                  </button>
+                  <button 
+                    onClick={() => setSyncModalTab("json")} 
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "json" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
+                    <Icon name="file-text" className="w-3.5 h-3.5" /> Tệp .JSON
+                  </button>
+                </div>
+
                 {/* TAB 1: GOOGLE DRIVE & CLOUD RELAY */}
-                <div className="space-y-4">
+                {syncModalTab === "drive" && (
+                  <div className="space-y-4">
                     {/* Real-time Status Card */}
                     <div className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${isRealtimeLive ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-blue-500/10 border-blue-500/20'}`}>
                       <div className="flex items-center gap-3">
@@ -3890,7 +3909,38 @@
                             </button>
                           )}
                         </div>
+                      </div>
+
+                      {/* Sync PIN code for easy cross-device connect */}
+                      <div className="bg-theme-surface/70 border border-theme-border/60 p-3 rounded-xl flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-theme-textSecondary tracking-wider">Mã kết nối nhanh 6 số (PIN)</p>
+                          <p className="text-base font-mono font-black text-emerald-600 dark:text-emerald-400 tracking-widest">{userSyncPin}</p>
                         </div>
+                        <span className="text-[10px] text-theme-textSecondary max-w-[160px] text-right">Nhập mã này trên điện thoại để đồng bộ tức thì</span>
+                      </div>
+
+                      {/* Auto Sync Toggle */}
+                      <div className="flex items-center justify-between pt-2 border-t border-theme-border/40 text-xs">
+                        <span className="text-theme-textSecondary font-medium">Tự động đồng bộ khi thêm/sửa chi tiêu:</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={autoCloudSync} 
+                            onChange={e=>{
+                              setAutoCloudSync(e.target.checked);
+                              localStorage.setItem("vina_auto_cloud_sync", e.target.checked.toString());
+                              showToast(e.target.checked ? "Đã bật tự động đồng bộ!" : "Đã tắt tự động đồng bộ.");
+                            }} 
+                            className="sr-only peer" 
+                          />
+                          <div className="w-9 h-5 bg-theme-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                        </div>
+                      )}
                     </div>
 
                     {/* Sync Actions */}
@@ -3937,6 +3987,78 @@
                       </div>
                     )}
                   </div>
+                )}
+
+                {/* TAB 2: QR CODE & INSTANT DATA TRANSFER */}
+                {syncModalTab === "qr" && (
+                  <div className="space-y-4">
+                    <div className="bg-theme-background border border-theme-border p-4 rounded-2xl text-center space-y-3">
+                      <h4 className="text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-1.5">
+                        <Icon name="smartphone" className="w-4 h-4 text-emerald-500" /> Quét mã QR từ màn hình Máy tính
+                      </h4>
+                      <p className="text-[11px] text-theme-textSecondary">
+                        Mở camera điện thoại hoặc ứng dụng quét mã để chuyển toàn bộ dữ liệu ngay lập tức không cần mạng internet.
+                      </p>
+                      <div className="flex justify-center p-3 bg-white rounded-2xl border border-theme-border shadow-inner max-w-[220px] mx-auto">
+                        <div id="sync_qr_canvas" className="w-[200px] h-[200px] flex items-center justify-center text-xs text-gray-400">
+                          Đang tạo mã QR...
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          const qrText = handleGenerateQrTransfer();
+                          if (navigator.clipboard && qrText) {
+                            navigator.clipboard.writeText(qrText);
+                            showToast("Đã chép chuỗi mã chuyển dữ liệu vào Clipboard!");
+                          }
+                        }}
+                        className="w-full py-2.5 bg-theme-surface border border-theme-border hover:border-theme-primary text-theme-textPrimary font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm">
+                        <Icon name="copy" className="w-3.5 h-3.5 text-theme-primary" /> Sao chép chuỗi mã dữ liệu (Gửi qua Zalo/Tin nhắn)
+                      </button>
+                    </div>
+
+                    {/* Paste string section on mobile */}
+                    <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-2.5">
+                      <h4 className="text-xs font-bold text-theme-textPrimary flex items-center gap-1.5">
+                        <Icon name="clipboard-paste" className="w-4 h-4 text-blue-500" /> Nhập chuỗi mã nhận được từ thiết bị khác
+                      </h4>
+                      <textarea 
+                        value={pasteSyncCode} 
+                        onChange={e => setPasteSyncCode(e.target.value)} 
+                        rows={2} 
+                        placeholder="Dán chuỗi LZ:... hoặc JSON tại đây..." 
+                        className="w-full bg-theme-surface border border-theme-border rounded-xl p-2.5 text-xs text-theme-textPrimary font-mono focus:border-theme-primary"
+                      />
+                      <button 
+                        onClick={() => handleApplyTransferString(pasteSyncCode)}
+                        disabled={!pasteSyncCode.trim()}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-40 shadow-md">
+                        <Icon name="zap" className="w-4 h-4" /> Khôi phục dữ liệu ngay từ mã
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: JSON FILE OFFLINE */}
+                {syncModalTab === "json" && (
+                  <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-theme-textPrimary">Tệp sao lưu .JSON ngoại tuyến</h4>
+                      <p className="text-[11px] text-theme-textSecondary mt-0.5">Tải tệp về máy tính hoặc nạp tệp từ điện thoại</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5 pt-2">
+                      <button 
+                        onClick={handleExportJson}
+                        className="py-3 px-3 bg-theme-surface border border-theme-border hover:border-theme-primary rounded-xl text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-2 transition-all shadow-sm">
+                        <Icon name="file-down" className="w-4 h-4 text-emerald-500" /> Tải tệp .JSON
+                      </button>
+                      <label className="py-3 px-3 bg-theme-surface border border-theme-border hover:border-theme-primary rounded-xl text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-2 cursor-pointer transition-all shadow-sm">
+                        <Icon name="file-up" className="w-4 h-4 text-blue-500" /> Nạp tệp .JSON
+                        <input id="hidden_drive_file_input" type="file" accept=".json" onChange={handleImportJson} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                )}
 
                 {/* Close Button */}
                 <button onClick={()=>setShowSyncDialog(false)} className="w-full py-3 bg-theme-variant text-theme-textPrimary font-bold rounded-2xl hover:bg-theme-border transition-all text-xs">

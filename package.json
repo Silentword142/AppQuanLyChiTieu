@@ -4,8 +4,7 @@
   "description": "VinaSpends - Smart Financial Management Web App with Gemini AI",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@babel/core": "^8.0.1",
