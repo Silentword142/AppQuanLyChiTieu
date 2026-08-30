@@ -1256,7 +1256,7 @@
             const tokenClient = window.google.accounts.oauth2.initTokenClient({
               client_id: effectiveClientId,
               scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-              prompt: 'select_account',
+              prompt: 'consent select_account',
               callback: async (resp) => {
                 if (resp && resp.error) {
                   showToast("OAuth: " + (resp.error_description || resp.error), "error");
@@ -1295,7 +1295,7 @@
                 }
               }
             });
-            tokenClient.requestAccessToken({ prompt: 'select_account' });
+            tokenClient.requestAccessToken({ prompt: 'consent select_account' });
             return;
           } catch (err) {
             console.warn("GSI error, falling back to manual email:", err);
