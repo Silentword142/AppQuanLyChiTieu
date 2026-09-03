@@ -1228,58 +1228,51 @@
         }
       };
 
-      // Universal Cloud Relay for Static Hosting (GitHub Pages)
-      const syncWithCloudRelay = async (action, email, payload = null, customId = null) => {
-        const pin = getEmailSyncPin(email);
-        const objKey = `vina_cloud_obj_${pin}`;
-        let savedId = customId || localStorage.getItem(objKey);
-
-        if (action === "BACKUP") {
-          if (savedId) {
-            try {
-              const res = await fetch(`https://api.restful-api.dev/objects/${savedId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name: `vina_sync_${pin}`,
-                  data: payload
-                })
-              });
-              if (res.ok) return { success: true, id: savedId };
-            } catch(e) {}
+      // Làm mới access token Google Drive trong nền (không hiện popup) khi token còn hạn dùng
+      // hoặc khi trình duyệt vẫn còn phiên đăng nhập Google hợp lệ cho đúng tài khoản đã chọn.
+      const requestGoogleTokenSilently = (clientId, emailHint) => {
+        return new Promise((resolve) => {
+          if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) {
+            resolve(null);
+            return;
           }
           try {
-            const res = await fetch('https://api.restful-api.dev/objects', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: `vina_sync_${pin}`,
-                data: payload
-              })
+            const silentClient = window.google.accounts.oauth2.initTokenClient({
+              client_id: clientId,
+              scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+              hint: emailHint || undefined,
+              prompt: '',
+              callback: (resp) => {
+                resolve(resp && resp.access_token ? resp : null);
+              },
+              error_callback: () => resolve(null)
             });
-            if (res.ok) {
-              const created = await res.json();
-              if (created && created.id) {
-                localStorage.setItem(objKey, created.id);
-                return { success: true, id: created.id };
-              }
-            }
-          } catch(e) {}
-          return { success: false };
-        } else if (action === "RESTORE") {
-          if (savedId) {
-            try {
-              const res = await fetch(`https://api.restful-api.dev/objects/${savedId}`);
-              if (res.ok) {
-                const item = await res.json();
-                if (item && item.data) {
-                  return item.data.data ? item.data.data : item.data;
-                }
-              }
-            } catch(e) {}
+            silentClient.requestAccessToken({ prompt: '' });
+          } catch (e) {
+            resolve(null);
           }
-          return null;
+        });
+      };
+
+      // Đảm bảo luôn có access token Google Drive còn hạn trước khi gọi API.
+      // Chỉ khi làm mới âm thầm thất bại (vd. chưa từng đăng nhập trên máy này) mới cần người dùng bấm "Kết nối Google".
+      const ensureFreshGoogleToken = async () => {
+        if (!googleUser?.email) return null;
+        const stillValid = googleUser.accessToken && googleUser.tokenExpiresAt && (googleUser.tokenExpiresAt - Date.now() > 120000);
+        if (stillValid) return googleUser.accessToken;
+
+        const effectiveClientId = googleClientId?.trim() || '266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com';
+        const resp = await requestGoogleTokenSilently(effectiveClientId, googleUser.email);
+        if (resp && resp.access_token) {
+          const refreshed = {
+            ...googleUser,
+            accessToken: resp.access_token,
+            tokenExpiresAt: Date.now() + ((resp.expires_in || 3500) * 1000)
+          };
+          setGoogleUser(refreshed);
+          return resp.access_token;
         }
+        return null;
       };
 
       const applyUserAccount = (userObj) => {
@@ -1353,6 +1346,7 @@
                       name: userName || userEmail.split('@')[0],
                       picture: userPic,
                       accessToken: resp.access_token,
+                      tokenExpiresAt: Date.now() + ((resp.expires_in || 3500) * 1000),
                       connectedAt: new Date().toISOString()
                     });
                   }
@@ -1533,40 +1527,28 @@
         if (!isSilent) setIsSyncing(true);
         try {
           const backupPayload = buildFullBackupPayload();
-          let successLog = [];
+          let driveOk = false;
 
-          // 1. Direct Ultra-Fast Local/Cloud Backend POST (<30ms)
-          const backendPromise = fetch('/api/cloud-sync/backup', {
+          // 1. Google Drive của chính người dùng - kênh đồng bộ chính, đợi kết quả thật
+          if (googleUser?.email) {
+            try {
+              const freshToken = await ensureFreshGoogleToken();
+              if (freshToken) {
+                const driveRes = await syncWithGoogleDrive("UPLOAD", freshToken, backupPayload);
+                driveOk = !!(driveRes && driveRes.success);
+                if (driveOk) localStorage.setItem("vina_last_drive_modified", String(Date.now()));
+              }
+            } catch (dErr) {
+              console.warn("Drive backup error:", dErr);
+            }
+          }
+
+          // 2. Máy chủ riêng (chỉ hoạt động nếu bạn tự triển khai server.js) - phụ, không chặn UI
+          fetch('/api/cloud-sync/backup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, payload: backupPayload, syncCode: userSyncPin })
-          }).then(res => {
-            if (res.ok) successLog.push("Máy chủ Thời gian thực");
           }).catch(() => {});
-
-          // 2. Concurrently push to Universal Cloud Relay & Google Drive
-          const externalPromises = [];
-
-          // Cloud Relay (for cross-network static access)
-          externalPromises.push(
-            syncWithCloudRelay("BACKUP", email, backupPayload).then(res => {
-              if (res && res.success) successLog.push(`Cloud Relay (${userSyncPin})`);
-            }).catch(e => console.warn("Cloud relay error:", e))
-          );
-
-          // Direct Google Drive API v3 (if access token active)
-          if (googleUser?.accessToken) {
-            externalPromises.push(
-              syncWithGoogleDrive("UPLOAD", googleUser.accessToken, backupPayload).then(driveRes => {
-                if (driveRes && driveRes.success) successLog.push("Google Drive v3");
-              }).catch(dErr => {
-                if (dErr.message === "TOKEN_EXPIRED") console.warn("Google Drive token expired");
-              })
-            );
-          }
-
-          // Await primary backend first for speed
-          await backendPromise;
 
           // Snapshot locally
           localStorage.setItem("vina_google_backup", JSON.stringify(backupPayload));
@@ -1574,16 +1556,15 @@
           setLastSyncTime(timeFormatted);
           localStorage.setItem("vina_last_google_sync", timeFormatted);
 
-          // Complete background upload
-          Promise.allSettled(externalPromises).then(() => {
-            const statusMsg = successLog.length > 0 
-              ? `Đã đồng bộ tức thì qua ${successLog.join(' + ')} lúc ${new Date().toLocaleTimeString('vi-VN')}` 
-              : `Đã lưu snapshot lúc ${new Date().toLocaleTimeString('vi-VN')}`;
-            setSyncStatusDetail(statusMsg);
-          });
-
-          if (!isSilent) {
-            showToast(`⚡ Đã sao lưu toàn bộ ${transactions.length} GD, ${categories.length} hạng mục & báo cáo vào Google Drive!`);
+          if (driveOk) {
+            setSyncStatusDetail(`Đã đồng bộ qua Google Drive lúc ${new Date().toLocaleTimeString('vi-VN')}`);
+            if (!isSilent) showToast(`⚡ Đã sao lưu toàn bộ ${transactions.length} GD, ${categories.length} hạng mục & báo cáo vào Google Drive!`);
+          } else if (googleUser?.email) {
+            setSyncStatusDetail(`Chưa kết nối được Google Drive, đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
+            if (!isSilent) showToast("Không thể kết nối Google Drive lúc này, vui lòng đăng nhập lại tài khoản Google.", "error");
+          } else {
+            setSyncStatusDetail(`Đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
+            if (!isSilent) showToast("Hãy kết nối tài khoản Google để sao lưu lên Drive!", "info");
           }
         } catch (err) {
           if (!isSilent) showToast("Lỗi sao lưu: " + err.message, "error");
@@ -1601,45 +1582,37 @@
           let remotePayload = null;
           let sourceName = "";
 
-          // 1. Primary Ultra-Fast Server Restore (<15ms)
-          try {
-            const sRes = await fetch(`/api/cloud-sync/restore?email=${encodeURIComponent(email)}&syncCode=${encodeURIComponent(customPinOrId || userSyncPin)}`);
-            if (sRes.ok) {
-              const sJson = await sRes.json();
-              if (sJson && sJson.payload && (sJson.payload.data || sJson.payload.transactions || sJson.payload.accounts)) {
-                remotePayload = sJson.payload;
-                sourceName = "Đám mây máy chủ";
-              }
-            }
-          } catch(e) {}
-
-          // 2. Universal Cloud Relay fallback
-          if (!remotePayload) {
+          // 1. Google Drive của chính người dùng - kênh chính (bỏ qua khi đang khôi phục theo mã PIN của tài khoản khác)
+          if (!customPinOrId && googleUser?.email) {
             try {
-              const relayData = await syncWithCloudRelay("RESTORE", email, null, customPinOrId);
-              if (relayData) {
-                remotePayload = relayData;
-                sourceName = "Cloud Relay (Mã đồng bộ)";
-              }
-            } catch(e) {
-              console.warn("Relay restore err:", e);
-            }
-          }
-
-          // 3. Direct Google Drive API (v3) fallback
-          if (!remotePayload && googleUser?.accessToken) {
-            try {
-              const driveData = await syncWithGoogleDrive("DOWNLOAD", googleUser.accessToken);
-              if (driveData && (driveData.data || driveData.accounts || driveData.transactions)) {
-                remotePayload = driveData;
-                sourceName = "Google Drive";
+              const freshToken = await ensureFreshGoogleToken();
+              if (freshToken) {
+                const driveData = await syncWithGoogleDrive("DOWNLOAD", freshToken);
+                if (driveData && (driveData.data || driveData.accounts || driveData.transactions)) {
+                  remotePayload = driveData;
+                  sourceName = "Google Drive";
+                }
               }
             } catch (dErr) {
               console.warn("Drive API restore err:", dErr);
             }
           }
 
-          // 4. Local cached backup fallback
+          // 2. Máy chủ riêng (chỉ hoạt động nếu bạn tự triển khai server.js) - dùng cho mã PIN 6 số hoặc khi chưa đăng nhập Google
+          if (!remotePayload) {
+            try {
+              const sRes = await fetch(`/api/cloud-sync/restore?email=${encodeURIComponent(email)}&syncCode=${encodeURIComponent(customPinOrId || userSyncPin)}`);
+              if (sRes.ok) {
+                const sJson = await sRes.json();
+                if (sJson && sJson.payload && (sJson.payload.data || sJson.payload.transactions || sJson.payload.accounts)) {
+                  remotePayload = sJson.payload;
+                  sourceName = "Máy chủ riêng";
+                }
+              }
+            } catch(e) {}
+          }
+
+          // 3. Local cached backup fallback
           if (!remotePayload) {
             const cached = localStorage.getItem("vina_google_backup");
             if (cached) {
@@ -1840,109 +1813,41 @@
         handleRestoreFromGoogle(true);
       }, []);
 
-      // Real-time Server-Sent Events (SSE) Live Stream (< 50ms latency across devices)
+      // Đồng bộ đa thiết bị qua Google Drive: kiểm tra định kỳ xem file backup trên Drive
+      // có bản mới hơn không (dựa trên modifiedTime thật của Drive), rồi mới tải về nếu cần.
       useEffect(() => {
-        if (!autoCloudSync) {
+        if (!autoCloudSync || !googleUser?.email) {
           setIsRealtimeLive(false);
           return;
         }
-        const email = (googleUser?.email || "drugunhp142@gmail.com").trim().toLowerCase();
-        let eventSource = null;
-        let retryTimer = null;
 
-        const connectSSE = () => {
+        const checkForRemoteChanges = async () => {
+          if (Date.now() - (lastLocalEditTime.current || 0) < 3000) return; // vừa sửa cục bộ, bỏ qua vòng này
           try {
-            const streamUrl = `/api/cloud-sync/stream?email=${encodeURIComponent(email)}&syncCode=${encodeURIComponent(userSyncPin)}`;
-            eventSource = new EventSource(streamUrl);
-
-            eventSource.onopen = () => {
-              setIsRealtimeLive(true);
-              setSyncStatusDetail("🟢 Thời gian thực trực tuyến (<50ms)");
-            };
-
-            eventSource.onmessage = (e) => {
-              try {
-                if (!e.data || e.data.startsWith(':')) return;
-                const msg = JSON.parse(e.data);
-                if (msg.type === "LIVE_UPDATE" && msg.payload) {
-                  const realData = msg.payload.data || msg.payload;
-                  const { accounts: rAcc, transactions: rTx, categories: rCat, debts: rDebts, categoryParentMap: rMap, theme: rTheme, categoryBudgets: rBudgets, monthlyBudget: rMonthlyBudget, reportSettings: rReportSettings } = realData;
-                  if (rTx && rAcc) {
-                    // Update state instantaneously without requiring manual button press or page reload!
-                    updateData(rAcc, rTx, rCat, rDebts, rMap || DEFAULT_CATEGORY_PARENT_MAP, true, rBudgets, rMonthlyBudget, rReportSettings);
-                    if (rTheme && THEMES[rTheme]) setTheme(rTheme);
-                    const timeStr = new Date().toLocaleTimeString('vi-VN');
-                    setLastSyncTime(new Date().toLocaleString('vi-VN'));
-                    setIsRealtimeLive(true);
-                    setSyncStatusDetail(`⚡ Đồng bộ tức thì: ${rTx.length} GD (${timeStr})`);
-                  }
-                }
-              } catch(err) {}
-            };
-
-            eventSource.onerror = () => {
-              setIsRealtimeLive(false);
-              if (eventSource) {
-                eventSource.close();
-                eventSource = null;
-              }
-              retryTimer = setTimeout(connectSSE, 2000);
-            };
-          } catch(err) {
+            const freshToken = await ensureFreshGoogleToken();
+            if (!freshToken) { setIsRealtimeLive(false); return; }
+            setIsRealtimeLive(true);
+            const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='vinaspends_backup.json' and trashed=false&orderBy=modifiedTime desc&fields=files(id,modifiedTime)`;
+            const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${freshToken}` } });
+            if (!searchRes.ok) return;
+            const searchData = await searchRes.json();
+            const remoteFile = searchData.files && searchData.files[0];
+            if (!remoteFile) return;
+            const remoteTime = new Date(remoteFile.modifiedTime).getTime();
+            const lastKnown = Number(localStorage.getItem("vina_last_drive_modified") || 0);
+            if (remoteTime > lastKnown + 1000) {
+              localStorage.setItem("vina_last_drive_modified", String(remoteTime));
+              handleRestoreFromGoogle(true);
+            }
+          } catch (e) {
             setIsRealtimeLive(false);
           }
         };
 
-        connectSSE();
-
-        return () => {
-          if (eventSource) {
-            eventSource.close();
-            eventSource = null;
-          }
-          if (retryTimer) clearTimeout(retryTimer);
-        };
-      }, [autoCloudSync, googleUser?.email, userSyncPin]);
-
-      // Ultra-Fast Cloud Polling / Heartbeat (Fallback for Network Shifts & Static Hosting)
-      useEffect(() => {
-        if (!autoCloudSync) return;
-        const email = (googleUser?.email || "drugunhp142@gmail.com").trim().toLowerCase();
-
-        const interval = setInterval(async () => {
-          // If user hasn't typed locally in last 200ms, check for updates
-          if (Date.now() - (lastLocalEditTime.current || 0) > 200) {
-            try {
-              const infoRes = await fetch(`/api/cloud-sync/info?email=${encodeURIComponent(email)}&syncCode=${encodeURIComponent(userSyncPin)}`);
-              if (infoRes.ok) {
-                const infoData = await infoRes.json();
-                if (infoData && infoData.exists && infoData.updatedAt) {
-                  const serverTime = new Date(infoData.updatedAt).getTime();
-                  if (serverTime > (lastLocalEditTime.current || 0) + 30) {
-                    handleRestoreFromGoogle(true);
-                  }
-                }
-              } else {
-                throw new Error("No SSE / Node.js Server");
-              }
-            } catch(e) {
-              // On static hosting (GitHub Pages), perform lightweight cloud relay heartbeat
-              try {
-                const relayData = await syncWithCloudRelay("RESTORE", email);
-                if (relayData) {
-                  const realData = relayData.data || relayData;
-                  const rTx = realData.transactions;
-                  if (rTx && (rTx.length !== transactions.length || JSON.stringify(rTx) !== JSON.stringify(transactions))) {
-                    handleRestoreFromGoogle(true);
-                  }
-                }
-              } catch(relayErr) {}
-            }
-          }
-        }, 1000);
-
+        checkForRemoteChanges();
+        const interval = setInterval(checkForRemoteChanges, 20000);
         return () => clearInterval(interval);
-      }, [autoCloudSync, googleUser?.email, userSyncPin, transactions.length, accounts.length, categories.length]);
+      }, [autoCloudSync, googleUser?.email, userSyncPin]);
 
       // Auto-refresh when tab becomes active / window focused (e.g. switching back on mobile/PC)
       useEffect(() => {
