@@ -11,6 +11,8 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -64,6 +66,19 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
+
+    // Firebase Authentication (đăng nhập Google tài khoản bất kỳ, dùng chung project với ứng dụng)
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAJ4w33N8F4sUo0ns86cEKoUgzmQVxZx9Q",
+      authDomain: "gen-lang-client-0911580894.firebaseapp.com",
+      projectId: "gen-lang-client-0911580894",
+      storageBucket: "gen-lang-client-0911580894.firebasestorage.app",
+      messagingSenderId: "526086158140",
+      appId: "1:526086158140:web:85f7523f295ba6088dd039"
+    };
+    if (window.firebase && typeof window.firebase.initializeApp === "function" && (!window.firebase.apps || !window.firebase.apps.length)) {
+      try { window.firebase.initializeApp(FIREBASE_CONFIG); } catch (e) { console.warn("Firebase init error:", e); }
+    }
 
     const THEMES = {
       light: { 
@@ -1300,68 +1315,46 @@
         setTimeout(() => handleRestoreFromGoogle(true), 300);
       };
 
-      const handleGoogleOAuthLogin = () => {
-        const effectiveClientId = googleClientId?.trim() || '266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com';
-
-        if (window.google && window.google.accounts && window.google.accounts.oauth2) {
-          try {
-            // Revoke old token if present to force Google to show account picker
-            if (googleUser?.accessToken) {
-              try { window.google.accounts.oauth2.revoke(googleUser.accessToken, () => {}); } catch(e) {}
-            }
-
-            const tokenClient = window.google.accounts.oauth2.initTokenClient({
-              client_id: effectiveClientId,
-              scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-              prompt: 'consent select_account',
-              callback: async (resp) => {
-                if (resp && resp.error) {
-                  showToast("OAuth: " + (resp.error_description || resp.error), "error");
-                  return;
-                }
-                if (resp && resp.access_token) {
-                  let userEmail = "";
-                  let userName = "";
-                  let userPic = null;
-                  try {
-                    const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                      headers: { Authorization: `Bearer ${resp.access_token}` }
-                    });
-                    if (userInfoRes.ok) {
-                      const userInfo = await userInfoRes.json();
-                      if (userInfo.email) userEmail = userInfo.email.trim().toLowerCase();
-                      if (userInfo.name) userName = userInfo.name;
-                      if (userInfo.picture) userPic = userInfo.picture;
-                    }
-                  } catch (e) {}
-
-                  if (!userEmail) {
-                    userEmail = prompt("Vui lòng xác nhận địa chỉ Gmail tài khoản vừa chọn:") || "";
-                    userEmail = userEmail.trim().toLowerCase();
-                  }
-
-                  if (userEmail) {
-                    applyUserAccount({
-                      email: userEmail,
-                      name: userName || userEmail.split('@')[0],
-                      picture: userPic,
-                      accessToken: resp.access_token,
-                      tokenExpiresAt: Date.now() + ((resp.expires_in || 3500) * 1000),
-                      connectedAt: new Date().toISOString()
-                    });
-                  }
-                }
-              }
-            });
-            tokenClient.requestAccessToken({ prompt: 'consent select_account' });
-            return;
-          } catch (err) {
-            console.warn("GSI error, falling back to manual email:", err);
-          }
+      // Đăng nhập bằng BẤT KỲ tài khoản Google nào qua Firebase Authentication,
+      // đồng thời xin luôn quyền Google Drive (drive.file) trong cùng một lần đăng nhập.
+      const handleGoogleOAuthLogin = async () => {
+        if (!(window.firebase && window.firebase.auth)) {
+          console.warn("Firebase SDK chưa sẵn sàng, dùng nhập Gmail thủ công.");
+          setShowAccountModal(true);
+          return;
         }
+        try {
+          // Thu hồi token Drive cũ (nếu có) để không giữ quyền của tài khoản trước
+          if (googleUser?.accessToken && window.google?.accounts?.oauth2) {
+            try { window.google.accounts.oauth2.revoke(googleUser.accessToken, () => {}); } catch(e) {}
+          }
 
-        // Direct input fallback
-        setShowAccountModal(true);
+          const provider = new window.firebase.auth.GoogleAuthProvider();
+          provider.addScope('https://www.googleapis.com/auth/drive.file');
+          provider.setCustomParameters({ prompt: 'select_account' });
+
+          const result = await window.firebase.auth().signInWithPopup(provider);
+          const credential = window.firebase.auth.GoogleAuthProvider.credentialFromResult(result);
+          const fbUser = result.user;
+
+          if (!credential?.accessToken || !fbUser?.email) {
+            throw new Error("Không nhận được quyền truy cập Google Drive từ tài khoản vừa chọn.");
+          }
+
+          applyUserAccount({
+            email: fbUser.email.trim().toLowerCase(),
+            name: fbUser.displayName || fbUser.email.split('@')[0],
+            picture: fbUser.photoURL || null,
+            accessToken: credential.accessToken,
+            tokenExpiresAt: Date.now() + 3500 * 1000,
+            connectedAt: new Date().toISOString()
+          });
+        } catch (err) {
+          if (err && err.code === 'auth/popup-closed-by-user') return;
+          console.warn("Firebase Google sign-in error, falling back to manual email:", err);
+          showToast("Đăng nhập Google thất bại: " + (err.message || err.code || "Lỗi không xác định"), "error");
+          setShowAccountModal(true);
+        }
       };
 
       const handleManualEmailLogin = (emailToUse) => {
@@ -1387,6 +1380,9 @@
         if (!confirm("Bạn có chắc muốn đăng xuất tài khoản Gmail hiện tại?")) return;
         if (googleUser?.accessToken && window.google?.accounts?.oauth2) {
           try { window.google.accounts.oauth2.revoke(googleUser.accessToken, () => {}); } catch(e) {}
+        }
+        if (window.firebase && window.firebase.auth) {
+          try { window.firebase.auth().signOut(); } catch(e) {}
         }
         setGoogleUser(null);
         localStorage.removeItem("vina_google_user");
