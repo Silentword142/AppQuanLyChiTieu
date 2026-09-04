@@ -1164,6 +1164,26 @@
         );
       };
 
+      // Xoá vĩnh viễn dữ liệu của TÀI KHOẢN ĐANG ĐĂNG NHẬP — cả trên máy lẫn trên Firebase.
+      // Dùng để dọn sạch 1 lần khi tài khoản này lỡ có dữ liệu sai/dính từ tài khoản khác
+      // (ví dụ do lỗi đồng bộ cũ trước khi có các bản vá cách ly dữ liệu theo tài khoản).
+      // Khác resetLocalFinancialData ở chỗ: gọi updateData với isRemote=false để cơ chế tự
+      // đẩy dữ liệu lên Firebase hoạt động bình thường, ghi đè bản cũ trên cloud.
+      const handleWipeCloudData = () => {
+        if (!confirm("XOÁ VĨNH VIỄN toàn bộ dữ liệu (giao dịch, ví, sổ nợ...) của tài khoản đang đăng nhập — cả trên máy lẫn trên Firebase. Không thể hoàn tác. Tiếp tục?")) return;
+        updateData(
+          [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }],
+          [],
+          [...DEFAULT_PARENT_CATEGORIES, ...DEFAULT_SUBCATEGORIES],
+          [],
+          DEFAULT_CATEGORY_PARENT_MAP,
+          false,
+          {},
+          0
+        );
+        showToast("Đã xoá toàn bộ dữ liệu của tài khoản này (cả trên máy và Firebase).", "info");
+      };
+
       const applyUserAccount = (userObj) => {
         if (!userObj || !userObj.email) return;
         const cleanEmail = userObj.email.trim().toLowerCase();
@@ -4235,6 +4255,20 @@
                       <Icon name="cloud" className="w-4 h-4" /> Mở trung tâm Đồng bộ Firebase
                     </button>
                   </div>
+                  {googleUser?.email && (
+                    <React.Fragment>
+                      <hr className="border-theme-border" />
+                      <div>
+                        <h4 className="text-sm font-bold text-rose-500 mb-2 flex items-center gap-2"><Icon name="alert-triangle" className="w-4 h-4" /> Vùng nguy hiểm</h4>
+                        <p className="text-xs text-theme-textSecondary mb-3">
+                          Xoá vĩnh viễn toàn bộ giao dịch, ví, sổ nợ, hạng mục tuỳ chỉnh của tài khoản <b>{googleUser.email}</b> — cả trên máy lẫn trên Firebase. Dùng khi tài khoản này lỡ dính dữ liệu sai của tài khoản khác. Không thể hoàn tác.
+                        </p>
+                        <button onClick={handleWipeCloudData} className="w-full py-3 bg-rose-500/10 border border-rose-500/40 text-rose-500 font-bold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-all">
+                          <Icon name="trash-2" className="w-4 h-4" /> Xoá toàn bộ dữ liệu tài khoản này
+                        </button>
+                      </div>
+                    </React.Fragment>
+                  )}
                   <hr className="border-theme-border" />
                   <div>
                     <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cpu" className="w-4 h-4 text-theme-primary" /> Gemini API Key</h4>
