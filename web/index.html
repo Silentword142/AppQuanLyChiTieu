@@ -1253,19 +1253,29 @@
         }
       };
 
-      const handleManualEmailLogin = (emailToUse) => {
+      // Mở popup đăng nhập Google THẬT, gợi ý sẵn 1 email cụ thể (dùng cho ô nhập email và danh
+      // sách "tài khoản gần đây"). KHÔNG được tự đặt googleUser theo email gõ tay mà bỏ qua xác
+      // thực thật — nếu chỉ đổi nhãn hiển thị mà không đổi phiên Firebase thật, mọi "tài khoản"
+      // sẽ đọc/ghi chung 1 tài liệu Firestore (đúng lỗi "các tài khoản đều giống nhau hết").
+      const handleManualEmailLogin = async (emailToUse) => {
         const input = (emailToUse || customEmailInput || "").trim().toLowerCase();
         if (!input || !input.includes("@")) {
           showToast("Vui lòng nhập đúng định dạng Gmail (ví dụ: yourname@gmail.com)", "error");
           return;
         }
-        applyUserAccount({
-          email: input,
-          name: input.split('@')[0],
-          picture: null,
-          connectedAt: new Date().toISOString()
-        });
-        setCustomEmailInput("");
+        if (!(window.firebase && window.firebase.auth)) {
+          showToast("Firebase chưa sẵn sàng, thử lại sau.", "error");
+          return;
+        }
+        try {
+          const provider = new window.firebase.auth.GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account', login_hint: input });
+          await window.firebase.auth().signInWithPopup(provider);
+          setCustomEmailInput("");
+        } catch (err) {
+          if (err && err.code === 'auth/popup-closed-by-user') return;
+          showToast("Đăng nhập Google thất bại: " + (err.message || err.code || "Lỗi không xác định"), "error");
+        }
       };
 
       const handleGoogleLogin = () => {
@@ -4159,9 +4169,10 @@
                   </button>
                 </div>
 
-                {/* Option 2: Direct Gmail Input */}
+                {/* Option 2: Gợi ý email cho popup Google (vẫn phải xác thực thật, không tự đăng nhập) */}
                 <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
-                  <span className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-wider block">Cách 2: Nhập trực tiếp địa chỉ Gmail</span>
+                  <span className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-wider block">Cách 2: Gợi ý sẵn địa chỉ Gmail</span>
+                  <p className="text-[11px] text-theme-textSecondary -mt-1">Vẫn sẽ mở popup Google để xác thực thật, chỉ điền sẵn email cho nhanh.</p>
                   <form onSubmit={(e) => { e.preventDefault(); handleManualEmailLogin(); }} className="space-y-2">
                     <div className="flex gap-2">
                       <div className="relative flex-1">
