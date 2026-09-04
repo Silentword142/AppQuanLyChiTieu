@@ -969,8 +969,10 @@
       const [syncModalTab, setSyncModalTab] = useState("drive"); // "drive", "cloud", "qr", "json"
       const [pasteSyncCode, setPasteSyncCode] = useState("");
       const [showSyncDialog, setShowSyncDialog] = useState(false);
+      const [restoreTrigger, setRestoreTrigger] = useState(0);
       const lastLocalEditTime = React.useRef(0);
       const isApplyingRemoteUpdate = React.useRef(false);
+      const googleUserRef = React.useRef(null);
 
       const [aiInputText, setAiInputText] = useState("");
       const [isAiProcessing, setIsAiProcessing] = useState(false);
@@ -1173,7 +1175,14 @@
 
         // Đang chuyển từ 1 tài khoản khác sang tài khoản này — xoá dữ liệu cục bộ trước để
         // tránh lẫn dữ liệu 2 tài khoản, dữ liệu thật của tài khoản mới sẽ được tải về ngay sau đó.
-        if (googleUser && googleUser.email && googleUser.email !== cleanEmail) {
+        // So theo uid (đáng tin hơn email) khi có, vì đây là phiên Firebase thật.
+        // Dùng ref thay vì đọc thẳng state googleUser vì hàm này còn được gọi từ bên trong
+        // listener onAuthStateChanged (closure sống lâu, chỉ chạy 1 lần lúc mount).
+        const prevUser = googleUserRef.current;
+        const isDifferentAccount = prevUser && (
+          (userObj.uid && prevUser.uid) ? prevUser.uid !== userObj.uid : prevUser.email !== cleanEmail
+        );
+        if (isDifferentAccount) {
           resetLocalFinancialData();
         }
 
@@ -1190,8 +1199,11 @@
         setShowAccountModal(false);
         showToast(`🟢 Đã chọn tài khoản: ${cleanEmail}`);
         setSyncStatusDetail(`Đã kết nối tài khoản ${cleanEmail}`);
-        // Pull latest backup for this account
-        setTimeout(() => handleRestoreFromGoogle(true), 300);
+        // Yêu cầu tải bản sao lưu của tài khoản này qua state trigger (không gọi thẳng
+        // handleRestoreFromGoogle ở đây) — applyUserAccount có thể được gọi từ closure "đông cứng"
+        // bên trong listener onAuthStateChanged (chỉ chạy 1 lần lúc mount), nên gọi thẳng sẽ dùng
+        // nhầm transactions/accounts cũ từ lúc mount thay vì dữ liệu hiện tại.
+        setRestoreTrigger(t => t + 1);
       };
 
       // Đăng nhập bằng BẤT KỲ tài khoản Google nào qua Firebase Authentication.
@@ -1207,19 +1219,12 @@
           provider.setCustomParameters({ prompt: 'select_account' });
 
           const result = await window.firebase.auth().signInWithPopup(provider);
-          const fbUser = result.user;
-
-          if (!fbUser?.email) {
+          if (!result?.user?.email) {
             throw new Error("Không lấy được thông tin tài khoản vừa chọn.");
           }
-
-          applyUserAccount({
-            uid: fbUser.uid,
-            email: fbUser.email.trim().toLowerCase(),
-            name: fbUser.displayName || fbUser.email.split('@')[0],
-            picture: fbUser.photoURL || null,
-            connectedAt: new Date().toISOString()
-          });
+          // Không tự áp dụng tài khoản ở đây — bộ lắng nghe onAuthStateChanged (nguồn sự thật
+          // duy nhất cho trạng thái đăng nhập) sẽ tự động gọi applyUserAccount ngay khi phiên
+          // Firebase thật sự thay đổi, tránh áp dụng 2 lần hoặc lệch trạng thái.
         } catch (err) {
           if (err && err.code === 'auth/popup-closed-by-user') return;
           console.warn("Firebase Google sign-in error, falling back to manual email:", err);
@@ -1249,12 +1254,17 @@
 
       const handleGoogleLogout = () => {
         if (!confirm("Bạn có chắc muốn đăng xuất tài khoản Gmail hiện tại?")) return;
-        if (window.firebase && window.firebase.auth) {
-          try { window.firebase.auth().signOut(); } catch(e) {}
+        const fbCurrentUser = window.firebase?.auth && window.firebase.auth().currentUser;
+        if (fbCurrentUser) {
+          // Đây là tài khoản đăng nhập Firebase thật — onAuthStateChanged sẽ tự xoá dữ liệu
+          // cục bộ ngay khi phiên thực sự kết thúc (đảm bảo không lệch trạng thái).
+          window.firebase.auth().signOut().catch((e) => console.warn("Sign out error:", e));
+        } else {
+          // Tài khoản nhập email thủ công — không có phiên Firebase thật để lắng nghe, tự xoá tại đây.
+          resetLocalFinancialData();
+          setGoogleUser(null);
+          localStorage.removeItem("vina_google_user");
         }
-        resetLocalFinancialData();
-        setGoogleUser(null);
-        localStorage.removeItem("vina_google_user");
         showToast("Đã đăng xuất. Dữ liệu trên máy đã được xoá — dữ liệu của bạn vẫn an toàn trên Firebase.", "info");
         setShowAccountModal(true);
       };
@@ -1677,10 +1687,49 @@
         };
       }, []);
 
+      useEffect(() => { googleUserRef.current = googleUser; }, [googleUser]);
+
+      // Nguồn sự thật DUY NHẤT cho trạng thái đăng nhập Google: lắng nghe trực tiếp phiên đăng
+      // nhập thật của Firebase (onAuthStateChanged), thay vì tự suy đoán qua localStorage.
+      // Firebase tự khôi phục phiên cũ khi tải lại trang — nếu chỉ dựa vào state cục bộ, UI có
+      // thể hiển thị "chưa đăng nhập" trong khi Firebase vẫn còn phiên cũ (và ngược lại), khiến
+      // app đồng bộ nhầm dữ liệu của tài khoản khác.
+      useEffect(() => {
+        if (!(window.firebase && window.firebase.auth)) return;
+        const unsubscribe = window.firebase.auth().onAuthStateChanged((fbUser) => {
+          if (fbUser) {
+            applyUserAccount({
+              uid: fbUser.uid,
+              email: (fbUser.email || "").trim().toLowerCase(),
+              name: fbUser.displayName || (fbUser.email || "").split('@')[0],
+              picture: fbUser.photoURL || null,
+              connectedAt: new Date().toISOString()
+            });
+          } else if (googleUserRef.current && googleUserRef.current.uid) {
+            // Chỉ tài khoản đăng nhập Firebase thật (có uid) mới bị xoá dữ liệu ở đây —
+            // tài khoản nhập email thủ công không có phiên Firebase nên không đi qua nhánh này.
+            resetLocalFinancialData();
+            setGoogleUser(null);
+            localStorage.removeItem("vina_google_user");
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
       // Initial restore check
       useEffect(() => {
         handleRestoreFromGoogle(true);
       }, []);
+
+      // Tải bản sao lưu khi applyUserAccount yêu cầu (đăng nhập / đổi tài khoản). Đặt trong 1
+      // effect riêng (chạy lại mỗi khi restoreTrigger đổi) để luôn dùng đúng closure hiện tại
+      // của handleRestoreFromGoogle, thay vì bị "đông cứng" nếu gọi trực tiếp từ trong listener
+      // onAuthStateChanged (chỉ đăng ký 1 lần lúc mount).
+      useEffect(() => {
+        if (restoreTrigger === 0) return;
+        const timer = setTimeout(() => handleRestoreFromGoogle(true), 300);
+        return () => clearTimeout(timer);
+      }, [restoreTrigger]);
 
       // Đồng bộ đa thiết bị THỜI GIAN THỰC qua Firestore onSnapshot: tự cập nhật ngay khi
       // một thiết bị khác lưu dữ liệu mới lên cùng tài khoản Firebase, không cần polling.
