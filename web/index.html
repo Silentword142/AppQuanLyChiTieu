@@ -1454,6 +1454,15 @@
         const email = (googleUser?.email || "drugunhp142@gmail.com").trim().toLowerCase();
         if (!email) return;
 
+        // Vừa có thao tác sửa/xoá cục bộ (vd xoá giao dịch) mà bản đẩy lên Firebase có thể chưa
+        // kịp tới máy chủ — nếu vẫn cho khôi phục ngầm chạy lúc này (do focus lại tab, listener
+        // realtime, v.v.) sẽ tải về bản CŨ trên Firebase và ghi đè mất thao tác vừa làm.
+        // resetLocalFinancialData/updateData(isRemote=true) không tính là "sửa cục bộ" nên không
+        // bị chặn ở đây — chỉ chặn khi có edit thật của người dùng.
+        if (isSilent && Date.now() - (lastLocalEditTime.current || 0) < 3000) {
+          return;
+        }
+
         if (!isSilent) setIsSyncing(true);
         try {
           let remotePayload = null;
