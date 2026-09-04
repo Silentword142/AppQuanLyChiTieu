@@ -1139,6 +1139,29 @@
         return window.firebase.firestore().collection('vinaspends_backups').doc(fbUser.uid);
       };
 
+      // Bản sao lưu cục bộ (fallback khi mất mạng) phải khoá riêng theo từng tài khoản,
+      // nếu không dữ liệu tài khoản A có thể "rò" sang khi đăng nhập tài khoản B.
+      const getLocalBackupCacheKey = () => {
+        const fbUser = window.firebase?.auth && window.firebase.auth().currentUser;
+        return fbUser ? `vina_google_backup_${fbUser.uid}` : "vina_google_backup_guest";
+      };
+
+      // Xoá dữ liệu tài chính trên máy về trạng thái trống (như app mới cài) — dùng khi đăng xuất
+      // hoặc chuyển sang tài khoản Google khác, để không hiển thị nhầm dữ liệu của tài khoản cũ.
+      // Dữ liệu thật vẫn an toàn trên Firebase của tài khoản cũ, không bị xoá.
+      const resetLocalFinancialData = () => {
+        updateData(
+          [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }],
+          [],
+          [...DEFAULT_PARENT_CATEGORIES, ...DEFAULT_SUBCATEGORIES],
+          [],
+          DEFAULT_CATEGORY_PARENT_MAP,
+          true,
+          {},
+          0
+        );
+      };
+
       const applyUserAccount = (userObj) => {
         if (!userObj || !userObj.email) return;
         const cleanEmail = userObj.email.trim().toLowerCase();
@@ -1147,6 +1170,13 @@
           email: cleanEmail,
           name: userObj.name || cleanEmail.split('@')[0]
         };
+
+        // Đang chuyển từ 1 tài khoản khác sang tài khoản này — xoá dữ liệu cục bộ trước để
+        // tránh lẫn dữ liệu 2 tài khoản, dữ liệu thật của tài khoản mới sẽ được tải về ngay sau đó.
+        if (googleUser && googleUser.email && googleUser.email !== cleanEmail) {
+          resetLocalFinancialData();
+        }
+
         setGoogleUser(finalized);
         localStorage.setItem("vina_google_user", JSON.stringify(finalized));
 
@@ -1222,9 +1252,10 @@
         if (window.firebase && window.firebase.auth) {
           try { window.firebase.auth().signOut(); } catch(e) {}
         }
+        resetLocalFinancialData();
         setGoogleUser(null);
         localStorage.removeItem("vina_google_user");
-        showToast("Đã đăng xuất. Vui lòng chọn tài khoản để tiếp tục đồng bộ.", "info");
+        showToast("Đã đăng xuất. Dữ liệu trên máy đã được xoá — dữ liệu của bạn vẫn an toàn trên Firebase.", "info");
         setShowAccountModal(true);
       };
 
@@ -1386,8 +1417,8 @@
             body: JSON.stringify({ email, payload: backupPayload, syncCode: userSyncPin })
           }).catch(() => {});
 
-          // Snapshot locally
-          localStorage.setItem("vina_google_backup", JSON.stringify(backupPayload));
+          // Snapshot locally (khoá riêng theo tài khoản để không lẫn dữ liệu khi đổi tài khoản)
+          localStorage.setItem(getLocalBackupCacheKey(), JSON.stringify(backupPayload));
           const timeFormatted = new Date().toLocaleString('vi-VN');
           setLastSyncTime(timeFormatted);
           localStorage.setItem("vina_last_google_sync", timeFormatted);
@@ -1450,9 +1481,9 @@
             } catch(e) {}
           }
 
-          // 3. Local cached backup fallback
+          // 3. Local cached backup fallback (chỉ đọc cache của đúng tài khoản đang đăng nhập)
           if (!remotePayload) {
-            const cached = localStorage.getItem("vina_google_backup");
+            const cached = localStorage.getItem(getLocalBackupCacheKey());
             if (cached) {
               try { 
                 remotePayload = JSON.parse(cached);
