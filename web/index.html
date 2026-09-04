@@ -10,9 +10,9 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -1115,7 +1115,7 @@
       };
 
       // ==========================================
-      // GOOGLE DRIVE & MULTI-DEVICE SYNC ENGINE
+      // FIREBASE MULTI-DEVICE SYNC ENGINE
       // ==========================================
       const getEmailSyncPin = (emailStr) => {
         const clean = (emailStr || "drugunhp142@gmail.com").trim().toLowerCase();
@@ -1131,163 +1131,12 @@
         return getEmailSyncPin(googleUser?.email || "drugunhp142@gmail.com");
       }, [googleUser?.email]);
 
-      // Direct Google Drive API operations (v3 REST API)
-      const syncWithGoogleDrive = async (action, accessToken, payload = null) => {
-        if (!accessToken) throw new Error("Chưa có mã ủy quyền Google Drive!");
-        const fileName = "vinaspends_backup.json";
-        const reportFileName = "vinaspends_bao_cao_chi_tieu.json";
-
-        const uploadOrUpdateFile = async (name, contentObj, description) => {
-          const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${name}' and trashed=false&fields=files(id,name)`;
-          const searchRes = await fetch(searchUrl, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          if (searchRes.status === 401) throw new Error("TOKEN_EXPIRED");
-          const searchData = await searchRes.json();
-          const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
-          const fileContent = JSON.stringify(contentObj, null, 2);
-
-          if (existingFile) {
-            const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
-              method: 'PATCH',
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json; charset=UTF-8'
-              },
-              body: fileContent
-            });
-            if (!updateRes.ok) throw new Error("Không thể ghi đè " + name + " trên Google Drive (" + updateRes.status + ")");
-            return { success: true, fileId: existingFile.id, action: 'updated' };
-          } else {
-            const boundary = "-------314159265358979323846";
-            const delimiter = "\r\n--" + boundary + "\r\n";
-            const close_delim = "\r\n--" + boundary + "--";
-            const metadata = {
-              name: name,
-              mimeType: 'application/json',
-              description: description || 'VinaSpends Financial Data'
-            };
-            const multipartRequestBody =
-              delimiter +
-              'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-              JSON.stringify(metadata) +
-              delimiter +
-              'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-              fileContent +
-              close_delim;
-
-            const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'multipart/related; boundary=' + boundary
-              },
-              body: multipartRequestBody
-            });
-            if (!createRes.ok) throw new Error("Không thể tạo " + name + " trên Google Drive (" + createRes.status + ")");
-            const created = await createRes.json();
-            return { success: true, fileId: created.id, action: 'created' };
-          }
-        };
-
-        if (action === "UPLOAD") {
-          // 1. Upload/Update Full App Master Backup File
-          const mainRes = await uploadOrUpdateFile(
-            fileName, 
-            payload, 
-            'VinaSpends Master Backup (Giao dịch, Hạng mục phân cấp, Báo cáo & Ngân sách)'
-          );
-
-          // 2. Also Upload/Update human-readable Category & Financial Report Analysis File
-          if (payload && payload.data) {
-            try {
-              const readableReport = {
-                title: "Báo Cáo Phân Tích Thu Chi & Cơ Cấu Hạng Mục VinaSpends",
-                exportedAt: new Date().toLocaleString('vi-VN'),
-                user: payload.user,
-                summaryMetrics: payload.data.reportSnapshot?.metrics || {},
-                budgetManagement: payload.data.reportSnapshot?.budgets || {},
-                categoryHierarchy: payload.data.reportSnapshot?.categoryHierarchy || [],
-                parentBreakdown: payload.data.reportSnapshot?.parentBreakdown || [],
-                childBreakdown: payload.data.reportSnapshot?.childBreakdown || [],
-                allCategories: payload.data.categories || [],
-                categoryParentMap: payload.data.categoryParentMap || {}
-              };
-              await uploadOrUpdateFile(
-                reportFileName, 
-                readableReport, 
-                'VinaSpends Financial Report & Category Breakdown'
-              );
-            } catch(rErr) {
-              console.warn("Report file sync warning:", rErr);
-            }
-          }
-
-          return mainRes;
-        } else if (action === "DOWNLOAD") {
-          const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${fileName}' and trashed=false&orderBy=modifiedTime desc&fields=files(id,name,modifiedTime)`;
-          const searchRes = await fetch(searchUrl, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          if (searchRes.status === 401) throw new Error("TOKEN_EXPIRED");
-          const searchData = await searchRes.json();
-          if (!searchData.files || searchData.files.length === 0) {
-            return null;
-          }
-          const fileId = searchData.files[0].id;
-          const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          });
-          if (!fileRes.ok) throw new Error("Không thể tải file từ Google Drive (" + fileRes.status + ")");
-          return await fileRes.json();
-        }
-      };
-
-      // Làm mới access token Google Drive trong nền (không hiện popup) khi token còn hạn dùng
-      // hoặc khi trình duyệt vẫn còn phiên đăng nhập Google hợp lệ cho đúng tài khoản đã chọn.
-      const requestGoogleTokenSilently = (clientId, emailHint) => {
-        return new Promise((resolve) => {
-          if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) {
-            resolve(null);
-            return;
-          }
-          try {
-            const silentClient = window.google.accounts.oauth2.initTokenClient({
-              client_id: clientId,
-              scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-              hint: emailHint || undefined,
-              prompt: '',
-              callback: (resp) => {
-                resolve(resp && resp.access_token ? resp : null);
-              },
-              error_callback: () => resolve(null)
-            });
-            silentClient.requestAccessToken({ prompt: '' });
-          } catch (e) {
-            resolve(null);
-          }
-        });
-      };
-
-      // Đảm bảo luôn có access token Google Drive còn hạn trước khi gọi API.
-      // Chỉ khi làm mới âm thầm thất bại (vd. chưa từng đăng nhập trên máy này) mới cần người dùng bấm "Kết nối Google".
-      const ensureFreshGoogleToken = async () => {
-        if (!googleUser?.email) return null;
-        const stillValid = googleUser.accessToken && googleUser.tokenExpiresAt && (googleUser.tokenExpiresAt - Date.now() > 120000);
-        if (stillValid) return googleUser.accessToken;
-
-        const effectiveClientId = googleClientId?.trim() || '266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com';
-        const resp = await requestGoogleTokenSilently(effectiveClientId, googleUser.email);
-        if (resp && resp.access_token) {
-          const refreshed = {
-            ...googleUser,
-            accessToken: resp.access_token,
-            tokenExpiresAt: Date.now() + ((resp.expires_in || 3500) * 1000)
-          };
-          setGoogleUser(refreshed);
-          return resp.access_token;
-        }
-        return null;
+      // Tài liệu Firestore lưu bản sao lưu của tài khoản Firebase đang đăng nhập.
+      // Khoá theo uid (ổn định, không đổi kể cả khi người dùng đổi email hiển thị).
+      const getUserBackupDocRef = () => {
+        const fbUser = window.firebase?.auth && window.firebase.auth().currentUser;
+        if (!fbUser || !(window.firebase && window.firebase.firestore)) return null;
+        return window.firebase.firestore().collection('vinaspends_backups').doc(fbUser.uid);
       };
 
       const applyUserAccount = (userObj) => {
@@ -1315,8 +1164,8 @@
         setTimeout(() => handleRestoreFromGoogle(true), 300);
       };
 
-      // Đăng nhập bằng BẤT KỲ tài khoản Google nào qua Firebase Authentication,
-      // đồng thời xin luôn quyền Google Drive (drive.file) trong cùng một lần đăng nhập.
+      // Đăng nhập bằng BẤT KỲ tài khoản Google nào qua Firebase Authentication.
+      // Không xin quyền Google Drive nữa — dữ liệu đồng bộ qua Firestore, khoá theo UID Firebase.
       const handleGoogleOAuthLogin = async () => {
         if (!(window.firebase && window.firebase.auth)) {
           console.warn("Firebase SDK chưa sẵn sàng, dùng nhập Gmail thủ công.");
@@ -1324,29 +1173,21 @@
           return;
         }
         try {
-          // Thu hồi token Drive cũ (nếu có) để không giữ quyền của tài khoản trước
-          if (googleUser?.accessToken && window.google?.accounts?.oauth2) {
-            try { window.google.accounts.oauth2.revoke(googleUser.accessToken, () => {}); } catch(e) {}
-          }
-
           const provider = new window.firebase.auth.GoogleAuthProvider();
-          provider.addScope('https://www.googleapis.com/auth/drive.file');
           provider.setCustomParameters({ prompt: 'select_account' });
 
           const result = await window.firebase.auth().signInWithPopup(provider);
-          const credential = window.firebase.auth.GoogleAuthProvider.credentialFromResult(result);
           const fbUser = result.user;
 
-          if (!credential?.accessToken || !fbUser?.email) {
-            throw new Error("Không nhận được quyền truy cập Google Drive từ tài khoản vừa chọn.");
+          if (!fbUser?.email) {
+            throw new Error("Không lấy được thông tin tài khoản vừa chọn.");
           }
 
           applyUserAccount({
+            uid: fbUser.uid,
             email: fbUser.email.trim().toLowerCase(),
             name: fbUser.displayName || fbUser.email.split('@')[0],
             picture: fbUser.photoURL || null,
-            accessToken: credential.accessToken,
-            tokenExpiresAt: Date.now() + 3500 * 1000,
             connectedAt: new Date().toISOString()
           });
         } catch (err) {
@@ -1378,9 +1219,6 @@
 
       const handleGoogleLogout = () => {
         if (!confirm("Bạn có chắc muốn đăng xuất tài khoản Gmail hiện tại?")) return;
-        if (googleUser?.accessToken && window.google?.accounts?.oauth2) {
-          try { window.google.accounts.oauth2.revoke(googleUser.accessToken, () => {}); } catch(e) {}
-        }
         if (window.firebase && window.firebase.auth) {
           try { window.firebase.auth().signOut(); } catch(e) {}
         }
@@ -1523,19 +1361,21 @@
         if (!isSilent) setIsSyncing(true);
         try {
           const backupPayload = buildFullBackupPayload();
-          let driveOk = false;
+          let firebaseOk = false;
 
-          // 1. Google Drive của chính người dùng - kênh đồng bộ chính, đợi kết quả thật
-          if (googleUser?.email) {
+          // 1. Firestore (Firebase) của chính tài khoản đang đăng nhập - kênh đồng bộ chính, đợi kết quả thật
+          const docRef = getUserBackupDocRef();
+          if (docRef) {
             try {
-              const freshToken = await ensureFreshGoogleToken();
-              if (freshToken) {
-                const driveRes = await syncWithGoogleDrive("UPLOAD", freshToken, backupPayload);
-                driveOk = !!(driveRes && driveRes.success);
-                if (driveOk) localStorage.setItem("vina_last_drive_modified", String(Date.now()));
-              }
-            } catch (dErr) {
-              console.warn("Drive backup error:", dErr);
+              await docRef.set({
+                email,
+                payload: backupPayload,
+                updatedAt: window.firebase.firestore.FieldValue.serverTimestamp()
+              });
+              firebaseOk = true;
+              localStorage.setItem("vina_last_firebase_push", String(Date.now()));
+            } catch (fErr) {
+              console.warn("Firestore backup error:", fErr);
             }
           }
 
@@ -1552,15 +1392,15 @@
           setLastSyncTime(timeFormatted);
           localStorage.setItem("vina_last_google_sync", timeFormatted);
 
-          if (driveOk) {
-            setSyncStatusDetail(`Đã đồng bộ qua Google Drive lúc ${new Date().toLocaleTimeString('vi-VN')}`);
-            if (!isSilent) showToast(`⚡ Đã sao lưu toàn bộ ${transactions.length} GD, ${categories.length} hạng mục & báo cáo vào Google Drive!`);
+          if (firebaseOk) {
+            setSyncStatusDetail(`Đã đồng bộ qua Firebase lúc ${new Date().toLocaleTimeString('vi-VN')}`);
+            if (!isSilent) showToast(`⚡ Đã sao lưu toàn bộ ${transactions.length} GD, ${categories.length} hạng mục & báo cáo lên Firebase!`);
           } else if (googleUser?.email) {
-            setSyncStatusDetail(`Chưa kết nối được Google Drive, đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
-            if (!isSilent) showToast("Không thể kết nối Google Drive lúc này, vui lòng đăng nhập lại tài khoản Google.", "error");
+            setSyncStatusDetail(`Chưa kết nối được Firebase, đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
+            if (!isSilent) showToast("Không thể kết nối Firebase lúc này, vui lòng đăng nhập lại tài khoản Google.", "error");
           } else {
             setSyncStatusDetail(`Đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
-            if (!isSilent) showToast("Hãy kết nối tài khoản Google để sao lưu lên Drive!", "info");
+            if (!isSilent) showToast("Hãy kết nối tài khoản Google để sao lưu lên Firebase!", "info");
           }
         } catch (err) {
           if (!isSilent) showToast("Lỗi sao lưu: " + err.message, "error");
@@ -1578,19 +1418,21 @@
           let remotePayload = null;
           let sourceName = "";
 
-          // 1. Google Drive của chính người dùng - kênh chính (bỏ qua khi đang khôi phục theo mã PIN của tài khoản khác)
-          if (!customPinOrId && googleUser?.email) {
-            try {
-              const freshToken = await ensureFreshGoogleToken();
-              if (freshToken) {
-                const driveData = await syncWithGoogleDrive("DOWNLOAD", freshToken);
-                if (driveData && (driveData.data || driveData.accounts || driveData.transactions)) {
-                  remotePayload = driveData;
-                  sourceName = "Google Drive";
+          // 1. Firestore (Firebase) của chính tài khoản đang đăng nhập - kênh chính (bỏ qua khi đang khôi phục theo mã PIN của tài khoản khác)
+          if (!customPinOrId) {
+            const docRef = getUserBackupDocRef();
+            if (docRef) {
+              try {
+                const snap = await docRef.get();
+                const remoteData = snap.exists ? snap.data() : null;
+                const firebaseData = remoteData?.payload;
+                if (firebaseData && (firebaseData.data || firebaseData.accounts || firebaseData.transactions)) {
+                  remotePayload = firebaseData;
+                  sourceName = "Firebase";
                 }
+              } catch (fErr) {
+                console.warn("Firestore restore err:", fErr);
               }
-            } catch (dErr) {
-              console.warn("Drive API restore err:", dErr);
             }
           }
 
@@ -1809,41 +1651,31 @@
         handleRestoreFromGoogle(true);
       }, []);
 
-      // Đồng bộ đa thiết bị qua Google Drive: kiểm tra định kỳ xem file backup trên Drive
-      // có bản mới hơn không (dựa trên modifiedTime thật của Drive), rồi mới tải về nếu cần.
+      // Đồng bộ đa thiết bị THỜI GIAN THỰC qua Firestore onSnapshot: tự cập nhật ngay khi
+      // một thiết bị khác lưu dữ liệu mới lên cùng tài khoản Firebase, không cần polling.
       useEffect(() => {
         if (!autoCloudSync || !googleUser?.email) {
           setIsRealtimeLive(false);
           return;
         }
+        const docRef = getUserBackupDocRef();
+        if (!docRef) {
+          setIsRealtimeLive(false);
+          return;
+        }
 
-        const checkForRemoteChanges = async () => {
+        const unsubscribe = docRef.onSnapshot((snap) => {
+          setIsRealtimeLive(true);
+          if (snap.metadata.hasPendingWrites) return; // bản ghi do chính máy này vừa gửi lên, bỏ qua
           if (Date.now() - (lastLocalEditTime.current || 0) < 3000) return; // vừa sửa cục bộ, bỏ qua vòng này
-          try {
-            const freshToken = await ensureFreshGoogleToken();
-            if (!freshToken) { setIsRealtimeLive(false); return; }
-            setIsRealtimeLive(true);
-            const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='vinaspends_backup.json' and trashed=false&orderBy=modifiedTime desc&fields=files(id,modifiedTime)`;
-            const searchRes = await fetch(searchUrl, { headers: { Authorization: `Bearer ${freshToken}` } });
-            if (!searchRes.ok) return;
-            const searchData = await searchRes.json();
-            const remoteFile = searchData.files && searchData.files[0];
-            if (!remoteFile) return;
-            const remoteTime = new Date(remoteFile.modifiedTime).getTime();
-            const lastKnown = Number(localStorage.getItem("vina_last_drive_modified") || 0);
-            if (remoteTime > lastKnown + 1000) {
-              localStorage.setItem("vina_last_drive_modified", String(remoteTime));
-              handleRestoreFromGoogle(true);
-            }
-          } catch (e) {
-            setIsRealtimeLive(false);
-          }
-        };
+          if (snap.exists) handleRestoreFromGoogle(true);
+        }, (err) => {
+          console.warn("Firestore realtime listener error:", err);
+          setIsRealtimeLive(false);
+        });
 
-        checkForRemoteChanges();
-        const interval = setInterval(checkForRemoteChanges, 20000);
-        return () => clearInterval(interval);
-      }, [autoCloudSync, googleUser?.email, userSyncPin]);
+        return () => unsubscribe();
+      }, [autoCloudSync, googleUser?.email]);
 
       // Auto-refresh when tab becomes active / window focused (e.g. switching back on mobile/PC)
       useEffect(() => {
@@ -1892,7 +1724,7 @@
           } catch(e) {}
         }
 
-        // 2. Push to Cloud Server & Drive within 50ms
+        // 2. Push to Cloud Server & Firebase within 50ms
         const timer = setTimeout(() => {
           handleBackupToGoogle(true);
         }, 50);
@@ -2750,7 +2582,7 @@
                   )}
                 </div>
 
-                {/* GOOGLE DRIVE SYNC CARD FOR REPORTS & CATEGORIES */}
+                {/* FIREBASE SYNC CARD FOR REPORTS & CATEGORIES */}
                 <div className="bg-gradient-to-r from-emerald-500/10 via-theme-surface to-blue-500/10 border border-emerald-500/30 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -2758,28 +2590,28 @@
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-theme-textPrimary">Đồng bộ Google Drive & Báo cáo</span>
-                        <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">2 Tệp Drive</span>
+                        <span className="text-xs font-bold text-theme-textPrimary">Đồng bộ Firebase & Báo cáo</span>
+                        <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">Firestore</span>
                       </div>
                       <p className="text-[11px] text-theme-textSecondary">
-                        Tất cả Hạng mục & Báo cáo phân tích được tự động sao lưu vào <code className="font-mono text-emerald-600 dark:text-emerald-400">vinaspends_bao_cao_chi_tieu.json</code> trên Drive.
+                        Tất cả Hạng mục & Báo cáo phân tích được tự động sao lưu vào tài khoản Firebase của bạn.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    <button 
+                    <button
                       onClick={handleExportReportJson}
                       title="Tải tệp snapshot báo cáo JSON"
                       className="px-3 py-2 bg-theme-surface border border-theme-border text-theme-textPrimary hover:border-theme-primary text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
                       <Icon name="file-down" className="w-3.5 h-3.5 text-blue-500" />
                       <span>Xuất JSON</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleBackupToGoogle(false)}
                       disabled={isSyncing}
                       className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50">
                       <Icon name={isSyncing ? "loader" : "refresh-cw"} className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-                      <span>{isSyncing ? "Đang đồng bộ..." : "Lưu lên Drive"}</span>
+                      <span>{isSyncing ? "Đang đồng bộ..." : "Lưu lên Firebase"}</span>
                     </button>
                   </div>
                 </div>
@@ -2982,7 +2814,7 @@
                         </div>
                     </div>
 
-                    {/* 5. CATEGORY BUDGET & GOAL PROGRESS (Đồng bộ Drive) */}
+                    {/* 5. CATEGORY BUDGET & GOAL PROGRESS (Đồng bộ Firebase) */}
                     <div className="bg-theme-surface border border-theme-border p-6 rounded-3xl shadow-sm space-y-4">
                       <div className="flex justify-between items-center">
                         <div>
@@ -2990,7 +2822,7 @@
                             <Icon name="target" className="w-4 h-4 text-theme-primary" /> Hạn mức Ngân sách theo Hạng mục
                           </h3>
                           <p className="text-[11px] text-theme-textSecondary">
-                            Thiết lập mục tiêu chi tiêu và theo dõi tiến độ (Tự động đồng bộ lên Drive).
+                            Thiết lập mục tiêu chi tiêu và theo dõi tiến độ (Tự động đồng bộ lên Firebase).
                           </p>
                         </div>
                         <button 
@@ -3183,19 +3015,19 @@
                   </div>
                 </div>
 
-                {/* Drive Sync Category Badge */}
+                {/* Firebase Sync Category Badge */}
                 <div className="bg-theme-surface border border-emerald-500/30 p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-2.5">
                     <Icon name="check-circle" className="w-4 h-4 text-emerald-500 shrink-0" />
                     <p className="text-xs text-theme-textPrimary font-medium">
-                      Cây phân cấp danh mục, biểu tượng & màu sắc được bảo toàn và đồng bộ hai chiều lên <b className="text-emerald-600 dark:text-emerald-400">Google Drive</b>.
+                      Cây phân cấp danh mục, biểu tượng & màu sắc được bảo toàn và đồng bộ hai chiều lên <b className="text-emerald-600 dark:text-emerald-400">Firebase</b>.
                     </p>
                   </div>
-                  <button 
+                  <button
                     onClick={()=>handleBackupToGoogle(false)}
                     disabled={isSyncing}
                     className="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shrink-0 transition-colors">
-                    <Icon name="upload-cloud" className="w-3.5 h-3.5" /> Sao lưu Drive
+                    <Icon name="upload-cloud" className="w-3.5 h-3.5" /> Sao lưu Firebase
                   </button>
                 </div>
 
@@ -3793,7 +3625,7 @@
                       <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2">
                         Đồng Bộ Đa Thiết Bị
                         <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          GitHub & Drive
+                          Firebase
                         </span>
                       </h3>
                       <p className="text-xs text-theme-textSecondary">Đồng bộ tức thì giữa Máy tính và Điện thoại</p>
@@ -3859,9 +3691,9 @@
                           <div className="overflow-hidden">
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-sm text-theme-textPrimary truncate">{googleUser?.name || "Tài khoản Gmail"}</p>
-                              {googleUser?.accessToken && (
+                              {googleUser?.email && (
                                 <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
-                                  OAuth OK
+                                  Firebase OK
                                 </span>
                               )}
                             </div>
@@ -3870,7 +3702,7 @@
                         </div>
                         <div className="flex gap-1.5 shrink-0">
                           <button onClick={handleGoogleLogin} className="text-xs text-theme-primary hover:bg-theme-primary/20 font-bold px-2.5 py-1.5 rounded-xl border border-theme-primary/30 bg-theme-primary/10 transition-colors">
-                            {googleUser?.accessToken ? "Đổi tài khoản" : "Đăng nhập Google"}
+                            {googleUser?.email ? "Đổi tài khoản" : "Đăng nhập Google"}
                           </button>
                           {googleUser && (
                             <button onClick={handleGoogleLogout} title="Đăng xuất" className="text-xs text-red-500 p-1.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20">
@@ -3916,7 +3748,7 @@
                         disabled={isSyncing}
                         className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 text-sm">
                         <Icon name={isSyncing ? "loader" : "upload-cloud"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
-                        <span>{isSyncing ? "Đang sao lưu..." : "Sao lưu lên Cloud / Drive ngay"}</span>
+                        <span>{isSyncing ? "Đang sao lưu..." : "Sao lưu lên Firebase ngay"}</span>
                       </button>
 
                       <button 
@@ -3928,19 +3760,19 @@
                       </button>
                     </div>
 
-                    {/* Google Drive Dual File Backup Badge */}
+                    {/* Firebase Backup Badge */}
                     <div className="bg-theme-surface/60 border border-theme-border/70 p-3.5 rounded-2xl space-y-2 text-xs">
                       <p className="font-bold text-theme-textPrimary flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
-                        <Icon name="check-circle" className="w-3.5 h-3.5 text-emerald-500" /> Danh mục đồng bộ trên Google Drive
+                        <Icon name="check-circle" className="w-3.5 h-3.5 text-emerald-500" /> Dữ liệu đồng bộ trên Firebase
                       </p>
                       <div className="space-y-1.5 text-[11px]">
                         <div className="flex items-center justify-between p-2 rounded-xl bg-theme-background border border-theme-border/50">
-                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">1. vinaspends_backup.json</span>
-                          <span className="text-[10px] text-theme-textSecondary">Giao dịch, Ví, Cây Hạng mục, Sổ nợ</span>
+                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">Giao dịch & Ví</span>
+                          <span className="text-[10px] text-theme-textSecondary">Cây Hạng mục, Sổ nợ</span>
                         </div>
                         <div className="flex items-center justify-between p-2 rounded-xl bg-theme-background border border-theme-border/50">
-                          <span className="font-mono text-blue-500 font-bold">2. vinaspends_bao_cao_chi_tieu.json</span>
-                          <span className="text-[10px] text-theme-textSecondary">Báo cáo, Ngân sách, Phân tích</span>
+                          <span className="font-mono text-blue-500 font-bold">Báo cáo & Ngân sách</span>
+                          <span className="text-[10px] text-theme-textSecondary">Phân tích thu chi</span>
                         </div>
                       </div>
                     </div>
@@ -4047,7 +3879,7 @@
                       <h3 className="text-base font-bold text-theme-textPrimary">
                         {editingBudgetCat ? `Ngân sách: ${editingBudgetCat}` : "Thiết lập Ngân sách Chi tiêu"}
                       </h3>
-                      <p className="text-xs text-theme-textSecondary">Tự động đồng bộ lên Google Drive</p>
+                      <p className="text-xs text-theme-textSecondary">Tự động đồng bộ lên Firebase</p>
                     </div>
                   </div>
                   <button onClick={() => { setIsBudgetModalOpen(false); setEditingBudgetCat(null); }} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full">
@@ -4309,9 +4141,9 @@
                 <div className="space-y-5">
                   <div>
                     <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cloud" className="w-4 h-4 text-theme-primary" /> Đồng bộ & Sao lưu</h4>
-                    <p className="text-xs text-theme-textSecondary mb-3">Sao lưu dữ liệu tài chính lên Google Drive và quản lý tệp khôi phục an toàn.</p>
+                    <p className="text-xs text-theme-textSecondary mb-3">Sao lưu dữ liệu tài chính lên Firebase và quản lý khôi phục an toàn.</p>
                     <button onClick={()=>{ setShowSettingsDialog(false); setShowSyncDialog(true); }} className="w-full py-3 bg-theme-background border border-theme-primary/40 text-theme-primary font-bold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-theme-primary/10 transition-all">
-                      <Icon name="cloud" className="w-4 h-4" /> Mở trung tâm Đồng bộ Drive
+                      <Icon name="cloud" className="w-4 h-4" /> Mở trung tâm Đồng bộ Firebase
                     </button>
                   </div>
                   <hr className="border-theme-border" />
