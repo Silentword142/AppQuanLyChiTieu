@@ -910,6 +910,8 @@
       const [categoryFilterTab, setCategoryFilterTab] = useState("all"); // "all", "parent", "child"
       
       const [debts, setDebts] = useState(() => safeJsonParse("vina_debts", []));
+      const [debtViewMode, setDebtViewMode] = useState("byPerson"); // "byPerson", "all"
+      const [expandedDebtPerson, setExpandedDebtPerson] = useState(null);
       const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem("vina_theme");
         return (saved && saved in THEMES) ? saved : "light";
@@ -1002,6 +1004,32 @@
           return true;
         });
       }, [categories, categoryParentMap]);
+
+      // Tổng hợp sổ nợ theo từng người: mỗi người có thể có nhiều khoản vay/cho vay rải rác
+      // theo thời gian — gộp lại để biết ròng rã đang nợ ai bao nhiêu, hoặc ai đang nợ mình.
+      const debtsByPerson = React.useMemo(() => {
+        const map = {};
+        debts.forEach(d => {
+          const key = (d.title || "").trim() || "Không rõ tên";
+          if (!map[key]) {
+            map[key] = { name: key, oweThemUnpaid: 0, theyOweMeUnpaid: 0, owePaidTotal: 0, theyOwePaidTotal: 0, entries: [] };
+          }
+          const bucket = map[key];
+          bucket.entries.push(d);
+          if (d.type === "VAY") {
+            if (d.isPaid) bucket.owePaidTotal += d.amount; else bucket.oweThemUnpaid += d.amount;
+          } else {
+            if (d.isPaid) bucket.theyOwePaidTotal += d.amount; else bucket.theyOweMeUnpaid += d.amount;
+          }
+        });
+        return Object.values(map)
+          .map(p => ({
+            ...p,
+            net: p.theyOweMeUnpaid - p.oweThemUnpaid,
+            entries: p.entries.slice().sort((a, b) => new Date(b.date) - new Date(a.date))
+          }))
+          .sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || b.entries.length - a.entries.length);
+      }, [debts]);
 
       const getIconForCategoryName = (catName) => {
           const cat = categories.find(c => c.name === catName);
@@ -3387,27 +3415,101 @@
                       <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all"><Icon name="save" className="w-5 h-5" /> GHI SỔ</button>
                     </form>
 
-                    <div className="space-y-3">
-                      {debts.map(d => (
-                        <div key={d.id} className={`bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center transition-all shadow-sm ${d.isPaid ? 'opacity-50 grayscale' : 'hover:bg-theme-variant'}`}>
-                          <div className="flex flex-col">
-                             <p className="font-bold text-theme-textPrimary text-[15px] flex items-center gap-2">
-                               {d.type === "VAY" ? <span className="text-rose-600 dark:text-rose-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-rose-500/20">ĐI VAY</span> : <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-emerald-500/20">CHO VAY</span>}
-                               {d.title}
-                             </p>
-                             <p className="text-[11px] font-semibold text-theme-textSecondary mt-1.5">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
-                          </div>
-                          <div className="flex items-center gap-5">
-                            <p className="font-bold text-theme-textPrimary text-base tracking-tight">{formatVND(d.amount)}</p>
-                            <div className="flex items-center gap-2 border-l border-theme-border pl-4">
-                              <button onClick={()=>handleToggleDebt(d.id)} className={`p-2.5 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-4 h-4" /></button>
-                              <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2.5 rounded-full text-theme-textSecondary border border-theme-border hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                    {/* TỔNG HỢP SỔ NỢ */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4">
+                        <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Bạn đang nợ</p>
+                        <p className="text-lg font-extrabold text-rose-600 dark:text-rose-400 mt-1">{formatVND(totalDebtBorrowed)}</p>
+                      </div>
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
+                        <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Người khác nợ bạn</p>
+                        <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{formatVND(totalDebtLent)}</p>
+                      </div>
+                    </div>
+
+                    {debts.length > 0 && (
+                      <div className="flex bg-theme-surface border border-theme-border p-1 rounded-2xl shadow-sm">
+                        <button type="button" onClick={()=>setDebtViewMode("byPerson")} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${debtViewMode === "byPerson" ? "bg-theme-primary text-theme-background shadow-sm" : "text-theme-textSecondary"}`}>Theo người</button>
+                        <button type="button" onClick={()=>setDebtViewMode("all")} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${debtViewMode === "all" ? "bg-theme-primary text-theme-background shadow-sm" : "text-theme-textSecondary"}`}>Tất cả giao dịch</button>
+                      </div>
+                    )}
+
+                    {debtViewMode === "byPerson" ? (
+                      <div className="space-y-3">
+                        {debtsByPerson.map(p => {
+                          const isExpanded = expandedDebtPerson === p.name;
+                          return (
+                            <div key={p.name} className="bg-theme-surface border border-theme-border rounded-2xl shadow-sm overflow-hidden">
+                              <button type="button" onClick={()=>setExpandedDebtPerson(isExpanded ? null : p.name)} className="w-full p-4 flex items-center justify-between text-left">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <div className="w-10 h-10 rounded-full bg-theme-primary/15 text-theme-primary flex items-center justify-center font-black text-sm uppercase shrink-0">{p.name.charAt(0)}</div>
+                                  <div className="overflow-hidden">
+                                    <p className="font-bold text-theme-textPrimary text-sm truncate">{p.name}</p>
+                                    <p className="text-[11px] text-theme-textSecondary">{p.entries.length} khoản ghi sổ</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <div className="text-right">
+                                    <p className={`font-bold text-sm ${p.net > 0 ? 'text-emerald-600 dark:text-emerald-400' : p.net < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-theme-textSecondary'}`}>
+                                      {p.net === 0 ? "Đã xong" : formatVND(Math.abs(p.net))}
+                                    </p>
+                                    {p.net !== 0 && (
+                                      <p className="text-[10px] text-theme-textSecondary">{p.net > 0 ? `${p.name} nợ bạn` : `Bạn nợ ${p.name}`}</p>
+                                    )}
+                                  </div>
+                                  <Icon name={isExpanded ? "chevron-up" : "chevron-down"} className="w-4 h-4 text-theme-textSecondary" />
+                                </div>
+                              </button>
+                              {isExpanded && (
+                                <div className="border-t border-theme-border divide-y divide-theme-border">
+                                  {p.entries.map(d => (
+                                    <div key={d.id} className={`p-3.5 flex items-center justify-between gap-3 ${d.isPaid ? 'opacity-50 grayscale' : ''}`}>
+                                      <div className="flex flex-col overflow-hidden">
+                                        <p className="font-bold text-theme-textPrimary text-xs flex items-center gap-2">
+                                          {d.type === "VAY" ? <span className="text-rose-600 dark:text-rose-400 text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20">ĐI VAY</span> : <span className="text-emerald-600 dark:text-emerald-400 text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20">CHO VAY</span>}
+                                          {d.isPaid && <span className="text-[9px] font-bold text-theme-textSecondary">Đã xong</span>}
+                                        </p>
+                                        <p className="text-[11px] font-semibold text-theme-textSecondary mt-1 truncate">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
+                                      </div>
+                                      <div className="flex items-center gap-3 shrink-0">
+                                        <p className="font-bold text-theme-textPrimary text-sm">{formatVND(d.amount)}</p>
+                                        <div className="flex items-center gap-1.5">
+                                          <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-3.5 h-3.5" /></button>
+                                          <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2 rounded-full text-theme-textSecondary border border-theme-border hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {debtsByPerson.length === 0 && <p className="text-center text-sm text-theme-textSecondary font-medium p-6">Chưa có khoản nợ nào được ghi.</p>}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {debts.map(d => (
+                          <div key={d.id} className={`bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center transition-all shadow-sm ${d.isPaid ? 'opacity-50 grayscale' : 'hover:bg-theme-variant'}`}>
+                            <div className="flex flex-col">
+                               <p className="font-bold text-theme-textPrimary text-[15px] flex items-center gap-2">
+                                 {d.type === "VAY" ? <span className="text-rose-600 dark:text-rose-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-rose-500/20">ĐI VAY</span> : <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-emerald-500/20">CHO VAY</span>}
+                                 {d.title}
+                               </p>
+                               <p className="text-[11px] font-semibold text-theme-textSecondary mt-1.5">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex items-center gap-5">
+                              <p className="font-bold text-theme-textPrimary text-base tracking-tight">{formatVND(d.amount)}</p>
+                              <div className="flex items-center gap-2 border-l border-theme-border pl-4">
+                                <button onClick={()=>handleToggleDebt(d.id)} className={`p-2.5 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-4 h-4" /></button>
+                                <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2.5 rounded-full text-theme-textSecondary border border-theme-border hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                      {debts.length === 0 && <p className="text-center text-sm text-theme-textSecondary font-medium p-6">Chưa có khoản nợ nào được ghi.</p>}
-                    </div>
+                        ))}
+                        {debts.length === 0 && <p className="text-center text-sm text-theme-textSecondary font-medium p-6">Chưa có khoản nợ nào được ghi.</p>}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
