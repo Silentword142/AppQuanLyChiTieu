@@ -287,34 +287,6 @@
 
     const PIE_COLORS = ["#FF6B6B", "#4ECDC4", "#FFD93D", "#45B7D1", "#FF847C", "#E84A5F", "#6C5CE7", "#A8E6CF", "#FD79A8", "#00B894", "#E040FB", "#8ED1FC"];
 
-    const SolidPieChart = ({ data, total }) => {
-        let cumulativePercent = 0;
-        const getCoordinatesForPercent = (percent) => {
-            const x = Math.cos(2 * Math.PI * percent);
-            const y = Math.sin(2 * Math.PI * percent);
-            return [x, y];
-        };
-        return (
-            <svg viewBox="-1 -1 2 2" className="w-32 h-32 md:w-40 md:h-40 transform -rotate-90">
-                {data.length === 0 && <circle cx="0" cy="0" r="1" fill="#888" opacity="0.2" />}
-                {data.length === 1 && <circle cx="0" cy="0" r="1" fill={data[0].color} />}
-                {data.length > 1 && data.filter(d => d.amount > 0).map((slice, i) => {
-                    const percent = slice.amount / total;
-                    if (percent === 1) return <circle key={i} cx="0" cy="0" r="1" fill={slice.color} />;
-                    const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
-                    cumulativePercent += percent;
-                    const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
-                    const largeArcFlag = percent > 0.5 ? 1 : 0;
-                    const pathData = [
-                        `M ${startX} ${startY}`,
-                        `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                        `L 0 0`,
-                    ].join(' ');
-                    return <path key={i} d={pathData} fill={slice.color} stroke="transparent" strokeWidth="0" />;
-                })}
-            </svg>
-        );
-    };
 
     const CurrencyInput = ({ id, name, defaultValue, placeholder, required, className }) => {
         const [val, setVal] = useState(() => {
@@ -932,7 +904,7 @@
 
       // Reports State
       const [reportType, setReportType] = useState(() => localStorage.getItem("vina_report_type") || "Chi tiêu"); // "Chi tiêu" | "Thu nhập"
-      const [reportPeriod, setReportPeriod] = useState(() => localStorage.getItem("vina_report_period") || "Tháng"); // "Ngày", "Tháng", "Năm"
+      const [reportPeriod, setReportPeriod] = useState(() => { const v = localStorage.getItem("vina_report_period"); return v === "Tháng" || v === "Năm" ? v : (v ? "Ngày" : "Tháng"); }); // "Ngày", "Tháng", "Năm"
       const [reportAccount, setReportAccount] = useState("Tất cả");
       const pad2 = (n) => String(n).padStart(2, "0");
       const todayKey = () => { const n = new Date(); return `${n.getFullYear()}-${pad2(n.getMonth()+1)}-${pad2(n.getDate())}`; };
@@ -1951,8 +1923,7 @@
            const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
            if (reportPeriod === "Tháng" && key.slice(0, 7) !== reportMonth) return false;
            if (reportPeriod === "Năm" && d.getFullYear() !== Number(reportYear)) return false;
-           if (reportPeriod === "Ngày" && key !== reportDay) return false;
-           if (reportPeriod === "Tùy chọn") {
+           if (reportPeriod === "Ngày") {
              if (reportFrom && key < reportFrom) return false;
              if (reportTo && key > reportTo) return false;
            }
@@ -2032,7 +2003,7 @@
             const [y, m] = reportMonth.split("-").map(Number);
             const n = new Date(y, m, 0).getDate();
             for (let d = 1; d <= n; d++) buckets.push({ key: `${reportMonth}-${pad2(d)}`, label: String(d) });
-         } else if (reportPeriod === "Tùy chọn" && reportFrom && reportTo && reportFrom <= reportTo) {
+         } else if (reportPeriod === "Ngày" && reportFrom && reportTo && reportFrom <= reportTo) {
             const n = daysBetween(reportFrom, reportTo);
             if (n <= 62) {
                mode = "day";
@@ -2876,9 +2847,6 @@
                       </h4>
 
                       <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex justify-center shrink-0">
-                          <SolidPieChart data={drillDownData.breakdown} total={drillDownData.total} />
-                        </div>
                         <div className="flex-1 w-full space-y-2.5">
                           {drillDownData.breakdown.map(item => {
                             const subPercent = drillDownData.total > 0 ? (item.amount / drillDownData.total * 100).toFixed(1) : 0;
@@ -2957,53 +2925,24 @@
                 {/* STANDARD HIERARCHICAL REPORT VIEW */}
                 {!drillDownParent && (
                   <>
-                    {/* 2. Main Chart Card */}
-                    <div className="bg-theme-surface border border-theme-border p-4 md:p-6 rounded-3xl shadow-sm">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                              <h3 className="font-bold text-theme-textPrimary text-sm md:text-base">
-                                  {reportHierarchyView === "parent" 
-                                    ? (reportType === "Chi tiêu" ? "Cơ cấu Chi tiêu theo Danh mục Lớn" : "Cơ cấu Thu nhập theo Danh mục Lớn")
-                                    : (reportType === "Chi tiêu" ? "Cơ cấu Chi tiêu theo Danh mục Nhỏ" : "Cơ cấu Thu nhập theo Danh mục Nhỏ")
-                                  }
-                              </h3>
-                              <p className="text-[11px] text-theme-textSecondary font-medium">
-                                {reportHierarchyView === "parent" ? "Nhấn vào danh mục lớn để xem phân tích chi tiết bên trong" : "Danh sách tất cả các mục phát sinh cụ thể"}
-                              </p>
-                            </div>
-                            <p className={`font-black text-lg md:text-xl ${reportType === "Chi tiêu" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
-                                {formatVND(reportTotal)}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center justify-between md:justify-start md:gap-16">
-                            {/* Period Selectors */}
-                            <div className="w-24 space-y-3 flex flex-col">
-                                <span className="text-[10px] font-bold text-theme-textSecondary tracking-wider">KỲ BÁO CÁO</span>
-                                {["Ngày", "Tháng", "Năm", "Tùy chọn"].map(p => (
-                                    <button key={p} onClick={()=>setReportPeriod(p)} className={`py-2 rounded-xl text-xs font-bold transition-colors ${reportPeriod === p ? 'bg-theme-primary text-theme-background shadow-md' : 'bg-white/5 text-theme-textSecondary hover:bg-white/10'}`}>
-                                        {p}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Pie Chart */}
-                            <div className="flex-1 flex justify-center">
-                                <SolidPieChart data={reportHierarchyView === "parent" ? parentBreakdown : childBreakdown} total={reportTotal} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 2b. Date range / month filter */}
-                    <div className="bg-theme-surface border border-theme-border p-4 rounded-2xl shadow-sm space-y-3">
+                    {/* 2c. Stacked bar chart with category legend */}
+                    <div className="bg-theme-surface border border-theme-border p-4 md:p-6 rounded-3xl shadow-sm space-y-4">
+                      <h3 className="font-bold text-theme-textPrimary text-sm md:text-base flex items-center gap-2">
+                        <Icon name="bar-chart-2" className="w-4 h-4 text-theme-primary" />
+                        {reportBarData.mode === "category" ? `${reportType} theo danh mục` : `${reportType} theo ${reportBarData.mode === "month" ? "tháng" : "ngày"}`}
+                        <span className={`ml-auto font-black ${reportType === "Chi tiêu" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{formatVND(reportTotal)}</span>
+                      </h3>
                       <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex bg-theme-background border border-theme-border p-1 rounded-xl">
+                          {["Ngày", "Tháng", "Năm"].map(p => (
+                            <button key={p} onClick={()=>setReportPeriod(p)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${reportPeriod === p ? 'bg-theme-primary text-theme-background shadow-sm' : 'text-theme-textSecondary hover:text-theme-textPrimary'}`}>{p === "Ngày" ? "Từ ngày - đến ngày" : p}</button>
+                          ))}
+                        </div>
+                        
                         <span className="text-xs font-bold text-theme-textSecondary whitespace-nowrap flex items-center gap-1.5">
-                          <Icon name="calendar" className="w-4 h-4 text-theme-primary" /> Thời gian:
+                          <Icon name="calendar" className="w-4 h-4 text-theme-primary" /> Xem theo:
                         </span>
-                        {reportPeriod === "Ngày" && (
-                          <input type="date" value={reportDay} onChange={e=>e.target.value && setReportDay(e.target.value)} className="bg-theme-background border border-theme-border rounded-xl py-2 px-3 text-sm text-theme-textPrimary focus:border-theme-primary transition-colors" />
-                        )}
-                        {reportPeriod === "Tháng" && (
+                                                {reportPeriod === "Tháng" && (
                           <input type="month" value={reportMonth} onChange={e=>e.target.value && setReportMonth(e.target.value)} className="bg-theme-background border border-theme-border rounded-xl py-2 px-3 text-sm text-theme-textPrimary focus:border-theme-primary transition-colors" />
                         )}
                         {reportPeriod === "Năm" && (
@@ -3011,7 +2950,7 @@
                             {Array.from({length: 11}, (_, i) => new Date().getFullYear() - 8 + i).map(y => <option key={y} value={y}>Năm {y}</option>)}
                           </select>
                         )}
-                        {reportPeriod === "Tùy chọn" && (
+                        {reportPeriod === "Ngày" && (
                           <>
                             <label className="text-xs text-theme-textSecondary font-semibold">Từ</label>
                             <input type="date" value={reportFrom} max={reportTo || undefined} onChange={e=>setReportFrom(e.target.value)} className="bg-theme-background border border-theme-border rounded-xl py-2 px-3 text-sm text-theme-textPrimary focus:border-theme-primary transition-colors" />
@@ -3020,14 +2959,6 @@
                           </>
                         )}
                       </div>
-                    </div>
-
-                    {/* 2c. Stacked bar chart with category legend */}
-                    <div className="bg-theme-surface border border-theme-border p-4 md:p-6 rounded-3xl shadow-sm space-y-4">
-                      <h3 className="font-bold text-theme-textPrimary text-sm md:text-base flex items-center gap-2">
-                        <Icon name="bar-chart-2" className="w-4 h-4 text-theme-primary" />
-                        {reportBarData.mode === "category" ? `${reportType} theo danh mục` : `${reportType} theo ${reportBarData.mode === "month" ? "tháng" : "ngày"}`}
-                      </h3>
                       {reportBarData.max === 0 ? (
                         <p className="text-center text-sm text-theme-textSecondary py-8">Chưa có dữ liệu trong khoảng thời gian này</p>
                       ) : (
@@ -3063,6 +2994,7 @@
                         </div>
                       )}
                     </div>
+
 
                     {/* 3. Quick Account & Search Filters */}
                     <div className="bg-theme-surface border border-theme-border p-4 rounded-2xl shadow-sm space-y-3">
