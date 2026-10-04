@@ -953,6 +953,16 @@
       const [restoreTrigger, setRestoreTrigger] = useState(0);
       const lastLocalEditTime = React.useRef(0);
       const isApplyingRemoteUpdate = React.useRef(false);
+      // Chỉ cho phép đẩy dữ liệu lên Firebase SAU khi đã kéo bản cloud về ít nhất 1 lần,
+      // để máy mới/máy cũ không ghi đè bản mới hơn của máy khác bằng dữ liệu lỗi thời.
+      const isFirstAutoPushRun = React.useRef(true);
+      // Danh sách id giao dịch đã xoá (tombstone) để lệnh xoá trên 1 máy không bị máy khác "hồi sinh".
+      const deletedTxIdsRef = React.useRef((() => { try { return JSON.parse(localStorage.getItem("vina_deleted_tx_ids") || "[]"); } catch(e) { return []; } })());
+      const addDeletedTxIds = (ids) => {
+        const set = new Set([...deletedTxIdsRef.current, ...ids]);
+        deletedTxIdsRef.current = Array.from(set).slice(-5000);
+        try { localStorage.setItem("vina_deleted_tx_ids", JSON.stringify(deletedTxIdsRef.current)); } catch(e) {}
+      };
       const googleUserRef = React.useRef(null);
 
       const [aiInputText, setAiInputText] = useState("");
@@ -1140,6 +1150,37 @@
         return getEmailSyncPin(googleUser?.email || "drugunhp142@gmail.com");
       }, [googleUser?.email]);
 
+      // Gộp dữ liệu 2 thiết bị thay vì ghi đè nhau. `base` là bên có thay đổi mới hơn (nguồn
+      // chính cho ví, danh mục, ngân sách...), `other` là bên cũ hơn. Giao dịch được gộp theo id,
+      // lệnh xoá (tombstone) luôn thắng, số dư ví được hiệu chỉnh theo phần giao dịch chênh lệch.
+      const mergeFinancialData = (base, other) => {
+        const eff = (t) => (t.type === "INCOME" ? t.amount : -t.amount) || 0;
+        const deleted = new Set([...(base.deletedTxIds || []), ...(other.deletedTxIds || [])]);
+        const baseTx = (base.transactions || []).filter(t => !deleted.has(t.id));
+        const otherTx = (other.transactions || []).filter(t => !deleted.has(t.id));
+        const baseAllIds = new Set((base.transactions || []).map(t => t.id));
+        const otherById = new Map((other.transactions || []).map(t => [t.id, t]));
+        const delta = {}; // tên ví -> chênh lệch số dư cần cộng vào ví của bên `base`
+        const bump = (name, v) => { delta[name] = (delta[name] || 0) + v; };
+
+        // Giao dịch bên base đã bị xoá ở bên kia -> trừ ảnh hưởng khỏi số dư
+        (base.transactions || []).forEach(t => { if (deleted.has(t.id)) bump(t.bankName, -eff(t)); });
+        // Giao dịch chỉ có bên kia -> thêm vào + cộng ảnh hưởng. Trùng id -> bản nào sửa sau thì thắng.
+        const mergedTx = baseTx.map(t => {
+          const o = otherById.get(t.id);
+          if (o && (o.updatedAt || 0) > (t.updatedAt || 0)) {
+            bump(t.bankName, -eff(t)); bump(o.bankName, eff(o));
+            return o;
+          }
+          return t;
+        });
+        otherTx.forEach(t => { if (!baseAllIds.has(t.id)) { mergedTx.push(t); bump(t.bankName, eff(t)); } });
+        mergedTx.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        const accounts = (base.accounts || []).map(a => delta[a.name] ? { ...a, balance: (Number(a.balance) || 0) + delta[a.name] } : a);
+        return { ...base, accounts, transactions: mergedTx, deletedTxIds: Array.from(deleted) };
+      };
+
       // Tài liệu Firestore lưu bản sao lưu của tài khoản Firebase đang đăng nhập.
       // Khoá theo uid (ổn định, không đổi kể cả khi người dùng đổi email hiển thị).
       const getUserBackupDocRef = () => {
@@ -1159,6 +1200,8 @@
       // hoặc chuyển sang tài khoản Google khác, để không hiển thị nhầm dữ liệu của tài khoản cũ.
       // Dữ liệu thật vẫn an toàn trên Firebase của tài khoản cũ, không bị xoá.
       const resetLocalFinancialData = () => {
+        deletedTxIdsRef.current = [];
+        try { localStorage.removeItem("vina_deleted_tx_ids"); } catch(e) {}
         updateData(
           [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }],
           [],
@@ -1188,6 +1231,7 @@
           {},
           0
         );
+        addDeletedTxIds(transactions.map(t => t.id));
         showToast("Đã xoá toàn bộ dữ liệu của tài khoản này (cả trên máy và Firebase).", "info");
       };
 
@@ -1415,6 +1459,7 @@
           data: {
             accounts,
             transactions,
+            deletedTxIds: deletedTxIdsRef.current,
             categories,
             categoryParentMap,
             categoryBudgets: categoryBudgets || {},
@@ -1445,11 +1490,29 @@
           const docRef = getUserBackupDocRef();
           if (docRef) {
             try {
-              await docRef.set({
-                email,
-                payload: backupPayload,
-                updatedAt: window.firebase.firestore.FieldValue.serverTimestamp()
+              const db = window.firebase.firestore();
+              const localTs = lastLocalEditTime.current || 0;
+              let mergedForLocal = null;
+              await db.runTransaction(async (trx) => {
+                const snap = await trx.get(docRef);
+                let toWrite = backupPayload;
+                const remote = snap.exists ? snap.data()?.payload : null;
+                const rData = remote && (remote.data || null);
+                mergedForLocal = null;
+                if (rData && Array.isArray(rData.transactions)) {
+                  const remoteTs = new Date(remote.timestamp || 0).getTime();
+                  const localData = backupPayload.data;
+                  const merged = localTs >= remoteTs ? mergeFinancialData(localData, rData) : mergeFinancialData(rData, localData);
+                  toWrite = { ...backupPayload, data: { ...localData, ...merged }, itemCount: { ...backupPayload.itemCount, transactions: merged.transactions.length, accounts: merged.accounts.length } };
+                  mergedForLocal = toWrite.data;
+                }
+                trx.set(docRef, { email, payload: toWrite, updatedAt: window.firebase.firestore.FieldValue.serverTimestamp() });
               });
+              // Nếu bản gộp khác dữ liệu đang hiển thị (máy khác có thay đổi) -> cập nhật lại màn hình
+              if (mergedForLocal && (JSON.stringify(mergedForLocal.transactions) !== JSON.stringify(transactions) || JSON.stringify(mergedForLocal.accounts) !== JSON.stringify(accounts))) {
+                addDeletedTxIds(mergedForLocal.deletedTxIds || []);
+                updateData(mergedForLocal.accounts, mergedForLocal.transactions, null, null, null, true);
+              }
               firebaseOk = true;
               localStorage.setItem("vina_last_firebase_push", String(Date.now()));
             } catch (fErr) {
@@ -1559,21 +1622,30 @@
           const { accounts: rAcc, transactions: rTx, categories: rCat, categoryParentMap: rMap, debts: rDebts, theme: rTheme, categoryBudgets: rBudgets, monthlyBudget: rMonthlyBudget, reportSettings: rReportSettings } = realData;
 
           if (isSilent) {
-            const remoteTime = new Date(remotePayload.timestamp || 0).getTime();
-            const localSavedTime = lastLocalEditTime.current || 0;
-            const isLocalEmpty = transactions.length === 0 && accounts.length <= 1;
-            const hasRemoteData = rTx && rTx.length > 0;
-            const isDifferent = rTx && (rTx.length !== transactions.length || JSON.stringify(rTx) !== JSON.stringify(transactions) || JSON.stringify(rAcc) !== JSON.stringify(accounts) || JSON.stringify(rCat) !== JSON.stringify(categories));
-            const shouldApply = (isLocalEmpty && hasRemoteData) || isDifferent || (remoteTime > localSavedTime);
-
-            if (shouldApply && rTx && rAcc) {
-              updateData(rAcc, rTx, rCat, rDebts, rMap || DEFAULT_CATEGORY_PARENT_MAP, true, rBudgets, rMonthlyBudget, rReportSettings);
-              if (rTheme && THEMES[rTheme]) setTheme(rTheme);
-              const timeFormatted = new Date().toLocaleString('vi-VN');
-              setLastSyncTime(timeFormatted);
-              setSyncStatusDetail(`⚡ Đã tự động cập nhật ${rTx.length} GD, ${rCat?.length || categories.length} Hạng mục từ đám mây`);
+            if (rTx && rAcc) {
+              const remoteTime = new Date(remotePayload.timestamp || 0).getTime();
+              const localTs = lastLocalEditTime.current || 0;
+              const localData = { accounts, transactions, deletedTxIds: deletedTxIdsRef.current };
+              const merged = localTs > remoteTime
+                ? mergeFinancialData({ ...localData, categories, categoryParentMap, debts, categoryBudgets, monthlyBudget }, realData)
+                : mergeFinancialData(realData, localData);
+              const changed = JSON.stringify(merged.transactions) !== JSON.stringify(transactions) || JSON.stringify(merged.accounts) !== JSON.stringify(accounts) ||
+                (localTs <= remoteTime && (JSON.stringify(rCat) !== JSON.stringify(categories) || JSON.stringify(rDebts) !== JSON.stringify(debts) || JSON.stringify(rBudgets || {}) !== JSON.stringify(categoryBudgets || {}) || (rMonthlyBudget || 0) !== (monthlyBudget || 0)));
+              if (changed) {
+                addDeletedTxIds(merged.deletedTxIds || []);
+                const useRemoteMeta = localTs <= remoteTime;
+                updateData(merged.accounts, merged.transactions, useRemoteMeta ? rCat : null, useRemoteMeta ? rDebts : null, useRemoteMeta ? (rMap || DEFAULT_CATEGORY_PARENT_MAP) : null, true, useRemoteMeta ? rBudgets : null, useRemoteMeta ? rMonthlyBudget : null, useRemoteMeta ? rReportSettings : null);
+                if (useRemoteMeta && rTheme && THEMES[rTheme]) setTheme(rTheme);
+                const timeFormatted = new Date().toLocaleString('vi-VN');
+                setLastSyncTime(timeFormatted);
+                setSyncStatusDetail(`⚡ Đã gộp dữ liệu từ thiết bị khác: ${merged.transactions.length} GD`);
+                // Bản gộp có thêm dữ liệu cục bộ mà cloud chưa có -> đẩy lại cho các máy khác
+                if (JSON.stringify(merged.transactions) !== JSON.stringify(rTx)) setTimeout(() => handleBackupToGoogle(true), 300);
+              }
             }
           } else {
+            deletedTxIdsRef.current = [];
+            addDeletedTxIds(realData.deletedTxIds || []);
             updateData(rAcc, rTx, rCat, rDebts, rMap || DEFAULT_CATEGORY_PARENT_MAP, true, rBudgets, rMonthlyBudget, rReportSettings);
             if (rTheme && THEMES[rTheme]) setTheme(rTheme);
             const timeFormatted = new Date().toLocaleString('vi-VN');
@@ -1762,6 +1834,10 @@
         return () => unsubscribe();
       }, []);
 
+      // Luôn trỏ tới bản mới nhất của handler để các listener (đăng ký 1 lần) không đọc state cũ.
+      const restoreRef = React.useRef(null);
+      restoreRef.current = handleRestoreFromGoogle;
+
       // Initial restore check
       useEffect(() => {
         handleRestoreFromGoogle(true);
@@ -1773,7 +1849,7 @@
       // onAuthStateChanged (chỉ đăng ký 1 lần lúc mount).
       useEffect(() => {
         if (restoreTrigger === 0) return;
-        const timer = setTimeout(() => handleRestoreFromGoogle(true), 300);
+        const timer = setTimeout(() => restoreRef.current(true), 300);
         return () => clearTimeout(timer);
       }, [restoreTrigger]);
 
@@ -1794,7 +1870,7 @@
           setIsRealtimeLive(true);
           if (snap.metadata.hasPendingWrites) return; // bản ghi do chính máy này vừa gửi lên, bỏ qua
           if (Date.now() - (lastLocalEditTime.current || 0) < 3000) return; // vừa sửa cục bộ, bỏ qua vòng này
-          if (snap.exists) handleRestoreFromGoogle(true);
+          if (snap.exists) restoreRef.current(true);
         }, (err) => {
           console.warn("Firestore realtime listener error:", err);
           setIsRealtimeLive(false);
@@ -1807,7 +1883,7 @@
       useEffect(() => {
         const onFocus = () => {
           if (autoCloudSync) {
-            handleRestoreFromGoogle(true);
+            restoreRef.current(true);
           }
         };
         window.addEventListener("focus", onFocus);
@@ -1827,6 +1903,12 @@
           return;
         }
 
+        // Lần chạy đầu khi mở app chưa phải thao tác của người dùng: không đẩy dữ liệu cũ trên máy
+        // lên cloud và không đánh dấu "vừa sửa", để bản cloud mới hơn được kéo về trước.
+        if (isFirstAutoPushRun.current) {
+          isFirstAutoPushRun.current = false;
+          return;
+        }
         lastLocalEditTime.current = Date.now();
         if (!autoCloudSync) return;
 
@@ -2188,7 +2270,7 @@
 
       const handleAddTx = (e) => {
         e.preventDefault();
-        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: new Date().toISOString() };
+        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: new Date().toISOString(), updatedAt: Date.now() };
         const newTx = [tx, ...transactions];
         const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? tx.amount : -tx.amount) } : a);
         updateData(newAcc, newTx, null, null);
@@ -2214,7 +2296,8 @@
           category: newCategory,
           bankName: newBankName,
           note: newNote,
-          date: newDate
+          date: newDate,
+          updatedAt: Date.now()
         };
 
         // Reconcile bank balances: Revert old tx, then apply updated tx
@@ -2253,6 +2336,7 @@
       const handleDeleteTx = (id) => {
         if(!confirm("Xóa giao dịch này?")) return;
         const tx = transactions.find(t => t.id === id);
+        addDeletedTxIds([id]);
         const newTx = transactions.filter(t => t.id !== id);
         const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? -tx.amount : tx.amount) } : a);
         updateData(newAcc, newTx, null, null);
