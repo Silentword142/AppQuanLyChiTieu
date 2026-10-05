@@ -2283,11 +2283,19 @@
         const form = e.target;
         const newType = form.type.value;
         const newAmount = Number(form.amount.value) || 0;
-        const newCategory = form.category.value;
+        // Không bắt buộc chọn lại hạng mục: nếu hạng mục cũ không nằm trong nhóm đang lọc thì giữ nguyên
+        const newCategory = (form.category && form.category.value) || editingTx.category;
         const newBankName = form.bankName.value;
         const newNote = form.note.value;
         const newDateVal = form.date ? form.date.value : null;
-        const newDate = newDateVal ? new Date(newDateVal).toISOString() : editingTx.date;
+        // Giữ nguyên giờ trong ngày, chỉ đổi ngày theo lịch địa phương (tránh lệch múi giờ)
+        let newDate = editingTx.date;
+        if (newDateVal) {
+          const [y, m, d] = newDateVal.split("-").map(Number);
+          const old = new Date(editingTx.date);
+          const base = isNaN(old) ? new Date() : old;
+          newDate = new Date(y, m - 1, d, base.getHours(), base.getMinutes(), base.getSeconds()).toISOString();
+        }
 
         const updatedTx = {
           ...editingTx,
@@ -3834,7 +3842,7 @@
                           {filteredCategoriesForTx.length > 0 ? (
                             filteredCategoriesForTx.map((c, i) => (
                               <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
-                                  <input type="radio" name="category" value={c.name} required className="peer hidden" defaultChecked={editingTx.category === c.name} />
+                                  <input type="radio" name="category" value={c.name} className="peer hidden" defaultChecked={editingTx.category === c.name} />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
                                       <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#4ECDC4" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
@@ -3859,7 +3867,7 @@
 
                     <div>
                       <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ngày giao dịch</label>
-                      <input name="date" type="date" defaultValue={editingTx.date ? new Date(editingTx.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]} className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                      <input name="date" type="date" defaultValue={(() => { const d = editingTx.date ? new Date(editingTx.date) : new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; })()} className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
                     </div>
 
                     <div>
