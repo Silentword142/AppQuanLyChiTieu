@@ -20,6 +20,16 @@ cp -r ../dist/www "$OUT/assets/www"
 # Số phiên bản tăng theo số commit để cài đè được bản cũ (giữ nguyên dữ liệu)
 VC=$(git rev-list --count HEAD 2>/dev/null || echo 1)
 sed "s/android:versionCode=\"1\"/android:versionCode=\"$VC\"/" AndroidManifest.xml > "$OUT/AndroidManifest.xml"
+# LITE=1: bỏ dịch vụ đọc thông báo (Play Protect ở VN chặn cài APK ngoài có quyền này).
+# Mai vẫn dùng được qua: dán thông báo, chia sẻ SMS vào app, quét ảnh chụp.
+if [ "${LITE:-0}" = "1" ]; then
+  python3 - "$OUT/AndroidManifest.xml" <<'PY'
+import re,sys
+p=sys.argv[1]; s=open(p).read()
+s=re.sub(r'\s*<service[\s\S]*?</service>','',s)
+open(p,'w').write(s)
+PY
+fi
 
 echo "→ aapt: tài nguyên"
 aapt package -f -m -J "$OUT/gen" -M "$OUT/AndroidManifest.xml" -S res -I "$SDK_JAR"
