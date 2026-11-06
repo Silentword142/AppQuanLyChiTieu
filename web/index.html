@@ -2,55 +2,44 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>VinaSpends - Web App</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#C8551B" />
+  <title>VinaSpends – Sổ chi tiêu cùng Mai</title>
+
+  <!-- BUILD:CDN-START (bản APK thay bằng thư viện đóng gói sẵn để chạy offline) -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    :root {
-      --primary: #059669;
-      --background: #F8FAFC;
-      --surface: #FFFFFF;
-      --text-primary: #0F172A;
-      --text-secondary: #334155;
-      --variant: #F1F5F9;
-      --border: #CBD5E1;
-      --expense: #DC2626;
-      --expense-light: #FEE2E2;
-      --income: #16A34A;
-      --income-light: #DCFCE7;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,100&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
+            display: ['Fraunces', 'Georgia', 'serif']
+          },
           colors: {
             theme: {
-              primary: 'var(--primary)',
-              background: 'var(--background)',
-              surface: 'var(--surface)',
-              textPrimary: 'var(--text-primary)',
-              textSecondary: 'var(--text-secondary)',
-              variant: 'var(--variant)',
-              border: 'var(--border)'
+              primary: 'rgb(var(--primary-rgb) / <alpha-value>)',
+              background: 'rgb(var(--background-rgb) / <alpha-value>)',
+              surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
+              textPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+              textSecondary: 'rgb(var(--text-secondary-rgb) / <alpha-value>)',
+              variant: 'rgb(var(--variant-rgb) / <alpha-value>)',
+              border: 'rgb(var(--border-rgb) / <alpha-value>)'
             },
+            retro: { mustard: '#E0A526', orange: '#C8551B', rust: '#9C3A1A', avocado: '#6B7A2A', teal: '#2F6F6A', cream: '#F7EDD6', ink: '#3A2618' },
             expense: 'var(--expense)',
             expenseLight: 'var(--expense-light)',
             income: 'var(--income)',
@@ -60,6 +49,93 @@
       }
     }
   </script>
+  <!-- BUILD:CDN-END -->
+  <script src="mai.js"></script>
+  <script>
+    // Trong app Android, WebView không tải được link blob: -> chuyển sang hộp thoại "Lưu tệp" của Android
+    (function () {
+      if (!window.MaiBridge || !window.MaiBridge.saveFile) return;
+      var orig = HTMLAnchorElement.prototype.click;
+      HTMLAnchorElement.prototype.click = function () {
+        var href = this.href || "", name = this.getAttribute("download");
+        if (name !== null && /^(blob:|data:)/.test(href)) {
+          fetch(href).then(function (r) { return r.text(); }).then(function (t) {
+            window.MaiBridge.saveFile(name || "vinaspends.json", "application/json", t);
+          });
+          return;
+        }
+        return orig.apply(this, arguments);
+      };
+    })();
+  </script>
+
+  <style>
+    :root {
+      --primary: #C8551B; --primary-rgb: 200 85 27;
+      --background: #F2E6CC; --background-rgb: 242 230 204;
+      --surface: #FBF3E1; --surface-rgb: 251 243 225;
+      --text-primary: #3A2618; --text-primary-rgb: 58 38 24;
+      --text-secondary: #6B4F3A; --text-secondary-rgb: 107 79 58;
+      --variant: #EBDDBE; --variant-rgb: 235 221 190;
+      --border: #CDB892; --border-rgb: 205 184 146;
+      --ink: #3A2618;
+      --expense: #B23A1F; --expense-light: #F4D9C8;
+      --income: #5E7A2B; --income-light: #E3E8C6;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .font-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.01em; }
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    /* ======= Phong cách Vintage 70s ======= */
+    html[data-retro="1"] body {
+      background-color: var(--background);
+      background-image:
+        radial-gradient(rgb(var(--text-primary-rgb) / 0.05) 1px, transparent 1.2px),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.23 0 0 0 0 0.15 0 0 0 0 0.09 0 0 0 .09 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      background-size: 6px 6px, 160px 160px;
+    }
+    html[data-retro="1"] main.bg-theme-background { background: transparent; }
+    /* Thẻ & nút: viền mực nâu + bóng đổ cứng kiểu in ấn cũ */
+    html[data-retro="1"] .bg-theme-surface.border.rounded-2xl,
+    html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
+    html[data-retro="1"] .retro-card {
+      border-color: rgb(var(--text-primary-rgb) / 0.85) !important;
+      border-width: 2px;
+      box-shadow: 4px 4px 0 rgb(var(--text-primary-rgb) / 0.9);
+    }
+    html[data-retro="1"] .retro-card-soft { border: 2px solid rgb(var(--text-primary-rgb) / 0.85); box-shadow: 3px 3px 0 rgb(var(--text-primary-rgb) / 0.9); }
+    html[data-retro="1"] button.bg-theme-primary,
+    html[data-retro="1"] .retro-btn {
+      border: 2px solid var(--ink);
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .08s ease, box-shadow .08s ease;
+    }
+    html[data-retro="1"] button.bg-theme-primary:active,
+    html[data-retro="1"] .retro-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+    html[data-retro="1"] input, html[data-retro="1"] select, html[data-retro="1"] textarea { border-color: rgb(var(--text-primary-rgb) / 0.35); }
+    html[data-retro="1"] input:focus, html[data-retro="1"] select:focus, html[data-retro="1"] textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.2); }
+    html[data-retro="1"] h1, html[data-retro="1"] h2, html[data-retro="1"] h3 { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; }
+
+    /* Dải sọc cầu vồng 70s */
+    .retro-stripes { background: linear-gradient(180deg, #E0A526 0 25%, #D9822B 25% 50%, #C8551B 50% 75%, #8E3B1B 75% 100%); }
+    .retro-stripes-h { background: linear-gradient(90deg, #E0A526 0 25%, #D9822B 25% 50%, #C8551B 50% 75%, #8E3B1B 75% 100%); }
+    .retro-sunburst { background: repeating-conic-gradient(from 0deg at 50% 110%, rgb(224 165 38 / .22) 0 7deg, transparent 7deg 14deg); }
+    .retro-arc { position: absolute; border-radius: 9999px; border-style: solid; border-color: transparent; }
+    .retro-ticket { -webkit-mask: radial-gradient(circle 10px at 0 62%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 62%, transparent 98%, #000) right / 51% 100% no-repeat; mask: radial-gradient(circle 10px at 0 62%, transparent 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 10px at 100% 62%, transparent 98%, #000) right / 51% 100% no-repeat; }
+    .retro-dash { background-image: linear-gradient(90deg, rgb(var(--text-primary-rgb) / .35) 50%, transparent 50%); background-size: 10px 2px; background-repeat: repeat-x; height: 2px; }
+    @keyframes mai-bloom { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(8deg) scale(1.06); } 100% { transform: rotate(0deg) scale(1); } }
+    .mai-bloom { animation: mai-bloom 3.5s ease-in-out infinite; }
+    @keyframes toast-in { from { transform: translate(-50%, -12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    .toast-in { animation: toast-in .25s ease-out both; }
+    html.dark .retro-hero, html.dark .retro-hero .text-white\/85 { color: #1F140D; }
+    html.dark button.bg-theme-primary { color: #1F140D; }
+    .pt-safe { padding-top: var(--safe-top); }
+    .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
+  </style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
   <div id="root"></div>
@@ -81,6 +157,18 @@
     }
 
     const THEMES = {
+      retro70: {
+        name: "🌻 Vintage 70s – Kem & Cam cháy (Mặc định)", retro: true,
+        colors: { primary: "#C8551B", background: "#F2E6CC", surface: "#FBF3E1", textPrimary: "#3A2618", textSecondary: "#6B4F3A", variant: "#EBDDBE", border: "#CDB892", ink: "#3A2618", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#5E7A2B", incomeLight: "#E3E8C6" }
+      },
+      retro70_avocado: {
+        name: "🥑 Vintage 70s – Xanh bơ & Mù tạt", retro: true,
+        colors: { primary: "#5E7A2B", background: "#EFE6CB", surface: "#FAF4E2", textPrimary: "#2F2A17", textSecondary: "#5C5433", variant: "#E4DDBD", border: "#C6BA8E", ink: "#2F2A17", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#3F6B4E", incomeLight: "#DCE8D5" }
+      },
+      retro70_night: {
+        name: "🪩 Vintage 70s – Đêm Disco (Tối)", retro: true,
+        colors: { primary: "#E8A33D", background: "#1F140D", surface: "#2C1E14", textPrimary: "#F5E6C8", textSecondary: "#D2B48C", variant: "#3A2A1D", border: "#5A4330", ink: "#0E0906", expense: "#F07A55", expenseLight: "#4A2418", income: "#B5C96A", incomeLight: "#2E3517" }
+      },
       light: { 
         name: "☀️ Sáng Hiện Đại (Mặc định)", 
         colors: { primary: "#059669", background: "#F8FAFC", surface: "#FFFFFF", textPrimary: "#0F172A", textSecondary: "#334155", variant: "#F1F5F9", border: "#CBD5E1" } 
@@ -255,6 +343,15 @@
         return "tag";
     };
 
+    // Dạng gọn cho ô hẹp: 15.000.000 -> "15 tr", 230.000 -> "230k", 1.250.000.000 -> "1,25 tỷ"
+    const formatShortVND = (num) => {
+      const n = Number(num) || 0, a = Math.abs(n), sign = n < 0 ? "−" : "";
+      const f = (v) => new Intl.NumberFormat('vi-VN', { maximumFractionDigits: v >= 100 ? 0 : v >= 10 ? 1 : 2 }).format(v);
+      if (a >= 1e9) return `${sign}${f(a / 1e9)} tỷ`;
+      if (a >= 1e6) return `${sign}${f(a / 1e6)} tr`;
+      if (a >= 1e3) return `${sign}${f(a / 1e3)}k`;
+      return `${sign}${a} đ`;
+    };
     const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
 
     const Icon = ({ name, className = "", style = {} }) => {
@@ -274,6 +371,20 @@
         />
       );
     };
+
+    // Mai = hoa mai vàng 5 cánh, nét vẽ kiểu tem thư thập niên 70
+    const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
+      <svg width={size} height={size} viewBox="0 0 64 64" className={`${className} ${animated ? "mai-bloom" : ""}`} aria-label="Mai">
+        <circle cx="32" cy="32" r="30" fill="#F7EDD6" stroke="#3A2618" strokeWidth="2.5" />
+        <g stroke="#3A2618" strokeWidth="2" fill="#E0A526">
+          {[0, 72, 144, 216, 288].map(r => (
+            <ellipse key={r} cx="32" cy="19" rx="8.5" ry="11" transform={`rotate(${r} 32 32)`} />
+          ))}
+        </g>
+        <circle cx="32" cy="32" r="7.5" fill="#C8551B" stroke="#3A2618" strokeWidth="2" />
+        <g fill="#3A2618">{[0, 60, 120, 180, 240, 300].map(r => <circle key={r} cx="32" cy="27.5" r="1.3" transform={`rotate(${r} 32 32)`} />)}</g>
+      </svg>
+    );
 
     const CATEGORY_COLOR_PALETTE = [
       "#FF6B6B", "#FF847C", "#FF5252", "#E84A5F", "#FA5252",
@@ -886,7 +997,12 @@
       const [expandedDebtPerson, setExpandedDebtPerson] = useState(null);
       const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem("vina_theme");
-        return (saved && saved in THEMES) ? saved : "light";
+        // Lần đầu lên bản mới: chuyển giao diện mặc định cũ ("light") sang Vintage 70s
+        if (!localStorage.getItem("vina_theme_v2")) {
+          localStorage.setItem("vina_theme_v2", "1");
+          if (!saved || saved === "light") return "retro70";
+        }
+        return (saved && saved in THEMES) ? saved : "retro70";
       });
 
       // UI States
@@ -967,6 +1083,180 @@
 
       const [aiInputText, setAiInputText] = useState("");
       const [isAiProcessing, setIsAiProcessing] = useState(false);
+
+      // ==========================================
+      // MAI – TRỢ LÝ ĐỌC THÔNG BÁO GIAO DỊCH (OFFLINE)
+      // ==========================================
+      const isAndroidApp = typeof window !== "undefined" && !!window.MaiBridge;
+      const [maiSettings, setMaiSettings] = useState(() => ({ autoSave: true, speak: false, syncBalance: true, ...safeJsonParse("vina_mai_settings", {}) }));
+      const [maiInbox, setMaiInbox] = useState(() => safeJsonParse("vina_mai_inbox", []));
+      const [maiMemory, setMaiMemory] = useState(() => safeJsonParse("vina_mai_memory", {}));
+      const [maiLog, setMaiLog] = useState(() => safeJsonParse("vina_mai_log", []));
+      const [maiDraft, setMaiDraft] = useState(null);
+      const [maiInput, setMaiInput] = useState("");
+      const [maiAccess, setMaiAccess] = useState(() => { try { return !!(window.MaiBridge && window.MaiBridge.hasNotificationAccess()); } catch(e) { return false; } });
+      const maiSeenRef = React.useRef(safeJsonParse("vina_mai_seen", []));
+      const stateRef = React.useRef({});
+      stateRef.current = { accounts, categories, maiMemory, maiSettings, transactions };
+
+      useEffect(() => { localStorage.setItem("vina_mai_settings", JSON.stringify(maiSettings)); }, [maiSettings]);
+      useEffect(() => { localStorage.setItem("vina_mai_inbox", JSON.stringify(maiInbox.slice(0, 100))); }, [maiInbox]);
+      useEffect(() => { localStorage.setItem("vina_mai_memory", JSON.stringify(maiMemory)); }, [maiMemory]);
+      useEffect(() => { localStorage.setItem("vina_mai_log", JSON.stringify(maiLog.slice(0, 60))); }, [maiLog]);
+
+      const maiSpeak = (text) => {
+        if (!stateRef.current.maiSettings.speak) return;
+        try {
+          if (window.MaiBridge && window.MaiBridge.speak) window.MaiBridge.speak(text);
+          else if (window.speechSynthesis) { const u = new SpeechSynthesisUtterance(text); u.lang = "vi-VN"; window.speechSynthesis.speak(u); }
+        } catch(e) {}
+      };
+
+      const foldName = (s) => (window.MaiAgent ? window.MaiAgent.fold(String(s || "")) : String(s || "").toLowerCase()).replace(/[^a-z0-9]/g, "");
+      // Tìm ví khớp với ngân hàng / 4 số cuối tài khoản trong thông báo
+      const maiMatchAccount = (r, accs) => {
+        if (r.accountTail) {
+          const byNo = accs.find(a => a.accountNo && String(a.accountNo).replace(/\D/g, "").endsWith(r.accountTail));
+          if (byNo) return byNo;
+        }
+        if (!r.bank) return null;
+        const key = foldName(r.bank).replace(/^vi/, "");
+        return accs.find(a => { const n = foldName(a.name); return n && (n.includes(key) || key.includes(n.replace(/^vi/, ""))); })
+          || accs.find(a => getBankLogo(a.name) && getBankLogo(a.name) === getBankLogo(r.bank)) || null;
+      };
+      // Hạng mục gợi ý phải tồn tại trong cây hạng mục hiện tại của người dùng
+      const maiResolveCategory = (name, type, cats) => {
+        const has = (n) => cats.some(c => c && c.name === n);
+        if (name && has(name)) return name;
+        const parent = name && DEFAULT_CATEGORY_PARENT_MAP[name];
+        if (parent && has(parent)) return parent;
+        const fallback = type === "INCOME" ? "Lương & Thu nhập" : "Khác";
+        return has(fallback) ? fallback : (cats.find(c => c && c.isParent)?.name || name || "Khác");
+      };
+
+      // Ghi 1 kết quả của Mai vào sổ. Dùng setState dạng hàm để nhiều thông báo đến cùng lúc không đè nhau.
+      const maiCommit = (draft, opts = {}) => {
+        const { accounts: accs, categories: cats } = stateRef.current;
+        const amount = Math.round(Number(draft.amount) || 0);
+        if (!(amount > 0)) { showToast("Số tiền chưa hợp lệ", "error"); return null; }
+        const type = draft.type === "INCOME" ? "INCOME" : "EXPENSE";
+        const category = maiResolveCategory(draft.category, type, cats);
+        let bankName = draft.bankName;
+        let createdAccount = null;
+        if (!bankName || !accs.some(a => a.name === bankName)) {
+          const m = maiMatchAccount(draft, accs);
+          if (m) bankName = m.name;
+          else if (draft.bank) {
+            const eff = type === "INCOME" ? amount : -amount;
+            createdAccount = { id: Date.now() + Math.floor(Math.random() * 1000), name: draft.bank, accountNo: draft.accountTail ? `xxxx${draft.accountTail}` : "N/A", balance: draft.balance != null ? draft.balance - eff : 0 };
+            bankName = draft.bank;
+          } else bankName = accs[0]?.name || "Tiền mặt";
+        }
+        const tx = {
+          id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
+          type, amount, category, bankName,
+          note: (draft.note || "").slice(0, 140),
+          date: draft.date || new Date().toISOString(),
+          updatedAt: Date.now(),
+          source: "mai",
+          maiKey: draft.memoryKey || null,
+          maiConfidence: draft.confidence || null
+        };
+        const eff = type === "INCOME" ? amount : -amount;
+        lastLocalEditTime.current = Date.now();
+        setAccounts(prev => {
+          let list = createdAccount && !prev.some(a => a.name === createdAccount.name) ? [...prev, createdAccount] : prev;
+          return list.map(a => {
+            if (a.name !== bankName) return a;
+            // Số dư trong thông báo là số liệu thật của ngân hàng -> khớp theo, nếu được bật
+            if (stateRef.current.maiSettings.syncBalance && draft.balance != null && !draft.edited) return { ...a, balance: draft.balance };
+            return { ...a, balance: (Number(a.balance) || 0) + eff };
+          });
+        });
+        setTransactions(prev => [tx, ...prev]);
+        if (draft.memoryKey && draft.category && draft.categoryEdited) setMaiMemory(prev => ({ ...prev, [draft.memoryKey]: category }));
+        setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
+        setTimeout(() => window.lucide && window.lucide.createIcons(), 60);
+        if (!opts.silent) showToast(`Mai đã ghi ${type === "INCOME" ? "+" : "-"}${formatVND(amount)} · ${category}`);
+        maiSpeak(`${type === "INCOME" ? "Nhận" : "Chi"} ${new Intl.NumberFormat('vi-VN').format(amount)} đồng, ${category}`);
+        return tx;
+      };
+
+      // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> phân tích -> chống trùng -> ghi / chờ duyệt
+      const maiIngest = (raw, source = "notification") => {
+        if (!window.MaiAgent) return { status: "error" };
+        const { maiMemory: memory, maiSettings: st } = stateRef.current;
+        const r = window.MaiAgent.parse(raw, { memory });
+        if (!r.ok) return { status: "ignored", reason: r.reason };
+        const recent = maiSeenRef.current;
+        const now = Date.now();
+        if (recent.some(x => window.MaiAgent.isDuplicate(x, r, 5 * 60000) && now - (x.seenAt || 0) < 30 * 60000)) return { status: "duplicate", result: r };
+        maiSeenRef.current = [{ amount: r.amount, type: r.type, bank: r.bank, balance: r.balance, date: r.date, seenAt: now }, ...recent].slice(0, 200);
+        try { localStorage.setItem("vina_mai_seen", JSON.stringify(maiSeenRef.current)); } catch(e) {}
+        const draft = { ...r, source, receivedAt: now, inboxId: `mi_${now}_${Math.random().toString(36).slice(2, 7)}` };
+        if (st.autoSave && r.confidence >= window.MaiAgent.AUTO_SAVE_THRESHOLD && source === "notification") {
+          maiCommit(draft, { auto: true });
+          return { status: "saved", result: r };
+        }
+        setMaiInbox(prev => [draft, ...prev].slice(0, 100));
+        if (source === "notification") showToast(`Mai cần anh xác nhận 1 giao dịch ${formatVND(r.amount)}`, "info");
+        return { status: "inbox", result: r };
+      };
+
+      // Cầu nối Android: lấy hàng đợi thông báo đã nhận khi app đang tắt + nhận trực tiếp khi đang mở
+      useEffect(() => {
+        if (!window.MaiBridge) return;
+        const drain = () => {
+          try {
+            const raw = window.MaiBridge.drainQueue();
+            const list = raw ? JSON.parse(raw) : [];
+            let saved = 0, inbox = 0;
+            list.forEach(n => { const res = maiIngest(n, "notification"); if (res.status === "saved") saved++; if (res.status === "inbox") inbox++; });
+            if (saved + inbox > 1) showToast(`Mai vừa xử lý ${saved + inbox} thông báo: ghi ${saved}, chờ duyệt ${inbox}`);
+          } catch(e) { console.warn("Mai drain error", e); }
+          try { setMaiAccess(!!window.MaiBridge.hasNotificationAccess()); } catch(e) {}
+        };
+        window.onMaiNotification = (json) => { try { maiIngest(typeof json === "string" ? JSON.parse(json) : json, "notification"); } catch(e) { console.warn(e); } };
+        window.onMaiResume = drain;
+        drain();
+        const onVis = () => { if (document.visibilityState === "visible") drain(); };
+        document.addEventListener("visibilitychange", onVis);
+        return () => { document.removeEventListener("visibilitychange", onVis); window.onMaiNotification = null; window.onMaiResume = null; };
+      }, []);
+
+      // Người dùng dán thông báo hoặc gõ câu nhanh ("cafe 35k") vào ô chat của Mai
+      const handleMaiAsk = () => {
+        const text = maiInput.trim();
+        if (!text || !window.MaiAgent) return;
+        const looksLikeBank = /(vnd|vnđ|₫|số dư|so du|\bsd\b|\btk\b|tài khoản|giao dịch|\bgd\b|\bps\b|[+\-]\s?\d{1,3}([.,]\d{3})+)/i.test(text);
+        let r = looksLikeBank ? window.MaiAgent.parse(text, { memory: maiMemory }) : null;
+        if (!r || !r.ok) {
+          const q = window.MaiAgent.parseQuick(text, { memory: maiMemory, accounts });
+          if (q.ok) r = q;
+        }
+        if (!r || !r.ok) {
+          const why = { otp: "Đây là tin OTP, Mai không ghi sổ.", promo: "Đây là tin khuyến mãi, không phải giao dịch.", failed_or_pending: "Giao dịch này chưa thành công nên Mai bỏ qua.", reminder: "Đây là tin nhắc thanh toán, chưa phải giao dịch." }[r && r.reason];
+          showToast(why || "Mai chưa thấy số tiền. Thử: \"cafe 35k\" hoặc dán nguyên thông báo ngân hàng.", "error");
+          return;
+        }
+        const m = maiMatchAccount(r, accounts);
+        setMaiDraft({ ...r, category: maiResolveCategory(r.category, r.type, categories), bankName: (r.bank && m ? m.name : null) || (r.bank ? null : (m?.name || accounts[0]?.name)), inboxId: null });
+      };
+
+      const maiApproveInbox = (item) => {
+        const tx = maiCommit(item);
+        if (tx) setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
+      };
+      const maiDismissInbox = (item) => setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
+      const maiUndo = (logItem) => {
+        const tx = transactions.find(t => t.id === logItem.id);
+        if (!tx) { setMaiLog(prev => prev.filter(x => x.id !== logItem.id)); return; }
+        addDeletedTxIds([tx.id]);
+        const eff = tx.type === "INCOME" ? -tx.amount : tx.amount;
+        updateData(accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + eff } : a), transactions.filter(t => t.id !== tx.id), null, null);
+        setMaiLog(prev => prev.filter(x => x.id !== logItem.id));
+        showToast("Đã hoàn tác giao dịch Mai ghi", "info");
+      };
 
       const parentCategories = React.useMemo(() => {
         const seen = new Set();
@@ -1052,10 +1342,20 @@
 
       useEffect(() => {
         const rootStyle = document.documentElement.style;
-        const currentTheme = THEMES[theme] || THEMES.light;
-        const c = currentTheme.colors;
-        Object.keys(c).forEach(k => rootStyle.setProperty(`--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`, c[k]));
-        localStorage.setItem("vina_theme", (theme in THEMES) ? theme : "light");
+        const currentTheme = THEMES[theme] || THEMES.retro70;
+        const c = { ink: currentTheme.colors.textPrimary, expense: "#DC2626", expenseLight: "#FEE2E2", income: "#16A34A", incomeLight: "#DCFCE7", ...currentTheme.colors };
+        const toRgb = (hex) => { const h = String(hex).replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16); return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`; };
+        Object.keys(c).forEach(k => {
+          const cssName = `--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
+          rootStyle.setProperty(cssName, c[k]);
+          if (/^#/.test(c[k])) rootStyle.setProperty(`${cssName}-rgb`, toRgb(c[k]));
+        });
+        document.documentElement.setAttribute("data-retro", currentTheme.retro ? "1" : "0");
+        { const bgc = toRgb(c.background).split(' ').map(Number); document.documentElement.classList.toggle("dark", (0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2]) < 110); }
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", currentTheme.retro ? c.primary : c.surface);
+        if (window.MaiBridge && window.MaiBridge.setStatusBarColor) { try { const bg = toRgb(c.background).split(' ').map(Number); window.MaiBridge.setStatusBarColor(c.background, (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) > 140); } catch(e) {} }
+        localStorage.setItem("vina_theme", (theme in THEMES) ? theme : "retro70");
       }, [theme]);
 
       useEffect(() => {
@@ -1996,6 +2296,44 @@
       const totalDebtLent = debts.filter(d => d.type === "CHO_VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
       const totalDebtBorrowed = debts.filter(d => d.type === "VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
 
+      // Tháng này: thu, chi, so với ngân sách
+      const monthStats = React.useMemo(() => {
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth();
+        let inc = 0, exp = 0, count = 0, maiCount = 0;
+        transactions.forEach(t => {
+          const d = new Date(t.date);
+          if (d.getFullYear() === y && d.getMonth() === m) {
+            count++;
+            if (t.source === "mai") maiCount++;
+            if (t.type === "INCOME") inc += Number(t.amount) || 0; else exp += Number(t.amount) || 0;
+          }
+        });
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        return { inc, exp, count, maiCount, net: inc - exp, dayOfMonth: now.getDate(), daysInMonth, label: `Tháng ${m + 1}/${y}` };
+      }, [transactions]);
+
+      // Giao dịch gần đây, nhóm theo ngày
+      const recentGroups = React.useMemo(() => {
+        const sorted = transactions.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+        const groups = [];
+        const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        const today = new Date(); const yest = new Date(Date.now() - 86400000);
+        sorted.forEach(t => {
+          const d = new Date(t.date);
+          const k = keyOf(d);
+          let g = groups.find(x => x.key === k);
+          if (!g) {
+            const label = k === keyOf(today) ? "Hôm nay" : k === keyOf(yest) ? "Hôm qua" : d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
+            g = { key: k, label, items: [], net: 0 };
+            groups.push(g);
+          }
+          g.items.push(t);
+          g.net += t.type === "INCOME" ? t.amount : -t.amount;
+        });
+        return groups;
+      }, [transactions]);
+
       const baseReportTxs = React.useMemo(() => {
         return transactions.filter(t => {
            if (reportAccount !== "Tất cả" && t.bankName !== reportAccount) return false;
@@ -2194,10 +2532,18 @@
         showToast("Đang phân tích ảnh giao dịch...", "info");
         try {
           if (!window.Tesseract) throw new Error("Chưa tải xong thư viện OCR");
-          const result = await window.Tesseract.recognize(file, 'vie+eng', {
-            logger: m => {} // Ignore logs for cleaner console
-          });
+          const ocrOpts = window.VINA_OFFLINE_OCR ? { ...window.VINA_OFFLINE_OCR, logger: () => {} } : { logger: () => {} };
+          const result = await window.Tesseract.recognize(file, 'vie+eng', ocrOpts);
           const text = result.data.text;
+          // Ưu tiên bộ đọc của Mai: hiểu được ảnh chụp thông báo/biên lai của hầu hết ngân hàng & ví
+          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, { memory: maiMemory }) : null;
+          if (maiR && maiR.ok) {
+            setIsAddTxModalOpen(false);
+            const m = maiMatchAccount(maiR, accounts);
+            setMaiDraft({ ...maiR, category: maiResolveCategory(maiR.category, maiR.type, categories), bankName: m ? m.name : (maiR.bank ? null : accounts[0]?.name), inboxId: null });
+            showToast("Mai đã đọc xong ảnh, anh kiểm tra lại nhé", "info");
+            return;
+          }
           
           let amount = 0;
           let type = "EXPENSE"; // Default
@@ -2270,7 +2616,11 @@
 
       const handleAddTx = (e) => {
         e.preventDefault();
-        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: new Date().toISOString(), updatedAt: Date.now() };
+        let txDate = new Date();
+        const dv = e.target.date && e.target.date.value;
+        if (dv && dv !== todayKey()) { const [y, m, d] = dv.split("-").map(Number); txDate = new Date(y, m - 1, d, txDate.getHours(), txDate.getMinutes()); }
+        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: txDate.toISOString(), updatedAt: Date.now() };
+        if (!(tx.amount > 0)) { showToast("Vui lòng nhập số tiền", "error"); return; }
         const newTx = [tx, ...transactions];
         const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? tx.amount : -tx.amount) } : a);
         updateData(newAcc, newTx, null, null);
@@ -2326,6 +2676,10 @@
         });
 
         const newTx = transactions.map(t => t.id === editingTx.id ? updatedTx : t);
+        // Mai học: người dùng sửa hạng mục của giao dịch Mai ghi -> lần sau gặp lại sẽ phân loại đúng
+        if (editingTx.source === "mai" && editingTx.maiKey && newCategory !== editingTx.category) {
+          setMaiMemory(prev => ({ ...prev, [editingTx.maiKey]: newCategory }));
+        }
         updateData(newAcc, newTx, null, null);
         setEditingTx(null);
         showToast("Đã cập nhật giao dịch thành công!");
@@ -2527,303 +2881,250 @@
 
       // Tab Definitions
       const TABS = [
-        { id: "overview", icon: "layout-dashboard", label: "Tổng quan" },
-        { id: "report", icon: "bar-chart-2", label: "Báo cáo" },
+        { id: "overview", icon: "home", label: "Tổng quan" },
+        { id: "report", icon: "bar-chart-3", label: "Báo cáo" },
+        { id: "mai", icon: "flower-2", label: "Mai" },
         { id: "category", icon: "tags", label: "Hạng mục" },
-        { id: "wallet_ai", icon: "sparkles", label: "Ví & Liên kết" }
+        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ" }
       ];
+      const maiBadge = maiInbox.length;
 
       return (
-        <div className="flex flex-col h-screen md:flex-row pb-16 md:pb-0 font-sans">
+        <div className="flex flex-col h-screen md:flex-row font-sans">
           
           {/* TOAST NOTIFICATION */}
           {syncMessage && (
-            <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 animate-bounce">
-              <div className={`px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border ${syncMessage.type === 'error' ? 'bg-red-900/90 text-red-100 border-red-500' : syncMessage.type === 'info' ? 'bg-blue-900/90 text-blue-100 border-blue-500' : 'bg-emerald-900/90 text-emerald-100 border-emerald-500'}`}>
+            <div className="fixed left-1/2 z-[60] toast-in w-[calc(100%-32px)] max-w-md" style={{ top: "calc(var(--safe-top) + 12px)" }}>
+              <div className={`px-4 py-3 rounded-2xl flex items-center gap-3 border-2 border-retro-ink shadow-[4px_4px_0_#3A2618] ${syncMessage.type === 'error' ? 'bg-[#F4D9C8] text-[#7A2410]' : syncMessage.type === 'info' ? 'bg-[#F6E3B0] text-[#3A2618]' : 'bg-[#E3E8C6] text-[#2F3D12]'}`}>
                 <Icon name={syncMessage.type === 'error' ? 'alert-circle' : syncMessage.type === 'info' ? 'info' : 'check-circle-2'} className="w-5 h-5" />
-                <span className="text-sm font-semibold">{syncMessage.text}</span>
+                <span className="text-sm font-semibold leading-snug">{syncMessage.text}</span>
               </div>
             </div>
           )}
 
           {/* HEADER MOBILE */}
-          <header className="md:hidden bg-theme-surface border-b border-theme-border px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-theme-primary flex items-center justify-center shadow-lg shadow-theme-primary/20">
-                <Icon name="wallet" className="w-4 h-4 text-theme-background" />
+          <header className="md:hidden bg-theme-background/95 backdrop-blur pt-safe sticky top-0 z-20">
+            <div className="h-1.5 retro-stripes-h" />
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full bg-retro-mustard border-2 border-retro-ink flex items-center justify-center shadow-[2px_2px_0_#3A2618]">
+                  <Icon name="sun" className="w-5 h-5 text-retro-ink" />
+                </div>
+                <div className="leading-tight">
+                  <h1 className="font-display font-black text-[22px] text-theme-textPrimary">VinaSpends</h1>
+                  <p className="text-[11px] font-semibold text-theme-textSecondary">{new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}</p>
+                </div>
               </div>
-              <h1 className="font-bold text-lg text-theme-textPrimary">VinaSpends</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={()=>setShowSyncDialog(true)} 
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${isRealtimeLive ? 'border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'}`}>
-                <span className={`w-2 h-2 rounded-full ${isRealtimeLive ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></span>
-                <span>{isRealtimeLive ? '⚡ Live' : 'Đồng bộ'}</span>
-              </button>
-              <button 
-                onClick={()=>handleRestoreFromGoogle(false)} 
-                title="Đồng bộ tức thì ngay bây giờ"
-                className="text-theme-textSecondary hover:text-theme-primary p-1.5 bg-theme-background border border-theme-border rounded-xl">
-                <Icon name="refresh-cw" className={`w-4 h-4 ${isSyncing ? "animate-spin text-theme-primary" : ""}`} />
-              </button>
-              <button onClick={()=>setShowThemeDialog(true)} className="text-theme-textSecondary hover:text-theme-primary p-1.5"><Icon name="palette" className="w-5 h-5" /></button>
-              <button onClick={()=>setShowSettingsDialog(true)} className="text-theme-textSecondary hover:text-theme-primary p-1.5"><Icon name="settings" className="w-5 h-5" /></button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={()=>setShowSyncDialog(true)}
+                  aria-label="Đồng bộ dữ liệu"
+                  className={`flex items-center gap-1.5 h-9 px-3 rounded-full border-2 text-xs font-bold ${googleUser ? 'border-retro-ink bg-theme-surface text-theme-textPrimary' : 'border-theme-border bg-theme-variant text-theme-textSecondary'}`}>
+                  <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                  <span>{googleUser ? (isRealtimeLive ? 'Live' : 'Đã lưu') : 'Offline'}</span>
+                </button>
+                <button onClick={()=>setShowThemeDialog(true)} aria-label="Đổi giao diện" className="w-9 h-9 rounded-full flex items-center justify-center text-theme-textPrimary hover:bg-theme-variant"><Icon name="palette" className="w-5 h-5" /></button>
+                <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="w-9 h-9 rounded-full flex items-center justify-center text-theme-textPrimary hover:bg-theme-variant"><Icon name="settings" className="w-5 h-5" /></button>
+              </div>
             </div>
           </header>
 
           {/* SIDEBAR DESKTOP */}
-          <aside className="hidden md:flex w-64 bg-theme-surface border-r border-theme-border flex-col p-4 shadow-lg z-10">
+          <aside className="hidden md:flex w-64 bg-theme-surface border-r-2 border-retro-ink/80 flex-col p-4 z-10 relative overflow-hidden">
+             <div className="absolute left-0 top-0 bottom-0 w-1.5 retro-stripes" />
              <div className="flex items-center justify-between mb-6 px-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-theme-primary flex items-center justify-center shadow-lg shadow-theme-primary/20">
-                    <Icon name="wallet" className="w-4 h-4 text-theme-background" />
+                  <div className="w-10 h-10 rounded-full bg-retro-mustard border-2 border-retro-ink flex items-center justify-center shadow-[2px_2px_0_#3A2618]">
+                    <Icon name="sun" className="w-5 h-5 text-retro-ink" />
                   </div>
-                  <h1 className="font-bold text-xl text-theme-textPrimary">VinaSpends</h1>
+                  <h1 className="font-display font-black text-2xl text-theme-textPrimary">VinaSpends</h1>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={()=>setShowThemeDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="palette" className="w-4 h-4" /></button>
-                  <button onClick={()=>setShowSettingsDialog(true)} className="text-theme-textSecondary hover:text-theme-primary"><Icon name="settings" className="w-4 h-4" /></button>
+                  <button onClick={()=>setShowThemeDialog(true)} aria-label="Đổi giao diện" className="text-theme-textSecondary hover:text-theme-primary"><Icon name="palette" className="w-4 h-4" /></button>
+                  <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="text-theme-textSecondary hover:text-theme-primary"><Icon name="settings" className="w-4 h-4" /></button>
                 </div>
             </div>
 
-            {/* REAL-TIME CLOUD SYNC STATUS BADGE */}
-            <div className="mb-6 p-3 rounded-2xl bg-theme-background border border-emerald-500/30 hover:border-emerald-500/60 transition-all shadow-inner group">
-              <div className="flex items-center justify-between gap-2">
-                <div onClick={()=>setShowSyncDialog(true)} className="flex items-center gap-2.5 flex-1 overflow-hidden cursor-pointer">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 group-hover:scale-105 transition-transform shrink-0">
-                    <Icon name={isRealtimeLive ? "zap" : "cloud"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : isRealtimeLive ? "text-emerald-400" : ""}`} />
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${isRealtimeLive ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></span>
-                      <p className="text-xs font-bold text-theme-textPrimary truncate">{googleUser?.email?.split('@')[0] || "Thời gian thực"}</p>
-                    </div>
-                    <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 truncate">
-                      {isRealtimeLive ? '⚡ Trực tuyến (<50ms)' : (lastSyncTime ? `Đã đồng bộ ${lastSyncTime.split(' ')[1] || ''}` : 'Tự động sao lưu')}
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  onClick={()=>handleRestoreFromGoogle(false)}
-                  title="Nhấn để đồng bộ ngay lập tức"
-                  className="p-1.5 text-theme-textSecondary hover:text-emerald-500 rounded-lg hover:bg-theme-surface transition-all">
-                  <Icon name="refresh-cw" className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin text-emerald-500" : ""}`} />
-                </button>
+            <button onClick={()=>setShowSyncDialog(true)} className="mb-6 p-3 rounded-2xl bg-theme-background border-2 border-theme-border text-left flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-theme-variant flex items-center justify-center text-theme-primary shrink-0">
+                <Icon name={googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
               </div>
-            </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-bold text-theme-textPrimary truncate">{googleUser?.email?.split('@')[0] || "Chưa đăng nhập"}</p>
+                <p className="text-[11px] font-medium text-theme-textSecondary truncate">{googleUser ? (isRealtimeLive ? 'Đang đồng bộ trực tiếp' : (lastSyncTime ? `Đồng bộ lúc ${lastSyncTime.split(' ')[1] || ''}` : 'Tự động sao lưu')) : 'Dữ liệu chỉ lưu trên máy'}</p>
+              </div>
+            </button>
 
             <nav className="flex-1 space-y-2">
               {TABS.map(t => (
-                <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-200 ${activeTab===t.id ? 'bg-theme-primary text-theme-background shadow-md shadow-theme-primary/20 scale-[1.02]' : 'text-theme-textSecondary hover:bg-theme-variant hover:text-theme-textPrimary'}`}>
-                  <Icon name={t.icon} className="w-5 h-5" />
-                  {t.label}
+                <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all ${activeTab===t.id ? 'bg-theme-primary text-white' : 'text-theme-textSecondary hover:bg-theme-variant hover:text-theme-textPrimary'}`}>
+                  {t.id === "mai" ? <MaiAvatar size={22} /> : <Icon name={t.icon} className="w-5 h-5" />}
+                  <span className="flex-1 text-left">{t.label}</span>
+                  {t.id === "mai" && maiBadge > 0 && <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-retro-mustard text-retro-ink border border-retro-ink text-[11px] font-black flex items-center justify-center">{maiBadge}</span>}
                 </button>
               ))}
             </nav>
           </aside>
 
           {/* MAIN CONTENT AREA */}
-          <main className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-8 bg-theme-background relative">
+          <main className="flex-1 overflow-y-auto no-scrollbar px-4 pt-3 pb-32 md:p-8 bg-theme-background relative">
             
             {/* TAB: TỔNG QUAN */}
             {activeTab === "overview" && (
-              <div className="max-w-3xl mx-auto space-y-6">
-                <div className="relative p-[1px] rounded-[24px] overflow-hidden bg-gradient-to-br from-theme-primary to-theme-surface shadow-2xl">
-                  <div className="p-6 rounded-[23px] bg-gradient-to-br from-theme-surface to-theme-variant h-full w-full">
-                    <div className="flex justify-between items-start">
+              <div className="max-w-3xl mx-auto space-y-5">
+                {/* VÉ TÀI SẢN – thẻ chính */}
+                <section className="retro-card rounded-[26px] overflow-hidden bg-theme-surface relative">
+                  <div className="retro-hero relative bg-theme-primary text-white px-5 pt-5 pb-14 overflow-hidden">
+                    <div className="absolute inset-0 retro-sunburst opacity-90" />
+                    <div className="absolute -right-10 -bottom-24 w-56 h-56 rounded-full border-[14px] border-retro-mustard/90" />
+                    <div className="absolute -right-10 -bottom-24 w-56 h-56 rounded-full border-[14px] border-transparent" style={{ boxShadow: "0 0 0 14px #D9822B, 0 0 0 28px #8E3B1B" }} />
+                    <div className="relative">
+                      <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/85">Tài sản ròng</p>
+                      <h2 className="font-display font-black text-[38px] md:text-5xl leading-none mt-2 tabular">{formatVND(totalOwned - totalDebtBorrowed)}</h2>
+                      <p className="text-[12px] font-semibold text-white/85 mt-2">{accounts.length} ví · {formatVND(totalOwned)} đang có{totalDebtBorrowed > 0 ? ` · nợ ${formatVND(totalDebtBorrowed)}` : ""}</p>
+                    </div>
+                  </div>
+                  {/* Thống kê tháng – nổi lên trên dải màu */}
+                  <div className="relative -mt-9 mx-4 mb-4 bg-theme-surface rounded-2xl border-2 border-retro-ink/85 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary">{monthStats.label}</p>
+                      {monthStats.maiCount > 0 && <p className="text-[11px] font-semibold text-theme-textSecondary flex items-center gap-1"><MaiAvatar size={14} /> Mai ghi {monthStats.maiCount}/{monthStats.count}</p>}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <h3 className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-widest flex items-center gap-1.5"><Icon name="shield-check" className="w-3.5 h-3.5" /> TỔNG TÀI SẢN THỰC TẾ</h3>
-                        <h2 className="text-[32px] md:text-4xl font-extrabold text-theme-primary mt-2 leading-none">{formatVND(totalOwned - totalDebtBorrowed)}</h2>
+                        <p className="text-[11px] font-semibold text-theme-textSecondary">Thu</p>
+                        <p className="font-display font-extrabold text-[19px] text-[var(--income)] tabular leading-tight" title={formatVND(monthStats.inc)}>{formatShortVND(monthStats.inc)}</p>
                       </div>
-                      <div className="bg-white/10 px-2.5 py-1.5 rounded-lg font-mono text-[9px] text-white tracking-wider uppercase font-bold shadow-inner">AES-256 MÃ HOÁ</div>
-                    </div>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4 mt-6 pt-6 border-t border-theme-border/50">
-                      {/* TÀI SẢN SỞ HỮU - Clickable Accordion Header */}
-                      <div 
-                        onClick={() => setIsOwnedAssetsExpanded(!isOwnedAssetsExpanded)}
-                        className={`flex-1 p-4 rounded-2xl border cursor-pointer transition-all group select-none shadow-sm ${isOwnedAssetsExpanded ? 'bg-theme-primary/10 border-theme-primary/60 ring-2 ring-theme-primary/20' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-theme-primary/40'}`}>
-                        <div className="flex items-center justify-between">
-                          <p className="text-[11px] font-bold text-theme-textSecondary uppercase flex items-center gap-1.5">
-                            <Icon name="piggy-bank" className="w-3.5 h-3.5 text-emerald-500" /> TÀI SẢN SỞ HỮU
-                          </p>
-                          <span className={`text-[10px] font-bold flex items-center gap-1 px-2 py-0.5 rounded-md transition-all ${isOwnedAssetsExpanded ? 'bg-theme-primary text-theme-background' : 'bg-white/10 text-theme-primary'}`}>
-                            <span>{accounts.length} ví</span>
-                            <Icon name={isOwnedAssetsExpanded ? "chevron-up" : "chevron-down"} className="w-3 h-3" />
-                          </span>
-                        </div>
-                        <p className="font-extrabold text-theme-textPrimary mt-1.5 text-base md:text-lg">{formatVND(totalOwned)}</p>
-                        <p className="text-[10px] text-theme-textSecondary mt-1 font-semibold flex items-center gap-1">
-                          <Icon name={isOwnedAssetsExpanded ? "minimize-2" : "maximize-2"} className="w-3 h-3 text-theme-primary" />
-                          {isOwnedAssetsExpanded ? "Thu gọn danh sách ví" : "Nhấn để xem & chỉnh sửa các ví"}
-                        </p>
+                      <div>
+                        <p className="text-[11px] font-semibold text-theme-textSecondary">Chi</p>
+                        <p className="font-display font-extrabold text-[19px] text-[var(--expense)] tabular leading-tight" title={formatVND(monthStats.exp)}>{formatShortVND(monthStats.exp)}</p>
                       </div>
-
-                      {/* TỔNG NỢ ĐI VAY */}
-                      <div className="flex-1 bg-white/5 p-4 rounded-2xl border border-white/10 shadow-sm">
-                        <p className="text-[11px] font-bold text-theme-textSecondary uppercase flex items-center gap-1.5"><Icon name="credit-card" className="w-3.5 h-3.5 text-rose-500" /> TỔNG NỢ ĐI VAY</p>
-                        <p className="font-extrabold text-theme-textPrimary mt-1.5 text-base md:text-lg">{formatVND(totalDebtBorrowed)}</p>
-                        <p className="text-[10px] text-theme-textSecondary mt-1 font-semibold">Theo dõi trong tab Ví & Sổ nợ</p>
+                      <div>
+                        <p className="text-[11px] font-semibold text-theme-textSecondary">Còn lại</p>
+                        <p className={`font-display font-extrabold text-[19px] tabular leading-tight ${monthStats.net >= 0 ? 'text-theme-textPrimary' : 'text-[var(--expense)]'}`}>{formatShortVND(monthStats.net)}</p>
                       </div>
                     </div>
-
-                    {/* EXPANDED ACCOUNTS LIST & DIRECT EDITING IN OVERVIEW */}
-                    {isOwnedAssetsExpanded && (
-                      <div className="mt-5 pt-5 border-t border-theme-border/50 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-bold text-theme-textSecondary uppercase tracking-wider flex items-center gap-1.5">
-                            <Icon name="landmark" className="w-3.5 h-3.5 text-emerald-500" /> Danh sách tài khoản & ví ({accounts.length})
-                          </h4>
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingBank(null);
-                              setBankNameType("preset");
-                              setIsAddBankModalOpen(true);
-                            }}
-                            className="text-xs bg-theme-primary text-theme-background px-3 py-1.5 rounded-xl font-bold hover:brightness-110 active:scale-95 transition-all shadow flex items-center gap-1">
-                            <Icon name="plus" className="w-3.5 h-3.5" /> Thêm ví mới
-                          </button>
+                    {monthlyBudget > 0 && (() => {
+                      const pct = Math.min(100, Math.round(monthStats.exp / monthlyBudget * 100));
+                      const timePct = Math.round(monthStats.dayOfMonth / monthStats.daysInMonth * 100);
+                      return (
+                        <div className="mt-3">
+                          <div className="h-3 rounded-full bg-theme-variant border-2 border-retro-ink/70 overflow-hidden relative">
+                            <div className={`h-full ${pct > timePct + 10 ? 'bg-[var(--expense)]' : 'bg-retro-mustard'}`} style={{ width: `${pct}%` }} />
+                            <div className="absolute top-0 bottom-0 w-0.5 bg-retro-ink" style={{ left: `${timePct}%` }} title="Hôm nay" />
+                          </div>
+                          <p className="text-[11px] font-semibold text-theme-textSecondary mt-1.5">Đã dùng {pct}% ngân sách {formatVND(monthlyBudget)} · tháng đã qua {timePct}%</p>
                         </div>
+                      );
+                    })()}
+                  </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto no-scrollbar p-1">
-                          {accounts.map(acc => {
-                            const logo = getBankLogo(acc.name);
-                            return (
-                              <div 
-                                key={acc.id} 
-                                onClick={() => {
-                                  setEditingBank(acc);
-                                  setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom");
-                                  setIsAddBankModalOpen(true);
-                                }}
-                                className="bg-theme-surface/90 border border-theme-border p-3.5 rounded-2xl flex items-center justify-between hover:border-theme-primary hover:bg-theme-variant cursor-pointer transition-all shadow-sm group">
-                                <div className="flex items-center gap-3">
-                                  {logo ? (
-                                    <div className="w-10 h-10 rounded-xl bg-white p-1 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                                      <img src={logo} alt={acc.name} className="max-h-full max-w-full object-contain" onError={(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex'; }} />
-                                      <div className="hidden w-full h-full items-center justify-center">
-                                        <Icon name="landmark" className="w-5 h-5 text-gray-500" />
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
-                                      <Icon name="wallet" className="w-5 h-5" />
-                                    </div>
-                                  )}
-                                  <div>
-                                    <p className="font-bold text-sm text-theme-textPrimary truncate">{acc.name}</p>
-                                    {acc.accountNo && acc.accountNo !== "N/A" && (
-                                      <p className="text-[10px] text-theme-textSecondary font-mono">{acc.accountNo}</p>
-                                    )}
-                                    <p className="text-xs font-black text-theme-primary mt-0.5">{formatVND(acc.balance)}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                                  <button 
-                                    type="button"
-                                    onClick={() => {
-                                      setEditingBank(acc);
-                                      setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom");
-                                      setIsAddBankModalOpen(true);
-                                    }}
-                                    className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-theme-primary hover:border-theme-primary rounded-xl transition-all shadow-sm"
-                                    title="Chỉnh sửa số dư / tên ví">
-                                    <Icon name="edit-2" className="w-3.5 h-3.5" />
-                                  </button>
-                                  {accounts.length > 1 && (
-                                    <button 
-                                      type="button"
-                                      onClick={() => {
-                                        if (confirm(`Xóa tài khoản/ví "${acc.name}"?`)) {
-                                          updateData(accounts.filter(a => a.id !== acc.id), null, null, null);
-                                        }
-                                      }}
-                                      className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-rose-500 hover:border-rose-500/40 rounded-xl transition-all shadow-sm"
-                                      title="Xóa ví">
-                                      <Icon name="trash-2" className="w-3.5 h-3.5" />
-                                    </button>
-                                  )}
-                                </div>
+                  {/* Danh sách ví (mở/đóng) */}
+                  <button type="button" onClick={() => setIsOwnedAssetsExpanded(!isOwnedAssetsExpanded)} className="w-full px-5 py-3 border-t-2 border-dashed border-theme-border flex items-center justify-between text-sm font-bold text-theme-textPrimary">
+                    <span className="flex items-center gap-2"><Icon name="landmark" className="w-4 h-4 text-theme-primary" /> Các ví & tài khoản</span>
+                    <span className="flex items-center gap-1 text-theme-textSecondary text-xs">{isOwnedAssetsExpanded ? "Thu gọn" : "Xem & sửa"} <Icon name={isOwnedAssetsExpanded ? "chevron-up" : "chevron-down"} className="w-4 h-4" /></span>
+                  </button>
+                  {isOwnedAssetsExpanded && (
+                    <div className="px-4 pb-4 space-y-2">
+                      {accounts.map(acc => {
+                        const logo = getBankLogo(acc.name);
+                        return (
+                          <div key={acc.id} onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }}
+                            className="bg-theme-background border-2 border-theme-border p-3 rounded-2xl flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-full bg-white border-2 border-retro-ink/70 flex items-center justify-center overflow-hidden shrink-0">
+                                {logo ? <img src={logo} alt="" className="max-h-[70%] max-w-[70%] object-contain" onError={(e) => { e.target.replaceWith(Object.assign(document.createElement('span'), { className: 'font-display font-black text-sm text-[#3A2618]', textContent: acc.name.charAt(0) })); }} /> : <Icon name={acc.name === "Tiền mặt" ? "banknote" : "wallet"} className="w-5 h-5 text-retro-ink" />}
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-sm text-theme-textPrimary truncate">{acc.name}</p>
+                                {acc.accountNo && acc.accountNo !== "N/A" && acc.accountNo !== "CASH" && <p className="text-[11px] text-theme-textSecondary font-mono">{acc.accountNo}</p>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-display font-extrabold text-[15px] text-theme-textPrimary tabular">{formatVND(acc.balance)}</p>
+                              <Icon name="chevron-right" className="w-4 h-4 text-theme-textSecondary" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
+                        className="w-full py-3 rounded-2xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm flex items-center justify-center gap-2">
+                        <Icon name="plus" className="w-4 h-4" /> Thêm ví / tài khoản
+                      </button>
+                    </div>
+                  )}
+                </section>
+
+                {/* HÀNH ĐỘNG NHANH */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={()=>setIsAddTxModalOpen(true)} className="py-4 bg-theme-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2">
+                    <Icon name="plus" className="w-5 h-5" /> Ghi giao dịch
+                  </button>
+                  <button onClick={()=>setActiveTab("mai")} className="retro-btn py-4 bg-retro-mustard text-retro-ink font-bold rounded-2xl flex items-center justify-center gap-2 relative">
+                    <MaiAvatar size={22} /> Nhờ Mai ghi
+                    {maiBadge > 0 && <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1 rounded-full bg-theme-primary text-white border-2 border-retro-ink text-[11px] font-black flex items-center justify-center">{maiBadge}</span>}
+                  </button>
                 </div>
 
-                {/* QUICK ACTIONS */}
-                <div className="flex gap-3 mt-4">
-                   <button onClick={()=>setIsAddTxModalOpen(true)} className="flex-1 py-4 bg-theme-primary text-theme-background font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:brightness-110 active:scale-95 transition-all">
-                     <Icon name="plus-circle" className="w-5 h-5" /> THÊM GIAO DỊCH
-                   </button>
-                </div>
+                {/* Nhắc quyền đọc thông báo trên Android */}
+                {isAndroidApp && !maiAccess && (
+                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="w-full text-left p-4 rounded-2xl bg-[#F6E3B0] border-2 border-retro-ink flex items-center gap-3 text-[#3A2618]">
+                    <MaiAvatar size={40} animated />
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">Cho Mai đọc thông báo ngân hàng</p>
+                      <p className="text-xs mt-0.5">Bật 1 lần, Mai tự ghi mọi biến động số dư. Không cần mạng.</p>
+                    </div>
+                    <Icon name="chevron-right" className="w-5 h-5" />
+                  </button>
+                )}
 
-                {/* RECENT TRANSACTIONS WITH DIRECT EDITING */}
-                <div className="mt-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold flex items-center gap-2 text-theme-textPrimary">
-                      <Icon name="history" className="w-5 h-5 text-theme-primary" /> Giao dịch gần đây ({transactions.length})
-                    </h3>
-                    <span className="text-xs text-theme-textSecondary font-semibold">Chạm để sửa</span>
+                {/* GIAO DỊCH GẦN ĐÂY – nhóm theo ngày */}
+                <section>
+                  <div className="flex justify-between items-end mb-3 px-1">
+                    <h3 className="font-display font-black text-xl text-theme-textPrimary">Gần đây</h3>
+                    <span className="text-xs text-theme-textSecondary font-semibold">Chạm để sửa · {transactions.length} giao dịch</span>
                   </div>
-                  
-                  <div className="space-y-3">
-                    {transactions.slice(0, 15).map(tx => (
-                      <div 
-                        key={tx.id} 
-                        onClick={() => handleStartEditTx(tx)}
-                        className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center group transition-all hover:bg-theme-variant hover:border-theme-primary/60 cursor-pointer shadow-sm">
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform" style={{ backgroundColor: `${getColorForCategoryName(tx.category)}20`, border: `1px solid ${getColorForCategoryName(tx.category)}40` }}>
-                             <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-6 h-6" style={{ color: getColorForCategoryName(tx.category) }} />
-                           </div>
-                           <div>
-                             <div className="flex items-center gap-2">
-                               <p className="font-bold text-theme-textPrimary text-[15px]">{tx.category}</p>
-                               {tx.note && <span className="text-xs text-theme-textSecondary font-normal italic truncate max-w-[120px] md:max-w-[220px]">— {tx.note}</span>}
-                             </div>
-                             <p className="text-xs text-theme-textSecondary mt-1 font-semibold">{tx.bankName} • {new Date(tx.date).toLocaleDateString('vi-VN')}</p>
-                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <p className={`font-bold text-base ${tx.type==="INCOME"?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}`}>
-                            {tx.type==="INCOME"?'+':'-'}{formatVND(tx.amount)}
-                          </p>
-                          
-                          <div className="flex items-center gap-1 opacity-90 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                            <button 
-                              type="button"
-                              onClick={() => handleStartEditTx(tx)} 
-                              title="Chỉnh sửa giao dịch" 
-                              className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-theme-primary hover:border-theme-primary rounded-xl transition-all shadow-sm">
-                              <Icon name="edit-3" className="w-3.5 h-3.5" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => handleDeleteTx(tx.id)} 
-                              title="Xóa giao dịch" 
-                              className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-rose-500 hover:border-rose-500/40 rounded-xl transition-all shadow-sm">
-                              <Icon name="trash-2" className="w-3.5 h-3.5" />
-                            </button>
+                  {recentGroups.length === 0 ? (
+                    <div className="text-center p-8 bg-theme-surface border-2 border-dashed border-theme-border rounded-3xl">
+                      <MaiAvatar size={56} className="mx-auto mb-3" />
+                      <p className="font-bold text-theme-textPrimary">Sổ còn trống</p>
+                      <p className="text-sm text-theme-textSecondary mt-1">Ghi giao dịch đầu tiên, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {recentGroups.map(g => (
+                        <div key={g.key} className="bg-theme-surface border rounded-3xl overflow-hidden">
+                          <div className="flex justify-between items-center px-4 py-2.5 bg-theme-variant/70 border-b-2 border-dashed border-theme-border">
+                            <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary first-letter:uppercase">{g.label}</p>
+                            <p className={`text-xs font-bold tabular ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</p>
+                          </div>
+                          <div className="divide-y divide-theme-border/70">
+                            {g.items.map(tx => {
+                              const col = getColorForCategoryName(tx.category);
+                              return (
+                                <div key={tx.id} onClick={() => handleStartEditTx(tx)} className="px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-theme-variant/60">
+                                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2" style={{ backgroundColor: `${col}26`, borderColor: `${col}AA` }}>
+                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-5 h-5" style={{ color: col }} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-theme-textPrimary text-[15px] truncate flex items-center gap-1.5">
+                                      {tx.category}
+                                      {tx.source === "mai" && <span title="Mai tự ghi" className="inline-flex"><MaiAvatar size={14} /></span>}
+                                    </p>
+                                    <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{tx.bankName} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                                  </div>
+                                  <p className={`font-display font-extrabold text-[15px] tabular shrink-0 ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>
+                                    {tx.type==="INCOME" ? '+' : '−'}{formatVND(tx.amount)}
+                                  </p>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      </div>
-                    ))}
-                    {transactions.length === 0 && (
-                      <div className="text-center p-8 bg-theme-surface/50 border border-theme-border border-dashed rounded-2xl">
-                         <Icon name="inbox" className="w-8 h-8 text-theme-textSecondary mx-auto mb-2 opacity-50" />
-                         <p className="text-sm text-theme-textSecondary font-medium">Chưa có giao dịch nào gần đây.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
               </div>
             )}
 
@@ -3487,6 +3788,119 @@
               </div>
             )}
 
+            {/* TAB: MAI */}
+            {activeTab === "mai" && (
+              <div className="max-w-3xl mx-auto space-y-5">
+                {/* Lời chào */}
+                <section className="retro-card rounded-[26px] bg-theme-surface overflow-hidden">
+                  <div className="h-2 retro-stripes-h" />
+                  <div className="p-5 flex gap-4 items-start">
+                    <MaiAvatar size={64} animated className="shrink-0" />
+                    <div className="flex-1">
+                      <h2 className="font-display font-black text-2xl text-theme-textPrimary leading-tight">Chào anh, em là Mai</h2>
+                      <p className="text-sm text-theme-textSecondary mt-1 leading-relaxed">Em đọc thông báo biến động số dư của ngân hàng và ví điện tử rồi tự ghi vào sổ. Em chạy ngay trên máy, không cần mạng, không gửi dữ liệu đi đâu.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 border-t-2 border-dashed border-theme-border text-center">
+                    <div className="p-3"><p className="font-display font-black text-xl text-theme-textPrimary tabular">{monthStats.maiCount}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Đã ghi tháng này</p></div>
+                    <div className="p-3 border-x-2 border-dashed border-theme-border"><p className="font-display font-black text-xl text-theme-primary tabular">{maiInbox.length}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Chờ anh duyệt</p></div>
+                    <div className="p-3"><p className="font-display font-black text-xl text-theme-textPrimary tabular">{Object.keys(maiMemory).length}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Thói quen đã học</p></div>
+                  </div>
+                </section>
+
+                {/* Trạng thái tự động */}
+                <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full border-2 border-retro-ink flex items-center justify-center ${isAndroidApp && maiAccess ? 'bg-[#E3E8C6]' : 'bg-[#F6E3B0]'}`}>
+                      <Icon name={isAndroidApp && maiAccess ? "bell-ring" : "bell-off"} className="w-5 h-5 text-retro-ink" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-theme-textPrimary">{isAndroidApp ? (maiAccess ? "Mai đang nghe thông báo" : "Mai chưa được đọc thông báo") : "Tự động đọc thông báo"}</p>
+                      <p className="text-xs text-theme-textSecondary">{isAndroidApp ? (maiAccess ? "Biến động số dư sẽ được ghi ngay khi về máy." : "Cần cấp quyền \"Truy cập thông báo\" một lần.") : "Có trong bản cài đặt Android (APK). Trên web, anh dán thông báo vào ô bên dưới."}</p>
+                    </div>
+                    {isAndroidApp && (
+                      <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className={`px-3 py-2 rounded-xl text-xs font-bold border-2 border-retro-ink ${maiAccess ? 'bg-theme-background text-theme-textPrimary' : 'bg-theme-primary text-white retro-btn'}`}>{maiAccess ? "Quản lý" : "Cấp quyền"}</button>
+                    )}
+                  </div>
+                  <div className="retro-dash" />
+                  {[
+                    { k: "autoSave", t: "Tự ghi khi chắc chắn", d: "Thông báo rõ ràng được ghi ngay; chỗ nào mơ hồ Mai để anh duyệt." },
+                    { k: "syncBalance", t: "Khớp số dư theo ngân hàng", d: "Dùng số dư trong thông báo để cập nhật số dư ví." },
+                    { k: "speak", t: "Mai đọc to khi ghi", d: "Dùng giọng tiếng Việt có sẵn trên máy." }
+                  ].map(o => (
+                    <label key={o.k} className="flex items-center gap-3 cursor-pointer">
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-theme-textPrimary">{o.t}</p>
+                        <p className="text-xs text-theme-textSecondary">{o.d}</p>
+                      </div>
+                      <input type="checkbox" className="sr-only peer" checked={!!maiSettings[o.k]} onChange={e => setMaiSettings(prev => ({ ...prev, [o.k]: e.target.checked }))} />
+                      <span className="w-12 h-7 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
+                    </label>
+                  ))}
+                </section>
+
+                {/* Ô nhập */}
+                <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
+                  <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="message-circle" className="w-4 h-4 text-theme-primary" /> Nói với Mai</p>
+                  <textarea rows={3} value={maiInput} onChange={e => setMaiInput(e.target.value)} placeholder={"Gõ nhanh: cafe 35k, đổ xăng 1tr2, nhận lương 15tr\nhoặc dán nguyên thông báo ngân hàng…"} className="w-full bg-theme-background border-2 rounded-2xl p-3.5 text-[15px] text-theme-textPrimary" />
+                  <div className="flex flex-wrap gap-2">
+                    {["cafe 35k", "ăn trưa 50k", "grab 42k", "nhận lương 15tr"].map(x => (
+                      <button key={x} type="button" onClick={() => setMaiInput(x)} className="px-3 py-1.5 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary bg-theme-background">{x}</button>
+                    ))}
+                  </div>
+                  <button onClick={handleMaiAsk} disabled={!maiInput.trim()} className="w-full py-3.5 bg-theme-primary text-white font-bold rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50">
+                    <Icon name="sparkles" className="w-5 h-5" /> Mai phân tích
+                  </button>
+                </section>
+
+                {/* Hộp chờ duyệt */}
+                {maiInbox.length > 0 && (
+                  <section className="space-y-3">
+                    <h3 className="font-display font-black text-xl text-theme-textPrimary px-1">Chờ anh duyệt</h3>
+                    {maiInbox.map(item => (
+                      <div key={item.inboxId} className="bg-theme-surface border rounded-3xl p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className={`font-display font-black text-2xl tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
+                            <p className="text-xs text-theme-textSecondary mt-0.5 truncate">{item.bank || "Không rõ nguồn"} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                          </div>
+                          <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">Chắc {Math.round((item.confidence || 0) * 100)}%</span>
+                        </div>
+                        <p className="text-xs text-theme-textSecondary mt-2 line-clamp-2 italic">“{item.raw}”</p>
+                        <div className="flex gap-2 mt-3">
+                          <button onClick={() => setMaiDraft({ ...item, category: maiResolveCategory(item.category, item.type, categories), bankName: maiMatchAccount(item, accounts)?.name || null })} className="flex-1 py-2.5 rounded-xl border-2 border-retro-ink text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
+                          <button onClick={() => maiApproveInbox(item)} className="flex-1 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold">Ghi luôn</button>
+                          <button onClick={() => maiDismissInbox(item)} aria-label="Bỏ qua" className="w-11 rounded-xl border-2 border-theme-border text-theme-textSecondary flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </section>
+                )}
+
+                {/* Nhật ký */}
+                <section className="space-y-2">
+                  <h3 className="font-display font-black text-xl text-theme-textPrimary px-1">Mai đã ghi</h3>
+                  {maiLog.length === 0 ? (
+                    <p className="text-sm text-theme-textSecondary px-1">Chưa có gì. Khi có biến động số dư, Mai sẽ ghi và báo ở đây.</p>
+                  ) : (
+                    <div className="bg-theme-surface border rounded-3xl divide-y divide-theme-border/70 overflow-hidden">
+                      {maiLog.slice(0, 15).map(l => (
+                        <div key={l.id} className="px-4 py-3 flex items-center gap-3">
+                          <Icon name={l.auto ? "bell" : "message-circle"} className="w-4 h-4 text-theme-textSecondary shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-theme-textPrimary truncate">{l.category}{l.note ? ` · ${l.note}` : ""}</p>
+                            <p className="text-[11px] text-theme-textSecondary">{l.bankName} · {new Date(l.at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                          </div>
+                          <p className={`font-display font-extrabold text-sm tabular ${l.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{l.type === "INCOME" ? "+" : "−"}{formatVND(l.amount)}</p>
+                          <button onClick={() => maiUndo(l)} className="text-xs font-bold text-theme-primary px-2 py-1">Hoàn tác</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+
             {/* TAB: VÍ & TRỢ LÝ AI */}
             {activeTab === "wallet_ai" && (
               <div className="max-w-3xl mx-auto space-y-6 flex flex-col h-full">
@@ -3494,7 +3908,7 @@
                 {/* Segmented Control */}
                 <div className="flex bg-theme-surface/50 border border-theme-border p-1 rounded-2xl shadow-sm">
                   <button onClick={()=>setSubTab("wallet")} className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${subTab==="wallet" ? 'bg-theme-primary text-theme-background shadow-md' : 'text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                    <Icon name="wallet" className="w-4 h-4" /> Ví & Liên kết
+                    <Icon name="wallet" className="w-4 h-4" /> Ví & tài khoản
                   </button>
                   <button onClick={()=>setSubTab("debts")} className={`flex-1 py-3 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${subTab==="debts" ? 'bg-theme-primary text-theme-background shadow-md' : 'text-theme-textSecondary hover:text-theme-textPrimary'}`}>
                     <Icon name="contact" className="w-4 h-4" /> Sổ vay nợ cá nhân
@@ -3532,7 +3946,7 @@
                                  {acc.accountNo && acc.accountNo !== "N/A" && <p className="text-[10px] text-theme-textSecondary font-mono tracking-wider">{acc.accountNo}</p>}
                                </div>
                              </div>
-                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <div className="flex gap-2">
                                <button onClick={()=>{ setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} className="text-theme-textSecondary hover:text-theme-primary bg-theme-background p-2 rounded-full"><Icon name="edit-2" className="w-4 h-4" /></button>
                                <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-rose-500 bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
                              </div>
@@ -3543,15 +3957,14 @@
                       )})}
                     </div>
 
-                    <div className="bg-theme-surface border border-theme-border p-6 rounded-3xl space-y-4 mt-6 relative overflow-hidden shadow-sm">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-theme-primary/10 blur-3xl rounded-full"></div>
-                      <h3 className="font-bold text-theme-primary flex items-center gap-2 text-lg"><Icon name="sparkles" className="w-5 h-5" /> Trợ lý AI Phân Tích</h3>
-                      <p className="text-xs text-theme-textSecondary leading-relaxed font-medium">Dán nội dung tin nhắn SMS hoặc thông báo biến động số dư để AI tự động trích xuất thông tin, số tiền và phân loại vào hạng mục tương ứng.</p>
-                      <textarea rows={4} placeholder="Ví dụ: MB Bank: +4,500,000 VND vao 08/06/2026. ND: CHUYEN KHOAN LUONG..." value={aiInputText} onChange={e=>setAiInputText(e.target.value)} className="w-full bg-theme-background border border-theme-border rounded-2xl p-4 text-sm text-theme-textPrimary focus:border-theme-primary focus:ring-1 focus:ring-theme-primary transition-all shadow-inner" />
-                      <button onClick={handleParseAI} disabled={isAiProcessing || !aiInputText} className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50 hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-theme-primary/20">
-                        {isAiProcessing ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <><Icon name="wand-2" className="w-5 h-5" /> Phân tích tự động</>}
-                      </button>
-                    </div>
+                    <button onClick={() => setActiveTab("mai")} className="w-full text-left bg-theme-surface border rounded-3xl p-4 flex items-center gap-3">
+                      <MaiAvatar size={44} />
+                      <div className="flex-1">
+                        <p className="font-bold text-theme-textPrimary">Để Mai tự cập nhật số dư</p>
+                        <p className="text-xs text-theme-textSecondary">Mai đọc thông báo ngân hàng và ghi giao dịch vào đúng ví.</p>
+                      </div>
+                      <Icon name="chevron-right" className="w-5 h-5 text-theme-textSecondary" />
+                    </button>
                   </div>
                 )}
 
@@ -3680,16 +4093,95 @@
           </main>
 
           {/* BOTTOM NAV MOBILE */}
-          <nav className="fixed bottom-0 w-full md:hidden flex justify-around items-center pt-2 pb-5 px-2 z-30 bg-theme-surface/90 backdrop-blur-xl border-t border-theme-border">
-             {TABS.map(item => (
-               <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex flex-col items-center p-2 min-w-[75px] transition-all duration-300 ${activeTab === item.id ? "text-theme-primary" : "text-theme-textSecondary"}`}>
-                 <div className={`p-1.5 rounded-xl transition-all duration-300 ${activeTab === item.id ? "bg-theme-primary/20 scale-110 shadow-sm" : ""}`}>
-                   <Icon name={item.icon} className="w-5 h-5" />
-                 </div>
-                 <span className="text-[10px] font-bold mt-1 tracking-wider">{item.label}</span>
-               </button>
-             ))}
+          <nav className="fixed bottom-0 inset-x-0 md:hidden z-30 bg-theme-surface border-t-2 border-retro-ink/85 pb-safe">
+            <div className="flex justify-around items-end px-1 pt-1.5">
+              {TABS.map(item => item.id === "mai" ? (
+                <button key={item.id} onClick={() => setActiveTab("mai")} aria-label="Mai" className="relative -mt-7 flex flex-col items-center w-[72px]">
+                  <span className={`w-16 h-16 rounded-full flex items-center justify-center border-2 border-retro-ink shadow-[3px_3px_0_#3A2618] ${activeTab === "mai" ? "bg-theme-primary" : "bg-retro-mustard"}`}>
+                    <MaiAvatar size={46} />
+                  </span>
+                  {maiBadge > 0 && <span className="absolute top-0 right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-theme-primary text-white border-2 border-retro-ink text-[11px] font-black flex items-center justify-center">{maiBadge}</span>}
+                  <span className={`text-[11px] font-bold mt-1 ${activeTab === "mai" ? "text-theme-primary" : "text-theme-textSecondary"}`}>Mai</span>
+                </button>
+              ) : (
+                <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex flex-col items-center py-1.5 w-[68px] ${activeTab === item.id ? "text-theme-primary" : "text-theme-textSecondary"}`}>
+                  <span className={`w-12 h-8 rounded-full flex items-center justify-center transition ${activeTab === item.id ? "bg-theme-primary/15" : ""}`}>
+                    <Icon name={item.icon} className="w-[22px] h-[22px]" />
+                  </span>
+                  <span className="text-[11px] font-bold mt-0.5">{item.label}</span>
+                </button>
+              ))}
+            </div>
           </nav>
+
+          {/* MAI – XÁC NHẬN / SỬA TRƯỚC KHI GHI */}
+          {maiDraft && (
+            <div className="fixed inset-0 bg-[#1F140D]/60 z-50 flex items-end md:items-center justify-center" onClick={() => setMaiDraft(null)}>
+              <form key={maiDraft.inboxId || maiDraft.raw || "draft"} onClick={e => e.stopPropagation()} onSubmit={e => {
+                  e.preventDefault();
+                  const f = e.target;
+                  const draft = { ...maiDraft, type: f.type.value, amount: Number(f.amount.value) || 0, category: f.category.value, bankName: f.bankName.value, note: f.note.value };
+                  draft.categoryEdited = draft.category !== maiDraft.category;
+                  draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || (maiDraft.bankName && draft.bankName !== maiDraft.bankName);
+                  if (f.date && f.date.value) { const [y, m, d] = f.date.value.split("-").map(Number); const old = new Date(maiDraft.date || Date.now()); draft.date = new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString(); }
+                  const tx = maiCommit(draft);
+                  if (tx) { if (maiDraft.inboxId) setMaiInbox(prev => prev.filter(x => x.inboxId !== maiDraft.inboxId)); setMaiDraft(null); setMaiInput(""); }
+                }}
+                className="bg-theme-surface w-full md:max-w-md rounded-t-[28px] md:rounded-[28px] border-2 border-retro-ink p-5 pb-8 max-h-[92vh] overflow-y-auto space-y-4">
+                <div className="flex items-center gap-3">
+                  <MaiAvatar size={40} />
+                  <div className="flex-1">
+                    <p className="font-display font-black text-lg text-theme-textPrimary leading-tight">Mai hiểu thế này, đúng không anh?</p>
+                    {maiDraft.confidence != null && <p className="text-xs text-theme-textSecondary">Độ chắc chắn {Math.round(maiDraft.confidence * 100)}%{maiDraft.balance != null ? ` · Số dư sau GD ${formatVND(maiDraft.balance)}` : ""}</p>}
+                  </div>
+                  <button type="button" onClick={() => setMaiDraft(null)} aria-label="Đóng" className="w-9 h-9 rounded-full bg-theme-variant flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[["EXPENSE", "Chi tiền", "arrow-up-right"], ["INCOME", "Thu tiền", "arrow-down-left"]].map(([v, l, ic]) => (
+                    <label key={v} className="cursor-pointer">
+                      <input type="radio" name="type" value={v} defaultChecked={maiDraft.type === v} className="peer sr-only" />
+                      <span className={`flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-theme-border font-bold text-sm text-theme-textSecondary peer-checked:border-retro-ink peer-checked:text-white ${v === "INCOME" ? "peer-checked:bg-[var(--income)]" : "peer-checked:bg-[var(--expense)]"}`}><Icon name={ic} className="w-4 h-4" /> {l}</span>
+                    </label>
+                  ))}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Số tiền</label>
+                  <CurrencyInput name="amount" defaultValue={maiDraft.amount} required={true} className="w-full bg-theme-background border-2 rounded-2xl p-3.5 font-display font-black text-2xl text-theme-textPrimary tabular" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Hạng mục</label>
+                    <select name="category" defaultValue={maiDraft.category} className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm font-semibold text-theme-textPrimary">
+                      {parentCategories.map(pc => (
+                        <optgroup key={pc.name} label={pc.name}>
+                          <option value={pc.name}>{pc.name} (chung)</option>
+                          {subCategories.filter(c => (c.parent || categoryParentMap[c.name]) === pc.name).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Ví</label>
+                    <select name="bankName" defaultValue={maiDraft.bankName || ""} className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm font-semibold text-theme-textPrimary">
+                      {!maiDraft.bankName && maiDraft.bank && <option value="">+ Tạo ví “{maiDraft.bank}”</option>}
+                      {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-[1fr_auto] gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Ghi chú</label>
+                    <input name="note" defaultValue={maiDraft.note || ""} className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm text-theme-textPrimary" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Ngày</label>
+                    <input name="date" type="date" defaultValue={(() => { const d = new Date(maiDraft.date || Date.now()); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="bg-theme-background border-2 rounded-2xl p-3 text-sm text-theme-textPrimary" />
+                  </div>
+                </div>
+                <button type="submit" className="w-full py-4 bg-theme-primary text-white font-bold rounded-2xl flex justify-center items-center gap-2"><Icon name="check" className="w-5 h-5" /> Đúng rồi, ghi sổ</button>
+              </form>
+            </div>
+          )}
 
           {/* ADD TRANSACTION MODAL */}
           {isAddTxModalOpen && (
@@ -3714,24 +4206,24 @@
                         type="button" 
                         onClick={() => ocrFileInputRef.current && ocrFileInputRef.current.click()}
                         disabled={isOcrScanning}
-                        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold rounded-xl border border-blue-500/30 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#F6E3B0] text-[#3A2618] font-bold rounded-2xl border-2 border-dashed border-retro-ink/70 cursor-pointer disabled:opacity-50"
                       >
                         {isOcrScanning ? (
                           <><Icon name="loader-2" className="w-5 h-5 animate-spin" /> Đang phân tích OCR...</>
                         ) : (
-                          <><Icon name="scan-text" className="w-5 h-5" /> Quét ảnh giao dịch tự động</>
+                          <><Icon name="scan-text" className="w-5 h-5" /> Quét ảnh chụp thông báo / hoá đơn</>
                         )}
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex justify-center p-3 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold cursor-pointer transition-colors shadow-inner">
-                        <input type="radio" name="type" value="EXPENSE" defaultChecked className="hidden peer" />
-                        <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-down-left" className="w-4 h-4" /> Chi Tiền</span>
+                      <label className="cursor-pointer">
+                        <input type="radio" name="type" value="EXPENSE" defaultChecked className="sr-only peer" />
+                        <span className="flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-theme-border font-bold text-sm text-theme-textSecondary peer-checked:border-retro-ink peer-checked:bg-[var(--expense)] peer-checked:text-white"><Icon name="arrow-up-right" className="w-4 h-4" /> Chi tiền</span>
                       </label>
-                      <label className="flex justify-center p-3 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors shadow-inner">
-                        <input type="radio" name="type" value="INCOME" className="hidden peer" />
-                        <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-up-right" className="w-4 h-4" /> Thu Tiền</span>
+                      <label className="cursor-pointer">
+                        <input type="radio" name="type" value="INCOME" className="sr-only peer" />
+                        <span className="flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-theme-border font-bold text-sm text-theme-textSecondary peer-checked:border-retro-ink peer-checked:bg-[var(--income)] peer-checked:text-white"><Icon name="arrow-down-left" className="w-4 h-4" /> Thu tiền</span>
                       </label>
                     </div>
 
@@ -3759,7 +4251,7 @@
                           {filteredCategoriesForTx.length > 0 ? (
                             filteredCategoriesForTx.map((c, i) => (
                               <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
-                                  <input type="radio" name="category" value={c.name} required className="peer hidden" defaultChecked={i === 0} />
+                                  <input type="radio" name="category" value={c.name} required className="peer sr-only" />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
                                       <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#4ECDC4" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
@@ -3782,9 +4274,15 @@
                       </select>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ghi chú</label>
-                      <input name="note" type="text" placeholder="Ví dụ: Ăn phở sáng..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                    <div className="grid grid-cols-[1fr_auto] gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ghi chú</label>
+                        <input name="note" type="text" placeholder="Ví dụ: Ăn phở sáng..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ngày</label>
+                        <input name="date" type="date" defaultValue={todayKey()} className="bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary text-sm" />
+                      </div>
                     </div>
 
                     <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-4 flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg"><Icon name="check" className="w-5 h-5" /> Hoàn Thành</button>

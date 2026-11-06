@@ -4,15 +4,30 @@
   "description": "VinaSpends - Smart Financial Management Web App with Gemini AI",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/mai.test.js",
+    "build:web": "node tools/build-web.mjs",
+    "build:apk": "npm run build:web && bash android/build-apk.sh"
   },
   "dependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/preset-react": "^8.0.1",
-    "@babel/standalone": "^8.0.4",
     "express": "^4.19.2"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.26.0",
+    "@babel/preset-react": "7.26.3",
+    "tailwindcss": "3.4.17",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "lucide": "0.460.0",
+    "firebase": "10.12.2",
+    "lz-string": "1.5.0",
+    "davidshimjs-qrcodejs": "0.0.2",
+    "tesseract.js": "5.1.1",
+    "tesseract.js-core": "5.1.1",
+    "@tesseract.js-data/vie": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0"
   }
 }
