@@ -131,8 +131,8 @@
     return lower.slice(Math.max(start, idx - 45), idx);
   }
 
-  var BAL_PREFIX = /(?:\bso du|\bsd|\bsdc|\bsdkd|\bbalance|\bbal|\bsdcuoi|\bsodu)\b[^0-9+\-]{0,26}$/;
-  var AMT_PREFIX = /(?:\bso tien(?: gd| giao dich)?|\bgd|\bps|\bphat sinh|\bgiao dich|\bst|\bamount|\bthay doi|\bbien dong|\btang|\bgiam|\bthanh toan|\bnhan(?: duoc)?|\bchuyen(?: khoan| tien)?|\btru|\bcong|\bghi co|\bghi no|\brut|\bnap)\b[^0-9]{0,18}$/;
+  var BAL_PREFIX = /(?:\bso du|\bsd|\bsdc|\bsdkd|\bbalance|\bbal|\bsdcuoi|\bsodu|\bhan muc(?: kha dung| con lai)?|\bdu no)\b[^0-9+\-]{0,26}$/;
+  var AMT_PREFIX = /(?:\bquy doi|\bso tien(?: gd| giao dich)?|\bgd|\bps|\bphat sinh|\bgiao dich|\bst|\bamount|\bthay doi|\bbien dong|\btang|\bgiam|\bthanh toan|\bnhan(?: duoc)?|\bchuyen(?: khoan| tien)?|\btru|\bcong|\bghi co|\bghi no|\brut|\bnap)\b[^0-9]{0,18}$/;
   var FEE_PREFIX = /\b(phi|fee|vat)\b[^0-9]{0,14}$/;
 
   function findMoneyTokens(lower) {
@@ -158,6 +158,8 @@
         var pc = lower.charAt(signIdx - 1);
         if (/[a-z0-9]/.test(pc)) hasSign = false;
       }
+      // Số tiền ngoại tệ (USD 12.99, 12.99 EUR) -> không phải số tiền VND, bỏ qua
+      if (/\b(usd|eur|jpy|krw|sgd|thb|cny|aud|gbp|\$)\s*$/.test(lower.slice(Math.max(0, startNum - 5), startNum)) || /^\s*(usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)\b/.test(lower.slice(startNum + m[3].length, startNum + m[3].length + 5))) continue;
       var value = unit ? parseSpokenMoney(m[3].replace(/[.,](?=\d{3})/g, ""), unit) : parseMoney(m[3]);
       if (!(value > 0)) continue;
       var hasSep = /[.,]\d{3}/.test(m[3]);
@@ -194,7 +196,7 @@
 
   // ---------- Hạng mục ----------
   var CATEGORY_RULES = [
-    { cat: "Phí dịch vụ & Ngân hàng", re: /\b(phi (sms|dich vu|thuong nien|duy tri|quan ly|chuyen tien|giao dich|rut tien)|sms ?banking|phi\b.*\btk\b|annual fee|service fee|phi thanh toan)\b/ },
+    { cat: "Phí dịch vụ & Ngân hàng", re: /\b(phi (sms|dich vu|thuong nien|duy tri|quan ly|chuyen tien|giao dich|rut tien)|sms ?banking|annual fee|service fee|phi thuong nien the)\b/ },
     { cat: "Lãi đầu tư", re: /\b(lai tien gui|tra lai|lai tiet kiem|interest|lai suat|tat toan|co tuc|lai khong ky han)\b/ },
     { cat: "Lương chính", re: /\b(luong|salary|payroll|tra luong|chi luong)\b/ },
     { cat: "Tiền thưởng & Làm thêm", re: /\b(thuong|bonus|hoa hong|commission|hoan tien|cashback|refund)\b/ },
@@ -220,7 +222,7 @@
     { cat: "Tập gym & Thể thao", re: /\b(gym|california fitness|citigym|yoga|the thao|swimming|be boi)\b/ },
     { cat: "Học phí & Khóa học", re: /\b(hoc phi|khoa hoc|udemy|coursera|tieng anh|ielts|truong)\b/ },
     { cat: "Sách vở & Tài liệu", re: /\b(fahasa|tiki trading|nha sach|sach)\b/ },
-    { cat: "Bảo hiểm & Thuế", re: /\b(bao hiem|prudential|manulife|aia|bao viet|thue|tax|bhxh|bhyt)\b/ },
+    { cat: "Bảo hiểm & Thuế", re: /\b(bao hiem|prudential|manulife|aia|bao viet|nop thue|thue tncn|thue thu nhap|le phi truoc ba|tax|bhxh|bhyt)\b/ },
     { cat: "Hiếu hỉ & Quà biếu", re: /\b(mung cuoi|dam cuoi|dam hieu|qua tang|li xi|mung sinh nhat|phung vieng)\b/ },
     { cat: "Con cái & Tiền sữa", re: /\b(tien sua|bim|con tho|kids|mam non|tre em)\b/ },
     { cat: "Thú cưng", re: /\b(pet|thu cung|cho meo|thuc an cho)\b/ },
@@ -305,6 +307,14 @@
     return null;
   }
 
+  // Nơi quẹt thẻ: "... tai CIRCLE K luc ...", "tại SHOPEE"
+  function extractMerchant(text, lower) {
+    var m = lower.match(/\b(?:tai|at)\s+(?!tk\b|tai khoan)([a-z0-9*&'.\- ]{2,40}?)(?=\s*(?:[.,;|\n]|$|luc\b|vao\b|ngay\b|quy doi|han muc|so du|sd\b))/);
+    if (!m) return null;
+    var s = m.index + m[0].indexOf(m[1]);
+    return text.slice(s, s + m[1].length).trim();
+  }
+
   function extractAccount(lower) {
     var m = lower.match(/\b(?:tk|tai khoan|stk|account|acct|the)\b[\s:.]*(?:so\s*)?([0-9x*.]{4,24}\d)/);
     if (!m) m = lower.match(/\b(\d{2,6}[x*.]{2,}\d{2,6})\b/);
@@ -315,7 +325,7 @@
 
   // ---------- Bộ lọc tin không phải giao dịch ----------
   var OTP_RE = /\b(otp|ma xac thuc|ma xac nhan|ma kich hoat|passcode|smart ?otp|ma giao dich la|ma bao mat)\b/;
-  var PROMO_RE = /\b(uu dai|khuyen mai|giam gia|giam ngay|voucher|qua tang|hoan tien (len|toi) den|len den|chi tu|co hoi|trung thuong|mien phi|flash sale|sale\b|nhan ngay|tang ngay|dang ky ngay|mo the|vay tieu dung|han muc)\b/;
+  var PROMO_RE = /\b(uu dai|khuyen mai|giam gia|giam ngay|voucher|qua tang|hoan tien (len|toi) den|len den|chi tu|co hoi|trung thuong|mien phi|flash sale|sale\b|nhan ngay|tang ngay|dang ky ngay|mo the|vay tieu dung)\b/;
   var LOGIN_RE = /\b(dang nhap|login|thiet bi moi|doi mat khau|cap nhat ung dung|phien ban moi)\b/;
   var PENDING_RE = /\b(that bai|khong thanh cong|bi tu choi|da huy|failed|declined|dang xu ly|cho xu ly)\b/;
   var REMIND_RE = /\b(nhac no|den han|sap den han|vui long thanh toan|du no|sao ke|han thanh toan|can thanh toan)\b/;
@@ -356,37 +366,45 @@
     var isOtp = OTP_RE.test(lower);
     var isPromo = PROMO_RE.test(lower);
     var isLogin = LOGIN_RE.test(lower);
-    var strongTxSignal = !!balanceTok || cands.some(function (c) { return c.sign; }) || /\b(so tien|ps|phat sinh|giao dich|bien dong so du|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen)\b/.test(lower);
+    var strongTxSignal = !!balanceTok || cands.some(function (c) { return c.sign; }) || /\b(so tien|ps|phat sinh|giao dich|bien dong so du|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen|vua chuyen|da nap|vua thanh toan|da thanh toan|hoan tien|chi tieu|thay doi|rut tien)\b/.test(lower);
 
     if (isOtp && !balanceTok) return Object.assign(result, { reason: "otp" });
     if (PENDING_RE.test(lower)) return Object.assign(result, { reason: "failed_or_pending" });
-    if (REMIND_RE.test(lower) && !balanceTok && !cands.some(function (c) { return c.sign; })) return Object.assign(result, { reason: "reminder" });
+    if (REMIND_RE.test(lower) && !cands.some(function (c) { return c.sign; })) return Object.assign(result, { reason: "reminder" });
     if ((isPromo || isLogin) && !balanceTok && !cands.some(function (c) { return c.sign; }) && !/\b(da thanh toan|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen)\b/.test(lower)) {
       return Object.assign(result, { reason: isPromo ? "promo" : "account_notice" });
     }
     if (!cands.length) return Object.assign(result, { reason: "no_amount" });
 
+    // Thông báo từ app lạ (chat, mạng xã hội...) mà không có dấu hiệu ngân hàng -> không phải biến động số dư
+    if (pkg && pkg !== "share" && !isKnownPackage(pkg) && !bankFromText(lower) && !balanceTok && !extractAccount(lower)) {
+      return Object.assign(result, { reason: "not_bank_source" });
+    }
     cands.sort(function (a, b) { return b.score - a.score || a.index - b.index; });
     var pick = cands[0];
 
     // hướng tiền
     var type = null, dirSource = null;
     if (pick.sign) { type = pick.sign > 0 ? "INCOME" : "EXPENSE"; dirSource = "sign"; }
+    if (!type && /\bnap\b[^|\n]{0,40}\bvao (vi|tai khoan)\b/.test(lower)) { type = "INCOME"; dirSource = "prefix"; }
     if (!type) {
       var pre2 = segmentBefore(lower, pick.index);
-      if (/\b(tang|cong tien|duoc cong|ghi co|nhan(?: duoc)?|credit)\b[^0-9]{0,18}$/.test(pre2)) { type = "INCOME"; dirSource = "prefix"; }
+      if (/\b(tang|cong tien|duoc cong|ghi co|nhan(?: duoc)?|credit|hoan tien|hoan)\b[^0-9]{0,18}$/.test(pre2)) { type = "INCOME"; dirSource = "prefix"; }
       else if (/\b(giam|tru|ghi no|thanh toan|chuyen(?: khoan| tien)?|rut|debit|nap)\b[^0-9]{0,18}$/.test(pre2)) { type = "EXPENSE"; dirSource = "prefix"; }
     }
     if (!type) {
       var w = directionFromWords(lower);
       if (w) { type = w.type; dirSource = "words"; }
     }
+    // Quẹt thẻ tại cửa hàng ("The *1234 giao dich ... tai NETFLIX") là khoản chi
+    if (!type && /\b(the|card|visa|mastercard)\b/.test(lower) && /\b(tai|at)\s+[a-z0-9]/.test(lower)) { type = "EXPENSE"; dirSource = "prefix"; }
     if (!type) { type = "EXPENSE"; dirSource = "default"; }
 
     var bank = bankFromPackage(pkg) || bankFromText(lower);
     var rawNote = extractNote(text, lower);
     var counterparty = extractCounterparty(text, lower);
-    var note = cleanNote(rawNote) || (counterparty ? ((type === "INCOME" ? "Từ " : "Cho ") + counterparty) : "");
+    var merchant = extractMerchant(text, lower);
+    var note = cleanNote(rawNote) || (counterparty ? ((type === "INCOME" ? "Từ " : "Cho ") + counterparty) : "") || (merchant ? "Tại " + merchant : "");
     if (!note) {
       var t1 = (title || "").trim();
       note = t1 && t1.length < 60 ? t1 : "";
@@ -394,9 +412,11 @@
     var when = parseDateTime(lower.replace(/\b(?:sd|so du|tk|stk)[^|\n]{0,40}/g, function (s) { return s.replace(/\d/g, "#"); }), postTime || opts.now || null);
     var accountTail = extractAccount(lower);
 
-    var lowerNoteCtx = fold((rawNote || "") + " " + (counterparty || "") + " " + (title || "") + " " + body);
     var memKey = memoryKeyFrom(counterparty, rawNote);
-    var cat = suggestCategory(lowerNoteCtx, type, opts.memory, memKey);
+    // Ưu tiên nội dung chuyển khoản / nơi giao dịch; chỉ khi không ra mới xét cả thông báo
+    var noteCtx = fold((rawNote || "") + " " + (counterparty || "") + " " + (merchant || ""));
+    var cat = suggestCategory(noteCtx, type, opts.memory, memKey);
+    if (cat.source === "default") cat = suggestCategory(fold((title || "") + " " + body), type, null, null);
 
     // độ tin cậy
     var conf = 0.35;
@@ -405,7 +425,7 @@
     if (balanceTok) conf += 0.12;
     if (accountTail) conf += 0.05;
     if (pick.currency || pick.unit) conf += 0.06;
-    if (/\b(thanh toan thanh cong|da thanh toan|vua nhan|da nhan|nhan duoc|da chuyen|chuyen tien thanh cong|giao dich thanh cong)\b|thanh cong/.test(lower)) conf += 0.1;
+    if (/\b(thanh toan thanh cong|da thanh toan|vua nhan|da nhan|nhan duoc|da chuyen|vua chuyen|da nap|chuyen tien thanh cong|giao dich thanh cong|hoan tien)\b|thanh cong/.test(lower)) conf += 0.1;
     if (cands.length > 1 && cands[1].score === pick.score && cands[1].value !== pick.value) conf -= 0.25; // 2 số tiền ngang nhau -> mơ hồ
     if (isPromo) conf -= 0.15;
     if (!strongTxSignal) conf -= 0.1;

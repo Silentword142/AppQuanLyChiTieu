@@ -202,6 +202,15 @@ public class MainActivity extends Activity {
     private class Bridge {
         @JavascriptInterface public boolean isAndroid() { return true; }
         @JavascriptInterface public boolean hasNotificationAccess() { return hasListenerAccess(); }
+        /** Bản Lite không khai báo dịch vụ đọc thông báo. */
+        @JavascriptInterface public boolean canListen() {
+            try {
+                getPackageManager().getServiceInfo(new ComponentName(MainActivity.this, MaiNotificationListener.class), 0);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         @JavascriptInterface public String drainQueue() { return MaiStore.drain(MainActivity.this); }
         @JavascriptInterface public int queueSize() { return MaiStore.size(MainActivity.this); }
 

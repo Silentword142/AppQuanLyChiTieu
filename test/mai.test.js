@@ -60,6 +60,28 @@ const TX = [
   // ---- Số thập phân
   ["Có ,00", n("com.vietinbank.ipay", "VietinBank", "Giao dịch: -1.234.567,00 VND\nSố dư: 9.876.543,00 VND\nNội dung: chuyen tien"), { amount: 1234567, type: "EXPENSE", balance: 9876543 }],
   ["Có .00", n("vn.com.techcombank.bb.app", "Techcombank", "Amount: +VND 2,500,000.00\nBalance: VND 12,750,000.00\nDescription: SALARY OCT"), { amount: 2500000, type: "INCOME", balance: 12750000, category: "Lương chính" }],
+  // ---- Ngân hàng khác
+  ["HDBank", n("com.vnpay.hdbank", "HDBank", "HDBank: TK 0123xxxx789 -500,000 VND luc 10:12 06/11/2026. SD: 4,500,000 VND. ND: CHUYEN TIEN NHA"), { amount: 500000, type: "EXPENSE", bank: "HDBank", balance: 4500000, category: "Tiền thuê nhà", minConf: 0.75 }],
+  ["VIB thay doi", n("com.vib.myvib2", "MyVIB", "VIB: TK *1234 thay doi -2,000,000 VND luc 06/11/2026 11:20. So du 10,000,000 VND. Noi dung: Thanh toan hoc phi IELTS"), { amount: 2000000, type: "EXPENSE", balance: 10000000, category: "Học phí & Khóa học", minConf: 0.75 }],
+  ["SHB hoàn tiền", n("vn.shb.mbanking", "SHB", "SHB: TK 1012xxxx: +700.000 VND tai 06/11/2026 14:30. SD: 1.700.000 VND. ND: Hoan tien don hang Lazada"), { amount: 700000, type: "INCOME", balance: 1700000, minConf: 0.75 }],
+  ["OCB giảm", n("vn.com.ocb.awe", "OCB OMNI", "Tài khoản ...1234 giảm 89.000 VND lúc 06/11/2026 08:00. Số dư: 911.000 VND. Nội dung: GRAB*TRIP"), { amount: 89000, type: "EXPENSE", bank: "OCB", balance: 911000, category: "Grab & Taxi", minConf: 0.75 }],
+  ["MSB đ", n("vn.com.msb.smartBanking", "MSB", "TK 0300xxxx5678 thay đổi +1.000.000đ lúc 06/11 09:00. Số dư 3.250.000đ. ND: NGUYEN THI H chuyen tien"), { amount: 1000000, type: "INCOME", bank: "MSB", balance: 3250000, minConf: 0.75 }],
+  ["LPBank", n("vn.com.lienvietpostbank", "LPBank", "LPBank: TK 0123456789 GD -75,000VND luc 06/11/2026 07:15 SD 425,000VND ND THANH TOAN PHUC LONG"), { amount: 75000, type: "EXPENSE", balance: 425000, category: "Cà phê & Trà", minConf: 0.75 }],
+  ["Timo", n("io.lifestyle.plus", "Timo", "Bạn vừa nhận 2,500,000 VND từ CONG TY ABC. Nội dung: Thuong thang 10"), { amount: 2500000, type: "INCOME", category: "Tiền thưởng & Làm thêm", minConf: 0.75 }],
+  ["Viettel Money", n("com.viettel.vtt.vn.emoneycustomer", "Viettel Money", "Quý khách đã thanh toán thành công 100.000đ cước di động Viettel cho thuê bao 0987xxx123"), { amount: 100000, type: "EXPENSE", category: "Cước điện thoại", minConf: 0.75 }],
+  // ---- Thẻ
+  ["Thẻ tín dụng + hạn mức", n("vn.com.techcombank.bb.app", "Techcombank", "The tin dung *1234 giao dich 450,000 VND tai SHOPEE luc 06/11 12:00. Han muc kha dung 20,000,000 VND"), { amount: 450000, type: "EXPENSE", category: "Mua sắm", minConf: 0.6 }],
+  ["Thẻ ghi nợ POS", n("com.VCB", "VCB", "The 4xxx1234 chi tieu 120,000 VND tai CIRCLE K luc 06/11/2026 21:10. SD 2,000,000 VND"), { amount: 120000, type: "EXPENSE", balance: 2000000, category: "Đi chợ & Siêu thị", minConf: 0.75 }],
+  ["Ngoại tệ", n("vn.com.techcombank.bb.app", "Techcombank", "The *1234 giao dich USD 12.99 tai NETFLIX.COM, quy doi 330,000 VND luc 06/11/2026 03:00"), { amount: 330000, type: "EXPENSE", category: "Game & Ứng dụng", minConf: 0.6 }],
+  ["Rút ATM + phí", n("com.vnpay.Agribank3g", "Agribank", "Agribank: Rut tien ATM -2,000,000VND luc 18:00 06/11/2026. Phi 1,100VND. So du 3,000,000VND"), { amount: 2000000, type: "EXPENSE", balance: 3000000, fee: 1100, minConf: 0.75 }],
+  // ---- Ví
+  ["Nạp ví MoMo", n("com.mservice.momotransfer", "Nạp tiền thành công", "Bạn đã nạp 500.000đ vào Ví MoMo từ Vietcombank"), { amount: 500000, type: "INCOME", bank: "Ví MoMo", minConf: 0.75 }],
+  ["Hoàn ShopeePay", n("com.beeasy.shopee.vn", "ShopeePay", "Hoàn tiền 25.000đ vào ví ShopeePay cho đơn hàng 2311ABC"), { amount: 25000, type: "INCOME", minConf: 0.6 }],
+  ["Cake chuyển", n("xyz.be.cake", "Cake", "Bạn vừa chuyển 300,000 VND tới NGUYEN VAN A. Nội dung: tra tien an"), { amount: 300000, type: "EXPENSE", minConf: 0.75 }],
+  // ---- Không có đơn vị tiền nhưng có dấu
+  ["Dấu không đơn vị", n("com.vnpay.bidv", "BIDV", "Biến động số dư: TK 31410001234567 | GD: -1.000.000 | 06/11/2026 10:00 | SD: 5.000.000 | ND: chuyen tien hoc phi"), { amount: 1000000, type: "EXPENSE", balance: 5000000, minConf: 0.75 }],
+  ["Giờ dạng 10h15", n("com.mbmobile", "MB", "TK 0123xxx456|GD: +200,000VND 06/11/26 10h15|SD: 1,400,000VND|ND: em gui tien"), { amount: 200000, type: "INCOME", balance: 1400000, day: 6 }],
+  ["VNĐ chữ hoa", n("com.vnpay.bidv", "BIDV", "Số tiền: -1.500.000 VNĐ. Số dư cuối: 8.500.000 VNĐ. Nội dung: Dong tien dien thang 10"), { amount: 1500000, type: "EXPENSE", balance: 8500000, category: "Tiền điện & Nước" }],
   // ---- Văn bản dán tay không có package
   ["Dán tay", "MB Bank: +4,500,000 VND vao 08/06/2026. ND: CHUYEN KHOAN LUONG", { amount: 4500000, type: "INCOME", bank: "MB Bank", category: "Lương chính" }],
 ];
@@ -71,6 +93,10 @@ const NOT_TX = [
   ["Thất bại", n("com.mbmobile", "MB Bank", "Giao dịch chuyển tiền 500,000VND không thành công. Vui lòng thử lại"), "failed_or_pending"],
   ["Nhắc nợ thẻ", n("vn.com.techcombank.bb.app", "Techcombank", "Thẻ tín dụng của Quý khách sắp đến hạn thanh toán. Số tiền cần thanh toán tối thiểu 1,500,000 VND"), "reminder"],
   ["Tin thường", n("com.zing.zalo", "Lan", "Tối nay đi ăn không?"), "no_amount"],
+  ["KM hoàn tiền", n("com.vpbank.neo", "VPBank NEO", "Ưu đãi hoàn tiền 50.000đ khi thanh toán QR tại Highlands. Áp dụng đến 30/11"), "promo"],
+  ["Sao kê thẻ", n("vn.com.techcombank.bb.app", "Techcombank", "Sao kê thẻ tín dụng kỳ 10/2026: Dư nợ 5,200,000 VND. Hạn thanh toán 25/11/2026"), "reminder"],
+  ["OTP chuyển tiền", n("com.google.android.apps.messaging", "TPBank", "TPBank: Ma xac thuc giao dich chuyen 3,000,000 VND den NGUYEN VAN A la 556677. Tuyet doi khong cung cap ma"), "otp"],
+  ["Chat có số tiền", n("com.zing.zalo", "Lan", "Mai nhớ chuyển mình 200.000đ tiền vé nhé"), null],
 ];
 
 for (const [name, input, exp] of TX) check(name, Mai.parse(input), { ok: true, ...exp });

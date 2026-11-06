@@ -24,6 +24,13 @@
 - **Hoạ tiết**: dải sọc cầu vồng 4 màu, tia nắng (sunburst) và vòng cung đồng tâm trên thẻ tài sản, nền hạt giấy in.
 - **3 theme**: Kem & Cam cháy (mặc định), Xanh bơ & Mù tạt, Đêm Disco (tối). Các theme cũ vẫn giữ.
 
+## 2b. Bản 2.1
+
+- **Theme**: bỏ toàn bộ 8 theme cũ, còn 6 bảng màu vintage: Cam cháy, Xanh bơ, Hồng đất, Xanh ngọc, Đêm Disco, Đêm Nhung. Màu hạng mục và mọi màu xanh/đỏ/xanh dương kiểu Tailwind mặc định đều đổi sang tông vintage; màu hạng mục mặc định trong dữ liệu cũ tự chuyển.
+- **Icon**: bộ icon SVG vẽ mới hoàn toàn (`web/icons.js`, ~170 icon, nét 2px bo tròn + tô nhạt kiểu in lụa), có icon riêng cho Việt Nam (xe máy, phin, trà sữa, phở, bánh mì, áo dài, nón lá, chùa, lì xì). Không dùng thư viện icon ngoài. Logo ngân hàng thay bằng tem chữ tự vẽ (VCB, TCB, MB…). Tên icon cũ trong dữ liệu đã lưu được tự đổi sang icon mới.
+- **Đồng bộ**: chỉ còn Firebase (email/mật khẩu – chạy cả trong app Android; trình duyệt có thêm Google và nút "Đặt mật khẩu" để dùng cùng tài khoản trên Android) và xuất/nhập file JSON. Đã bỏ: mã PIN, QR, chuỗi chuyển dữ liệu, máy chủ riêng `/api/cloud-sync`, đồng bộ giữa các tab. Cài đặt + giao diện + đồng bộ gộp vào một màn "Cài đặt".
+- **Bỏ API ngoài**: Gemini API key, logo từ api.vietqr.io, endpoint máy chủ. `server.js` chỉ còn phục vụ trang tĩnh.
+
 ## 3. Mai trong app
 
 `web/mai.js` – bộ đọc thông báo giao dịch chạy 100% offline (rule-based, không gọi mạng).
@@ -37,7 +44,7 @@
 - Gõ nhanh kiểu nói: `cafe 35k`, `đổ xăng 1tr2`, `nhận lương 15tr`.
 - Quét ảnh chụp thông báo/hoá đơn: OCR tiếng Việt chạy offline → Mai đọc.
 
-Kiểm thử: `npm test` (53 mẫu: 30 thông báo thật của các ngân hàng/ví, 6 tin không phải giao dịch, định dạng tiền, câu gõ nhanh, học hạng mục, chống trùng).
+Kiểm thử: `npm test` (75 mẫu: 48 thông báo của các ngân hàng/ví/thẻ – gồm thẻ tín dụng có hạn mức, rút ATM kèm phí, giao dịch ngoại tệ có quy đổi, nạp ví, hoàn tiền –, 10 tin không phải giao dịch – OTP, khuyến mãi, sao kê, nhắc nợ, tin chat có số tiền –, định dạng tiền, câu gõ nhanh, học hạng mục, chống trùng).
 
 ## 4. Bản Android (APK)
 

@@ -8,15 +8,12 @@
 
   <!-- BUILD:CDN-START (bản APK thay bằng thư viện đóng gói sẵn để chạy offline) -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,600..900,100&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -51,6 +48,7 @@
   </script>
   <!-- BUILD:CDN-END -->
   <script src="mai.js"></script>
+  <script src="icons.js"></script>
   <script>
     // Trong app Android, WebView không tải được link blob: -> chuyển sang hộp thoại "Lưu tệp" của Android
     (function () {
@@ -89,6 +87,10 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .font-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.01em; }
     .tabular { font-variant-numeric: tabular-nums; }
+    .vi { width: 100%; height: 100%; display: block; overflow: visible; }
+    .vi .f { fill: currentColor; fill-opacity: .2; }
+    .vi .d { fill: currentColor; fill-opacity: .2; stroke: none; }
+    .vi .s { fill: currentColor; stroke: none; }
 
     /* ======= Phong cách Vintage 70s ======= */
     html[data-retro="1"] body {
@@ -156,164 +158,154 @@
       try { window.firebase.initializeApp(FIREBASE_CONFIG); } catch (e) { console.warn("Firebase init error:", e); }
     }
 
+    // Chỉ dùng bảng màu vintage thập niên 70. `swatch` = 3 màu đại diện hiển thị trong Cài đặt.
     const THEMES = {
       retro70: {
-        name: "🌻 Vintage 70s – Kem & Cam cháy (Mặc định)", retro: true,
-        colors: { primary: "#C8551B", background: "#F2E6CC", surface: "#FBF3E1", textPrimary: "#3A2618", textSecondary: "#6B4F3A", variant: "#EBDDBE", border: "#CDB892", ink: "#3A2618", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#5E7A2B", incomeLight: "#E3E8C6" }
+        name: "Cam cháy", desc: "Kem giấy · cam cháy · mù tạt", retro: true,
+        colors: { primary: "#C8551B", background: "#F2E6CC", surface: "#FBF3E1", textPrimary: "#3A2618", textSecondary: "#6B4F3A", variant: "#EBDDBE", border: "#CDB892", ink: "#3A2618", accent: "#E0A526", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#5E7A2B", incomeLight: "#E3E8C6" }
       },
       retro70_avocado: {
-        name: "🥑 Vintage 70s – Xanh bơ & Mù tạt", retro: true,
-        colors: { primary: "#5E7A2B", background: "#EFE6CB", surface: "#FAF4E2", textPrimary: "#2F2A17", textSecondary: "#5C5433", variant: "#E4DDBD", border: "#C6BA8E", ink: "#2F2A17", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#3F6B4E", incomeLight: "#DCE8D5" }
+        name: "Xanh bơ", desc: "Xanh bơ · mù tạt · kem", retro: true,
+        colors: { primary: "#5E7A2B", background: "#EFE6CB", surface: "#FAF4E2", textPrimary: "#2F2A17", textSecondary: "#5C5433", variant: "#E4DDBD", border: "#C6BA8E", ink: "#2F2A17", accent: "#E0A526", expense: "#B23A1F", expenseLight: "#F4D9C8", income: "#3F6B4E", incomeLight: "#DCE8D5" }
+      },
+      retro70_rose: {
+        name: "Hồng đất", desc: "Gạch hồng · xanh ngọc · be", retro: true,
+        colors: { primary: "#B84A4A", background: "#F4E3D3", surface: "#FCF1E6", textPrimary: "#3B2420", textSecondary: "#75504A", variant: "#EED6C4", border: "#D7B5A0", ink: "#3B2420", accent: "#E9A23B", expense: "#A8321E", expenseLight: "#F3D3C6", income: "#2F6F6A", incomeLight: "#D5E6E1" }
+      },
+      retro70_teal: {
+        name: "Xanh ngọc", desc: "Xanh ngọc · cam · kem", retro: true,
+        colors: { primary: "#2F6F6A", background: "#EFE7D2", surface: "#FAF5E6", textPrimary: "#1F2E2C", textSecondary: "#4C5F5B", variant: "#E2DCC5", border: "#BFB89A", ink: "#1F2E2C", accent: "#E0A526", expense: "#C8551B", expenseLight: "#F4DCC8", income: "#5E7A2B", incomeLight: "#E3E8C6" }
       },
       retro70_night: {
-        name: "🪩 Vintage 70s – Đêm Disco (Tối)", retro: true,
-        colors: { primary: "#E8A33D", background: "#1F140D", surface: "#2C1E14", textPrimary: "#F5E6C8", textSecondary: "#D2B48C", variant: "#3A2A1D", border: "#5A4330", ink: "#0E0906", expense: "#F07A55", expenseLight: "#4A2418", income: "#B5C96A", incomeLight: "#2E3517" }
+        name: "Đêm Disco", desc: "Nâu cà phê · mù tạt (tối)", retro: true,
+        colors: { primary: "#E8A33D", background: "#1F140D", surface: "#2C1E14", textPrimary: "#F5E6C8", textSecondary: "#D2B48C", variant: "#3A2A1D", border: "#5A4330", ink: "#0E0906", accent: "#C8551B", expense: "#F07A55", expenseLight: "#4A2418", income: "#B5C96A", incomeLight: "#2E3517" }
       },
-      light: { 
-        name: "☀️ Sáng Hiện Đại (Mặc định)", 
-        colors: { primary: "#059669", background: "#F8FAFC", surface: "#FFFFFF", textPrimary: "#0F172A", textSecondary: "#334155", variant: "#F1F5F9", border: "#CBD5E1" } 
-      },
-      light_blue: { 
-        name: "💎 Sáng Xanh Biển Tinh Tế", 
-        colors: { primary: "#2563EB", background: "#F8FAFC", surface: "#FFFFFF", textPrimary: "#0F172A", textSecondary: "#1E293B", variant: "#EFF6FF", border: "#CBD5E1" } 
-      },
-      light_rose: { 
-        name: "🌸 Sáng Pastel Ấm Áp", 
-        colors: { primary: "#E11D48", background: "#FFFBF7", surface: "#FFFFFF", textPrimary: "#0F172A", textSecondary: "#334155", variant: "#FFF1F2", border: "#FECDD3" } 
-      },
-      ocean: { 
-        name: "🌙 Đêm Đại Dương (Tối)", 
-        colors: { primary: "#8ED1FC", background: "#09121A", surface: "#121E2A", textPrimary: "#F8FAFC", textSecondary: "#CBD5E1", variant: "#1A2A38", border: "#334E68" } 
-      },
-      emerald: { 
-        name: "🌿 Đêm Lục Bảo (Tối)", 
-        colors: { primary: "#69F0AE", background: "#051206", surface: "#0C240E", textPrimary: "#F0FDF4", textSecondary: "#BBF7D0", variant: "#143B17", border: "#166534" } 
-      },
-      terracotta: { 
-        name: "🏺 Đêm Đất Nung (Tối)", 
-        colors: { primary: "#FFAB91", background: "#140D09", surface: "#221611", textPrimary: "#FFF7ED", textSecondary: "#FED7AA", variant: "#332019", border: "#9A3412" } 
-      },
-      purple: { 
-        name: "🔮 Đêm Thạch Anh (Tối)", 
-        colors: { primary: "#E040FB", background: "#12091A", surface: "#1F122A", textPrimary: "#FAF5FF", textSecondary: "#E9D5FF", variant: "#2F1B3E", border: "#7E22CE" } 
-      },
-      minimalist: { 
-        name: "🖤 Đêm Tối Giản Đen Trắng", 
-        colors: { primary: "#FFFFFF", background: "#111111", surface: "#1A1A1A", textPrimary: "#FFFFFF", textSecondary: "#E5E5E5", variant: "#262626", border: "#525252" } 
+      retro70_plum: {
+        name: "Đêm Nhung", desc: "Tím mận · cam đào (tối)", retro: true,
+        colors: { primary: "#E39B5B", background: "#1E1420", surface: "#2B1D2E", textPrimary: "#F3E3D3", textSecondary: "#C9A99A", variant: "#3A2840", border: "#5B4260", ink: "#0D080E", accent: "#D46A6A", expense: "#F07A55", expenseLight: "#4A2230", income: "#B5C96A", incomeLight: "#2C3320" }
       }
     };
 
+    // Ngân hàng & ví: tem chữ tự vẽ (không tải logo từ internet). code = chữ trên tem, color = màu tem.
     const BANK_LOGOS = [
-      { name: "Vietcombank", url: "https://api.vietqr.io/img/VCB.png" },
-      { name: "Techcombank", url: "https://api.vietqr.io/img/TCB.png" },
-      { name: "MB Bank", url: "https://api.vietqr.io/img/MB.png" },
-      { name: "TPBank", url: "https://api.vietqr.io/img/TPB.png" },
-      { name: "VPBank", url: "https://api.vietqr.io/img/VPB.png" },
-      { name: "Agribank", url: "https://api.vietqr.io/img/AGR.png" },
-      { name: "BIDV", url: "https://api.vietqr.io/img/BIDV.png" },
-      { name: "VietinBank", url: "https://api.vietqr.io/img/ICB.png" },
-      { name: "Sacombank", url: "https://api.vietqr.io/img/STB.png" },
-      { name: "ACB", url: "https://api.vietqr.io/img/ACB.png" },
-      { name: "VIB", url: "https://api.vietqr.io/img/VIB.png" },
-      { name: "Shinhan Bank", url: "https://api.vietqr.io/img/SHB.png" },
-      { name: "Ví MoMo", url: "https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" },
-      { name: "ZaloPay", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ZaloPay-Square.png" },
-      { name: "Ví ShopeePay", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-ShopeePay-Orange.png" },
-      { name: "Viettel Money", url: "https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-Viettel-Money.png" },
-      { name: "Tiền mặt", url: null, icon: "banknote" }
+      { name: "Vietcombank", code: "VCB", color: "#2E7D4F", keys: ["vietcombank", "vcb"] },
+      { name: "Techcombank", code: "TCB", color: "#C8341F", keys: ["techcombank", "tcb"] },
+      { name: "MB Bank", code: "MB", color: "#24408E", keys: ["mbbank", "mbb"] },
+      { name: "BIDV", code: "BIDV", color: "#1E6C74", keys: ["bidv"] },
+      { name: "VietinBank", code: "CTG", color: "#1B5E9A", keys: ["vietinbank", "ctg", "icb"] },
+      { name: "Agribank", code: "AGR", color: "#9C3A1A", keys: ["agribank", "agr"] },
+      { name: "ACB", code: "ACB", color: "#2A55A2", keys: ["acb"] },
+      { name: "TPBank", code: "TPB", color: "#6B3FA0", keys: ["tpbank", "tpb"] },
+      { name: "VPBank", code: "VPB", color: "#3E8E3E", keys: ["vpbank", "vpb"] },
+      { name: "Sacombank", code: "STB", color: "#1F6FB2", keys: ["sacombank", "stb"] },
+      { name: "VIB", code: "VIB", color: "#E0A526", keys: ["vib"] },
+      { name: "SHB", code: "SHB", color: "#D9822B", keys: ["shb"] },
+      { name: "HDBank", code: "HDB", color: "#C8341F", keys: ["hdbank"] },
+      { name: "Shinhan Bank", code: "SHN", color: "#2459A8", keys: ["shinhan"] },
+      { name: "Cake", code: "CK", color: "#D9467A", keys: ["cake"] },
+      { name: "Ví MoMo", code: "MoMo", color: "#A33A72", keys: ["momo"] },
+      { name: "ZaloPay", code: "ZLP", color: "#1E78C8", keys: ["zalopay", "zalo"] },
+      { name: "Ví ShopeePay", code: "SPP", color: "#E0602A", keys: ["shopeepay", "spp"] },
+      { name: "Viettel Money", code: "VTM", color: "#C2272D", keys: ["viettelmoney", "vtm"] },
+      { name: "Tiền mặt", code: null, color: "#5E7A2B", icon: "banknote", keys: ["tienmat", "cash"] }
     ];
 
-    const getBankLogo = (bankName) => {
-      const norm = bankName.toLowerCase().replace(/ /g, '');
-      if(norm.includes("vietcombank") || norm.includes("vcb")) return BANK_LOGOS[0].url;
-      if(norm.includes("techcombank") || norm.includes("tcb")) return BANK_LOGOS[1].url;
-      if(norm.includes("mbbank") || norm.includes("mbb") || (norm.includes("mb") && !norm.includes("momo"))) return BANK_LOGOS[2].url;
-      if(norm.includes("tpbank") || norm.includes("tpb")) return BANK_LOGOS[3].url;
-      if(norm.includes("vpbank") || norm.includes("vpb")) return BANK_LOGOS[4].url;
-      if(norm.includes("agribank") || norm.includes("agr")) return BANK_LOGOS[5].url;
-      if(norm.includes("bidv")) return BANK_LOGOS[6].url;
-      if(norm.includes("vietinbank") || norm.includes("ctg") || norm.includes("icb")) return BANK_LOGOS[7].url;
-      if(norm.includes("sacombank") || norm.includes("stb")) return BANK_LOGOS[8].url;
-      if(norm.includes("acb")) return BANK_LOGOS[9].url;
-      if(norm.includes("vib")) return BANK_LOGOS[10].url;
-      if(norm.includes("shinhan")) return BANK_LOGOS[11].url;
-      if(norm.includes("momo")) return BANK_LOGOS[12].url;
-      if(norm.includes("zalopay") || norm.includes("zalo")) return BANK_LOGOS[13].url;
-      if(norm.includes("shopeepay") || norm.includes("spp")) return BANK_LOGOS[14].url;
-      if(norm.includes("viettelmoney") || norm.includes("vtm")) return BANK_LOGOS[15].url;
-      return null;
-    }
+    const bankStyleOf = (bankName) => {
+      const norm = (window.MaiAgent ? window.MaiAgent.fold(bankName || "") : String(bankName || "").toLowerCase()).replace(/[^a-z0-9]/g, "");
+      if (!norm) return null;
+      const exact = BANK_LOGOS.find(b => b.keys.includes(norm));
+      if (exact) return exact;
+      return BANK_LOGOS.find(b => b.keys.some(k => k.length >= 4 && norm.includes(k)))
+        || (/^mb/.test(norm) && !norm.includes("momo") ? BANK_LOGOS[2] : null);
+    };
+    // Giữ tên cũ để các chỗ khác dùng chung: trả về mã ngân hàng (hoặc null)
+    const getBankLogo = (bankName) => { const b = bankStyleOf(bankName); return b ? (b.code || b.name) : null; };
+
+    // Tem ngân hàng: vòng tròn màu, viền mực, chữ mã ngân hàng kiểu tem thư
+    const BankBadge = ({ name, size = 40 }) => {
+      const b = bankStyleOf(name);
+      const color = b ? b.color : "#6B4F3A";
+      const label = b ? b.code : ((name || "?").replace(/^(ví|vi)\s+/i, "").trim().slice(0, 2).toUpperCase());
+      const fs = !label ? 0 : label.length >= 4 ? size * 0.27 : label.length === 3 ? size * 0.3 : size * 0.38;
+      return (
+        <span className="relative inline-flex items-center justify-center rounded-full shrink-0 border-2 border-retro-ink" style={{ width: size, height: size, background: color, boxShadow: "2px 2px 0 #3A2618" }}>
+          <span className="absolute inset-[3px] rounded-full border border-dashed" style={{ borderColor: "rgba(255,255,255,.55)" }} />
+          {label ? <span className="font-display font-black text-white leading-none relative" style={{ fontSize: fs, letterSpacing: "-0.02em" }}>{label}</span>
+                 : <Icon name={b && b.icon || "wallet"} className="w-1/2 h-1/2 text-white relative" />}
+        </span>
+      );
+    };
 
     const DEFAULT_PARENT_CATEGORIES = [
-      { id: "p1", name: "Ăn uống", icon: "coffee", color: "#FF6B6B", isParent: true },
-      { id: "p2", name: "Di chuyển", icon: "bike", color: "#4ECDC4", isParent: true },
-      { id: "p3", name: "Nhà cửa", icon: "home", color: "#FFD93D", isParent: true },
-      { id: "p4", name: "Mua sắm", icon: "shopping-bag", color: "#45B7D1", isParent: true },
-      { id: "p5", name: "Giải trí & Du lịch", icon: "gamepad-2", color: "#FF847C", isParent: true },
-      { id: "p6", name: "Sức khỏe & Y tế", icon: "heart", color: "#E84A5F", isParent: true },
-      { id: "p7", name: "Học tập & Bản thân", icon: "book", color: "#6C5CE7", isParent: true },
-      { id: "p8", name: "Hóa đơn & Dịch vụ", icon: "file-text", color: "#A8E6CF", isParent: true },
-      { id: "p9", name: "Gia đình & Xã hội", icon: "users", color: "#FD79A8", isParent: true },
-      { id: "p10", name: "Lương & Thu nhập", icon: "banknote", color: "#00B894", isParent: true },
-      { id: "p11", name: "Khác", icon: "more-horizontal", color: "#95A5A6", isParent: true }
+      { id: "p1", name: "Ăn uống", icon: "pho", color: "#C8551B", isParent: true },
+      { id: "p2", name: "Di chuyển", icon: "scooter", color: "#2F6F6A", isParent: true },
+      { id: "p3", name: "Nhà cửa", icon: "home", color: "#E0A526", isParent: true },
+      { id: "p4", name: "Mua sắm", icon: "bag", color: "#B84A4A", isParent: true },
+      { id: "p5", name: "Giải trí & Du lịch", icon: "palm", color: "#D9822B", isParent: true },
+      { id: "p6", name: "Sức khỏe & Y tế", icon: "heart", color: "#9C3A1A", isParent: true },
+      { id: "p7", name: "Học tập & Bản thân", icon: "graduation", color: "#5B5A8C", isParent: true },
+      { id: "p8", name: "Hóa đơn & Dịch vụ", icon: "receipt", color: "#7A8B3A", isParent: true },
+      { id: "p9", name: "Gia đình & Xã hội", icon: "users", color: "#C26A8A", isParent: true },
+      { id: "p10", name: "Lương & Thu nhập", icon: "salary", color: "#5E7A2B", isParent: true },
+      { id: "p11", name: "Khác", icon: "more", color: "#8A7560", isParent: true }
     ];
 
     const DEFAULT_SUBCATEGORIES = [
       // Ăn uống
-      { id: "s1", name: "Ăn sáng", icon: "coffee", color: "#FF6B6B", parent: "Ăn uống" },
-      { id: "s2", name: "Cơm trưa / tối", icon: "utensils", color: "#FF6B6B", parent: "Ăn uống" },
-      { id: "s3", name: "Cà phê & Trà", icon: "coffee", color: "#FF6B6B", parent: "Ăn uống" },
-      { id: "s4", name: "Ăn vặt", icon: "ice-cream", color: "#FF6B6B", parent: "Ăn uống" },
-      { id: "s5", name: "Đi chợ & Siêu thị", icon: "shopping-cart", color: "#FF6B6B", parent: "Ăn uống" },
-      { id: "s6", name: "Tiệc tùng & Nhậu", icon: "beer", color: "#FF6B6B", parent: "Ăn uống" },
+      { id: "s1", name: "Ăn sáng", icon: "banh-mi", color: "#C8551B", parent: "Ăn uống" },
+      { id: "s2", name: "Cơm trưa / tối", icon: "rice", color: "#C8551B", parent: "Ăn uống" },
+      { id: "s3", name: "Cà phê & Trà", icon: "phin", color: "#C8551B", parent: "Ăn uống" },
+      { id: "s4", name: "Ăn vặt", icon: "ice-cream", color: "#C8551B", parent: "Ăn uống" },
+      { id: "s5", name: "Đi chợ & Siêu thị", icon: "basket", color: "#C8551B", parent: "Ăn uống" },
+      { id: "s6", name: "Tiệc tùng & Nhậu", icon: "beer", color: "#C8551B", parent: "Ăn uống" },
 
       // Di chuyển
-      { id: "s7", name: "Xăng xe", icon: "fuel", color: "#4ECDC4", parent: "Di chuyển" },
-      { id: "s8", name: "Grab & Taxi", icon: "car", color: "#4ECDC4", parent: "Di chuyển" },
-      { id: "s9", name: "Gửi xe", icon: "circle-parking", color: "#4ECDC4", parent: "Di chuyển" },
-      { id: "s10", name: "Bảo dưỡng & Sửa xe", icon: "wrench", color: "#4ECDC4", parent: "Di chuyển" },
-      { id: "s11", name: "Vé tàu & Máy bay", icon: "plane", color: "#4ECDC4", parent: "Di chuyển" },
+      { id: "s7", name: "Xăng xe", icon: "fuel", color: "#2F6F6A", parent: "Di chuyển" },
+      { id: "s8", name: "Grab & Taxi", icon: "taxi", color: "#2F6F6A", parent: "Di chuyển" },
+      { id: "s9", name: "Gửi xe", icon: "parking", color: "#2F6F6A", parent: "Di chuyển" },
+      { id: "s10", name: "Bảo dưỡng & Sửa xe", icon: "wrench", color: "#2F6F6A", parent: "Di chuyển" },
+      { id: "s11", name: "Vé tàu & Máy bay", icon: "plane", color: "#2F6F6A", parent: "Di chuyển" },
 
       // Nhà cửa
-      { id: "s12", name: "Tiền thuê nhà", icon: "home", color: "#FFD93D", parent: "Nhà cửa" },
-      { id: "s13", name: "Tiền điện & Nước", icon: "zap", color: "#FFD93D", parent: "Nhà cửa" },
-      { id: "s14", name: "Internet & Wifi", icon: "wifi", color: "#FFD93D", parent: "Nhà cửa" },
-      { id: "s15", name: "Đồ gia dụng", icon: "tv", color: "#FFD93D", parent: "Nhà cửa" },
+      { id: "s12", name: "Tiền thuê nhà", icon: "home", color: "#E0A526", parent: "Nhà cửa" },
+      { id: "s13", name: "Tiền điện & Nước", icon: "bulb", color: "#E0A526", parent: "Nhà cửa" },
+      { id: "s14", name: "Internet & Wifi", icon: "wifi", color: "#E0A526", parent: "Nhà cửa" },
+      { id: "s15", name: "Đồ gia dụng", icon: "tv", color: "#E0A526", parent: "Nhà cửa" },
 
       // Mua sắm
-      { id: "s16", name: "Quần áo & Giày dép", icon: "shirt", color: "#45B7D1", parent: "Mua sắm" },
-      { id: "s17", name: "Đồ công nghệ", icon: "smartphone", color: "#45B7D1", parent: "Mua sắm" },
-      { id: "s18", name: "Mỹ phẩm & Làm đẹp", icon: "sparkles", color: "#45B7D1", parent: "Mua sắm" },
-      { id: "s19", name: "Phụ kiện", icon: "watch", color: "#45B7D1", parent: "Mua sắm" },
+      { id: "s16", name: "Quần áo & Giày dép", icon: "ao-dai", color: "#B84A4A", parent: "Mua sắm" },
+      { id: "s17", name: "Đồ công nghệ", icon: "phone", color: "#B84A4A", parent: "Mua sắm" },
+      { id: "s18", name: "Mỹ phẩm & Làm đẹp", icon: "lipstick", color: "#B84A4A", parent: "Mua sắm" },
+      { id: "s19", name: "Phụ kiện", icon: "watch", color: "#B84A4A", parent: "Mua sắm" },
 
       // Giải trí & Du lịch
-      { id: "s20", name: "Xem phim", icon: "film", color: "#FF847C", parent: "Giải trí & Du lịch" },
-      { id: "s21", name: "Du lịch & Nghỉ dưỡng", icon: "compass", color: "#FF847C", parent: "Giải trí & Du lịch" },
-      { id: "s22", name: "Game & Ứng dụng", icon: "gamepad-2", color: "#FF847C", parent: "Giải trí & Du lịch" },
+      { id: "s20", name: "Xem phim", icon: "film", color: "#D9822B", parent: "Giải trí & Du lịch" },
+      { id: "s21", name: "Du lịch & Nghỉ dưỡng", icon: "luggage", color: "#D9822B", parent: "Giải trí & Du lịch" },
+      { id: "s22", name: "Game & Ứng dụng", icon: "gamepad", color: "#D9822B", parent: "Giải trí & Du lịch" },
 
       // Sức khỏe & Y tế
-      { id: "s23", name: "Thuốc men", icon: "pill", color: "#E84A5F", parent: "Sức khỏe & Y tế" },
-      { id: "s24", name: "Khám chữa bệnh", icon: "heart", color: "#E84A5F", parent: "Sức khỏe & Y tế" },
-      { id: "s25", name: "Tập gym & Thể thao", icon: "activity", color: "#E84A5F", parent: "Sức khỏe & Y tế" },
+      { id: "s23", name: "Thuốc men", icon: "pill", color: "#9C3A1A", parent: "Sức khỏe & Y tế" },
+      { id: "s24", name: "Khám chữa bệnh", icon: "stethoscope", color: "#9C3A1A", parent: "Sức khỏe & Y tế" },
+      { id: "s25", name: "Tập gym & Thể thao", icon: "dumbbell", color: "#9C3A1A", parent: "Sức khỏe & Y tế" },
 
       // Học tập & Bản thân
-      { id: "s26", name: "Học phí & Khóa học", icon: "book", color: "#6C5CE7", parent: "Học tập & Bản thân" },
-      { id: "s27", name: "Sách vở & Tài liệu", icon: "file-text", color: "#6C5CE7", parent: "Học tập & Bản thân" },
+      { id: "s26", name: "Học phí & Khóa học", icon: "book", color: "#5B5A8C", parent: "Học tập & Bản thân" },
+      { id: "s27", name: "Sách vở & Tài liệu", icon: "book-open", color: "#5B5A8C", parent: "Học tập & Bản thân" },
 
       // Hóa đơn & Dịch vụ
-      { id: "s28", name: "Cước điện thoại", icon: "phone", color: "#A8E6CF", parent: "Hóa đơn & Dịch vụ" },
-      { id: "s29", name: "Phí dịch vụ & Ngân hàng", icon: "credit-card", color: "#A8E6CF", parent: "Hóa đơn & Dịch vụ" },
-      { id: "s30", name: "Bảo hiểm & Thuế", icon: "shield", color: "#A8E6CF", parent: "Hóa đơn & Dịch vụ" },
+      { id: "s28", name: "Cước điện thoại", icon: "phone-call", color: "#7A8B3A", parent: "Hóa đơn & Dịch vụ" },
+      { id: "s29", name: "Phí dịch vụ & Ngân hàng", icon: "credit-card", color: "#7A8B3A", parent: "Hóa đơn & Dịch vụ" },
+      { id: "s30", name: "Bảo hiểm & Thuế", icon: "shield", color: "#7A8B3A", parent: "Hóa đơn & Dịch vụ" },
 
       // Gia đình & Xã hội
-      { id: "s31", name: "Con cái & Tiền sữa", icon: "baby", color: "#FD79A8", parent: "Gia đình & Xã hội" },
-      { id: "s32", name: "Hiếu hỉ & Quà biếu", icon: "gift", color: "#FD79A8", parent: "Gia đình & Xã hội" },
-      { id: "s33", name: "Thú cưng", icon: "paw-print", color: "#FD79A8", parent: "Gia đình & Xã hội" },
+      { id: "s31", name: "Con cái & Tiền sữa", icon: "baby", color: "#C26A8A", parent: "Gia đình & Xã hội" },
+      { id: "s32", name: "Hiếu hỉ & Quà biếu", icon: "envelope-red", color: "#C26A8A", parent: "Gia đình & Xã hội" },
+      { id: "s33", name: "Thú cưng", icon: "paw", color: "#C26A8A", parent: "Gia đình & Xã hội" },
 
       // Lương & Thu nhập
-      { id: "s34", name: "Lương chính", icon: "banknote", color: "#00B894", parent: "Lương & Thu nhập" },
-      { id: "s35", name: "Tiền thưởng & Làm thêm", icon: "trending-up", color: "#00B894", parent: "Lương & Thu nhập" },
-      { id: "s36", name: "Lãi đầu tư", icon: "piggy-bank", color: "#00B894", parent: "Lương & Thu nhập" }
+      { id: "s34", name: "Lương chính", icon: "salary", color: "#5E7A2B", parent: "Lương & Thu nhập" },
+      { id: "s35", name: "Tiền thưởng & Làm thêm", icon: "trend-up", color: "#5E7A2B", parent: "Lương & Thu nhập" },
+      { id: "s36", name: "Lãi đầu tư", icon: "piggy", color: "#5E7A2B", parent: "Lương & Thu nhập" }
     ];
 
     const DEFAULT_CATEGORY_PARENT_MAP = DEFAULT_SUBCATEGORIES.reduce((acc, curr) => {
@@ -322,24 +314,17 @@
     }, {});
 
     const getCategoryIcon = (category) => {
-        const c = (category || "").toLowerCase();
-        if (c.includes("ăn") || c.includes("cơm") || c.includes("phở") || c.includes("bún")) return "utensils";
-        if (c.includes("cà phê") || c.includes("trà") || c.includes("coffee")) return "coffee";
-        if (c.includes("xe") || c.includes("grab") || c.includes("taxi") || c.includes("xăng")) return "car";
-        if (c.includes("tàu") || c.includes("máy bay") || c.includes("du lịch")) return "plane";
-        if (c.includes("nhà") || c.includes("thuê")) return "home";
-        if (c.includes("điện") || c.includes("nước") || c.includes("wifi")) return "zap";
-        if (c.includes("sắm") || c.includes("quần áo") || c.includes("giày")) return "shopping-bag";
-        if (c.includes("chợ") || c.includes("siêu thị")) return "shopping-cart";
-        if (c.includes("phim") || c.includes("game") || c.includes("giải trí")) return "gamepad-2";
-        if (c.includes("lương") || c.includes("thưởng") || c.includes("tiền")) return "banknote";
-        if (c.includes("sức khỏe") || c.includes("bệnh") || c.includes("thuốc") || c.includes("khám")) return "heart";
-        if (c.includes("học") || c.includes("sách") || c.includes("khóa học")) return "book";
-        if (c.includes("hóa đơn") || c.includes("phí") || c.includes("dịch vụ")) return "file-text";
-        if (c.includes("con") || c.includes("sữa") || c.includes("gia đình") || c.includes("hiếu hỉ")) return "users";
-        if (c.includes("mèo") || c.includes("chó") || c.includes("thú cưng")) return "paw-print";
-        if (c.includes("đầu tư") || c.includes("chứng khoán")) return "trending-up";
-        if (c.includes("tiết kiệm")) return "piggy-bank";
+        const c = window.MaiAgent ? window.MaiAgent.fold(category || "") : (category || "").toLowerCase();
+        const rules = [
+          [/ca phe|tra sua|coffee|\btra\b/, "phin"], [/an sang|banh mi/, "banh-mi"], [/pho|bun|mi\b/, "pho"], [/com|an trua|an toi|nha hang/, "rice"], [/an|uong/, "utensils"],
+          [/xang/, "fuel"], [/grab|taxi/, "taxi"], [/gui xe/, "parking"], [/sua xe|bao duong/, "wrench"], [/tau|may bay/, "plane"], [/xe|di chuyen/, "scooter"],
+          [/du lich|nghi duong/, "luggage"], [/thue nha|nha/, "home"], [/dien|nuoc/, "bulb"], [/wifi|internet/, "wifi"], [/quan ao|giay/, "ao-dai"], [/my pham|lam dep/, "lipstick"],
+          [/cho|sieu thi/, "basket"], [/mua sam/, "bag"], [/phim/, "film"], [/game|ung dung/, "gamepad"], [/giai tri/, "party"], [/luong/, "salary"], [/thuong|lam them/, "trend-up"],
+          [/lai|dau tu|chung khoan/, "piggy"], [/tiet kiem/, "safe"], [/thuoc/, "pill"], [/benh|kham|y te|suc khoe/, "stethoscope"], [/gym|the thao/, "dumbbell"], [/hoc|khoa hoc/, "graduation"],
+          [/sach/, "book-open"], [/dien thoai|cuoc/, "phone-call"], [/phi|ngan hang/, "credit-card"], [/bao hiem|thue/, "shield"], [/hoa don|dich vu/, "receipt"], [/hieu hi|qua|cuoi/, "envelope-red"],
+          [/con|sua|em be/, "baby"], [/thu cung|meo|cho\b/, "paw"], [/gia dinh|xa hoi/, "users"], [/tien|thu nhap/, "banknote"]
+        ];
+        for (const [re, ic] of rules) if (re.test(c)) return ic;
         return "tag";
     };
 
@@ -354,23 +339,14 @@
     };
     const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
 
-    const Icon = ({ name, className = "", style = {} }) => {
-      const spanRef = React.useRef(null);
-      React.useEffect(() => {
-        if (spanRef.current && window.lucide && window.lucide.createIcons) {
-          window.lucide.createIcons({ root: spanRef.current });
-        }
-      }, [name, className]);
-
-      return (
-        <span 
-          ref={spanRef} 
-          className={`inline-flex items-center justify-center shrink-0 ${className}`} 
-          style={style}
-          dangerouslySetInnerHTML={{ __html: `<i data-lucide="${name || 'tag'}" class="${className}" style="color: inherit;"></i>` }} 
-        />
-      );
-    };
+    // Bộ icon tự vẽ (web/icons.js) – không dùng thư viện icon ngoài
+    const Icon = ({ name, className = "", style = {} }) => (
+      <span
+        className={`inline-flex items-center justify-center shrink-0 ${className}`}
+        style={style}
+        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(name) : "" }}
+      />
+    );
 
     // Mai = hoa mai vàng 5 cánh, nét vẽ kiểu tem thư thập niên 70
     const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
@@ -386,17 +362,14 @@
       </svg>
     );
 
+    // Bảng màu hạng mục: tông vintage 70s
     const CATEGORY_COLOR_PALETTE = [
-      "#FF6B6B", "#FF847C", "#FF5252", "#E84A5F", "#FA5252",
-      "#FF922B", "#F97316", "#FFD93D", "#FAB005", "#F59E0B",
-      "#4ECDC4", "#10B981", "#059669", "#00B894", "#12B886",
-      "#20C997", "#45B7D1", "#06B6D4", "#0EA5E9", "#228BE6",
-      "#3B82F6", "#2563EB", "#6C5CE7", "#7950F2", "#845EF7",
-      "#E040FB", "#BE4BDB", "#FD79A8", "#F06595", "#EC4899",
-      "#868E96", "#95A5A6", "#495057", "#2D3748"
+      "#C8551B", "#D9822B", "#E0A526", "#C9A227", "#9C3A1A", "#B23A1F", "#B84A4A", "#C26A8A",
+      "#8E4E7A", "#5B5A8C", "#3E5C8A", "#2F6F6A", "#3F7F6E", "#5E7A2B", "#7A8B3A", "#9A8F3A",
+      "#8A7560", "#6B4F3A", "#4A3B2E", "#A0522D", "#CD8C52", "#D4A373", "#7D9D8C", "#5C8A9C"
     ];
-
-    const PIE_COLORS = ["#FF6B6B", "#4ECDC4", "#FFD93D", "#45B7D1", "#FF847C", "#E84A5F", "#6C5CE7", "#A8E6CF", "#FD79A8", "#00B894", "#E040FB", "#8ED1FC"];
+    const LEGACY_COLOR_MAP = {"#FF6B6B": "#C8551B", "#2F6F6A": "#2F6F6A", "#FFD93D": "#E0A526", "#45B7D1": "#B84A4A", "#FF847C": "#D9822B", "#E84A5F": "#9C3A1A", "#6C5CE7": "#5B5A8C", "#A8E6CF": "#7A8B3A", "#FD79A8": "#C26A8A", "#00B894": "#5E7A2B", "#95A5A6": "#8A7560"};
+    const PIE_COLORS = ["#C8551B", "#2F6F6A", "#E0A526", "#B84A4A", "#5E7A2B", "#5B5A8C", "#D9822B", "#9C3A1A", "#C26A8A", "#7A8B3A", "#3E5C8A", "#8A7560"];
 
 
     const CurrencyInput = ({ id, name, defaultValue, placeholder, required, className }) => {
@@ -512,7 +485,7 @@
             name: c.name.trim(),
             id: c.id || `c_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             icon: c.icon || "tag",
-            color: c.color || "#4ECDC4",
+            color: c.color || "#2F6F6A",
             isParent: !!c.isParent,
             parent: c.isParent ? null : (c.parent || null)
           });
@@ -521,146 +494,8 @@
       return result;
     };
 
-    const ICON_GROUPS = [
-      {
-        name: "Tất cả",
-        icon: "layout-grid",
-        icons: []
-      },
-      {
-        name: "Ăn uống",
-        icon: "utensils",
-        icons: [
-          "coffee", "utensils", "utensils-crossed", "cup-soda", "beer", "wine", "cake", "ice-cream", 
-          "pizza", "apple", "cookie", "egg", "soup", "flame", "shopping-cart", "shopping-basket", 
-          "martini", "glass-water", "sandwich", "croissant", "candy", "nut", "citrus", "banana", 
-          "cherry", "carrot", "popcorn", "beef", "fish", "drumstick", "wheat", "milk", 
-          "grape", "cooking-pot", "sparkling-wine", "refrigerator", "chef-hat", "microwave", "oven", "store", 
-          "package-open", "receipt", "tag", "qr-code", "truck", "percent", "badge-percent", "concierge-bell", 
-          "scale", "sparkles"
-        ]
-      },
-      {
-        name: "Di chuyển",
-        icon: "car",
-        icons: [
-          "car", "bike", "plane", "train", "bus", "ship", "fuel", "circle-parking", 
-          "wrench", "map-pin", "navigation", "compass", "luggage", "tickets", "footprints", "car-front", 
-          "car-taxi-front", "cable-car", "tram-front", "truck", "rail-symbol", "caravan", "sailboat", "anchor", 
-          "ferry", "helicopter", "rocket", "plane-takeoff", "plane-landing", "map", "navigation-2", "milestone", 
-          "route", "signpost", "traffic-cone", "shield-alert", "gauge", "key", "key-round", "battery-charging", 
-          "shield-check", "cog", "settings-2", "hammer", "plug-zap", "flashlight", "siren", "ticket", 
-          "circle-dot", "globe"
-        ]
-      },
-      {
-        name: "Nhà cửa",
-        icon: "home",
-        icons: [
-          "home", "building", "building-2", "zap", "wifi", "tv", "droplets", "lightbulb", 
-          "bed", "bath", "trash-2", "key", "lock", "hammer", "sofa", "plug", 
-          "door-closed", "door-open", "fence", "warehouse", "factory", "flame", "fan", "air-vent", 
-          "thermometer", "sun", "moon", "wind", "shower-head", "waves", "paint-bucket", "brush", 
-          "roller-coaster", "shovel", "axe", "drill", "tree-pine", "flower", "flower-2", "trees", 
-          "sprout", "sparkles", "shield", "alarm-clock", "clock", "calendar", "bell", "camera", 
-          "radio", "power"
-        ]
-      },
-      {
-        name: "Mua sắm",
-        icon: "shopping-bag",
-        icons: [
-          "shopping-bag", "shopping-cart", "shopping-basket", "shirt", "watch", "sparkles", "scissors", "package", 
-          "package-check", "package-open", "package-plus", "tag", "tags", "gift", "glasses", "crown", 
-          "gem", "footprints", "hanger", "ribbon", "badge", "badge-check", "badge-percent", "percent", 
-          "scan-line", "barcode", "qr-code", "ticket", "receipt", "credit-card", "wallet", "store", 
-          "wand-2", "palette", "sparkle", "award", "trophy", "medal", "heart", "star", 
-          "smile", "sun-medium", "umbrella", "layers", "boxes", "box", "truck", "archive", 
-          "sparkles", "check"
-        ]
-      },
-      {
-        name: "Công nghệ",
-        icon: "smartphone",
-        icons: [
-          "smartphone", "smartphone-charging", "laptop", "laptop-2", "tablet", "headphones", "camera", "monitor", 
-          "monitor-speaker", "monitor-smartphone", "cpu", "hard-drive", "radio", "battery-charging", "battery", "battery-full", 
-          "battery-low", "battery-warning", "printer", "server", "database", "router", "wifi", "bluetooth", 
-          "mic", "mic-2", "video", "webcam", "cast", "tv", "mouse", "keyboard", 
-          "usb", "gamepad", "gamepad-2", "code", "terminal", "binary", "globe", "cloud", 
-          "cloud-download", "cloud-upload", "satellite", "signal", "plug-2", "power", "shield-alert", "scan", 
-          "fingerprint", "bot"
-        ]
-      },
-      {
-        name: "Tài chính",
-        icon: "banknote",
-        icons: [
-          "wallet", "wallet-2", "wallet-cards", "credit-card", "banknote", "coins", "piggy-bank", "trending-up", 
-          "trending-down", "dollar-sign", "receipt", "landmark", "badge-percent", "hand-coins", "scale", "circle-dollar-sign", 
-          "badge-dollar-sign", "arrow-up-right", "arrow-down-left", "arrow-left-right", "repeat", "refresh-cw", "percent", "pie-chart", 
-          "bar-chart-3", "bar-chart-2", "line-chart", "candlestick-chart", "shield-check", "lock", "key", "key-round", 
-          "vault", "safe", "file-text", "file-check", "calculator", "badge-alert", "bell", "gem", 
-          "award", "crown", "gift", "handshake", "sparkles", "target", "activity", "layers", 
-          "briefcase", "building-2"
-        ]
-      },
-      {
-        name: "Sức khỏe",
-        icon: "heart",
-        icons: [
-          "heart", "heart-pulse", "pill", "stethoscope", "activity", "dumbbell", "cross", "smile", 
-          "shield-plus", "sun", "flower-2", "thermometer", "bandage", "syringe", "dna", "brain", 
-          "eye", "ear", "baby", "accessibility", "footprints", "flame", "apple", "droplets", 
-          "heart-handshake", "shield-alert", "user-check", "bike", "swords", "medal", "trophy", "award", 
-          "target", "timer", "clock", "alarm-clock", "zap", "waves", "wind", "sun-medium", 
-          "trees", "sprout", "sparkles", "bath", "bed", "shield", "check-circle", "smile-plus", 
-          "smile", "bot"
-        ]
-      },
-      {
-        name: "Giải trí",
-        icon: "gamepad-2",
-        icons: [
-          "gamepad-2", "gamepad", "film", "music", "music-2", "music-3", "music-4", "clapperboard", 
-          "ticket", "party-popper", "palmtree", "paw-print", "cat", "dog", "trophy", "target", 
-          "dices", "tv", "radio", "camera", "video", "disc", "headphones", "mic", 
-          "mic-2", "swords", "sparkles", "wand-2", "crown", "gift", "tent", "mountain", 
-          "compass", "ferris-wheel", "roller-coaster", "binoculars", "sun", "moon", "guitar", "drum", 
-          "piano", "cast", "glasses", "popcorn", "beer", "wine", "martini", "cup-soda", 
-          "cake", "smile"
-        ]
-      },
-      {
-        name: "Học tập",
-        icon: "book",
-        icons: [
-          "book", "book-open", "book-marked", "books", "graduation-cap", "briefcase", "file-text", "file-check", 
-          "file-spreadsheet", "folder", "folder-open", "pen-tool", "pencil", "calculator", "clipboard-list", "clipboard-check", 
-          "calendar", "calendar-days", "clock", "hourglass", "presentation", "projector", "newspaper", "mail", 
-          "inbox", "library", "school", "university", "award", "medal", "trophy", "target", 
-          "compass", "ruler", "scissors", "stamp", "paperclip", "bookmark", "lightbulb", "brain", 
-          "microscope", "test-tube", "flask-conical", "atom", "globe", "languages", "message-square", "check-square", 
-          "list-todo", "users"
-        ]
-      },
-      {
-        name: "Gia đình & Xã hội",
-        icon: "users",
-        icons: [
-          "users", "users-2", "user", "user-check", "user-plus", "user-cog", "baby", "heart-handshake", 
-          "handshake", "phone", "phone-call", "mail", "message-circle", "message-square", "messages-square", "bell", 
-          "bell-ring", "shield", "shield-check", "award", "star", "heart", "gift", "cake", 
-          "party-popper", "crown", "home", "camera", "sparkles", "smile", "smile-plus", "laugh", 
-          "sparkle", "sun", "moon", "flower", "flower-2", "share-2", "send", "compass", 
-          "map-pin", "map", "anchor", "flag", "landmark", "church", "help-circle", "info", 
-          "badge-check", "check"
-        ]
-      }
-    ];
-
-    const ALL_AVAILABLE_ICONS = Array.from(new Set(ICON_GROUPS.flatMap(g => g.icons)));
-    ICON_GROUPS[0].icons = ALL_AVAILABLE_ICONS;
+    const ICON_GROUPS = window.VinaIcons.GROUPS;
+    const ALL_AVAILABLE_ICONS = ICON_GROUPS[0].icons;
 
     const IconGroupSelector = ({ iconGroups, selectedGroup, onSelectGroup }) => {
       const scrollRef = React.useRef(null);
@@ -713,7 +548,7 @@
 
       const [name, setName] = React.useState(editingCategory?.name || "");
       const [selectedIcon, setSelectedIcon] = React.useState(editingCategory?.icon || "tag");
-      const [selectedColor, setSelectedColor] = React.useState(editingCategory?.color || "#4ECDC4");
+      const [selectedColor, setSelectedColor] = React.useState(editingCategory?.color || "#2F6F6A");
       const [isChild, setIsChild] = React.useState(() => {
         if (editingCategory) {
           return !editingCategory.isParent && !!(editingCategory.parent || categoryParentMap[editingCategory.name]);
@@ -850,7 +685,7 @@
                       <span>Tự pha màu</span>
                       <input 
                         type="color" 
-                        value={selectedColor.startsWith("#") ? selectedColor : "#4ECDC4"}
+                        value={selectedColor.startsWith("#") ? selectedColor : "#2F6F6A"}
                         onChange={(e) => setSelectedColor(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                       />
@@ -979,7 +814,8 @@
           // If stored categories are old flat ones, merge default parents
           const hasParents = stored.some(c => c && c.isParent);
           const raw = !hasParents ? [...DEFAULT_PARENT_CATEGORIES, ...stored] : stored;
-          return deduplicateCategories(raw);
+          // Chuyển màu hạng mục mặc định kiểu cũ sang bảng màu vintage
+          return deduplicateCategories(raw).map(c => (c && c.color && LEGACY_COLOR_MAP[String(c.color).toUpperCase()]) ? { ...c, color: LEGACY_COLOR_MAP[String(c.color).toUpperCase()] } : c);
       });
 
       const [categoryBudgets, setCategoryBudgets] = useState(() => safeJsonParse("vina_category_budgets", {}));
@@ -1033,20 +869,8 @@
       const [reportHierarchyView, setReportHierarchyView] = useState(() => localStorage.getItem("vina_report_hview") || "parent"); // "parent" | "child"
       const [drillDownParent, setDrillDownParent] = useState(null); // string or null
 
-      const [showThemeDialog, setShowThemeDialog] = useState(false);
       const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-      const [showAccountModal, setShowAccountModal] = useState(false);
-      const [customEmailInput, setCustomEmailInput] = useState("");
-      const [recentAccounts, setRecentAccounts] = useState(() => {
-        try {
-          const recents = JSON.parse(localStorage.getItem("vina_recent_accounts"));
-          if (Array.isArray(recents) && recents.length > 0) return recents;
-        } catch(e) {}
-        return [];
-      });
       
-      const [googleClientId, setGoogleClientId] = useState("266525209219-7bkgvo5olk6nm75ifb27pe0vdp6g41vj.apps.googleusercontent.com");
-      const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem("vina_gemini_key") || "");
       const [googleUser, setGoogleUser] = useState(() => {
         try {
           const stored = JSON.parse(localStorage.getItem("vina_google_user"));
@@ -1063,9 +887,6 @@
       const [isRealtimeLive, setIsRealtimeLive] = useState(false);
       const [syncMessage, setSyncMessage] = useState(null);
       const [syncStatusDetail, setSyncStatusDetail] = useState("");
-      const [syncModalTab, setSyncModalTab] = useState("drive"); // "drive", "cloud", "qr", "json"
-      const [pasteSyncCode, setPasteSyncCode] = useState("");
-      const [showSyncDialog, setShowSyncDialog] = useState(false);
       const [restoreTrigger, setRestoreTrigger] = useState(0);
       const lastLocalEditTime = React.useRef(0);
       const isApplyingRemoteUpdate = React.useRef(false);
@@ -1081,13 +902,12 @@
       };
       const googleUserRef = React.useRef(null);
 
-      const [aiInputText, setAiInputText] = useState("");
-      const [isAiProcessing, setIsAiProcessing] = useState(false);
 
       // ==========================================
       // MAI – TRỢ LÝ ĐỌC THÔNG BÁO GIAO DỊCH (OFFLINE)
       // ==========================================
       const isAndroidApp = typeof window !== "undefined" && !!window.MaiBridge;
+      const canListen = isAndroidApp && (() => { try { return window.MaiBridge.canListen ? !!window.MaiBridge.canListen() : true; } catch(e) { return true; } })();
       const [maiSettings, setMaiSettings] = useState(() => ({ autoSave: true, speak: false, syncBalance: true, ...safeJsonParse("vina_mai_settings", {}) }));
       const [maiInbox, setMaiInbox] = useState(() => safeJsonParse("vina_mai_inbox", []));
       const [maiMemory, setMaiMemory] = useState(() => safeJsonParse("vina_mai_memory", {}));
@@ -1176,7 +996,6 @@
         setTransactions(prev => [tx, ...prev]);
         if (draft.memoryKey && draft.category && draft.categoryEdited) setMaiMemory(prev => ({ ...prev, [draft.memoryKey]: category }));
         setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
-        setTimeout(() => window.lucide && window.lucide.createIcons(), 60);
         if (!opts.silent) showToast(`Mai đã ghi ${type === "INCOME" ? "+" : "-"}${formatVND(amount)} · ${category}`);
         maiSpeak(`${type === "INCOME" ? "Nhận" : "Chi"} ${new Intl.NumberFormat('vi-VN').format(amount)} đồng, ${category}`);
         return tx;
@@ -1329,7 +1148,7 @@
             const parentCat = categories.find(c => c.name === parentName);
             if (parentCat && parentCat.color) return parentCat.color;
           }
-          return "#999999";
+          return "#8A7560";
       };
 
       const getParentNameForCategory = (catName) => {
@@ -1369,11 +1188,10 @@
         localStorage.setItem("vina_report_period", reportPeriod);
         localStorage.setItem("vina_report_hview", reportHierarchyView);
         localStorage.setItem("vina_debts", JSON.stringify(debts));
-        localStorage.setItem("vina_gemini_key", geminiApiKey);
         if (googleUser) localStorage.setItem("vina_google_user", JSON.stringify(googleUser));
         else localStorage.removeItem("vina_google_user");
         if (lastBackupTime) localStorage.setItem("vina_last_backup_time", lastBackupTime);
-      }, [accounts, transactions, categories, categoryParentMap, categoryBudgets, monthlyBudget, reportType, reportPeriod, reportHierarchyView, debts, googleClientId, geminiApiKey, googleUser, lastBackupTime]);
+      }, [accounts, transactions, categories, categoryParentMap, categoryBudgets, monthlyBudget, reportType, reportPeriod, reportHierarchyView, debts, googleUser, lastBackupTime]);
 
       const showToast = (text, type = "success") => {
         setSyncMessage({ text, type });
@@ -1397,58 +1215,7 @@
           if (newReportSettings.reportHierarchyView) setReportHierarchyView(newReportSettings.reportHierarchyView);
           if (newReportSettings.reportAccount) setReportAccount(newReportSettings.reportAccount);
         }
-        setTimeout(() => window.lucide && window.lucide.createIcons(), 50);
       };
-
-      // Device identifier
-      const getDeviceName = () => {
-        const ua = navigator.userAgent;
-        if (/android/i.test(ua)) return "Android Phone";
-        if (/iPad|iPhone|iPod/.test(ua)) return "iOS Device";
-        if (/Macintosh/i.test(ua)) return "Mac";
-        if (/Windows/i.test(ua)) return "Windows PC";
-        return "Trình duyệt Web";
-      };
-
-      // Multi-Device Cloud Sync Endpoints
-      const SERVER_ENDPOINTS = [""];
-
-      const encodeTransferData = (obj) => {
-        try {
-          const jsonStr = JSON.stringify(obj);
-          return btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (m, p) => String.fromCharCode('0x' + p)));
-        } catch(e) {
-          return JSON.stringify(obj);
-        }
-      };
-
-      const decodeTransferData = (str) => {
-        try {
-          const cleaned = str.trim();
-          if (cleaned.startsWith('{')) return JSON.parse(cleaned);
-          const decoded = decodeURIComponent(Array.prototype.map.call(atob(cleaned), (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-          return JSON.parse(decoded);
-        } catch(e) {
-          try { return JSON.parse(str); } catch(err) { throw new Error("Mã chuỗi chuyển dữ liệu không đúng định dạng!"); }
-        }
-      };
-
-      // ==========================================
-      // FIREBASE MULTI-DEVICE SYNC ENGINE
-      // ==========================================
-      const getEmailSyncPin = (emailStr) => {
-        const clean = (emailStr || "drugunhp142@gmail.com").trim().toLowerCase();
-        let hash = 0;
-        for (let i = 0; i < clean.length; i++) {
-          hash = ((hash << 5) - hash) + clean.charCodeAt(i);
-          hash |= 0;
-        }
-        return String(Math.abs(hash) % 900000 + 100000);
-      };
-
-      const userSyncPin = React.useMemo(() => {
-        return getEmailSyncPin(googleUser?.email || "drugunhp142@gmail.com");
-      }, [googleUser?.email]);
 
       // Gộp dữ liệu 2 thiết bị thay vì ghi đè nhau. `base` là bên có thay đổi mới hơn (nguồn
       // chính cho ví, danh mục, ngân sách...), `other` là bên cũ hơn. Giao dịch được gộp theo id,
@@ -1560,15 +1327,7 @@
         setGoogleUser(finalized);
         localStorage.setItem("vina_google_user", JSON.stringify(finalized));
 
-        // Update recent accounts list
-        setRecentAccounts(prev => {
-          const list = [cleanEmail, ...prev.filter(e => e.toLowerCase() !== cleanEmail)].slice(0, 6);
-          localStorage.setItem("vina_recent_accounts", JSON.stringify(list));
-          return list;
-        });
-
-        setShowAccountModal(false);
-        showToast(`🟢 Đã chọn tài khoản: ${cleanEmail}`);
+        showToast(`Đã đăng nhập: ${cleanEmail}`);
         setSyncStatusDetail(`Đã kết nối tài khoản ${cleanEmail}`);
         // Yêu cầu tải bản sao lưu của tài khoản này qua state trigger (không gọi thẳng
         // handleRestoreFromGoogle ở đây) — applyUserAccount có thể được gọi từ closure "đông cứng"
@@ -1577,77 +1336,91 @@
         setRestoreTrigger(t => t + 1);
       };
 
-      // Đăng nhập bằng BẤT KỲ tài khoản Google nào qua Firebase Authentication.
-      // Không xin quyền Google Drive nữa — dữ liệu đồng bộ qua Firestore, khoá theo UID Firebase.
-      const handleGoogleOAuthLogin = async () => {
-        if (!(window.firebase && window.firebase.auth)) {
-          console.warn("Firebase SDK chưa sẵn sàng, dùng nhập Gmail thủ công.");
-          setShowAccountModal(true);
-          return;
+      // ===== Đăng nhập Firebase =====
+      // Email + mật khẩu chạy được ở mọi nơi (kể cả app Android). Google chỉ có trên trình duyệt
+      // vì Google chặn đăng nhập qua cửa sổ web nhúng (WebView) trong app.
+      const AUTH_ERRORS = {
+        "auth/invalid-email": "Email không hợp lệ.",
+        "auth/user-not-found": "Chưa có tài khoản với email này. Bấm \"Tạo tài khoản\".",
+        "auth/wrong-password": "Sai mật khẩu.",
+        "auth/invalid-credential": "Sai email hoặc mật khẩu.",
+        "auth/invalid-login-credentials": "Sai email hoặc mật khẩu.",
+        "auth/email-already-in-use": "Email này đã có tài khoản. Chọn \"Đăng nhập\".",
+        "auth/weak-password": "Mật khẩu cần ít nhất 6 ký tự.",
+        "auth/too-many-requests": "Thử sai quá nhiều lần, đợi một lúc rồi thử lại.",
+        "auth/network-request-failed": "Không có mạng. Kết nối mạng để đăng nhập.",
+        "auth/operation-not-allowed": "Dự án Firebase chưa bật đăng nhập Email/Mật khẩu (Firebase Console → Authentication → Sign-in method).",
+        "auth/requires-recent-login": "Vui lòng đăng xuất rồi đăng nhập lại trước khi làm thao tác này.",
+        "auth/provider-already-linked": "Tài khoản đã có mật khẩu.",
+        "auth/credential-already-in-use": "Email này đã gắn với tài khoản khác."
+      };
+      const authErrorText = (err) => AUTH_ERRORS[err && err.code] || (err && err.message) || "Lỗi không xác định";
+      const [authBusy, setAuthBusy] = useState(false);
+      const [authMode, setAuthMode] = useState("login");
+      const [authEmail, setAuthEmail] = useState("");
+      const [authPass, setAuthPass] = useState("");
+      const [showPass, setShowPass] = useState(false);
+      const [linkPass, setLinkPass] = useState("");
+
+      const handleEmailAuth = async (mode, email, password) => {
+        if (!(window.firebase && window.firebase.auth)) { showToast("Firebase chưa sẵn sàng, kiểm tra kết nối mạng.", "error"); return; }
+        const em = (email || "").trim().toLowerCase();
+        if (!em.includes("@")) { showToast("Nhập đúng email.", "error"); return; }
+        if ((password || "").length < 6) { showToast("Mật khẩu cần ít nhất 6 ký tự.", "error"); return; }
+        setAuthBusy(true);
+        try {
+          if (mode === "signup") await window.firebase.auth().createUserWithEmailAndPassword(em, password);
+          else await window.firebase.auth().signInWithEmailAndPassword(em, password);
+          // onAuthStateChanged sẽ áp dụng tài khoản và tải dữ liệu về
+        } catch (err) {
+          showToast(authErrorText(err), "error");
+        } finally {
+          setAuthBusy(false);
         }
+      };
+
+      const handleResetPassword = async (email) => {
+        const em = (email || "").trim().toLowerCase();
+        if (!em.includes("@")) { showToast("Nhập email trước rồi bấm Quên mật khẩu.", "error"); return; }
+        try {
+          await window.firebase.auth().sendPasswordResetEmail(em);
+          showToast(`Đã gửi thư đặt lại mật khẩu tới ${em}`, "info");
+        } catch (err) { showToast(authErrorText(err), "error"); }
+      };
+
+      const handleGoogleOAuthLogin = async () => {
+        if (!(window.firebase && window.firebase.auth)) { showToast("Firebase chưa sẵn sàng.", "error"); return; }
         try {
           const provider = new window.firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
-
-          const result = await window.firebase.auth().signInWithPopup(provider);
-          if (!result?.user?.email) {
-            throw new Error("Không lấy được thông tin tài khoản vừa chọn.");
-          }
-          // Không tự áp dụng tài khoản ở đây — bộ lắng nghe onAuthStateChanged (nguồn sự thật
-          // duy nhất cho trạng thái đăng nhập) sẽ tự động gọi applyUserAccount ngay khi phiên
-          // Firebase thật sự thay đổi, tránh áp dụng 2 lần hoặc lệch trạng thái.
-        } catch (err) {
-          if (err && err.code === 'auth/popup-closed-by-user') return;
-          console.warn("Firebase Google sign-in error, falling back to manual email:", err);
-          showToast("Đăng nhập Google thất bại: " + (err.message || err.code || "Lỗi không xác định"), "error");
-          setShowAccountModal(true);
-        }
-      };
-
-      // Mở popup đăng nhập Google THẬT, gợi ý sẵn 1 email cụ thể (dùng cho ô nhập email và danh
-      // sách "tài khoản gần đây"). KHÔNG được tự đặt googleUser theo email gõ tay mà bỏ qua xác
-      // thực thật — nếu chỉ đổi nhãn hiển thị mà không đổi phiên Firebase thật, mọi "tài khoản"
-      // sẽ đọc/ghi chung 1 tài liệu Firestore (đúng lỗi "các tài khoản đều giống nhau hết").
-      const handleManualEmailLogin = async (emailToUse) => {
-        const input = (emailToUse || customEmailInput || "").trim().toLowerCase();
-        if (!input || !input.includes("@")) {
-          showToast("Vui lòng nhập đúng định dạng Gmail (ví dụ: yourname@gmail.com)", "error");
-          return;
-        }
-        if (!(window.firebase && window.firebase.auth)) {
-          showToast("Firebase chưa sẵn sàng, thử lại sau.", "error");
-          return;
-        }
-        try {
-          const provider = new window.firebase.auth.GoogleAuthProvider();
-          provider.setCustomParameters({ prompt: 'select_account', login_hint: input });
           await window.firebase.auth().signInWithPopup(provider);
-          setCustomEmailInput("");
         } catch (err) {
           if (err && err.code === 'auth/popup-closed-by-user') return;
-          showToast("Đăng nhập Google thất bại: " + (err.message || err.code || "Lỗi không xác định"), "error");
+          showToast("Đăng nhập Google thất bại: " + authErrorText(err), "error");
         }
       };
 
-      const handleGoogleLogin = () => {
-        setShowAccountModal(true);
+      // Tài khoản Google (tạo trên web) đặt thêm mật khẩu -> đăng nhập được trong app Android, cùng dữ liệu
+      const fbHasPassword = () => {
+        const u = window.firebase?.auth && window.firebase.auth().currentUser;
+        return !!(u && u.providerData.some(p => p.providerId === "password"));
+      };
+      const handleLinkPassword = async (password) => {
+        const u = window.firebase?.auth && window.firebase.auth().currentUser;
+        if (!u || !u.email) return;
+        if ((password || "").length < 6) { showToast("Mật khẩu cần ít nhất 6 ký tự.", "error"); return; }
+        try {
+          await u.linkWithCredential(window.firebase.auth.EmailAuthProvider.credential(u.email, password));
+          showToast(`Đã đặt mật khẩu. Trong app Android, đăng nhập bằng ${u.email} + mật khẩu này.`);
+          setGoogleUser(prev => prev ? { ...prev, hasPassword: true } : prev);
+        } catch (err) { showToast(authErrorText(err), "error"); }
       };
 
       const handleGoogleLogout = () => {
-        if (!confirm("Bạn có chắc muốn đăng xuất tài khoản Gmail hiện tại?")) return;
+        if (!confirm("Đăng xuất? Dữ liệu trên máy sẽ được dọn để tránh lẫn tài khoản; dữ liệu vẫn an toàn trên Firebase.")) return;
         const fbCurrentUser = window.firebase?.auth && window.firebase.auth().currentUser;
-        if (fbCurrentUser) {
-          // Đây là tài khoản đăng nhập Firebase thật — onAuthStateChanged sẽ tự xoá dữ liệu
-          // cục bộ ngay khi phiên thực sự kết thúc (đảm bảo không lệch trạng thái).
-          window.firebase.auth().signOut().catch((e) => console.warn("Sign out error:", e));
-        } else {
-          // Tài khoản nhập email thủ công — không có phiên Firebase thật để lắng nghe, tự xoá tại đây.
-          resetLocalFinancialData();
-          setGoogleUser(null);
-          localStorage.removeItem("vina_google_user");
-        }
-        showToast("Đã đăng xuất. Dữ liệu trên máy đã được xoá — dữ liệu của bạn vẫn an toàn trên Firebase.", "info");
-        setShowAccountModal(true);
+        if (fbCurrentUser) window.firebase.auth().signOut().catch((e) => console.warn("Sign out error:", e));
+        showToast("Đã đăng xuất.", "info");
       };
 
       const handleSaveCategoryBudget = (catName, amount) => {
@@ -1667,30 +1440,8 @@
         showToast(`Đã cập nhật hạn mức chi tiêu tháng: ${formatVND(val)}`);
       };
 
-      const handleExportReportJson = () => {
-        const backup = buildFullBackupPayload();
-        const reportData = {
-          title: "Báo Cáo Tài Chính & Phân Cấp Hạng Mục VinaSpends",
-          exportDate: new Date().toLocaleString('vi-VN'),
-          user: googleUser?.email || "drugunhp142@gmail.com",
-          reportSnapshot: backup.reportSnapshot,
-          categoryBudgets: backup.categoryBudgets,
-          monthlyBudget: backup.monthlyBudget,
-          reportSettings: backup.reportSettings,
-          categories: backup.categories
-        };
-        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `vinaspends_bao_cao_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Đã tải tệp báo cáo JSON!");
-      };
-
       const buildFullBackupPayload = () => {
-        const email = googleUser?.email || "drugunhp142@gmail.com";
+        const email = googleUser?.email || "";
 
         // Dynamic report snapshot metrics
         const totalExp = transactions.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
@@ -1778,8 +1529,11 @@
       };
 
       const handleBackupToGoogle = async (isSilent = false) => {
-        const email = (googleUser?.email || "drugunhp142@gmail.com").trim().toLowerCase();
-        if (!email) return;
+        const email = (googleUser?.email || "").trim().toLowerCase();
+        if (!getUserBackupDocRef()) {
+          if (!isSilent) showToast("Đăng nhập tài khoản Firebase để đồng bộ.", "info");
+          return;
+        }
 
         if (!isSilent) setIsSyncing(true);
         try {
@@ -1820,15 +1574,6 @@
             }
           }
 
-          // 2. Máy chủ riêng (chỉ hoạt động nếu bạn tự triển khai server.js) - phụ, không chặn UI
-          fetch('/api/cloud-sync/backup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, payload: backupPayload, syncCode: userSyncPin })
-          }).catch(() => {});
-
-          // Snapshot locally (khoá riêng theo tài khoản để không lẫn dữ liệu khi đổi tài khoản)
-          localStorage.setItem(getLocalBackupCacheKey(), JSON.stringify(backupPayload));
           const timeFormatted = new Date().toLocaleString('vi-VN');
           setLastSyncTime(timeFormatted);
           localStorage.setItem("vina_last_google_sync", timeFormatted);
@@ -1836,12 +1581,9 @@
           if (firebaseOk) {
             setSyncStatusDetail(`Đã đồng bộ qua Firebase lúc ${new Date().toLocaleTimeString('vi-VN')}`);
             if (!isSilent) showToast(`⚡ Đã sao lưu toàn bộ ${transactions.length} GD, ${categories.length} hạng mục & báo cáo lên Firebase!`);
-          } else if (googleUser?.email) {
-            setSyncStatusDetail(`Chưa kết nối được Firebase, đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
-            if (!isSilent) showToast("Không thể kết nối Firebase lúc này, vui lòng đăng nhập lại tài khoản Google.", "error");
           } else {
-            setSyncStatusDetail(`Đã lưu snapshot cục bộ lúc ${new Date().toLocaleTimeString('vi-VN')}`);
-            if (!isSilent) showToast("Hãy kết nối tài khoản Google để sao lưu lên Firebase!", "info");
+            setSyncStatusDetail(`Chưa kết nối được Firebase lúc ${new Date().toLocaleTimeString('vi-VN')} – sẽ thử lại khi có mạng`);
+            if (!isSilent) showToast("Chưa kết nối được Firebase. Kiểm tra mạng rồi thử lại.", "error");
           }
         } catch (err) {
           if (!isSilent) showToast("Lỗi sao lưu: " + err.message, "error");
@@ -1850,9 +1592,8 @@
         }
       };
 
-      const handleRestoreFromGoogle = async (isSilent = false, customPinOrId = null) => {
-        const email = (googleUser?.email || "drugunhp142@gmail.com").trim().toLowerCase();
-        if (!email) return;
+      const handleRestoreFromGoogle = async (isSilent = false) => {
+        if (!getUserBackupDocRef()) return;
 
         // Vừa có thao tác sửa/xoá cục bộ (vd xoá giao dịch) mà bản đẩy lên Firebase có thể chưa
         // kịp tới máy chủ — nếu vẫn cho khôi phục ngầm chạy lúc này (do focus lại tab, listener
@@ -1868,52 +1609,23 @@
           let remotePayload = null;
           let sourceName = "";
 
-          // 1. Firestore (Firebase) của chính tài khoản đang đăng nhập - kênh chính (bỏ qua khi đang khôi phục theo mã PIN của tài khoản khác)
-          if (!customPinOrId) {
-            const docRef = getUserBackupDocRef();
-            if (docRef) {
-              try {
-                const snap = await docRef.get();
-                const remoteData = snap.exists ? snap.data() : null;
-                const firebaseData = remoteData?.payload;
-                if (firebaseData && (firebaseData.data || firebaseData.accounts || firebaseData.transactions)) {
-                  remotePayload = firebaseData;
-                  sourceName = "Firebase";
-                }
-              } catch (fErr) {
-                console.warn("Firestore restore err:", fErr);
-              }
+          const docRef = getUserBackupDocRef();
+          try {
+            const snap = await docRef.get();
+            const firebaseData = snap.exists ? snap.data()?.payload : null;
+            if (firebaseData && (firebaseData.data || firebaseData.accounts || firebaseData.transactions)) {
+              remotePayload = firebaseData;
+              sourceName = "Firebase";
             }
-          }
-
-          // 2. Máy chủ riêng (chỉ hoạt động nếu bạn tự triển khai server.js) - dùng cho mã PIN 6 số hoặc khi chưa đăng nhập Google
-          if (!remotePayload) {
-            try {
-              const sRes = await fetch(`/api/cloud-sync/restore?email=${encodeURIComponent(email)}&syncCode=${encodeURIComponent(customPinOrId || userSyncPin)}`);
-              if (sRes.ok) {
-                const sJson = await sRes.json();
-                if (sJson && sJson.payload && (sJson.payload.data || sJson.payload.transactions || sJson.payload.accounts)) {
-                  remotePayload = sJson.payload;
-                  sourceName = "Máy chủ riêng";
-                }
-              }
-            } catch(e) {}
-          }
-
-          // 3. Local cached backup fallback (chỉ đọc cache của đúng tài khoản đang đăng nhập)
-          if (!remotePayload) {
-            const cached = localStorage.getItem(getLocalBackupCacheKey());
-            if (cached) {
-              try { 
-                remotePayload = JSON.parse(cached);
-                sourceName = "Bộ nhớ đệm máy";
-              } catch(e) {}
-            }
+          } catch (fErr) {
+            console.warn("Firestore restore err:", fErr);
+            if (!isSilent) showToast("Chưa kết nối được Firebase. Kiểm tra mạng rồi thử lại.", "error");
+            return;
           }
 
           if (!remotePayload) {
             if (!isSilent) {
-              showToast(`Chưa tìm thấy bản sao lưu nào cho [${email}]. Hãy bấm "Sao lưu ngay" từ máy có dữ liệu!`, "info");
+              showToast("Tài khoản này chưa có dữ liệu trên Firebase. Bấm \"Đồng bộ ngay\" ở máy đang có dữ liệu.", "info");
             }
             return;
           }
@@ -1961,150 +1673,6 @@
         }
       };
 
-      // 1-Tap QR & Compressed String Transfer
-      const handleGenerateQrTransfer = () => {
-        try {
-          const payload = buildFullBackupPayload();
-          const jsonStr = JSON.stringify(payload);
-          let encoded = "";
-          if (window.LZString) {
-            encoded = "LZ:" + window.LZString.compressToEncodedURIComponent(jsonStr);
-          } else {
-            encoded = "B64:" + encodeTransferData(payload);
-          }
-          return encoded;
-        } catch(e) {
-          return "";
-        }
-      };
-
-      const handleApplyTransferString = (rawStr) => {
-        if (!rawStr || !rawStr.trim()) {
-          showToast("Vui lòng dán mã chuỗi dữ liệu hoặc mã PIN 6 số!", "error");
-          return;
-        }
-        try {
-          const cleaned = rawStr.trim();
-          
-          // Support 6-digit Sync PIN
-          if (/^\d{6}$/.test(cleaned)) {
-            showToast("Đang kết nối Cloud bằng mã PIN...", "success");
-            handleRestoreFromGoogle(false, cleaned);
-            setPasteSyncCode("");
-            return;
-          }
-
-          let parsed = null;
-          if (cleaned.startsWith("LZ:") && window.LZString) {
-            const decompressed = window.LZString.decompressFromEncodedURIComponent(cleaned.slice(3));
-            parsed = JSON.parse(decompressed);
-          } else if (cleaned.startsWith("B64:")) {
-            parsed = decodeTransferData(cleaned.slice(4));
-          } else {
-            parsed = decodeTransferData(cleaned);
-          }
-
-          const realData = parsed.data || parsed;
-          if (realData && (realData.transactions || realData.accounts)) {
-            updateData(
-              realData.accounts, 
-              realData.transactions, 
-              realData.categories, 
-              realData.debts, 
-              realData.categoryParentMap || DEFAULT_CATEGORY_PARENT_MAP, 
-              true,
-              realData.categoryBudgets,
-              realData.monthlyBudget,
-              realData.reportSettings
-            );
-            if (realData.theme && THEMES[realData.theme]) setTheme(realData.theme);
-            const timeFormatted = new Date().toLocaleString('vi-VN');
-            setLastSyncTime(timeFormatted);
-            localStorage.setItem("vina_last_google_sync", timeFormatted);
-            showToast(`🎉 Khôi phục thần tốc ${realData.transactions?.length || 0} giao dịch & hạng mục thành công!`);
-            // Also backup to cloud/drive
-            setTimeout(() => handleBackupToGoogle(true), 200);
-            setPasteSyncCode("");
-          } else {
-            showToast("Mã chuỗi không chứa dữ liệu tài chính hợp lệ!", "error");
-          }
-        } catch(err) {
-          showToast("Lỗi giải mã chuỗi: " + err.message, "error");
-        }
-      };
-
-      // Render QR Code when tab is "qr"
-      useEffect(() => {
-        if (showSyncDialog && syncModalTab === "qr") {
-          setTimeout(() => {
-            const container = document.getElementById("sync_qr_canvas");
-            if (container && window.QRCode) {
-              container.innerHTML = "";
-              const qrText = handleGenerateQrTransfer();
-              if (qrText) {
-                new window.QRCode(container, {
-                  text: qrText,
-                  width: 200,
-                  height: 200,
-                  colorDark: "#059669",
-                  colorLight: "#FFFFFF",
-                  correctLevel: window.QRCode.CorrectLevel.L
-                });
-              }
-            }
-          }, 150);
-        }
-      }, [showSyncDialog, syncModalTab, transactions.length, accounts.length]);
-
-      // Multi-Tab Real-time Broadcast Bus (0ms latency across tabs/windows)
-      const liveBroadcastChannel = React.useRef(null);
-      useEffect(() => {
-        if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-          try {
-            liveBroadcastChannel.current = new BroadcastChannel("vinaspends_realtime_bus");
-            liveBroadcastChannel.current.onmessage = (event) => {
-              if (event.data && event.data.type === "LIVE_STATE_PUSH" && event.data.payload) {
-                const { accounts: rAcc, transactions: rTx, categories: rCat, debts: rDebts, categoryParentMap: rMap, theme: rTheme, categoryBudgets: rBudgets, monthlyBudget: rMonthlyBudget, reportSettings: rReportSettings } = event.data.payload;
-                if (rTx && rAcc) {
-                  updateData(rAcc, rTx, rCat, rDebts, rMap || DEFAULT_CATEGORY_PARENT_MAP, true, rBudgets, rMonthlyBudget, rReportSettings);
-                  if (rTheme && THEMES[rTheme]) setTheme(rTheme);
-                  const timeFormatted = new Date().toLocaleString('vi-VN');
-                  setLastSyncTime(timeFormatted);
-                  setIsRealtimeLive(true);
-                  setSyncStatusDetail(`⚡ Đồng bộ tức thì các tab lúc ${timeFormatted.split(' ')[1]}`);
-                }
-              }
-            };
-          } catch(e) {}
-        }
-
-        // Cross-tab storage listener fallback (0ms)
-        const onStorageChange = (e) => {
-          if (e.key === "vina_transactions" || e.key === "vina_accounts" || e.key === "vina_categories" || e.key === "vina_category_budgets") {
-            try {
-              const txs = JSON.parse(localStorage.getItem("vina_transactions") || "[]");
-              const accs = JSON.parse(localStorage.getItem("vina_accounts") || "[]");
-              const cats = JSON.parse(localStorage.getItem("vina_categories") || "[]");
-              const debts = JSON.parse(localStorage.getItem("vina_debts") || "[]");
-              const map = JSON.parse(localStorage.getItem("vina_category_parent_map") || "{}");
-              const budgets = JSON.parse(localStorage.getItem("vina_category_budgets") || "{}");
-              const mBudget = JSON.parse(localStorage.getItem("vina_monthly_budget") || "0");
-              if (txs && accs) {
-                updateData(accs, txs, cats, debts, map, true, budgets, mBudget);
-              }
-            } catch(err) {}
-          }
-        };
-        window.addEventListener("storage", onStorageChange);
-
-        return () => {
-          if (liveBroadcastChannel.current) {
-            try { liveBroadcastChannel.current.close(); } catch(e) {}
-          }
-          window.removeEventListener("storage", onStorageChange);
-        };
-      }, []);
-
       useEffect(() => { googleUserRef.current = googleUser; }, [googleUser]);
 
       // Nguồn sự thật DUY NHẤT cho trạng thái đăng nhập Google: lắng nghe trực tiếp phiên đăng
@@ -2121,6 +1689,8 @@
               email: (fbUser.email || "").trim().toLowerCase(),
               name: fbUser.displayName || (fbUser.email || "").split('@')[0],
               picture: fbUser.photoURL || null,
+              hasPassword: fbUser.providerData.some(p => p.providerId === "password"),
+              hasGoogle: fbUser.providerData.some(p => p.providerId === "google.com"),
               connectedAt: new Date().toISOString()
             });
           } else if (googleUserRef.current && googleUserRef.current.uid) {
@@ -2193,9 +1763,9 @@
         return () => {
           window.removeEventListener("focus", onFocus);
         };
-      }, [autoCloudSync, googleUser?.email, userSyncPin]);
+      }, [autoCloudSync, googleUser?.email]);
 
-      // Ultra-Fast Auto-Push on Local Data Change (50ms debounce + Instant BroadcastChannel)
+      // Tự đẩy dữ liệu lên Firebase khi có thay đổi trên máy
       useEffect(() => {
         if (isApplyingRemoteUpdate.current) {
           // Received from remote or cross-tab, do not push back to prevent echo loop
@@ -2212,42 +1782,22 @@
         lastLocalEditTime.current = Date.now();
         if (!autoCloudSync) return;
 
-        // 1. Broadcast instantly to all other open tabs on this device (0ms)
-        if (liveBroadcastChannel.current) {
-          try {
-            liveBroadcastChannel.current.postMessage({
-              type: "LIVE_STATE_PUSH",
-              payload: { 
-                accounts, 
-                transactions, 
-                categories, 
-                debts, 
-                categoryParentMap, 
-                categoryBudgets, 
-                monthlyBudget, 
-                reportSettings: { reportType, reportPeriod, reportHierarchyView, reportAccount },
-                theme 
-              }
-            });
-          } catch(e) {}
-        }
-
-        // 2. Push to Cloud Server & Firebase within 50ms
+        // Đẩy lên Firebase sau 800ms kể từ lần sửa cuối (gom nhiều thay đổi liên tiếp thành 1 lần ghi)
+        if (!googleUser?.uid) return;
         const timer = setTimeout(() => {
           handleBackupToGoogle(true);
-        }, 50);
+        }, 800);
 
         return () => clearTimeout(timer);
       }, [transactions, accounts, categories, debts, categoryParentMap, categoryBudgets, monthlyBudget, reportType, reportPeriod, reportHierarchyView, theme]);
 
       const handleExportJson = () => {
-        const email = googleUser?.email || "drugunhp142@gmail.com";
         const payload = buildFullBackupPayload();
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `vinaspends_backup_${email.replace(/[@.]/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `vinaspends_sao_luu_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         showToast("Đã tải tệp sao lưu JSON đầy đủ về máy!");
@@ -2262,6 +1812,7 @@
             const parsed = JSON.parse(event.target.result);
             const d = parsed.data || parsed;
             if (d.accounts || d.transactions) {
+              if (!confirm(`Nhập tệp sao lưu (${d.transactions?.length || 0} giao dịch) sẽ THAY THẾ dữ liệu hiện có trên máy. Tiếp tục?`)) return;
               updateData(
                 d.accounts, 
                 d.transactions, 
@@ -2273,10 +1824,9 @@
                 d.monthlyBudget,
                 d.reportSettings
               );
-              if (d.theme) setTheme(d.theme);
+              if (d.theme && THEMES[d.theme]) setTheme(d.theme);
               showToast(`Đã nhập ${d.transactions?.length || 0} giao dịch & hạng mục từ tệp JSON!`);
-              // Trigger backup to Google for this imported data
-              setTimeout(() => handleBackupToGoogle(true), 500);
+              if (googleUser?.uid) setTimeout(() => handleBackupToGoogle(true), 500);
             } else {
               showToast("Tệp không đúng định dạng dữ liệu VinaSpends!", "error");
             }
@@ -2286,8 +1836,6 @@
         };
         reader.readAsText(file);
       };
-
-      useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
 
       // Calculate totals
       const totalOwned = accounts.reduce((sum, acc) => sum + (Number(acc.balance)||0), 0);
@@ -2724,13 +2272,13 @@
           payload.preventDefault();
           catName = payload.target.catName?.value?.trim() || "";
           catIcon = payload.target.catIcon?.value || "tag";
-          catColor = payload.target.catColor?.value || "#4ECDC4";
+          catColor = payload.target.catColor?.value || "#2F6F6A";
           isChild = payload.target.isChildCategory ? payload.target.isChildCategory.checked : false;
           parentName = isChild ? (payload.target.parentCategorySelect?.value || newCategoryParent || parentCategories[0]?.name || "Khác") : null;
         } else if (payload && typeof payload === 'object') {
           catName = payload.name?.trim() || "";
           catIcon = payload.icon || "tag";
-          catColor = payload.color || "#4ECDC4";
+          catColor = payload.color || "#2F6F6A";
           isChild = !!payload.isChild;
           parentName = isChild ? (payload.parent || newCategoryParent || parentCategories[0]?.name || "Khác") : null;
         }
@@ -2859,26 +2407,6 @@
         setEditingBank(null);
       };
 
-      const handleParseAI = async () => {
-        if (!geminiApiKey) return alert("Vui lòng cấu hình Gemini API Key bằng nút Cài đặt ở góc phải trên cùng!");
-        setIsAiProcessing(true);
-        try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-          const prompt = `Trích xuất JSON từ nội dung này (amount:number, type:"EXPENSE"|"INCOME", category:"text", note:"text", bankName:"text"). Nội dung: ${aiInputText}`;
-          const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-          const data = await res.json();
-          if(data.error) throw new Error(data.error.message);
-          const raw = data.candidates[0].content.parts[0].text;
-          const result = JSON.parse(raw.replace(/```json/g, "").replace(/```/g, "").trim());
-          
-          if (confirm(`AI Phát hiện: ${formatVND(result.amount)} - ${result.type}\nLưu ngay?`)) {
-             handleAddTx({ target: { type: { value: result.type }, amount: { value: result.amount }, category: { value: result.category || categories[0]?.name }, bankName: { value: accounts.find(a => a.name.includes(result.bankName))?.name || accounts[0].name }, note: { value: result.note || "AI Scan" } }, preventDefault: ()=>{} });
-             setAiInputText("");
-          }
-        } catch(e) { alert("Lỗi AI: " + e.message); }
-        setIsAiProcessing(false);
-      };
-
       // Tab Definitions
       const TABS = [
         { id: "overview", icon: "home", label: "Tổng quan" },
@@ -2917,13 +2445,12 @@
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={()=>setShowSyncDialog(true)}
+                  onClick={()=>setShowSettingsDialog(true)}
                   aria-label="Đồng bộ dữ liệu"
                   className={`flex items-center gap-1.5 h-9 px-3 rounded-full border-2 text-xs font-bold ${googleUser ? 'border-retro-ink bg-theme-surface text-theme-textPrimary' : 'border-theme-border bg-theme-variant text-theme-textSecondary'}`}>
                   <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
                   <span>{googleUser ? (isRealtimeLive ? 'Live' : 'Đã lưu') : 'Offline'}</span>
                 </button>
-                <button onClick={()=>setShowThemeDialog(true)} aria-label="Đổi giao diện" className="w-9 h-9 rounded-full flex items-center justify-center text-theme-textPrimary hover:bg-theme-variant"><Icon name="palette" className="w-5 h-5" /></button>
                 <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="w-9 h-9 rounded-full flex items-center justify-center text-theme-textPrimary hover:bg-theme-variant"><Icon name="settings" className="w-5 h-5" /></button>
               </div>
             </div>
@@ -2940,12 +2467,11 @@
                   <h1 className="font-display font-black text-2xl text-theme-textPrimary">VinaSpends</h1>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={()=>setShowThemeDialog(true)} aria-label="Đổi giao diện" className="text-theme-textSecondary hover:text-theme-primary"><Icon name="palette" className="w-4 h-4" /></button>
                   <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="text-theme-textSecondary hover:text-theme-primary"><Icon name="settings" className="w-4 h-4" /></button>
                 </div>
             </div>
 
-            <button onClick={()=>setShowSyncDialog(true)} className="mb-6 p-3 rounded-2xl bg-theme-background border-2 border-theme-border text-left flex items-center gap-2.5">
+            <button onClick={()=>setShowSettingsDialog(true)} className="mb-6 p-3 rounded-2xl bg-theme-background border-2 border-theme-border text-left flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-theme-variant flex items-center justify-center text-theme-primary shrink-0">
                 <Icon name={googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
               </div>
@@ -3032,9 +2558,7 @@
                           <div key={acc.id} onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }}
                             className="bg-theme-background border-2 border-theme-border p-3 rounded-2xl flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-full bg-white border-2 border-retro-ink/70 flex items-center justify-center overflow-hidden shrink-0">
-                                {logo ? <img src={logo} alt="" className="max-h-[70%] max-w-[70%] object-contain" onError={(e) => { e.target.replaceWith(Object.assign(document.createElement('span'), { className: 'font-display font-black text-sm text-[#3A2618]', textContent: acc.name.charAt(0) })); }} /> : <Icon name={acc.name === "Tiền mặt" ? "banknote" : "wallet"} className="w-5 h-5 text-retro-ink" />}
-                              </div>
+                              <BankBadge name={acc.name} size={40} />
                               <div className="min-w-0">
                                 <p className="font-bold text-sm text-theme-textPrimary truncate">{acc.name}</p>
                                 {acc.accountNo && acc.accountNo !== "N/A" && acc.accountNo !== "CASH" && <p className="text-[11px] text-theme-textSecondary font-mono">{acc.accountNo}</p>}
@@ -3067,7 +2591,7 @@
                 </div>
 
                 {/* Nhắc quyền đọc thông báo trên Android */}
-                {isAndroidApp && !maiAccess && (
+                {canListen && !maiAccess && (
                   <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="w-full text-left p-4 rounded-2xl bg-[#F6E3B0] border-2 border-retro-ink flex items-center gap-3 text-[#3A2618]">
                     <MaiAvatar size={40} animated />
                     <div className="flex-1">
@@ -3162,47 +2686,13 @@
                   )}
                 </div>
 
-                {/* FIREBASE SYNC CARD FOR REPORTS & CATEGORIES */}
-                <div className="bg-gradient-to-r from-emerald-500/10 via-theme-surface to-blue-500/10 border border-emerald-500/30 p-4 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <Icon name="upload-cloud" className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-theme-textPrimary">Đồng bộ Firebase & Báo cáo</span>
-                        <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">Firestore</span>
-                      </div>
-                      <p className="text-[11px] text-theme-textSecondary">
-                        Tất cả Hạng mục & Báo cáo phân tích được tự động sao lưu vào tài khoản Firebase của bạn.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                    <button
-                      onClick={handleExportReportJson}
-                      title="Tải tệp snapshot báo cáo JSON"
-                      className="px-3 py-2 bg-theme-surface border border-theme-border text-theme-textPrimary hover:border-theme-primary text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm">
-                      <Icon name="file-down" className="w-3.5 h-3.5 text-blue-500" />
-                      <span>Xuất JSON</span>
-                    </button>
-                    <button
-                      onClick={() => handleBackupToGoogle(false)}
-                      disabled={isSyncing}
-                      className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50">
-                      <Icon name={isSyncing ? "loader" : "refresh-cw"} className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-                      <span>{isSyncing ? "Đang đồng bộ..." : "Lưu lên Firebase"}</span>
-                    </button>
-                  </div>
-                </div>
-                
                 {/* 1. KHOẢN CHI TIÊU / THU NHẬP Segment */}
                 <div className="flex bg-theme-surface border border-theme-border p-1 rounded-2xl shadow-sm">
-                  <button onClick={()=>{ setReportType("Chi tiêu"); setDrillDownParent(null); }} className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${reportType==="Chi tiêu" ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/40 shadow-sm' : 'text-theme-textSecondary hover:text-theme-textPrimary border border-transparent'}`}>
-                    <div className={`w-2 h-2 rounded-full ${reportType==="Chi tiêu" ? 'bg-rose-500' : 'bg-transparent'}`}></div> KHOẢN CHI TIÊU
+                  <button onClick={()=>{ setReportType("Chi tiêu"); setDrillDownParent(null); }} className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${reportType==="Chi tiêu" ? 'bg-[var(--expense-light)] text-[var(--expense)] border border-[var(--expense)] shadow-sm' : 'text-theme-textSecondary hover:text-theme-textPrimary border border-transparent'}`}>
+                    <div className={`w-2 h-2 rounded-full ${reportType==="Chi tiêu" ? 'bg-[var(--expense)]' : 'bg-transparent'}`}></div> KHOẢN CHI TIÊU
                   </button>
-                  <button onClick={()=>{ setReportType("Thu nhập"); setDrillDownParent(null); }} className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${reportType==="Thu nhập" ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shadow-sm' : 'text-theme-textSecondary hover:text-theme-textPrimary border border-transparent'}`}>
-                    <div className={`w-2 h-2 rounded-full ${reportType==="Thu nhập" ? 'bg-emerald-500' : 'bg-transparent'}`}></div> KHOẢN THU NHẬP
+                  <button onClick={()=>{ setReportType("Thu nhập"); setDrillDownParent(null); }} className={`flex-1 py-3 text-xs md:text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${reportType==="Thu nhập" ? 'bg-[var(--income-light)] text-[var(--income)] border border-[var(--income)] shadow-sm' : 'text-theme-textSecondary hover:text-theme-textPrimary border border-transparent'}`}>
+                    <div className={`w-2 h-2 rounded-full ${reportType==="Thu nhập" ? 'bg-[var(--income)]' : 'bg-transparent'}`}></div> KHOẢN THU NHẬP
                   </button>
                 </div>
 
@@ -3226,7 +2716,7 @@
                         </div>
                         <div className="sm:text-right">
                           <span className="text-[10px] text-theme-textSecondary uppercase font-bold">Tổng chi trong kỳ</span>
-                          <p className={`text-2xl font-black ${reportType === "Chi tiêu" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                          <p className={`text-2xl font-black ${reportType === "Chi tiêu" ? "text-[var(--expense)]" : "text-[var(--income)]"}`}>
                             {formatVND(drillDownData.total)}
                           </p>
                         </div>
@@ -3289,7 +2779,7 @@
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <p className={`font-bold text-sm md:text-base ${tx.type==="INCOME"?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}`}>
+                            <p className={`font-bold text-sm md:text-base ${tx.type==="INCOME"?'text-[var(--income)]':'text-[var(--expense)]'}`}>
                               {tx.type==="INCOME"?'+':'-'}{formatVND(tx.amount)}
                             </p>
                             <div className="flex items-center gap-1 opacity-90 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
@@ -3304,7 +2794,7 @@
                                 type="button"
                                 onClick={() => handleDeleteTx(tx.id)} 
                                 title="Xóa giao dịch" 
-                                className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-rose-500 rounded-xl transition-all shadow-sm">
+                                className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-[var(--expense)] rounded-xl transition-all shadow-sm">
                                 <Icon name="trash-2" className="w-3.5 h-3.5" />
                               </button>
                             </div>
@@ -3323,7 +2813,7 @@
                       <h3 className="font-bold text-theme-textPrimary text-sm md:text-base flex items-center gap-2">
                         <Icon name="bar-chart-2" className="w-4 h-4 text-theme-primary" />
                         {reportBarData.mode === "category" ? `${reportType} theo danh mục` : `${reportType} theo ${reportBarData.mode === "month" ? "tháng" : "ngày"}`}
-                        <span className={`ml-auto font-black ${reportType === "Chi tiêu" ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{formatVND(reportTotal)}</span>
+                        <span className={`ml-auto font-black ${reportType === "Chi tiêu" ? "text-[var(--expense)]" : "text-[var(--income)]"}`}>{formatVND(reportTotal)}</span>
                       </h3>
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="flex bg-theme-background border border-theme-border p-1 rounded-xl">
@@ -3412,15 +2902,15 @@
                         <div className="flex justify-between items-center">
                             <div className="flex flex-col">
                                 <span className="text-xs text-theme-textSecondary font-semibold mb-1">Thu nhập (+)</span>
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm md:text-base">{formatVND(reportSummary.income)}</span>
+                                <span className="font-bold text-[var(--income)] text-sm md:text-base">{formatVND(reportSummary.income)}</span>
                             </div>
                             <div className="flex flex-col items-center">
                                 <span className="text-xs text-theme-textSecondary font-semibold mb-1">Chi tiêu (-)</span>
-                                <span className="font-bold text-rose-600 dark:text-rose-400 text-sm md:text-base">{formatVND(reportSummary.expense)}</span>
+                                <span className="font-bold text-[var(--expense)] text-sm md:text-base">{formatVND(reportSummary.expense)}</span>
                             </div>
                             <div className="flex flex-col items-end">
                                 <span className="text-xs text-theme-textSecondary font-semibold mb-1">Số dư Ròng</span>
-                                <span className={`font-bold text-sm md:text-base ${reportSummary.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>{formatVND(reportSummary.net)}</span>
+                                <span className={`font-bold text-sm md:text-base ${reportSummary.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{formatVND(reportSummary.net)}</span>
                             </div>
                         </div>
                     </div>
@@ -3457,13 +2947,13 @@
                           <>
                             <div className="w-full bg-theme-surface h-2.5 rounded-full overflow-hidden border border-theme-border">
                               <div 
-                                className={`h-full rounded-full transition-all ${reportSummary.expense > monthlyBudget ? 'bg-rose-500' : (reportSummary.expense / monthlyBudget > 0.8 ? 'bg-amber-500' : 'bg-emerald-500')}`}
+                                className={`h-full rounded-full transition-all ${reportSummary.expense > monthlyBudget ? 'bg-[var(--expense)]' : (reportSummary.expense / monthlyBudget > 0.8 ? 'bg-retro-mustard' : 'bg-[var(--income)]')}`}
                                 style={{ width: `${Math.min(100, (reportSummary.expense / monthlyBudget) * 100)}%` }}
                               />
                             </div>
                             <div className="flex justify-between items-center text-[10px] text-theme-textSecondary">
                               <span>Đã dùng {((reportSummary.expense / monthlyBudget) * 100).toFixed(1)}%</span>
-                              <span className={monthlyBudget >= reportSummary.expense ? "text-emerald-500 font-bold" : "text-rose-500 font-bold"}>
+                              <span className={monthlyBudget >= reportSummary.expense ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
                                 {monthlyBudget >= reportSummary.expense ? `Còn lại: ${formatVND(monthlyBudget - reportSummary.expense)}` : `Vượt hạn mức: ${formatVND(reportSummary.expense - monthlyBudget)}`}
                               </span>
                             </div>
@@ -3502,13 +2992,13 @@
                                 <div className="space-y-1">
                                   <div className="w-full bg-theme-surface h-1.5 rounded-full overflow-hidden border border-theme-border">
                                     <div 
-                                      className={`h-full rounded-full transition-all ${spent > limit ? 'bg-rose-500' : (percent > 80 ? 'bg-amber-500' : 'bg-emerald-500')}`}
+                                      className={`h-full rounded-full transition-all ${spent > limit ? 'bg-[var(--expense)]' : (percent > 80 ? 'bg-retro-mustard' : 'bg-[var(--income)]')}`}
                                       style={{ width: `${Math.min(100, percent)}%` }}
                                     />
                                   </div>
                                   <div className="flex justify-between items-center text-[9px]">
                                     <span className="text-theme-textSecondary">{percent.toFixed(0)}%</span>
-                                    <span className={spent <= limit ? "text-emerald-500 font-bold" : "text-rose-500 font-bold"}>
+                                    <span className={spent <= limit ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
                                       {spent <= limit ? `Còn: ${formatVND(limit - spent)}` : `Vượt: ${formatVND(spent - limit)}`}
                                     </span>
                                   </div>
@@ -3626,22 +3116,6 @@
                   </div>
                 </div>
 
-                {/* Firebase Sync Category Badge */}
-                <div className="bg-theme-surface border border-emerald-500/30 p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <Icon name="check-circle" className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <p className="text-xs text-theme-textPrimary font-medium">
-                      Cây phân cấp danh mục, biểu tượng & màu sắc được bảo toàn và đồng bộ hai chiều lên <b className="text-emerald-600 dark:text-emerald-400">Firebase</b>.
-                    </p>
-                  </div>
-                  <button
-                    onClick={()=>handleBackupToGoogle(false)}
-                    disabled={isSyncing}
-                    className="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 shrink-0 transition-colors">
-                    <Icon name="upload-cloud" className="w-3.5 h-3.5" /> Sao lưu Firebase
-                  </button>
-                </div>
-
                 {/* Hierarchy Filter Tabs */}
                 <div className="flex bg-theme-surface border border-theme-border p-1 rounded-2xl shadow-sm">
                   <button 
@@ -3714,7 +3188,7 @@
                               </button>
                               <button 
                                 onClick={()=>handleDeleteCategory(parent)}
-                                className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-rose-500 rounded-xl transition-all"
+                                className="p-2 bg-theme-background border border-theme-border text-theme-textSecondary hover:text-[var(--expense)] rounded-xl transition-all"
                                 title="Xóa danh mục lớn">
                                 <Icon name="trash-2" className="w-3.5 h-3.5" />
                               </button>
@@ -3740,7 +3214,7 @@
                                         </button>
                                         <button 
                                           onClick={()=>handleDeleteCategory(child)}
-                                          className="text-theme-textSecondary hover:text-rose-500 p-1">
+                                          className="text-theme-textSecondary hover:text-[var(--expense)] p-1">
                                           <Icon name="trash-2" className="w-3 h-3" />
                                         </button>
                                       </div>
@@ -3776,7 +3250,7 @@
                             <button className="text-theme-textSecondary hover:text-theme-primary p-1.5 bg-theme-background rounded-full transition-all" onClick={()=>{ setEditingCategory(sub); setIsCategoryModalOpen(true); }}>
                               <Icon name="edit-2" className="w-3.5 h-3.5" />
                             </button>
-                            <button className="text-theme-textSecondary hover:text-rose-500 p-1.5 bg-theme-background rounded-full transition-all" onClick={()=>handleDeleteCategory(sub)}>
+                            <button className="text-theme-textSecondary hover:text-[var(--expense)] p-1.5 bg-theme-background rounded-full transition-all" onClick={()=>handleDeleteCategory(sub)}>
                               <Icon name="trash-2" className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -3811,14 +3285,14 @@
                 {/* Trạng thái tự động */}
                 <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full border-2 border-retro-ink flex items-center justify-center ${isAndroidApp && maiAccess ? 'bg-[#E3E8C6]' : 'bg-[#F6E3B0]'}`}>
-                      <Icon name={isAndroidApp && maiAccess ? "bell-ring" : "bell-off"} className="w-5 h-5 text-retro-ink" />
+                    <div className={`w-10 h-10 rounded-full border-2 border-retro-ink flex items-center justify-center ${canListen && maiAccess ? 'bg-[#E3E8C6]' : 'bg-[#F6E3B0]'}`}>
+                      <Icon name={canListen && maiAccess ? "bell-ring" : "bell-off"} className="w-5 h-5 text-retro-ink" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm text-theme-textPrimary">{isAndroidApp ? (maiAccess ? "Mai đang nghe thông báo" : "Mai chưa được đọc thông báo") : "Tự động đọc thông báo"}</p>
-                      <p className="text-xs text-theme-textSecondary">{isAndroidApp ? (maiAccess ? "Biến động số dư sẽ được ghi ngay khi về máy." : "Cần cấp quyền \"Truy cập thông báo\" một lần.") : "Có trong bản cài đặt Android (APK). Trên web, anh dán thông báo vào ô bên dưới."}</p>
+                      <p className="font-bold text-sm text-theme-textPrimary">{canListen ? (maiAccess ? "Mai đang nghe thông báo" : "Mai chưa được đọc thông báo") : isAndroidApp ? "Bản Lite: chia sẻ tin cho Mai" : "Tự động đọc thông báo"}</p>
+                      <p className="text-xs text-theme-textSecondary">{canListen ? (maiAccess ? "Biến động số dư sẽ được ghi ngay khi về máy." : "Cần cấp quyền \"Truy cập thông báo\" một lần.") : isAndroidApp ? "Mở tin nhắn SMS ngân hàng → Chia sẻ → VinaSpends, hoặc dán vào ô bên dưới." : "Có trong bản cài đặt Android (APK). Trên web, anh dán thông báo vào ô bên dưới."}</p>
                     </div>
-                    {isAndroidApp && (
+                    {canListen && (
                       <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className={`px-3 py-2 rounded-xl text-xs font-bold border-2 border-retro-ink ${maiAccess ? 'bg-theme-background text-theme-textPrimary' : 'bg-theme-primary text-white retro-btn'}`}>{maiAccess ? "Quản lý" : "Cấp quyền"}</button>
                     )}
                   </div>
@@ -3929,18 +3403,7 @@
                         <div key={acc.id} className="bg-gradient-to-br from-theme-surface to-theme-background border border-theme-border p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden group hover:border-theme-primary/50 transition-colors shadow-lg">
                           <div className="flex justify-between items-start z-10">
                              <div className="flex items-center gap-3">
-                               {logo ? (
-                                 <div className="w-10 h-10 rounded-lg bg-white p-1 shadow-sm flex items-center justify-center overflow-hidden">
-                                    <img src={logo} alt={acc.name} className="max-h-full max-w-full object-contain" onError={(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex'; }} />
-                                    <div className="hidden w-full h-full items-center justify-center">
-                                       <Icon name="landmark" className="w-5 h-5 text-gray-500" />
-                                    </div>
-                                 </div>
-                               ) : (
-                                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shadow-sm">
-                                   <Icon name="wallet" className="w-5 h-5 text-theme-primary" />
-                                 </div>
-                               )}
+                               <BankBadge name={acc.name} size={44} />
                                <div className="flex flex-col">
                                  <p className="font-bold text-base text-theme-textPrimary">{acc.name}</p>
                                  {acc.accountNo && acc.accountNo !== "N/A" && <p className="text-[10px] text-theme-textSecondary font-mono tracking-wider">{acc.accountNo}</p>}
@@ -3948,7 +3411,7 @@
                              </div>
                              <div className="flex gap-2">
                                <button onClick={()=>{ setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} className="text-theme-textSecondary hover:text-theme-primary bg-theme-background p-2 rounded-full"><Icon name="edit-2" className="w-4 h-4" /></button>
-                               <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-rose-500 bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
+                               <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-[var(--expense)] bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
                              </div>
                           </div>
                           <p className="text-2xl font-black text-theme-textPrimary z-10 tracking-tight mt-1">{formatVND(acc.balance)}</p>
@@ -3974,11 +3437,11 @@
                     <form onSubmit={handleAddDebt} className="bg-theme-surface border border-theme-border p-6 rounded-3xl space-y-5 shadow-lg relative overflow-hidden">
                       <h3 className="font-bold text-theme-textPrimary flex items-center gap-2 text-base"><Icon name="book-open" className="w-5 h-5 text-theme-primary" /> Ghi sổ vay mượn</h3>
                       <div className="flex gap-3">
-                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold cursor-pointer transition-colors shadow-inner">
+                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-[var(--expense)] bg-[var(--expense-light)] text-[var(--expense)] font-bold cursor-pointer transition-colors shadow-inner">
                           <input type="radio" name="type" value="VAY" defaultChecked className="hidden peer" />
                           <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-down-left" className="w-4 h-4" /> Tôi đi vay</span>
                         </label>
-                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors shadow-inner">
+                        <label className="flex-1 flex justify-center p-3.5 rounded-xl border border-[var(--income)] bg-[var(--income-light)] text-[var(--income)] font-bold cursor-pointer transition-colors shadow-inner">
                           <input type="radio" name="type" value="CHO_VAY" className="hidden peer" />
                           <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-up-right" className="w-4 h-4" /> Tôi cho vay</span>
                         </label>
@@ -3993,13 +3456,13 @@
 
                     {/* TỔNG HỢP SỔ NỢ */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4">
-                        <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Bạn đang nợ</p>
-                        <p className="text-lg font-extrabold text-rose-600 dark:text-rose-400 mt-1">{formatVND(totalDebtBorrowed)}</p>
+                      <div className="bg-[var(--expense-light)] border border-[var(--expense)] rounded-2xl p-4">
+                        <p className="text-[11px] font-bold text-[var(--expense)] uppercase tracking-wider">Bạn đang nợ</p>
+                        <p className="text-lg font-extrabold text-[var(--expense)] mt-1">{formatVND(totalDebtBorrowed)}</p>
                       </div>
-                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
-                        <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Người khác nợ bạn</p>
-                        <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{formatVND(totalDebtLent)}</p>
+                      <div className="bg-[var(--income-light)] border border-[var(--income)] rounded-2xl p-4">
+                        <p className="text-[11px] font-bold text-[var(--income)] uppercase tracking-wider">Người khác nợ bạn</p>
+                        <p className="text-lg font-extrabold text-[var(--income)] mt-1">{formatVND(totalDebtLent)}</p>
                       </div>
                     </div>
 
@@ -4026,7 +3489,7 @@
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <div className="text-right">
-                                    <p className={`font-bold text-sm ${p.net > 0 ? 'text-emerald-600 dark:text-emerald-400' : p.net < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-theme-textSecondary'}`}>
+                                    <p className={`font-bold text-sm ${p.net > 0 ? 'text-[var(--income)]' : p.net < 0 ? 'text-[var(--expense)]' : 'text-theme-textSecondary'}`}>
                                       {p.net === 0 ? "Đã xong" : formatVND(Math.abs(p.net))}
                                     </p>
                                     {p.net !== 0 && (
@@ -4042,7 +3505,7 @@
                                     <div key={d.id} className={`p-3.5 flex items-center justify-between gap-3 ${d.isPaid ? 'opacity-50 grayscale' : ''}`}>
                                       <div className="flex flex-col overflow-hidden">
                                         <p className="font-bold text-theme-textPrimary text-xs flex items-center gap-2">
-                                          {d.type === "VAY" ? <span className="text-rose-600 dark:text-rose-400 text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-rose-500/20">ĐI VAY</span> : <span className="text-emerald-600 dark:text-emerald-400 text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20">CHO VAY</span>}
+                                          {d.type === "VAY" ? <span className="text-[var(--expense)] text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-[var(--expense-light)]">ĐI VAY</span> : <span className="text-[var(--income)] text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded bg-[var(--income-light)]">CHO VAY</span>}
                                           {d.isPaid && <span className="text-[9px] font-bold text-theme-textSecondary">Đã xong</span>}
                                         </p>
                                         <p className="text-[11px] font-semibold text-theme-textSecondary mt-1 truncate">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
@@ -4051,7 +3514,7 @@
                                         <p className="font-bold text-theme-textPrimary text-sm">{formatVND(d.amount)}</p>
                                         <div className="flex items-center gap-1.5">
                                           <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-3.5 h-3.5" /></button>
-                                          <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2 rounded-full text-theme-textSecondary border border-theme-border hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                          <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2 rounded-full text-theme-textSecondary border border-theme-border hover:bg-[var(--expense-light)] hover:text-[var(--expense)] transition-colors"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
                                         </div>
                                       </div>
                                     </div>
@@ -4069,7 +3532,7 @@
                           <div key={d.id} className={`bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center transition-all shadow-sm ${d.isPaid ? 'opacity-50 grayscale' : 'hover:bg-theme-variant'}`}>
                             <div className="flex flex-col">
                                <p className="font-bold text-theme-textPrimary text-[15px] flex items-center gap-2">
-                                 {d.type === "VAY" ? <span className="text-rose-600 dark:text-rose-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-rose-500/20">ĐI VAY</span> : <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-emerald-500/20">CHO VAY</span>}
+                                 {d.type === "VAY" ? <span className="text-[var(--expense)] text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-[var(--expense-light)]">ĐI VAY</span> : <span className="text-[var(--income)] text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-[var(--income-light)]">CHO VAY</span>}
                                  {d.title}
                                </p>
                                <p className="text-[11px] font-semibold text-theme-textSecondary mt-1.5">{d.note || "Không có ghi chú"} • {new Date(d.date).toLocaleDateString()}</p>
@@ -4078,7 +3541,7 @@
                               <p className="font-bold text-theme-textPrimary text-base tracking-tight">{formatVND(d.amount)}</p>
                               <div className="flex items-center gap-2 border-l border-theme-border pl-4">
                                 <button onClick={()=>handleToggleDebt(d.id)} className={`p-2.5 rounded-full transition-colors ${d.isPaid ? 'bg-theme-primary text-theme-background' : 'bg-theme-background text-theme-primary border border-theme-border hover:bg-theme-primary/20'}`}><Icon name="check" className="w-4 h-4" /></button>
-                                <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2.5 rounded-full text-theme-textSecondary border border-theme-border hover:bg-rose-500/20 hover:text-rose-500 transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
+                                <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2.5 rounded-full text-theme-textSecondary border border-theme-border hover:bg-[var(--expense-light)] hover:text-[var(--expense)] transition-colors"><Icon name="trash-2" className="w-4 h-4" /></button>
                               </div>
                             </div>
                           </div>
@@ -4253,7 +3716,7 @@
                               <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
                                   <input type="radio" name="category" value={c.name} required className="peer sr-only" />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
-                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#4ECDC4" }} />
+                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
                                   </div>
                               </label>
@@ -4306,11 +3769,11 @@
                   </div>
                   <form onSubmit={handleUpdateTx} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex justify-center p-3 rounded-xl border border-rose-500/50 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold cursor-pointer transition-colors shadow-inner">
+                      <label className="flex justify-center p-3 rounded-xl border border-[var(--expense)] bg-[var(--expense-light)] text-[var(--expense)] font-bold cursor-pointer transition-colors shadow-inner">
                         <input type="radio" name="type" value="EXPENSE" defaultChecked={editingTx.type === "EXPENSE"} className="hidden peer" />
                         <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-down-left" className="w-4 h-4" /> Chi Tiền</span>
                       </label>
-                      <label className="flex justify-center p-3 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold cursor-pointer transition-colors shadow-inner">
+                      <label className="flex justify-center p-3 rounded-xl border border-[var(--income)] bg-[var(--income-light)] text-[var(--income)] font-bold cursor-pointer transition-colors shadow-inner">
                         <input type="radio" name="type" value="INCOME" defaultChecked={editingTx.type === "INCOME"} className="hidden peer" />
                         <span className="peer-checked:underline decoration-2 underline-offset-4 flex items-center gap-2"><Icon name="arrow-up-right" className="w-4 h-4" /> Thu Tiền</span>
                       </label>
@@ -4342,7 +3805,7 @@
                               <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
                                   <input type="radio" name="category" value={c.name} className="peer hidden" defaultChecked={editingTx.category === c.name} />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
-                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#4ECDC4" }} />
+                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
                                   </div>
                               </label>
@@ -4381,7 +3844,7 @@
                           setEditingTx(null);
                           handleDeleteTx(idToDelete);
                         }}
-                        className="px-4 py-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-rose-500/20 active:scale-95 transition-all">
+                        className="px-4 py-3.5 bg-[var(--expense-light)] border border-[var(--expense)] text-[var(--expense)] font-bold rounded-xl flex items-center justify-center gap-1.5 hover:bg-[var(--expense-light)] active:scale-95 transition-all">
                         <Icon name="trash-2" className="w-4 h-4" /> Xóa
                       </button>
                       <button type="submit" className="flex-1 py-3.5 bg-theme-primary text-theme-background font-bold rounded-xl flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg">
@@ -4431,15 +3894,8 @@
                              {BANK_LOGOS.map(b => (
                                <label key={b.name} className="cursor-pointer relative group">
                                  <input type="radio" name="bankName" value={b.name} required={bankNameType==="preset"} className="peer hidden" defaultChecked={editingBank ? editingBank.name === b.name : b.name === "Vietcombank"} />
-                                 <div className="p-2 border border-theme-border rounded-xl bg-theme-background peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 flex items-center justify-center h-[52px] transition-all relative overflow-hidden">
-                                   {b.url ? (
-                                       <>
-                                           <img src={b.url} alt={b.name} className="max-h-full max-w-full object-contain rounded-md" onError={(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex'; }} />
-                                           <div className="hidden w-full h-full items-center justify-center bg-white/10 rounded-md">
-                                               <Icon name="landmark" className="w-6 h-6 text-theme-textSecondary" />
-                                           </div>
-                                       </>
-                                   ) : <Icon name="banknote" className="w-6 h-6 text-theme-textPrimary" />}
+                                 <div className="p-2 border border-theme-border rounded-xl bg-theme-background peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 flex items-center justify-center h-[64px] transition-all relative overflow-hidden">
+                                   <span className="flex flex-col items-center gap-1"><BankBadge name={b.name} size={30} /><span className="text-[9px] font-bold text-theme-textSecondary leading-none truncate max-w-[64px]">{b.name.replace("Ví ", "")}</span></span>
                                  </div>
                                </label>
                              ))}
@@ -4468,282 +3924,131 @@
             </div>
           )}
 
-          {/* THEME SWITCHER DIALOG */}
-          {showThemeDialog && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="palette" className="w-5 h-5 text-theme-primary" /> Giao diện & Chủ đề</h3>
-                  <button onClick={()=>setShowThemeDialog(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
-                </div>
-                <div className="space-y-3">
-                  {Object.entries(THEMES).map(([id, t]) => (
-                    <button key={id} onClick={() => setTheme(id)} className={`w-full flex items-center justify-between p-4 rounded-xl border ${theme === id ? 'border-theme-primary bg-theme-primary/10' : 'border-theme-border bg-theme-background'} transition-all`}>
-                      <span className={`font-bold ${theme === id ? 'text-theme-primary' : 'text-theme-textPrimary'}`}>{t.name}</span>
-                      <div className="flex gap-1 border border-white/10 rounded-full p-1 bg-black/20">
-                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.primary}}></span>
-                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.surface}}></span>
-                        <span className="w-4 h-4 rounded-full" style={{backgroundColor: t.colors.background}}></span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* GOOGLE DRIVE & CLOUD SYNC DIALOG */}
-          {showSyncDialog && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-              <div className="bg-theme-surface w-full max-w-lg rounded-3xl border border-theme-border p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto no-scrollbar">
-                
-                {/* Header */}
-                <div className="flex justify-between items-center pb-3 border-b border-theme-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-inner">
-                      <Icon name="cloud" className={`w-6 h-6 ${isSyncing ? "animate-spin" : ""}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2">
-                        Đồng Bộ Đa Thiết Bị
-                        <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                          Firebase
-                        </span>
-                      </h3>
-                      <p className="text-xs text-theme-textSecondary">Đồng bộ tức thì giữa Máy tính và Điện thoại</p>
-                    </div>
+          {/* CÀI ĐẶT: giao diện · đồng bộ Firebase · sao lưu file */}
+          {showSettingsDialog && (
+            <div className="fixed inset-0 bg-[#1F140D]/60 z-50 flex items-end md:items-center justify-center" onClick={() => setShowSettingsDialog(false)}>
+              <div onClick={e => e.stopPropagation()} className="bg-theme-surface w-full md:max-w-lg rounded-t-[28px] md:rounded-[28px] border-2 border-retro-ink max-h-[92vh] overflow-y-auto">
+                <div className="h-2 retro-stripes-h rounded-t-[26px]" />
+                <div className="p-5 pb-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-black text-2xl text-theme-textPrimary">Cài đặt</h3>
+                    <button onClick={() => setShowSettingsDialog(false)} aria-label="Đóng" className="w-9 h-9 rounded-full bg-theme-variant flex items-center justify-center text-theme-textPrimary"><Icon name="x" className="w-4 h-4" /></button>
                   </div>
-                  <button onClick={()=>setShowSyncDialog(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full">
-                    <Icon name="x" className="w-4 h-4" />
-                  </button>
-                </div>
 
-                {/* Tab Navigation */}
-                <div className="grid grid-cols-3 bg-theme-background border border-theme-border p-1 rounded-2xl gap-1">
-                  <button 
-                    onClick={() => setSyncModalTab("drive")} 
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "drive" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
-                    <Icon name="cloud" className="w-3.5 h-3.5" /> Google / Cloud
-                  </button>
-                  <button 
-                    onClick={() => setSyncModalTab("qr")} 
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "qr" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
-                    <Icon name="qr-code" className="w-3.5 h-3.5" /> Quét QR / Mã
-                  </button>
-                  <button 
-                    onClick={() => setSyncModalTab("json")} 
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${syncModalTab === "json" ? "bg-theme-surface text-theme-primary shadow-sm border border-theme-border" : "text-theme-textSecondary hover:text-theme-textPrimary"}`}>
-                    <Icon name="file-text" className="w-3.5 h-3.5" /> Tệp .JSON
-                  </button>
-                </div>
-
-                {/* TAB 1: GOOGLE DRIVE & CLOUD RELAY */}
-                {syncModalTab === "drive" && (
-                  <div className="space-y-4">
-                    {/* Real-time Status Card */}
-                    <div className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${isRealtimeLive ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-blue-500/10 border-blue-500/20'}`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full shrink-0 ${isRealtimeLive ? 'bg-emerald-500 animate-ping' : 'bg-blue-500 animate-pulse'}`}></div>
-                        <div>
-                          <p className="text-xs font-bold text-theme-textPrimary flex items-center gap-1.5">
-                            {isRealtimeLive ? '⚡ Kênh truyền Thời gian thực (<50ms): ĐANG KẾT NỐI' : '⚡ Chế độ Tự động tức thì: ĐANG HOẠT ĐỘNG'}
-                          </p>
-                          <p className="text-[10px] text-theme-textSecondary">
-                            {isRealtimeLive 
-                              ? 'Mọi thay đổi trên điện thoại/máy tính sẽ hiển thị ngay lập tức không trễ.' 
-                              : 'Tự động đồng bộ 2 chiều tức thì sau mỗi lần thêm/sửa chi tiêu.'}
-                          </p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={()=>handleRestoreFromGoogle(false)}
-                        className="px-2.5 py-1.5 bg-theme-surface border border-theme-border hover:border-theme-primary text-theme-textPrimary font-bold text-[11px] rounded-xl flex items-center gap-1 shrink-0 shadow-sm">
-                        <Icon name="refresh-cw" className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                        <span>Đồng bộ</span>
-                      </button>
+                  {/* Giao diện */}
+                  <section className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" className="w-4 h-4" /> Giao diện</p>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {Object.entries(THEMES).map(([key, t]) => (
+                        <button key={key} onClick={() => setTheme(key)} className={`text-left p-3 rounded-2xl border-2 transition ${theme === key ? 'border-retro-ink shadow-[3px_3px_0_#3A2618]' : 'border-theme-border'}`} style={{ background: t.colors.surface }}>
+                          <div className="flex -space-x-1.5 mb-2">
+                            {[t.colors.primary, t.colors.accent, t.colors.income, t.colors.textPrimary].map((c, i) => <span key={i} className="w-6 h-6 rounded-full border-2" style={{ background: c, borderColor: t.colors.surface }} />)}
+                          </div>
+                          <p className="font-display font-black text-[15px] leading-tight" style={{ color: t.colors.textPrimary }}>{t.name}</p>
+                          <p className="text-[11px] font-medium leading-snug mt-0.5" style={{ color: t.colors.textSecondary }}>{t.desc}</p>
+                        </button>
+                      ))}
                     </div>
+                  </section>
 
-                    {/* Google Account Card */}
-                    <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-10 h-10 rounded-full bg-theme-primary/20 border border-theme-primary/40 flex items-center justify-center font-black text-theme-primary shrink-0">
-                            {googleUser?.name ? googleUser.name.charAt(0).toUpperCase() : <Icon name="user" className="w-5 h-5" />}
-                          </div>
-                          <div className="overflow-hidden">
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-sm text-theme-textPrimary truncate">{googleUser?.name || "Tài khoản Gmail"}</p>
-                              {googleUser?.email && (
-                                <span className="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30 shrink-0">
-                                  Firebase OK
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-theme-textSecondary font-medium truncate">{googleUser ? googleUser.email : "drugunhp142@gmail.com"}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-1.5 shrink-0">
-                          <button onClick={handleGoogleLogin} className="text-xs text-theme-primary hover:bg-theme-primary/20 font-bold px-2.5 py-1.5 rounded-xl border border-theme-primary/30 bg-theme-primary/10 transition-colors">
-                            {googleUser?.email ? "Đổi tài khoản" : "Đăng nhập Google"}
-                          </button>
-                          {googleUser && (
-                            <button onClick={handleGoogleLogout} title="Đăng xuất" className="text-xs text-red-500 p-1.5 rounded-xl border border-red-500/20 bg-red-500/10 hover:bg-red-500/20">
-                              <Icon name="log-out" className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                  <div className="retro-dash" />
 
-                      {/* Sync PIN code for easy cross-device connect */}
-                      <div className="bg-theme-surface/70 border border-theme-border/60 p-3 rounded-xl flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] uppercase font-bold text-theme-textSecondary tracking-wider">Mã kết nối nhanh 6 số (PIN)</p>
-                          <p className="text-base font-mono font-black text-emerald-600 dark:text-emerald-400 tracking-widest">{userSyncPin}</p>
+                  {/* Đồng bộ Firebase */}
+                  <section className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="cloud" className="w-4 h-4" /> Đồng bộ Firebase</p>
+                    {!googleUser ? (
+                      <form className="space-y-3" onSubmit={e => { e.preventDefault(); handleEmailAuth(authMode, authEmail, authPass); }}>
+                        <p className="text-sm text-theme-textSecondary leading-relaxed">Đăng nhập cùng một tài khoản trên điện thoại và máy tính để dữ liệu tự đồng bộ. Không đăng nhập thì dữ liệu chỉ nằm trên máy này.</p>
+                        <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-theme-variant border-2 border-theme-border">
+                          {[["login", "Đăng nhập"], ["signup", "Tạo tài khoản"]].map(([m, l]) => (
+                            <button type="button" key={m} onClick={() => setAuthMode(m)} className={`py-2 rounded-xl text-sm font-bold ${authMode === m ? 'bg-theme-surface text-theme-textPrimary border-2 border-retro-ink' : 'text-theme-textSecondary border-2 border-transparent'}`}>{l}</button>
+                          ))}
                         </div>
-                        <span className="text-[10px] text-theme-textSecondary max-w-[160px] text-right">Nhập mã này trên điện thoại để đồng bộ tức thì</span>
-                      </div>
-
-                      {/* Auto Sync Toggle */}
-                      <div className="flex items-center justify-between pt-2 border-t border-theme-border/40 text-xs">
-                        <span className="text-theme-textSecondary font-medium">Tự động đồng bộ khi thêm/sửa chi tiêu:</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={autoCloudSync} 
-                            onChange={e=>{
-                              setAutoCloudSync(e.target.checked);
-                              localStorage.setItem("vina_auto_cloud_sync", e.target.checked.toString());
-                              showToast(e.target.checked ? "Đã bật tự động đồng bộ!" : "Đã tắt tự động đồng bộ.");
-                            }} 
-                            className="sr-only peer" 
-                          />
-                          <div className="w-9 h-5 bg-theme-border peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <label className="block">
+                          <span className="text-xs font-bold text-theme-textSecondary uppercase tracking-wider">Email</span>
+                          <input type="email" autoComplete="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="ten@gmail.com" className="mt-1 w-full bg-theme-background border-2 rounded-2xl p-3 text-[15px] text-theme-textPrimary" />
                         </label>
-                      </div>
-                    </div>
-
-
-                    {/* Sync Actions */}
-                    <div className="space-y-2.5">
-                      <button 
-                        onClick={() => handleBackupToGoogle(false)}
-                        disabled={isSyncing}
-                        className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 text-sm">
-                        <Icon name={isSyncing ? "loader" : "upload-cloud"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
-                        <span>{isSyncing ? "Đang sao lưu..." : "Sao lưu lên Firebase ngay"}</span>
-                      </button>
-
-                      <button 
-                        onClick={() => handleRestoreFromGoogle(false)}
-                        disabled={isSyncing}
-                        className="w-full py-3 bg-theme-background border-2 border-emerald-500/40 text-theme-textPrimary hover:border-emerald-500 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-theme-variant active:scale-95 transition-all disabled:opacity-50 text-xs shadow-sm">
-                        <Icon name="download-cloud" className="w-4 h-4 text-emerald-500" />
-                        <span>Tải & Khôi phục dữ liệu từ Cloud</span>
-                      </button>
-                    </div>
-
-                    {/* Firebase Backup Badge */}
-                    <div className="bg-theme-surface/60 border border-theme-border/70 p-3.5 rounded-2xl space-y-2 text-xs">
-                      <p className="font-bold text-theme-textPrimary flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
-                        <Icon name="check-circle" className="w-3.5 h-3.5 text-emerald-500" /> Dữ liệu đồng bộ trên Firebase
-                      </p>
-                      <div className="space-y-1.5 text-[11px]">
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-theme-background border border-theme-border/50">
-                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">Giao dịch & Ví</span>
-                          <span className="text-[10px] text-theme-textSecondary">Cây Hạng mục, Sổ nợ</span>
+                        <label className="block">
+                          <span className="text-xs font-bold text-theme-textSecondary uppercase tracking-wider">Mật khẩu</span>
+                          <div className="relative mt-1">
+                            <input type={showPass ? "text" : "password"} autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="Ít nhất 6 ký tự" className="w-full bg-theme-background border-2 rounded-2xl p-3 pr-12 text-[15px] text-theme-textPrimary" />
+                            <button type="button" onClick={() => setShowPass(v => !v)} aria-label={showPass ? "Ẩn mật khẩu" : "Hiện mật khẩu"} className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-theme-textSecondary"><Icon name={showPass ? "eye-off" : "eye"} className="w-5 h-5" /></button>
+                          </div>
+                        </label>
+                        <button type="submit" disabled={authBusy} className="w-full py-3.5 bg-theme-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-60">
+                          {authBusy ? <Icon name="loader" className="w-5 h-5 animate-spin" /> : <Icon name={authMode === "signup" ? "user" : "lock"} className="w-5 h-5" />}
+                          {authMode === "signup" ? "Tạo tài khoản & đồng bộ" : "Đăng nhập & đồng bộ"}
+                        </button>
+                        <div className="flex items-center justify-between">
+                          <button type="button" onClick={() => handleResetPassword(authEmail)} className="text-xs font-bold text-theme-primary py-1">Quên mật khẩu?</button>
+                          {!isAndroidApp && <button type="button" onClick={handleGoogleOAuthLogin} className="text-xs font-bold text-theme-textSecondary flex items-center gap-1.5 py-1"><Icon name="google" className="w-4 h-4" /> Đăng nhập bằng Google</button>}
                         </div>
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-theme-background border border-theme-border/50">
-                          <span className="font-mono text-blue-500 font-bold">Báo cáo & Ngân sách</span>
-                          <span className="text-[10px] text-theme-textSecondary">Phân tích thu chi</span>
+                      </form>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-4 rounded-2xl bg-theme-background border-2 border-theme-border flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-retro-mustard border-2 border-retro-ink flex items-center justify-center font-display font-black text-lg text-retro-ink uppercase">{(googleUser.email || "?").charAt(0)}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-theme-textPrimary truncate">{googleUser.email}</p>
+                            <p className="text-xs text-theme-textSecondary flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full ${isRealtimeLive ? 'bg-[var(--income)]' : 'bg-theme-border'}`} />
+                              {isSyncing ? "Đang đồng bộ…" : isRealtimeLive ? "Đang đồng bộ trực tiếp" : (lastSyncTime ? `Lần cuối: ${lastSyncTime}` : "Chưa đồng bộ")}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Status detail log */}
-                    {syncStatusDetail && (
-                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium flex items-center gap-2">
-                        <Icon name="check-circle" className="w-4 h-4 shrink-0" />
-                        <span className="truncate">{syncStatusDetail}</span>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-theme-textPrimary">Tự động đồng bộ</p>
+                            <p className="text-xs text-theme-textSecondary">Mỗi thay đổi được đẩy lên Firebase và cập nhật sang máy khác.</p>
+                          </div>
+                          <input type="checkbox" className="sr-only peer" checked={autoCloudSync} onChange={e => { setAutoCloudSync(e.target.checked); localStorage.setItem("vina_auto_cloud_sync", String(e.target.checked)); }} />
+                          <span className="w-12 h-7 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button onClick={() => handleBackupToGoogle(false)} disabled={isSyncing} className="py-3 bg-theme-primary text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-sm disabled:opacity-60"><Icon name="refresh" className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Đồng bộ ngay</button>
+                          <button onClick={handleGoogleLogout} className="py-3 rounded-2xl border-2 border-retro-ink text-theme-textPrimary font-bold flex items-center justify-center gap-2 text-sm"><Icon name="log-out" className="w-4 h-4" /> Đăng xuất</button>
+                        </div>
+                        {googleUser.hasGoogle && !googleUser.hasPassword && (
+                          <div className="p-3 rounded-2xl bg-[#F6E3B0] border-2 border-retro-ink text-[#3A2618] space-y-2">
+                            <p className="text-xs font-bold">Đặt mật khẩu để đăng nhập trong app Android (cùng dữ liệu):</p>
+                            <div className="flex gap-2">
+                              <input type="password" value={linkPass} onChange={e => setLinkPass(e.target.value)} placeholder="Mật khẩu mới" className="flex-1 min-w-0 bg-white/80 border-2 border-retro-ink/40 rounded-xl p-2.5 text-sm" />
+                              <button onClick={() => { handleLinkPassword(linkPass); setLinkPass(""); }} className="px-3 rounded-xl bg-retro-ink text-white text-sm font-bold">Lưu</button>
+                            </div>
+                          </div>
+                        )}
+                        {syncStatusDetail && <p className="text-[11px] text-theme-textSecondary">{syncStatusDetail}</p>}
                       </div>
                     )}
-                  </div>
-                )}
+                  </section>
 
-                {/* TAB 2: QR CODE & INSTANT DATA TRANSFER */}
-                {syncModalTab === "qr" && (
-                  <div className="space-y-4">
-                    <div className="bg-theme-background border border-theme-border p-4 rounded-2xl text-center space-y-3">
-                      <h4 className="text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-1.5">
-                        <Icon name="smartphone" className="w-4 h-4 text-emerald-500" /> Quét mã QR từ màn hình Máy tính
-                      </h4>
-                      <p className="text-[11px] text-theme-textSecondary">
-                        Mở camera điện thoại hoặc ứng dụng quét mã để chuyển toàn bộ dữ liệu ngay lập tức không cần mạng internet.
-                      </p>
-                      <div className="flex justify-center p-3 bg-white rounded-2xl border border-theme-border shadow-inner max-w-[220px] mx-auto">
-                        <div id="sync_qr_canvas" className="w-[200px] h-[200px] flex items-center justify-center text-xs text-gray-400">
-                          Đang tạo mã QR...
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          const qrText = handleGenerateQrTransfer();
-                          if (navigator.clipboard && qrText) {
-                            navigator.clipboard.writeText(qrText);
-                            showToast("Đã chép chuỗi mã chuyển dữ liệu vào Clipboard!");
-                          }
-                        }}
-                        className="w-full py-2.5 bg-theme-surface border border-theme-border hover:border-theme-primary text-theme-textPrimary font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm">
-                        <Icon name="copy" className="w-3.5 h-3.5 text-theme-primary" /> Sao chép chuỗi mã dữ liệu (Gửi qua Zalo/Tin nhắn)
-                      </button>
-                    </div>
+                  <div className="retro-dash" />
 
-                    {/* Paste string section on mobile */}
-                    <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-2.5">
-                      <h4 className="text-xs font-bold text-theme-textPrimary flex items-center gap-1.5">
-                        <Icon name="clipboard-paste" className="w-4 h-4 text-blue-500" /> Nhập mã PIN 6 số hoặc chuỗi LZ
-                      </h4>
-                      <textarea 
-                        value={pasteSyncCode} 
-                        onChange={e => setPasteSyncCode(e.target.value)} 
-                        rows={2} 
-                        placeholder="Nhập mã PIN 6 số hoặc dán chuỗi LZ..." 
-                        className="w-full bg-theme-surface border border-theme-border rounded-xl p-2.5 text-xs text-theme-textPrimary font-mono focus:border-theme-primary"
-                      />
-                      <button 
-                        onClick={() => handleApplyTransferString(pasteSyncCode)}
-                        disabled={!pasteSyncCode.trim()}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-40 shadow-md">
-                        <Icon name="zap" className="w-4 h-4" /> Kết nối & Khôi phục dữ liệu
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: JSON FILE OFFLINE */}
-                {syncModalTab === "json" && (
-                  <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
-                    <div>
-                      <h4 className="text-xs font-bold text-theme-textPrimary">Tệp sao lưu .JSON ngoại tuyến</h4>
-                      <p className="text-[11px] text-theme-textSecondary mt-0.5">Tải tệp về máy tính hoặc nạp tệp từ điện thoại</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5 pt-2">
-                      <button 
-                        onClick={handleExportJson}
-                        className="py-3 px-3 bg-theme-surface border border-theme-border hover:border-theme-primary rounded-xl text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-2 transition-all shadow-sm">
-                        <Icon name="file-down" className="w-4 h-4 text-emerald-500" /> Tải tệp .JSON
-                      </button>
-                      <label className="py-3 px-3 bg-theme-surface border border-theme-border hover:border-theme-primary rounded-xl text-xs font-bold text-theme-textPrimary flex items-center justify-center gap-2 cursor-pointer transition-all shadow-sm">
-                        <Icon name="file-up" className="w-4 h-4 text-blue-500" /> Nạp tệp .JSON
-                        <input id="hidden_drive_file_input" type="file" accept=".json" onChange={handleImportJson} className="hidden" />
+                  {/* Sao lưu thủ công */}
+                  <section className="space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu bằng file</p>
+                    <p className="text-sm text-theme-textSecondary">Xuất toàn bộ dữ liệu ra một file .json để cất giữ, hoặc nhập lại từ file đó.</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button onClick={handleExportJson} className="py-3 rounded-2xl border-2 border-retro-ink bg-theme-background text-theme-textPrimary font-bold text-sm flex items-center justify-center gap-2"><Icon name="download" className="w-4 h-4" /> Xuất file</button>
+                      <label className="py-3 rounded-2xl border-2 border-retro-ink bg-theme-background text-theme-textPrimary font-bold text-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <Icon name="upload" className="w-4 h-4" /> Nhập file
+                        <input type="file" accept=".json,application/json" className="hidden" onChange={e => { handleImportJson(e); e.target.value = ""; }} />
                       </label>
                     </div>
-                  </div>
-                )}
+                  </section>
 
-                {/* Close Button */}
-                <button onClick={()=>setShowSyncDialog(false)} className="w-full py-3 bg-theme-variant text-theme-textPrimary font-bold rounded-2xl hover:bg-theme-border transition-all text-xs">
-                  Đóng
-                </button>
+                  {googleUser && (
+                    <React.Fragment>
+                      <div className="retro-dash" />
+                      <section className="space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[var(--expense)] flex items-center gap-2"><Icon name="alert" className="w-4 h-4" /> Vùng nguy hiểm</p>
+                        <button onClick={handleWipeCloudData} className="w-full py-3 rounded-2xl border-2 border-[var(--expense)] text-[var(--expense)] font-bold text-sm flex items-center justify-center gap-2"><Icon name="trash" className="w-4 h-4" /> Xoá toàn bộ dữ liệu của tài khoản này</button>
+                      </section>
+                    </React.Fragment>
+                  )}
+
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.1 · Mai đọc thông báo hoàn toàn trên máy</p>
+                </div>
               </div>
             </div>
           )}
@@ -4815,7 +4120,7 @@
                         <button 
                           type="button"
                           onClick={() => handleSaveCategoryBudget(editingBudgetCat, 0)}
-                          className="px-4 py-3.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 font-bold rounded-xl text-xs transition-colors">
+                          className="px-4 py-3.5 bg-[var(--expense-light)] text-[var(--expense)] hover:bg-[var(--expense-light)] font-bold rounded-xl text-xs transition-colors">
                           Xóa hạn mức
                         </button>
                       )}
@@ -4856,7 +4161,7 @@
                           handleSaveMonthlyBudget(val);
                           setIsBudgetModalOpen(false);
                         }}
-                        className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-500/20">
+                        className="w-full py-3 bg-[var(--income)] hover:bg-[var(--income)] text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-[var(--income)]">
                         Cập nhật Ngân sách Tổng
                       </button>
                     </div>
@@ -4884,173 +4189,6 @@
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* ACCOUNT CHOOSER & SWITCHER MODAL */}
-          {showAccountModal && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-theme-surface w-full max-w-md rounded-3xl border border-theme-border p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-2xl bg-white p-2 flex items-center justify-center shadow-sm border border-gray-200">
-                      <svg className="w-full h-full" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-theme-textPrimary">Chọn Tài Khoản Gmail</h3>
-                      <p className="text-xs text-theme-textSecondary">Đồng bộ dữ liệu thời gian thực giữa các thiết bị</p>
-                    </div>
-                  </div>
-                  <button onClick={()=>setShowAccountModal(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
-                </div>
-
-                {/* Option 1: Official Google OAuth Account Picker */}
-                <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-wider">Cách 1: Chọn tài khoản Google</span>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded-md">Khuyên dùng</span>
-                  </div>
-                  <p className="text-xs text-theme-textSecondary leading-relaxed">
-                    Mở popup của Google để chọn bất kỳ tài khoản Gmail nào bạn đã đăng nhập trên trình duyệt.
-                  </p>
-                  <button 
-                    onClick={handleGoogleOAuthLogin} 
-                    className="w-full py-3.5 bg-white text-gray-800 hover:bg-gray-50 border border-gray-300 font-bold rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm text-sm">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                    </svg>
-                    <span>Mở danh sách tài khoản Google</span>
-                  </button>
-                </div>
-
-                {/* Option 2: Gợi ý email cho popup Google (vẫn phải xác thực thật, không tự đăng nhập) */}
-                <div className="bg-theme-background border border-theme-border p-4 rounded-2xl space-y-3">
-                  <span className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-wider block">Cách 2: Gợi ý sẵn địa chỉ Gmail</span>
-                  <p className="text-[11px] text-theme-textSecondary -mt-1">Vẫn sẽ mở popup Google để xác thực thật, chỉ điền sẵn email cho nhanh.</p>
-                  <form onSubmit={(e) => { e.preventDefault(); handleManualEmailLogin(); }} className="space-y-2">
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Icon name="mail" className="w-4 h-4 text-theme-textSecondary absolute left-3.5 top-1/2 -translate-y-1/2" />
-                        <input 
-                          type="email" 
-                          value={customEmailInput} 
-                          onChange={(e)=>setCustomEmailInput(e.target.value)} 
-                          placeholder="Nhập email, ví dụ: name@gmail.com" 
-                          className="w-full bg-theme-surface border border-theme-border rounded-xl pl-10 pr-3 py-3 text-xs text-theme-textPrimary focus:border-theme-primary focus:ring-1 focus:ring-theme-primary transition-all font-medium"
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        disabled={!customEmailInput.trim()}
-                        className="px-4 bg-theme-primary text-theme-background font-bold text-xs rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-md disabled:opacity-40 shrink-0 flex items-center gap-1.5">
-                        <Icon name="check" className="w-3.5 h-3.5" />
-                        <span>Chọn</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-
-                {/* Option 3: Recent Accounts */}
-                {recentAccounts && recentAccounts.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-theme-textSecondary uppercase tracking-wider block">Tài khoản đã dùng gần đây:</span>
-                    <div className="space-y-1.5 max-h-[160px] overflow-y-auto no-scrollbar">
-                      {recentAccounts.map(accEmail => {
-                        const isCurrent = googleUser?.email?.toLowerCase() === accEmail.toLowerCase();
-                        return (
-                          <div 
-                            key={accEmail} 
-                            onClick={() => handleManualEmailLogin(accEmail)}
-                            className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${isCurrent ? 'bg-theme-primary/10 border-theme-primary ring-1 ring-theme-primary/30' : 'bg-theme-background border-theme-border hover:bg-theme-surface hover:border-theme-primary/50'}`}>
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs uppercase ${isCurrent ? 'bg-theme-primary text-theme-background' : 'bg-white/10 text-theme-textPrimary'}`}>
-                                {accEmail.charAt(0)}
-                              </div>
-                              <div className="overflow-hidden">
-                                <p className="text-xs font-bold text-theme-textPrimary truncate">{accEmail}</p>
-                                {isCurrent && <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">● Đang hoạt động</span>}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {!isCurrent && (
-                                <button 
-                                  type="button" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const updated = recentAccounts.filter(a => a !== accEmail);
-                                    setRecentAccounts(updated);
-                                    localStorage.setItem("vina_recent_accounts", JSON.stringify(updated));
-                                  }}
-                                  className="p-1.5 text-theme-textSecondary hover:text-rose-500 rounded-lg">
-                                  <Icon name="x" className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                              <span className="text-xs text-theme-primary font-bold">{isCurrent ? "" : "Chuyển"}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <button 
-                  type="button" 
-                  onClick={()=>setShowAccountModal(false)} 
-                  className="w-full py-3 bg-theme-surface border border-theme-border text-theme-textSecondary hover:text-theme-textPrimary font-bold rounded-2xl text-xs transition-colors">
-                  Đóng
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* SETTINGS (GEMINI API) DIALOG */}
-          {showSettingsDialog && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-theme-surface w-full max-w-sm rounded-3xl border border-theme-border p-6 shadow-2xl">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="settings" className="w-5 h-5 text-theme-primary" /> Cấu hình Hệ thống</h3>
-                  <button onClick={()=>setShowSettingsDialog(false)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
-                </div>
-                <div className="space-y-5">
-                  <div>
-                    <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cloud" className="w-4 h-4 text-theme-primary" /> Đồng bộ & Sao lưu</h4>
-                    <p className="text-xs text-theme-textSecondary mb-3">Sao lưu dữ liệu tài chính lên Firebase và quản lý khôi phục an toàn.</p>
-                    <button onClick={()=>{ setShowSettingsDialog(false); setShowSyncDialog(true); }} className="w-full py-3 bg-theme-background border border-theme-primary/40 text-theme-primary font-bold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-theme-primary/10 transition-all">
-                      <Icon name="cloud" className="w-4 h-4" /> Mở trung tâm Đồng bộ Firebase
-                    </button>
-                  </div>
-                  {googleUser?.email && (
-                    <React.Fragment>
-                      <hr className="border-theme-border" />
-                      <div>
-                        <h4 className="text-sm font-bold text-rose-500 mb-2 flex items-center gap-2"><Icon name="alert-triangle" className="w-4 h-4" /> Vùng nguy hiểm</h4>
-                        <p className="text-xs text-theme-textSecondary mb-3">
-                          Xoá vĩnh viễn toàn bộ giao dịch, ví, sổ nợ, hạng mục tuỳ chỉnh của tài khoản <b>{googleUser.email}</b> — cả trên máy lẫn trên Firebase. Dùng khi tài khoản này lỡ dính dữ liệu sai của tài khoản khác. Không thể hoàn tác.
-                        </p>
-                        <button onClick={handleWipeCloudData} className="w-full py-3 bg-rose-500/10 border border-rose-500/40 text-rose-500 font-bold rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-all">
-                          <Icon name="trash-2" className="w-4 h-4" /> Xoá toàn bộ dữ liệu tài khoản này
-                        </button>
-                      </div>
-                    </React.Fragment>
-                  )}
-                  <hr className="border-theme-border" />
-                  <div>
-                    <h4 className="text-sm font-bold text-theme-textPrimary mb-2 flex items-center gap-2"><Icon name="cpu" className="w-4 h-4 text-theme-primary" /> Gemini API Key</h4>
-                    <p className="text-xs text-theme-textSecondary mb-3">Sử dụng để phân tích tin nhắn và hình ảnh tự động. Cấu hình sẽ được lưu cục bộ trên trình duyệt.</p>
-                    <input type="password" placeholder="AIzaSy..." value={geminiApiKey} onChange={e=>setGeminiApiKey(e.target.value)} className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-sm text-theme-textPrimary focus:border-theme-primary transition-all shadow-inner" />
-                  </div>
-                  <button onClick={()=>setShowSettingsDialog(false)} className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-4 hover:brightness-110 transition-all shadow-lg">Lưu & Đóng</button>
-                </div>
               </div>
             </div>
           )}
@@ -5083,36 +4221,36 @@
       render() {
         if (this.state.hasError) {
           return (
-            <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center p-6 font-sans">
-              <div className="max-w-md w-full bg-white rounded-3xl p-6 shadow-xl border border-slate-200 text-center space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="min-h-screen bg-[#F2E6CC] text-[#3A2618] flex items-center justify-center p-6 font-sans">
+              <div className="max-w-md w-full bg-white rounded-3xl p-6 shadow-xl border border-[#3A2618] text-center space-y-4">
+                <div className="w-16 h-16 bg-[var(--income)] text-[var(--income)] rounded-2xl flex items-center justify-center mx-auto">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Khôi phục Ứng dụng VinaSpends</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="text-xl font-bold text-[#6B4F3A]">Khôi phục Ứng dụng VinaSpends</h2>
+                <p className="text-xs text-[#6B4F3A]">
                   Đã xảy ra sự cố khi tải giao diện. Nhấn nút bên dưới để đặt lại giao diện sáng và tiếp tục sử dụng:
                 </p>
                 {this.state.error && (
-                  <div className="p-3 bg-red-50 text-red-700 text-[11px] rounded-xl text-left font-mono break-all max-h-24 overflow-y-auto">
+                  <div className="p-3 bg-[var(--expense)] text-[var(--expense)] text-[11px] rounded-xl text-left font-mono break-all max-h-24 overflow-y-auto">
                     {this.state.error.toString()}
                   </div>
                 )}
                 <div className="space-y-2 pt-2">
                   <button 
                     onClick={() => this.handleReset()} 
-                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                    className="w-full py-3 bg-[var(--income)] text-white font-bold rounded-xl text-sm shadow-md hover:bg-[var(--income)] active:scale-95 transition-all">
                     Đặt lại Giao diện & Tải lại
                   </button>
                   <button 
                     onClick={() => window.location.reload()} 
-                    className="w-full py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-200">
+                    className="w-full py-2.5 bg-[#EBDDBE] text-[#6B4F3A] font-semibold rounded-xl text-xs hover:bg-[#EBDDBE]">
                     Thử tải lại ngay
                   </button>
                   <button 
                     onClick={() => this.handleFullReset()} 
-                    className="w-full py-2 text-slate-400 hover:text-red-500 text-[11px] font-medium transition-colors">
+                    className="w-full py-2 text-[#6B4F3A] hover:text-[var(--expense)] text-[11px] font-medium transition-colors">
                     Khôi phục dữ liệu gốc nếu bị xung đột
                   </button>
                 </div>
