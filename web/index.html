@@ -3803,22 +3803,6 @@
                         <Icon name="plus" className="w-7 h-7" /> Thêm ví
                       </button>
                     </div>
-                    {accounts.length > 0 && (
-                      <div className="bg-theme-surface border border-theme-border rounded-3xl divide-y divide-theme-border/60">
-                        {accounts.map(acc => (
-                          <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
-                            <BankBadge name={acc.name} size={26} />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-[14px] text-theme-textPrimary truncate">{acc.name}{isCreditAcc(acc) && <span className="ml-1.5 text-[10px] font-bold uppercase text-theme-primary">· tín dụng</span>}</p>
-                              <p className="text-[12px] text-theme-textSecondary font-mono tracking-[0.1em] truncate">{formatAccNo(acc.accountNo, isCreditAcc(acc)) || "—"}</p>
-                            </div>
-                            <button onClick={()=>{ setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} className="text-theme-textSecondary hover:text-theme-primary bg-theme-background p-2 rounded-full" aria-label="Sửa"><Icon name="edit-2" className="w-4 h-4" /></button>
-                            <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-[var(--expense)] bg-theme-background p-2 rounded-full" aria-label="Xóa"><Icon name="trash-2" className="w-4 h-4" /></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                     <button onClick={() => setActiveTab("mai")} className="w-full text-left bg-theme-surface border rounded-3xl p-4 flex items-center gap-3">
                       <MaiAvatar size={44} />
                       <div className="flex-1">
@@ -4350,6 +4334,10 @@
                         )}
                     </div>
                     <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-2 flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg"><Icon name={editingBank ? "save" : "link"} className="w-5 h-5" /> {editingBank ? "Lưu thay đổi" : "Liên kết ngay"}</button>
+                    {editingBank && (
+                      <button type="button" onClick={() => { if (confirm("Xóa ví/tài khoản này?")) { updateData(accounts.filter(a => a.id !== editingBank.id), null, null, null); setIsAddBankModalOpen(false); setEditingBank(null); } }}
+                        className="w-full py-3 text-[var(--expense)] font-bold rounded-xl flex justify-center items-center gap-2 border-2 border-[var(--expense)]/40"><Icon name="trash-2" className="w-4 h-4" /> Xóa ví này</button>
+                    )}
                   </form>
                </div>
             </div>
