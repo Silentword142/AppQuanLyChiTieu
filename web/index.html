@@ -450,7 +450,7 @@
                   type="button" 
                   onClick={() => onSelectParent(p.name)} 
                   className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg shrink-0 flex items-center gap-1.5 transition-all ${isSelected ? 'bg-theme-primary text-theme-background shadow-md' : 'bg-theme-background text-theme-textSecondary border border-theme-border hover:text-theme-textPrimary hover:bg-theme-surface'}`}>
-                  <Icon name={p.icon || "tag"} className="w-3.5 h-3.5 shrink-0" style={{ color: isSelected ? 'currentColor' : (p.color || '#4ECDC4') }} />
+                  <Icon name={p.icon || "tag"} className="w-5 h-5 shrink-0" style={{ color: isSelected ? 'currentColor' : (p.color || '#4ECDC4') }} />
                   <span className="whitespace-nowrap">{p.name}</span>
                 </button>
               );
@@ -612,9 +612,8 @@
             {/* LIVE PREVIEW HERO CARD */}
             <div className="p-4 rounded-2xl border transition-all shadow-inner flex items-center gap-3.5" style={{ backgroundColor: `${selectedColor}15`, borderColor: `${selectedColor}50` }}>
               <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md transition-all shrink-0" 
-                style={{ backgroundColor: `${selectedColor}30`, border: `2px solid ${selectedColor}` }}>
-                <Icon name={selectedIcon} className="w-7 h-7 transition-all" style={{ color: selectedColor }} />
+                className="w-14 h-14 flex items-center justify-center transition-all shrink-0">
+                <Icon name={selectedIcon} className="w-14 h-14 transition-all" style={{ color: selectedColor }} />
               </div>
               <div className="flex-1 overflow-hidden">
                 <div className="flex items-center gap-2">
@@ -746,7 +745,7 @@
                 )}
 
                 {/* Icon Grid */}
-                <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[160px] overflow-y-auto no-scrollbar p-2 border border-theme-border rounded-2xl bg-theme-background shadow-inner">
+                <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-[220px] overflow-y-auto no-scrollbar p-2 border border-theme-border rounded-2xl bg-theme-background shadow-inner">
                   {filteredIcons.map(iconName => {
                     const isSelected = selectedIcon === iconName;
                     return (
@@ -755,15 +754,14 @@
                         type="button"
                         onClick={() => setSelectedIcon(iconName)}
                         title={iconName}
-                        className={`p-2 rounded-xl flex items-center justify-center h-10 transition-all border ${isSelected ? 'shadow-md scale-105' : 'border-transparent hover:bg-theme-surface/60 opacity-75 hover:opacity-100'}`}
+                        className={`p-1 rounded-xl flex items-center justify-center h-12 transition-all border-2 ${isSelected ? 'scale-105' : 'border-transparent'}`}
                         style={{
-                          backgroundColor: isSelected ? `${selectedColor}25` : 'transparent',
+                          backgroundColor: 'transparent',
                           borderColor: isSelected ? selectedColor : 'transparent'
                         }}>
                         <Icon 
                           name={iconName} 
-                          className="w-5 h-5 transition-transform" 
-                          style={{ color: isSelected ? selectedColor : 'inherit' }} 
+                          className="w-9 h-9 transition-transform" 
                         />
                       </button>
                     );
@@ -2625,8 +2623,8 @@
                               const col = getColorForCategoryName(tx.category);
                               return (
                                 <div key={tx.id} onClick={() => handleStartEditTx(tx)} className="px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-theme-variant/60">
-                                  <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 border-2" style={{ backgroundColor: `${col}26`, borderColor: `${col}AA` }}>
-                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-5 h-5" style={{ color: col }} />
+                                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-10 h-10" style={{ color: col }} />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-bold text-theme-textPrimary text-[15px] truncate flex items-center gap-1.5">
@@ -2701,8 +2699,8 @@
                     <div className="bg-theme-surface border border-theme-border p-5 md:p-6 rounded-3xl shadow-sm relative overflow-hidden">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${drillDownData.parentColor}25` }}>
-                            <Icon name={drillDownData.parentIcon} className="w-7 h-7" style={{ color: drillDownData.parentColor }} />
+                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center ">
+                            <Icon name={drillDownData.parentIcon} className="w-14 h-14" style={{ color: drillDownData.parentColor }} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -2734,8 +2732,8 @@
                             return (
                               <div key={item.category} className="bg-theme-background border border-theme-border p-3 rounded-2xl flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${item.color}25` }}>
-                                    <Icon name={item.icon} className="w-4 h-4" style={{ color: item.color }} />
+                                  <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+                                    <Icon name={item.icon} className="w-8 h-8" style={{ color: item.color }} />
                                   </div>
                                   <div>
                                     <p className="font-bold text-sm text-theme-textPrimary">{item.category}</p>
@@ -2766,8 +2764,8 @@
                           onClick={() => handleStartEditTx(tx)}
                           className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center hover:bg-theme-variant hover:border-theme-primary/50 cursor-pointer transition-all shadow-sm group">
                           <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform" style={{ backgroundColor: `${getColorForCategoryName(tx.category)}20`, border: `1px solid ${getColorForCategoryName(tx.category)}35` }}>
-                              <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-5 h-5" style={{ color: getColorForCategoryName(tx.category) }} />
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center  group-hover:scale-105 transition-transform">
+                              <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-10 h-10" style={{ color: getColorForCategoryName(tx.category) }} />
                             </div>
                             <div>
                               <p className="font-bold text-theme-textPrimary text-sm">{tx.category}</p>
@@ -2971,8 +2969,8 @@
                             <div key={parent.id} className="bg-theme-background border border-theme-border p-3.5 rounded-2xl flex flex-col justify-between gap-2.5">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${parent.color}25` }}>
-                                    <Icon name={parent.icon} className="w-4 h-4" style={{ color: parent.color }} />
+                                  <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+                                    <Icon name={parent.icon} className="w-8 h-8" style={{ color: parent.color }} />
                                   </div>
                                   <div>
                                     <p className="font-bold text-xs text-theme-textPrimary">{parent.name}</p>
@@ -3035,8 +3033,8 @@
                                    onClick={()=>setDrillDownParent(item.category)}
                                    className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center hover:border-theme-primary/60 hover:bg-theme-variant cursor-pointer transition-all shadow-sm group">
                                      <div className="flex items-center gap-4">
-                                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform" style={{ backgroundColor: `${item.color}20` }}>
-                                             <Icon name={item.icon} className="w-6 h-6" style={{ color: item.color }} />
+                                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center  group-hover:scale-105 transition-transform">
+                                             <Icon name={item.icon} className="w-12 h-12" style={{ color: item.color }} />
                                          </div>
                                          <div>
                                              <div className="flex items-center gap-2">
@@ -3063,8 +3061,8 @@
                              return (
                                  <div key={item.category} className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center hover:bg-theme-variant transition-colors shadow-sm">
                                      <div className="flex items-center gap-4">
-                                         <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${item.color}20` }}>
-                                             <Icon name={item.icon} className="w-5 h-5" style={{ color: item.color }} />
+                                         <div className="w-10 h-10 rounded-xl flex items-center justify-center ">
+                                             <Icon name={item.icon} className="w-10 h-10" style={{ color: item.color }} />
                                          </div>
                                          <div>
                                              <p className="font-bold text-theme-textPrimary text-sm md:text-base">{item.category}</p>
@@ -3153,8 +3151,8 @@
                           {/* Parent Header */}
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-3.5">
-                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${parent.color}25` }}>
-                                <Icon name={parent.icon} className="w-6 h-6" style={{ color: parent.color }} />
+                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center ">
+                                <Icon name={parent.icon} className="w-12 h-12" style={{ color: parent.color }} />
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
@@ -3201,7 +3199,7 @@
                                   {children.map(child => (
                                     <div key={child.id} className="bg-theme-background border border-theme-border/80 px-3 py-2.5 rounded-xl flex items-center justify-between group hover:border-theme-primary/50 transition-colors">
                                       <div className="flex items-center gap-2 overflow-hidden">
-                                        <Icon name={child.icon} className="w-4 h-4 shrink-0" style={{ color: child.color }} />
+                                        <Icon name={child.icon} className="w-6 h-6 shrink-0" style={{ color: child.color }} />
                                         <span className="text-xs font-semibold text-theme-textPrimary truncate">{child.name}</span>
                                       </div>
                                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -3236,8 +3234,8 @@
                       return (
                         <div key={sub.id} className="bg-theme-surface border border-theme-border p-4 rounded-2xl flex justify-between items-center group hover:border-theme-primary transition-colors shadow-sm">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${sub.color}20` }}>
-                              <Icon name={sub.icon} className="w-4 h-4" style={{ color: sub.color }} />
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center">
+                              <Icon name={sub.icon} className="w-9 h-9" style={{ color: sub.color }} />
                             </div>
                             <div>
                               <p className="font-bold text-sm text-theme-textPrimary">{sub.name}</p>
@@ -3299,11 +3297,12 @@
                       <p className="font-bold text-sm">Không bật được quyền?</p>
                       <p>Android 13 trở lên chặn quyền này với app cài từ file APK (nút bật bị mờ hoặc báo "Chế độ cài đặt bị hạn chế"). Mở khoá một lần là xong:</p>
                       <ol className="list-decimal pl-5 space-y-1">
-                        <li>Bấm <b>"Mở thông tin ứng dụng"</b> bên dưới.</li>
+                        <li>Bấm <b>"Cấp quyền"</b>, chạm vào <b>công tắc bị mờ</b> một lần để máy hiện thông báo "Chế độ cài đặt bị hạn chế" → OK.</li>
+                        <li>Quay lại, bấm <b>"Mở thông tin ứng dụng"</b> bên dưới.</li>
                         <li>Bấm dấu <b>⋮</b> góc trên bên phải → <b>"Cho phép chế độ cài đặt bị hạn chế"</b> (Allow restricted settings), xác nhận vân tay/mã PIN.</li>
                         <li>Quay lại đây, bấm <b>"Cấp quyền"</b> và bật VinaSpends.</li>
                       </ol>
-                      <p className="opacity-80">Không thấy dấu ⋮? Thử bấm "Cấp quyền" một lần cho máy hiện cảnh báo trước, rồi mới vào lại thông tin ứng dụng.</p>
+                      <p className="opacity-80">Không thấy dấu ⋮ hoặc mục đó? Làm lại bước 1 (phải chạm vào công tắc mờ trước), rồi mở lại thông tin ứng dụng.</p>
                       <div className="flex gap-2 pt-1">
                         <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="flex-1 px-3 py-2 rounded-xl font-bold border-2 border-retro-ink bg-theme-surface text-theme-textPrimary">Mở thông tin ứng dụng</button>
                         <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="flex-1 px-3 py-2 rounded-xl font-bold border-2 border-retro-ink bg-theme-primary text-white">Cấp quyền</button>
@@ -3582,8 +3581,8 @@
                 </button>
               ) : (
                 <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex flex-col items-center py-1.5 w-[68px] ${activeTab === item.id ? "text-theme-primary" : "text-theme-textSecondary"}`}>
-                  <span className={`w-12 h-8 rounded-full flex items-center justify-center transition ${activeTab === item.id ? "bg-theme-primary/15" : ""}`}>
-                    <Icon name={item.icon} className="w-[22px] h-[22px]" />
+                  <span className={`w-12 h-9 rounded-full flex items-center justify-center transition ${activeTab === item.id ? "" : ""}`}>
+                    <Icon name={item.icon} className="w-7 h-7" />
                   </span>
                   <span className="text-[11px] font-bold mt-0.5">{item.label}</span>
                 </button>
@@ -3730,7 +3729,7 @@
                               <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
                                   <input type="radio" name="category" value={c.name} required className="peer sr-only" />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
-                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
+                                      <Icon name={c.icon || "tag"} className="w-6 h-6 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
                                   </div>
                               </label>
@@ -3819,7 +3818,7 @@
                               <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
                                   <input type="radio" name="category" value={c.name} className="peer hidden" defaultChecked={editingTx.category === c.name} />
                                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-theme-border bg-theme-surface peer-checked:border-theme-primary peer-checked:bg-theme-primary/10 peer-checked:shadow-sm transition-all hover:border-theme-primary/40">
-                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
+                                      <Icon name={c.icon || "tag"} className="w-6 h-6 shrink-0" style={{ color: c.color || "#2F6F6A" }} />
                                       <span className="text-xs font-bold text-theme-textPrimary truncate">{c.name}</span>
                                   </div>
                               </label>
@@ -4061,7 +4060,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.3 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.4 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>
@@ -4193,7 +4192,7 @@
                             onClick={() => setEditingBudgetCat(p.name)}
                             className="p-2.5 bg-theme-background border border-theme-border hover:border-theme-primary rounded-xl text-left flex items-center justify-between group transition-all">
                             <div className="flex items-center gap-2 truncate">
-                              <Icon name={p.icon} className="w-3.5 h-3.5" style={{ color: p.color }} />
+                              <Icon name={p.icon} className="w-5 h-5" style={{ color: p.color }} />
                               <span className="text-xs font-bold text-theme-textPrimary truncate">{p.name}</span>
                             </div>
                             <span className="text-[10px] text-theme-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity">Đặt</span>
