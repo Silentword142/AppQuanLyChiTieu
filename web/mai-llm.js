@@ -155,17 +155,30 @@ function chat(opts) {
       temperature: opts.temperature == null ? 0.4 : opts.temperature,
       top_p: 0.9,
       top_k: 40,
+      frequency_penalty: 0.3,
+      presence_penalty: 0.2,
       stream: true,
     };
+    const stopper = new AbortController();
+    params.abortSignal = stopper.signal;
     if (opts.tools && opts.tools.length) { params.tools = opts.tools; params.tool_choice = "auto"; }
     let content = "";
     const calls = [];
     let n = 0;
     const stream = await wllama.createChatCompletion(params);
+    try {
     for await (const chunk of stream) {
       const d = chunk && chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
       if (!d) continue;
-      if (d.content) { content += d.content; n++; if (opts.onToken) opts.onToken(cleanText(content)); }
+      if (d.content) {
+        content += d.content; n++;
+        if (opts.onToken) opts.onToken(cleanText(content));
+        // Mô hình nhỏ đôi khi lặp lại một câu mãi -> cắt
+        if (content.length > 160 && n % 8 === 0) {
+          const tail = content.slice(-48);
+          if (content.slice(0, -48).split(tail).length > 2) { content = content.slice(0, content.indexOf(tail) + tail.length); stopper.abort(); break; }
+        }
+      }
       if (d.tool_calls) {
         d.tool_calls.forEach((tc) => {
           const i = tc.index == null ? calls.length : tc.index;
@@ -174,6 +187,9 @@ function chat(opts) {
           if (tc.function && tc.function.arguments) c.args += tc.function.arguments;
         });
       }
+    }
+    } catch (e) {
+      if (!stopper.signal.aborted) throw e;
     }
     const secs = (performance.now() - t0) / 1000;
     if (n > 3) emit({ speed: Math.round((n / secs) * 10) / 10 });
