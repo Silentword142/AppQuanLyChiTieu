@@ -11,7 +11,7 @@ const MODELS = [
     desc: "Qwen2.5 1.5B · hiểu tiếng Việt khá, trò chuyện tự nhiên. Hợp máy RAM 6 GB trở lên.",
     url: `${HF}/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf`,
     size: 1117320736,
-    ctx: 4096,
+    ctx: 2048,
   },
   {
     id: "qwen2.5-0.5b",
@@ -19,10 +19,10 @@ const MODELS = [
     desc: "Qwen2.5 0.5B · nhanh, nhẹ máy, nhưng kém thông minh hơn. Hợp máy RAM 3–4 GB.",
     url: `${HF}/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf`,
     size: 491400032,
-    ctx: 4096,
+    ctx: 2048,
   },
 ];
-const IMPORTED = { id: "imported", name: "Mô hình tự nhập", desc: "File .gguf anh chọn từ máy.", url: "local://mai-imported.gguf", size: 0, ctx: 4096 };
+const IMPORTED = { id: "imported", name: "Mô hình tự nhập", desc: "File .gguf anh chọn từ máy.", url: "local://mai-imported.gguf", size: 0, ctx: 2048 };
 const WASM = new URL("./lib/wllama/wllama.wasm", import.meta.url).href;
 // Bản tương thích (WebView cũ chưa có JSPI / Memory64) – để sẵn trong app, không tải từ CDN
 const COMPAT = { wasm: new URL("./lib/wllama/compat/wllama.wasm", import.meta.url).href, worker: new URL("./lib/wllama/compat/wllama.js", import.meta.url).href };
@@ -37,9 +37,12 @@ const cache = new CacheManager();
 let wllama = null;
 let loadedId = null;
 let abortCtl = null;
-let queue = Promise.resolve(); // chạy lần lượt từng việc (chat ưu tiên vẫn phải chờ việc đang chạy)
+let queue = Promise.resolve(); // chạy lần lượt từng việc
+let waitingFg = 0;          // số câu chat của anh đang chờ -> việc nền nhường chỗ
+let bgStopper = null;       // dừng việc nền đang chạy (xếp hạng mục, nạp sẵn)
+let fgStopper = null;       // nút "Dừng" của anh
 
-const state = { status: "idle", modelId: null, progress: 0, loaded: 0, total: 0, error: null, downloaded: [], threads: 0, speed: 0 };
+const state = { status: "idle", modelId: null, progress: 0, loaded: 0, total: 0, error: null, downloaded: [], threads: 0, speed: 0, readSpeed: 0 };
 const subs = new Set();
 const emit = (patch) => { Object.assign(state, patch); subs.forEach((f) => { try { f({ ...state }); } catch (e) {} }); };
 
@@ -118,15 +121,17 @@ async function load(id) {
     const blob = await cache.open(m.url);
     if (!blob) throw new Error("Chưa tải mô hình về máy");
     wllama = makeWllama();
-    const cores = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
-    const base = { n_ctx: m.ctx, n_batch: 256 };
+    // Điện thoại có lõi to + lõi nhỏ: dùng 4 luồng là nhanh nhất, nhiều hơn lại chậm
+    const cores = Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1));
+    // Chạy bằng CPU: WebGPU trên điện thoại hay bị treo rất lâu ở lần chạy đầu
+    const base = { n_ctx: m.ctx, n_batch: 512, n_gpu_layers: 0, n_parallel: 1, warmup: false };
     try {
       await wllama.loadModel([blob], { ...base, n_threads: cores });
     } catch (e) {
-      // WebGPU / đa luồng lỗi trên một số máy -> thử lại kiểu an toàn
+      // đa luồng lỗi trên một số máy -> thử lại 1 luồng
       try { await wllama.exit(); } catch (x) {}
       wllama = makeWllama();
-      await wllama.loadModel([blob], { ...base, n_gpu_layers: 0 });
+      await wllama.loadModel([blob], { ...base, n_threads: 1 });
     }
     loadedId = id;
     emit({ status: "loaded", modelId: id, threads: wllama.getNumThreads ? wllama.getNumThreads() : 0 });
@@ -145,10 +150,16 @@ async function unload() {
 
 // Gọi mô hình. opts: { messages, tools, maxTokens, temperature, onToken(textSoFar) }
 // -> { content, toolCalls: [{ name, args }] }
+// opts.background = true: việc nền, tự nhường khi anh nhắn. opts.onStage("reading"|"writing")
 function chat(opts) {
+  const bg = !!opts.background;
+  if (!bg) { waitingFg++; if (bgStopper) bgStopper.abort(); }
   const run = async () => {
+    if (!bg) waitingFg--;
     if (!wllama || !wllama.isModelLoaded()) throw new Error("Mai chưa bật bộ não AI");
+    if (bg && waitingFg > 0) return { content: "", toolCalls: [], skipped: true };
     const t0 = performance.now();
+    let tFirst = 0;
     const params = {
       messages: opts.messages,
       max_tokens: opts.maxTokens || 320,
@@ -160,7 +171,9 @@ function chat(opts) {
       stream: true,
     };
     const stopper = new AbortController();
+    if (bg) bgStopper = stopper; else fgStopper = stopper;
     params.abortSignal = stopper.signal;
+    if (opts.onStage) opts.onStage("reading");
     if (opts.tools && opts.tools.length) { params.tools = opts.tools; params.tool_choice = "auto"; }
     let content = "";
     const calls = [];
@@ -170,6 +183,7 @@ function chat(opts) {
     for await (const chunk of stream) {
       const d = chunk && chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
       if (!d) continue;
+      if ((d.content || d.tool_calls) && !tFirst) { tFirst = performance.now(); if (opts.onStage) opts.onStage("writing"); }
       if (d.content) {
         content += d.content; n++;
         if (opts.onToken) opts.onToken(cleanText(content));
@@ -190,15 +204,19 @@ function chat(opts) {
     }
     } catch (e) {
       if (!stopper.signal.aborted) throw e;
+    } finally {
+      if (bgStopper === stopper) bgStopper = null;
+      if (fgStopper === stopper) fgStopper = null;
     }
-    const secs = (performance.now() - t0) / 1000;
-    if (n > 3) emit({ speed: Math.round((n / secs) * 10) / 10 });
+    const tEnd = performance.now();
+    if (n > 3 && tFirst) emit({ speed: Math.round((n / ((tEnd - tFirst) / 1000)) * 10) / 10 });
+    if (tFirst && opts.promptChars) emit({ readSpeed: Math.round(opts.promptChars / 3.5 / ((tFirst - t0) / 1000)) });
     const toolCalls = calls.filter(Boolean).map((c) => { let a = {}; try { a = JSON.parse(c.args || "{}"); } catch (e) {} return { name: c.name, args: a }; });
     // Mô hình nhỏ đôi khi viết lệnh gọi công cụ thành chữ <tool_call>{...}</tool_call>
     const inline = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g;
     let mm;
     while ((mm = inline.exec(content))) { try { const j = JSON.parse(mm[1]); if (j && j.name) toolCalls.push({ name: j.name, args: j.arguments || {} }); } catch (e) {} }
-    return { content: cleanText(content), toolCalls };
+    return { content: cleanText(content), toolCalls, stopped: !bg && stopper.signal.aborted && !content };
   };
   const p = queue.then(run, run);
   queue = p.catch(() => {});
@@ -224,15 +242,18 @@ function explain(e) {
 // Nạp sẵn phần dặn dò (system prompt) vào bộ nhớ đệm để câu hỏi đầu tiên trả lời nhanh
 function warm(messages, tools) {
   if (!wllama || !wllama.isModelLoaded()) return Promise.resolve();
-  return chat({ messages: messages.concat([{ role: "user", content: "." }]), tools, maxTokens: 1, temperature: 0 }).catch(() => {});
+  return chat({ messages: messages.concat([{ role: "user", content: "." }]), tools, maxTokens: 1, temperature: 0, background: true }).catch(() => {});
 }
+
+// Nút "Dừng": dừng câu trả lời đang chạy
+function stop() { if (fgStopper) fgStopper.abort(); }
 
 const MaiLLM = {
   MODELS, IMPORTED,
   getState: () => ({ ...state }),
   subscribe: (fn) => { subs.add(fn); fn({ ...state }); return () => subs.delete(fn); },
   refresh: refreshDownloaded,
-  download, cancel, importFile, remove, load, unload, chat, warm,
+  download, cancel, importFile, remove, load, unload, chat, warm, stop,
   isLoaded: () => !!(wllama && loadedId && wllama.isModelLoaded()),
   loadedId: () => loadedId,
   recommended: () => ((navigator.deviceMemory || 4) >= 6 ? "qwen2.5-1.5b" : "qwen2.5-0.5b"),

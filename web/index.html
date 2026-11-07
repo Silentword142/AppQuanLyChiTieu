@@ -1196,7 +1196,13 @@
         const names = categories.map(c => c && c.name).filter(Boolean);
         const blocks = maiSettings.blockWords || [];
         switch (it.intent) {
-          case "greet": return "Em chào anh! Anh cứ dặn em kiểu \"Grab là Di chuyển\" hay \"bỏ qua tin từ Shopee\" là em nhớ ngay ạ.";
+          case "greet": {
+            const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+            const spent = transactions.filter(t => t.type !== "INCOME" && new Date(t.date) >= t0).reduce((s, t) => s + (Number(t.amount) || 0), 0);
+            const h = new Date().getHours();
+            const hi = h < 11 ? "Chào buổi sáng anh" : h < 14 ? "Em chào anh, trưa rồi ạ" : h < 18 ? "Em chào anh" : "Chào buổi tối anh";
+            return `${hi}! ${spent > 0 ? `Hôm nay anh đã chi ${new Intl.NumberFormat("vi-VN").format(spent)}đ rồi đó. ` : "Hôm nay em chưa thấy anh chi khoản nào. "}Anh muốn hỏi em gì ạ?`;
+          }
           case "thanks": return "Dạ không có gì ạ, có gì anh cứ nhắc em nhé!";
           case "help": return "Em hiểu mấy kiểu câu này ạ:\n• \"Grab là Di chuyển\" / \"xếp Tokyolife vào Quần áo\" – em nhớ hạng mục\n• \"Chuyển khoản từ mẹ là thu nhập\" – em nhớ là khoản thu\n• \"Bỏ qua tin từ Shopee\" / \"bỏ chặn Shopee\"\n• \"Grab là mục gì?\" – hỏi em đang hiểu thế nào\n• \"Quên Grab\" – xoá điều đã dạy\n• \"Em đã học được gì?\"\n• \"cafe 35k\" hoặc dán thông báo ngân hàng – em ghi giao dịch" + (window.MaiLLM && window.MaiLLM.isLoaded() ? "\nBộ não AI đang bật nên anh cứ hỏi tự nhiên, ví dụ \"tháng này em thấy anh tiêu nhiều nhất vào đâu?\"" : "\nMuốn em trò chuyện tự nhiên hơn, anh bật \"Bộ não AI\" ở ngay dưới khung chat.");
           case "teach": {
@@ -1255,6 +1261,9 @@
       // ---------- Bộ não AI chạy trên máy ----------
       const [aiState, setAiState] = useState(() => (window.MaiLLM ? window.MaiLLM.getState() : null));
       const [maiBusy, setMaiBusy] = useState(false);
+      const [maiStage, setMaiStage] = useState(null); // { stage: loading|reading|writing, at }
+      const [, setMaiClock] = useState(0);
+      useEffect(() => { if (!maiStage) return; const id = setInterval(() => setMaiClock(x => x + 1), 1000); return () => clearInterval(id); }, [!!maiStage]);
       useEffect(() => {
         let unsub = null;
         const hook = () => { if (window.MaiLLM && !unsub) unsub = window.MaiLLM.subscribe(setAiState); };
@@ -1275,7 +1284,7 @@
         if (!aiLoaded) { aiWarmedRef.current = false; return; }
         if (aiWarmedRef.current || maiBusy) return;
         aiWarmedRef.current = true;
-        window.MaiLLM.warm([{ role: "system", content: maiSystemPrompt() }], MAI_TOOLS);
+        window.MaiLLM.warm([{ role: "system", content: maiSystemPrompt(false) }]);
       }, [aiLoaded]);
       // Tự bật bộ não khi mở tab Mai (đã tải mô hình)
       useEffect(() => {
@@ -1342,27 +1351,34 @@
         if (tc.name === "add_transaction") return maiDo({ intent: "add_tx", type: /thu|in/i.test(a.direction) ? "INCOME" : "EXPENSE", amount: a.amount, category: a.category, note: a.note });
         return null;
       };
-      const maiSystemPrompt = () => {
-        const names = categories.map(c => c && c.name).filter(Boolean);
-        return `Bạn là Mai, trợ lý quản lý chi tiêu trong app VinaSpends. Luôn trả lời bằng tiếng Việt có dấu, xưng "em", gọi người dùng là "anh", giọng thân thiện, ngắn gọn (1–4 câu), đi thẳng vào ý.
-Chỉ dùng số liệu trong phần DỮ LIỆU bên dưới; không có thì nói em chưa có số liệu, tuyệt đối không bịa số. Tiền viết dạng 1.250.000đ.
-Khi anh dặn cách xếp hạng mục, dặn bỏ qua thông báo, hoặc kể một khoản thu/chi cần ghi, hãy gọi công cụ phù hợp. Hạng mục phải lấy đúng tên trong danh sách.
-Em chạy ngay trên điện thoại của anh, không gửi dữ liệu đi đâu.
-
-DANH SÁCH HẠNG MỤC: ${names.join(", ")}
+      // Phần dặn dò giữ NGẮN: điện thoại phải đọc hết từng chữ trước khi trả lời, càng dài càng chậm.
+      // Phần đầu luôn giống nhau để máy dùng lại phần đã đọc sẵn; số liệu chỉ thêm khi câu hỏi cần.
+      const maiSystemPrompt = (withData) => {
+        const base = `Bạn là Mai, trợ lý chi tiêu trong app VinaSpends. Trả lời tiếng Việt có dấu, xưng "em", gọi "anh", thân thiện, ngắn gọn 1–3 câu. Không bịa số liệu.`;
+        if (!withData) return base;
+        return `${base}
+Chỉ dùng số trong DỮ LIỆU; không có thì nói em chưa có số liệu. Tiền viết dạng 1.250.000đ.
 
 DỮ LIỆU:
 ${maiAiContext()}`;
       };
-      const maiAskAI = async (text, history, onToken) => {
-        const msgs = [{ role: "system", content: maiSystemPrompt() }];
-        history.slice(-8).forEach(m => { if (m.text && !m.pending) msgs.push({ role: m.from === "me" ? "user" : "assistant", content: String(m.text).slice(0, 600) }); });
+      const NEED_DATA_RE = /(tieu|chi|thu|tien|bao nhieu|thang|tuan|hom nay|hom qua|vi|so du|tiet kiem|ngan sach|no|the|giao dich|luong|khoan|muc|nhieu nhat|it nhat|con lai|dong|\d)/;
+      const NEED_TOOL_RE = /(nho|dan|tu gio|tu nay|lan sau|bo qua|dung ghi|khong ghi|ghi|them|tinh la|tinh vao|xep|cho vao|la muc|hang muc|chan)/;
+      const maiAskAI = async (text, history, onToken, onStage) => {
+        const f = window.MaiAgent.fold(text);
+        const withData = NEED_DATA_RE.test(f);
+        const useTools = NEED_TOOL_RE.test(f);
+        let sys = maiSystemPrompt(withData);
+        if (useTools) sys += `\nKhi anh dặn xếp hạng mục, bỏ qua thông báo, hoặc kể khoản thu/chi cần ghi thì gọi công cụ. Hạng mục lấy đúng tên trong: ${categories.map(c => c && c.name).filter(Boolean).join(", ")}.`;
+        const msgs = [{ role: "system", content: sys }];
+        history.filter(m => m.text && !m.pending).slice(-4).forEach(m => msgs.push({ role: m.from === "me" ? "user" : "assistant", content: String(m.text).slice(0, 300) }));
         msgs.push({ role: "user", content: text });
-        return window.MaiLLM.chat({ messages: msgs, tools: MAI_TOOLS, maxTokens: 300, temperature: 0.4, onToken });
+        const promptChars = msgs.reduce((n, m) => n + m.content.length, 0) + (useTools ? 1600 : 0);
+        return window.MaiLLM.chat({ messages: msgs, tools: useTools ? MAI_TOOLS : undefined, maxTokens: 220, temperature: 0.4, onToken, onStage, promptChars });
       };
 
       // Câu nào bộ luật làm chắc chắn được thì làm ngay; còn lại để bộ não AI (nếu đã bật) trả lời tự nhiên
-      const RULE_SURE = ["teach", "teach_type", "block", "unblock", "forget", "list"];
+      const RULE_SURE = ["teach", "teach_type", "block", "unblock", "forget", "list", "greet", "thanks"];
       const handleMaiSend = async (preset) => {
         const text = String(preset != null ? preset : maiInput).trim();
         if (!text || !window.MaiAgent || maiBusy) return;
@@ -1382,13 +1398,16 @@ ${maiAiContext()}`;
           }
           if (!aiReady) return say(maiDo(it, text));
           setMaiBusy(true);
-          if (!aiLoaded) say("Em đang khởi động bộ não AI, anh chờ em chút nhé…", { pending: true });
-          else say("", { pending: true });
+          setMaiStage({ stage: aiLoaded ? "reading" : "loading", at: Date.now() });
+          say("", { pending: true });
           const ok = await aiEnsure();
           if (!ok) return say(maiDo(it, text) + "\n(Bộ não AI chưa khởi động được, em trả lời theo cách cơ bản.)");
-          say("", { pending: true });
+          setMaiStage({ stage: "reading", at: Date.now() });
           let last = 0;
-          const res = await maiAskAI(text, history, (partial) => { const t = Date.now(); if (t - last > 80) { last = t; say(partial, { pending: true, ai: true }); } });
+          const res = await maiAskAI(text, history,
+            (partial) => { const t = Date.now(); if (t - last > 80) { last = t; say(partial, { pending: true, ai: true }); } },
+            (stage) => setMaiStage(s => ({ ...s, stage })));
+          if (res.stopped) return say("Dạ em dừng rồi ạ. " + (it.intent !== "unknown" && it.intent !== "ask" ? maiDo(it, text) : "Anh hỏi ngắn hơn, hoặc dùng \"Mai Nhẹ\" để em trả lời nhanh hơn nhé."));
           const acts = (res.toolCalls || []).map(maiRunTool).filter(Boolean);
           let reply = res.content;
           if (acts.length) reply = (reply && !/^\s*$/.test(reply) ? reply + "\n" : "") + acts.join("\n");
@@ -1399,6 +1418,7 @@ ${maiAiContext()}`;
           say("Ui, em bị rối một chút. Anh nói lại giúp em nhé.");
         } finally {
           setMaiBusy(false);
+          setMaiStage(null);
         }
       };
 
@@ -1417,8 +1437,9 @@ ${maiAiContext()}`;
             { role: "system", content: "Bạn phân loại giao dịch ngân hàng ở Việt Nam vào đúng một hạng mục. Chỉ trả lời đúng tên một hạng mục trong danh sách, không giải thích." },
             { role: "user", content: `Danh sách hạng mục: ${names.join(", ")}\nGiao dịch: ${type === "INCOME" ? "tiền vào" : "tiền ra"} ${vnd(item.amount)}, nội dung: "${desc}"\nHạng mục:` },
           ],
-          maxTokens: 16, temperature: 0,
+          maxTokens: 16, temperature: 0, background: true,
         });
+        if (res.skipped) return null;
         const cat = A.matchCategory(res.content.split("\n")[0], names);
         return cat && cat !== "Khác" ? cat : null;
       };
@@ -3964,6 +3985,19 @@ ${maiAiContext()}`;
                         <div className="max-w-[82%] bg-theme-background border-2 border-theme-border rounded-2xl rounded-bl-md px-3.5 py-2 text-[14px] text-theme-textPrimary leading-relaxed whitespace-pre-line break-words">
                           {m.text || (m.pending ? <span className="mai-typing inline-flex gap-1 py-1"><i /><i /><i /></span> : "")}
                           {m.text && m.pending && <span className="mai-caret" />}
+                          {m.pending && !m.text && maiStage && (() => {
+                            const sec = Math.floor((Date.now() - maiStage.at) / 1000);
+                            const label = maiStage.stage === "loading" ? "Em đang khởi động bộ não AI" : maiStage.stage === "writing" ? "Em đang viết" : "Em đang đọc câu hỏi";
+                            return (
+                              <div className="text-xs text-theme-textSecondary mt-1">
+                                {label}… {sec}s
+                                {sec >= 25 && <div className="mt-1">Máy đang chạy hơi chậm. Anh có thể bấm Dừng, hoặc đổi sang “Mai Nhẹ” cho nhanh.</div>}
+                              </div>
+                            );
+                          })()}
+                          {m.pending && maiStage && maiStage.stage !== "loading" && (
+                            <button type="button" onClick={() => window.MaiLLM && window.MaiLLM.stop()} className="block mt-1.5 px-3 py-1 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary">Dừng</button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -4036,7 +4070,7 @@ ${maiAiContext()}`;
                       {aiState.status === "importing" && <p className="text-xs text-theme-textSecondary">Đang chép file vào app… {Math.round((aiState.progress || 0) * 100)}%</p>}
                       {aiState.status === "loading" && <p className="text-xs text-theme-textSecondary">Đang nạp mô hình vào bộ nhớ, lần đầu có thể mất 10–40 giây…</p>}
                       {aiState.error && <p className="text-xs font-semibold text-[var(--expense)]">{aiState.error}</p>}
-                      {aiLoaded && <p className="text-[11px] text-theme-textSecondary">Đang chạy {aiState.threads > 1 ? `${aiState.threads} luồng` : "1 luồng"}{aiState.speed ? ` · khoảng ${aiState.speed} chữ/giây` : ""}.</p>}
+                      {aiLoaded && <p className="text-[11px] text-theme-textSecondary">Đang chạy {aiState.threads > 1 ? `${aiState.threads} luồng` : "1 luồng"}{aiState.readSpeed ? ` · đọc ~${aiState.readSpeed} chữ/giây` : ""}{aiState.speed ? ` · viết ~${aiState.speed} chữ/giây` : ""}.</p>}
                       <label className="flex items-center justify-between gap-3 text-xs font-semibold text-theme-textPrimary">
                         <span>AI tự xếp hạng mục cho giao dịch lạ</span>
                         <input type="checkbox" checked={maiSettings.aiClassify !== false} onChange={e => setMaiSettings(p => ({ ...p, aiClassify: e.target.checked }))} className="w-5 h-5 accent-[#C8551B]" />
@@ -4840,7 +4874,7 @@ ${maiAiContext()}`;
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 3.0 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 3.1 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>
