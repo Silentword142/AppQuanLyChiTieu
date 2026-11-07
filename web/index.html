@@ -88,9 +88,6 @@
     .font-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.01em; }
     .tabular { font-variant-numeric: tabular-nums; }
     .vi { width: 100%; height: 100%; display: block; overflow: visible; }
-    .vi .f { fill: currentColor; fill-opacity: .2; }
-    .vi .d { fill: currentColor; fill-opacity: .2; stroke: none; }
-    .vi .s { fill: currentColor; stroke: none; }
 
     /* ======= Phong cách Vintage 70s ======= */
     html[data-retro="1"] body {
@@ -339,11 +336,12 @@
     };
     const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
 
-    // Bộ icon tự vẽ (web/icons.js) – không dùng thư viện icon ngoài
+    // Bộ icon tự vẽ nhiều màu (web/icons.js) – không dùng thư viện icon ngoài.
+    // Icon hạng mục: viền luôn theo màu mực của theme, màu hạng mục nằm ở nền tròn bao quanh.
     const Icon = ({ name, className = "", style = {} }) => (
       <span
         className={`inline-flex items-center justify-center shrink-0 ${className}`}
-        style={style}
+        style={style.color && style.color !== "currentColor" ? { ...style, color: "rgb(var(--text-primary-rgb))" } : style}
         dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(name) : "" }}
       />
     );
@@ -4047,7 +4045,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.1 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.2 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

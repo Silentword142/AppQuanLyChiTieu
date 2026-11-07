@@ -1,6 +1,6 @@
 /*
  * Bộ icon VinaSpends "Vintage 70s" – vẽ tay bằng SVG, không dùng thư viện icon nào.
- * Lưới 24×24, nét 2px bo tròn. Lớp:
+ * Lưới 24×24, nét 2px bo tròn, tô nhiều màu (bảng màu P, map C + chi tiết X ở cuối file). Lớp:
  *   f  = tô nhạt cùng màu nét (duotone kiểu in lụa) + giữ nét viền
  *   d  = chỉ tô nhạt, không viền
  *   s  = tô đặc cùng màu nét (chấm, điểm nhấn)
@@ -290,8 +290,255 @@
     return "tag";
   }
 
-  function svg(name, cls) {
-    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + I[resolve(name)] + "</svg>";
+  // ---------- Màu (bộ icon nhiều màu kiểu in lụa thập niên 70) ----------
+  // Bảng màu: mỗi mã -> biến CSS (theme có thể chỉnh) + màu dự phòng
+  var P = {
+    mu: "#E9A23B", ye: "#F4CF5D", or: "#E0702F", tm: "#C9452F", ro: "#E28B84", pk: "#F3BDB2",
+    av: "#A3AD45", gr: "#5E9150", te: "#2E8C86", mt: "#8CCBB9", sk: "#82B9D4", dn: "#3F6E99",
+    cr: "#F7E8C8", wh: "#FFF8EA", br: "#9A6240", cf: "#5C3A26", pl: "#946096", gy: "#BDB3A2",
+    ink: "currentColor"
+  };
+  function col(t) { return t === "ink" ? "currentColor" : "var(--ic-" + t + "," + (P[t] || P.mu) + ")"; }
+
+  // Màu cho từng vùng tô (theo thứ tự các phần tử class f / d / s trong icon)
+  var C = {
+    "home": "or", "chart": "te ro", "pie": "mu", "trend-up": "av", "tags": "mu wh", "wallet": "or cf", "settings": "mu",
+    "palette": "cr tm te dn", "sun": "ye", "moon": "ye", "cloud": "sk", "cloud-up": "sk", "zap": "ye", "bell": "mu",
+    "chat": "sk", "sparkles": "ye", "trash": "ro", "pencil": "ye", "search": "sk", "filter": "te", "calendar": "cr tm te",
+    "clock": "cr", "info": "sk ink", "alert": "ye ink", "alert-circle": "ro ink", "check-circle": "av", "landmark": "tm",
+    "banknote": "av", "credit-card": "dn", "piggy": "pk cf", "coins": "ye mu", "receipt": "cr", "calculator": "te mu mu mu or or or",
+    "percent": "ro te", "download": "sk", "upload": "sk", "file": "cr", "user": "mu te", "users": "or te", "mail": "cr",
+    "lock": "mu cf", "key": "ye", "eye": "wh", "inbox": "sk", "grid": "or te", "list": "or te mu", "scan": "sk", "camera": "dn",
+    "more": "or mu te", "target": "wh tm", "book": "te", "book-open": "cr", "contact": "cr", "save": "dn", "shield": "te",
+    "star": "ye", "heart": "tm", "image": "sk ye", "flower": "pk ro pk ro pk ye", "globe": "sk",
+    // ăn uống
+    "coffee": "cr", "phin": "gy cf", "milk-tea": "pk cf cf cf", "utensils": "gy", "pho": "cr", "rice": "dn wh", "banh-mi": "mu",
+    "cup-soda": "tm", "beer": "ye", "wine": "pl", "cake": "pk mu", "ice-cream": "pk", "pizza": "ye tm tm tm", "apple": "tm",
+    "cart": "mu ink ink", "basket": "mu", "fish": "sk cf", "egg": "wh", "carrot": "or", "candy": "ro", "chef": "wh",
+    // di chuyển
+    "scooter": "cf cf tm", "bike": "cf cf", "car": "tm ye ye", "taxi": "ye wh wh", "bus": "or ye ye", "train": "te ye ye",
+    "plane": "sk", "ship": "tm", "fuel": "tm", "parking": "dn", "wrench": "gy", "map-pin": "tm", "compass": "cr", "luggage": "or",
+    "ticket": "or", "road": "gy",
+    // nhà cửa
+    "building": "mu", "droplet": "sk", "wifi": "te", "tv": "cf", "bulb": "ye", "bed": "dn", "bath": "wh", "sofa": "te or",
+    "fan": "cf sk", "plug": "gy", "flame": "or", "tree": "gr", "sprout": "av", "bag": "or", "shirt": "te", "ao-dai": "tm",
+    "shoe": "tm", "watch": "cr", "glasses": "sk sk", "gem": "mt", "gift": "ro", "scissors": "tm tm", "package": "mu", "lipstick": "cf",
+    "store": "cr", "crown": "ye", "umbrella": "tm", "non-la": "ye",
+    // công nghệ
+    "phone": "cf ink", "laptop": "sk", "headphones": "or or", "gamepad": "pl ye ro", "monitor": "sk", "printer": "gy", "radio": "or", "cassette": "mu",
+    // tài chính
+    "briefcase": "br", "hand-coins": "ye", "safe": "gy", "handshake": "mu", "salary": "av",
+    // sức khỏe
+    "heart-pulse": "tm", "pill": "wh", "stethoscope": "sk", "dumbbell": "tm tm", "syringe": "sk", "tooth": "wh", "baby": "pk cf cf",
+    "cross": "tm", "yoga": "or",
+    // giải trí
+    "film": "cf", "music": "or te", "guitar": "or", "party": "ye", "paw": "br br br br br", "cat": "mu cf cf", "dog": "br cf cf",
+    "palm": "gr", "tent": "or", "mountain": "te", "dice": "wh tm tm tm tm tm", "vinyl": "cf", "disco": "gy",
+    // học tập & gia đình
+    "graduation": "cf", "school": "tm", "lamp": "mu", "phone-call": "av", "envelope-red": "tm", "pagoda": "tm tm", "flag": "tm",
+    "home-heart": "or tm"
+  };
+
+  // Chi tiết màu thêm (vẽ dưới nét viền, trên lớp tô chính) – làm icon có nhiều mảng màu
+  var X = {
+    "home": [["mu", '<path d="M10 20v-5.2a2 2 0 0 1 4 0V20z"/>']],
+    "chart": [["mu", '<rect x="10.2" y="5" width="3.6" height="15.5" rx="1.2"/>']],
+    "pie": [["te", '<path d="M10 5.7A8.5 8.5 0 1 0 18.3 14H10z"/>']],
+    "wallet": [["cr", '<path d="M3.5 6.5A2 2 0 0 1 5.5 4.5H16v3H4z"/>'], ["mu", '<path d="M20.5 11.5h-4a2 2 0 0 0 0 4h4z"/>']],
+    "settings": [["cr", '<circle cx="12" cy="12" r="2.8"/>']],
+    "sun": [["or", '<circle cx="12" cy="12" r="2.2"/>']],
+    "cloud-up": [["wh", '<path d="M12 16v-5.5l-2.5 2.5h5L12 10.5z"/>']],
+    "bell": [["or", '<circle cx="12" cy="20.6" r="1.7"/>']],
+    "chat": [["wh", '<path d="M8 8.2h8v1.6H8zM8 11.7h5v1.6H8z"/>']],
+    "sparkles": [["or", '<path d="M17.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>']],
+    "trash": [["tm", '<path d="M4 6.5h16M9.5 6.5V4.5h5v2"/>']],
+    "pencil": [["ro", '<path d="M15.5 4.5l4 4-2 2-4-4z"/>'], ["cr", '<path d="M5 15l4 4-5 1z"/>']],
+    "search": [["wh", '<circle cx="9" cy="9" r="1.8"/>']],
+    "calendar": [["tm", '<path d="M3.5 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v3h-17z"/>']],
+    "clock": [["mu", '<path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5H12z"/>']],
+    "landmark": [["cr", '<path d="M4.5 17.5h15v3h-15z"/>']],
+    "banknote": [["ye", '<circle cx="12" cy="12" r="2.6"/>']],
+    "credit-card": [["ye", '<path d="M2.5 9.5h19V7a2 2 0 0 0-2-2h-15a2 2 0 0 0-2 2z"/>'], ["mu", '<rect x="5" y="12.5" width="4" height="3" rx=".6"/>']],
+    "piggy": [["ro", '<path d="M3.5 11.5H5"/>']],
+    "receipt": [["av", '<path d="M8 7.2h8v1.6H8z"/>']],
+    "calculator": [["sk", '<rect x="8" y="6" width="8" height="3.5" rx=".6"/>']],
+    "download": [["dn", '<path d="M12 3.5v11l-4.5-4.5h9L12 14.5z"/>']],
+    "upload": [["dn", '<path d="M12 14.5v-11L7.5 8h9L12 3.5z"/>']],
+    "file": [["mu", '<path d="M14 3v5h5z"/>']],
+    "mail": [["or", '<path d="M3.5 7l8.5 6 8.5-6V6.5a1 1 0 0 0-1-1h-15a1 1 0 0 0-1 1z"/>']],
+    "lock": [["gy", '<path d="M8 10.5V7.5a4 4 0 0 1 8 0v3h-1.6v-3a2.4 2.4 0 0 0-4.8 0v3z"/>']],
+    "key": [["or", '<circle cx="7" cy="16" r="1.5"/>']],
+    "eye": [["te", '<circle cx="12" cy="12" r="3"/>'], ["cf", '<circle cx="12" cy="12" r="1.3"/>']],
+    "inbox": [["mu", '<path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19z"/>']],
+    "grid": [["mu", '<rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/>'], ["ro", '<rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/>']],
+    "scan": [["wh", '<path d="M9.5 10.2h5v1.6h-5z"/>']],
+    "camera": [["sk", '<circle cx="12" cy="13.2" r="3.6"/>'], ["mu", '<path d="M9 4.5h6L16.5 7h-9z"/>']],
+    "target": [["ro", '<circle cx="12" cy="12" r="5"/>'], ["wh", '<circle cx="12" cy="12" r="3"/>']],
+    "book": [["cr", '<path d="M4 19.8A1.8 1.8 0 0 0 5.8 21.5H19V18H5.8z"/>'], ["mu", '<path d="M8.5 6.5h6v2h-6z"/>']],
+    "book-open": [["or", '<path d="M12 6.5C10 5 7 4.5 3 4.8V18.5c4-.3 7 .2 9 1.7z"/>']],
+    "contact": [["mu", '<circle cx="12" cy="10" r="2.8"/>'], ["te", '<path d="M8 17a4 4 0 0 1 8 0z"/>']],
+    "save": [["wh", '<path d="M7.5 3.5v5h7v-5z"/>'], ["sk", '<path d="M7.5 20.5v-6h9v6z"/>']],
+    "shield": [["mt", '<path d="M12 3 4.5 6v6c0 4.5 3.2 7.8 7.5 9z"/>']],
+    "star": [["or", '<path d="M12 3.5v13.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>']],
+    "heart": [["ro", '<path d="M7 7.2c-1.6.5-2.5 1.8-2.4 3.3"/>']],
+    "image": [["av", '<path d="m3.5 17 5-5 4 4 2.5-2.5 5.5 5V18a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3.5 18z"/>']],
+    "globe": [["av", '<path d="M7 7c2 0 3 1.5 2.5 3S7 12 6 14c-1 1.5-2 1-2.4-.5A8.5 8.5 0 0 1 7 7zM15 15c1.5-1 3-.5 4 .5a8.5 8.5 0 0 1-4 4c-.8-1.5-1-3.5 0-4.5z"/>']],
+    // ăn uống
+    "coffee": [["cf", '<path d="M4.5 9.5h12v2h-12z"/>'], ["mu", '<path d="M3.5 21h15v-1h-15z"/>']],
+    "phin": [["cf", '<path d="M7.6 17h8.8l-.9 3.5h-7z"/>']],
+    "milk-tea": [["wh", '<path d="M8 8.5a4 4 0 0 1 8 0z"/>'], ["tm", '<path d="M13.5 2.5 12 8.5"/>']],
+    "utensils": [["br", '<path d="M17.5 13h-2.5v-3c0-3 .5-5.5 2.5-7z"/>']],
+    "pho": [["or", '<path d="M4.2 13.5h15.6a8.3 8.3 0 0 1-1.3 2.5H5.5a8.3 8.3 0 0 1-1.3-2.5z"/>'], ["gr", '<circle cx="9" cy="11" r="1.3"/><circle cx="14.5" cy="11.2" r="1.1"/>'], ["br", '<path d="M15 3.5 9 11M19.5 4.5 11 11"/>']],
+    "rice": [["sk", '<path d="M5.5 15h13"/>']],
+    "banh-mi": [["or", '<path d="M5 15.2c1.8 1 4.6.8 7.6-.6s5.6-3.4 6.6-5.4c-2.2 1.5-5 3.1-8 4-2.6.7-4.6.9-6.2 2z"/>'], ["gr", '<path d="M8.5 13.2c1.5-.2 3.5-.8 5.5-1.8 1.4-.7 2.5-1.4 3.5-2.2"/>']],
+    "cup-soda": [["wh", '<path d="M7 13h10l-.3 2.5H7.3z"/>'], ["ye", '<path d="M12 8l1.5-5.5 3 .5"/>']],
+    "beer": [["wh", '<path d="M5.5 7.5a2.3 2.3 0 0 1 1.7-3.9 2.8 2.8 0 0 1 5 0 2.3 2.3 0 0 1 3.3 3.9z"/>']],
+    "wine": [["tm", '<path d="M7.3 8h9.4a4.7 4.7 0 0 1-9.4 0z"/>']],
+    "cake": [["wh", '<path d="M4 12.5h16v3c-1.3 1-2.7 1-4 0s-2.7-1-4 0-2.7 1-4 0-2.7-1-4 0z"/>'], ["sk", '<path d="M11.2 9h1.6v3.5h-1.6zM7.2 10h1.6v2.5H7.2zM15.2 10h1.6v2.5h-1.6z"/>']],
+    "ice-cream": [["mu", '<path d="M7 11l5 10.5L17 11z"/>'], ["mt", '<path d="M7 11a5 5 0 0 1 5-5v5z"/>']],
+    "pizza": [["mu", '<path d="M3.5 6.5C9 3.5 15 3.5 20.5 6.5l-1.3 3c-4.6-2.2-9.8-2.2-14.4 0z"/>'], ["gr", '<circle cx="12.5" cy="10.6" r=".8"/><circle cx="15.5" cy="11.2" r=".7"/>']],
+    "apple": [["gr", '<path d="M14.5 3.5c-1.7.5-2.5 2-2.5 4 1.5-.3 2.5-1.8 2.5-4z"/>'], ["ro", '<path d="M7.5 10c.4-1.3 1.3-2 2.3-2.2"/>']],
+    "cart": [["dn", '<path d="M6.3 7h14.2l-1 4H7.1z"/>']],
+    "basket": [["br", '<path d="M3.5 10h17l-.4 2H3.9z"/>'], ["av", '<circle cx="9.5" cy="8.3" r="2"/>'], ["tm", '<circle cx="14" cy="8" r="2"/>']],
+    "fish": [["dn", '<path d="M21 6v12l-4.5-3.7V9.7z"/>']],
+    "egg": [["ye", '<circle cx="12" cy="14" r="3"/>']],
+    "carrot": [["gr", '<path d="M14.5 9.5c.5-2.5 2-4 4-4.5M15.5 10.5c2.3-.6 4-.2 5 1M15 10c0-2.5.8-4.5 2-6"/>']],
+    "candy": [["ye", '<path d="M8.5 9.8 3.5 8l1 4 4.1.3zM15.5 14.2l5 1.8-1-4-4.1-.3z"/>'], ["wh", '<path d="M10 10.5c1.5-1 3-1 4 .5"/>']],
+    "chef": [["tm", '<path d="M7 15.5h10v1.8H7z"/>']],
+    // di chuyển
+    "scooter": [["sk", '<path d="M13.5 11.5 16 6h2.5"/>'], ["gy", '<circle cx="5.5" cy="17" r="1"/><circle cx="18.5" cy="17" r="1"/>']],
+    "bike": [["gy", '<circle cx="5.5" cy="16.5" r="1.3"/><circle cx="18.5" cy="16.5" r="1.3"/>'], ["te", '<path d="M5.5 16.5 9.5 9h6l3 7.5"/>']],
+    "car": [["sk", '<path d="M5.7 12.5l1.6-4.3a1 1 0 0 1 .9-.7h7.6a1 1 0 0 1 .9.7l1.6 4.3z"/>'], ["cf", '<rect x="5.5" y="17" width="2" height="2.5" rx=".5"/><rect x="16.5" y="17" width="2" height="2.5" rx=".5"/>']],
+    "taxi": [["sk", '<path d="M5.7 12.5l1.6-4.3a1 1 0 0 1 .9-.7h7.6a1 1 0 0 1 .9.7l1.6 4.3z"/>'], ["tm", '<path d="M10 3.5h4v2.5h-4z"/>']],
+    "bus": [["sk", '<path d="M4.5 6a2.5 2.5 0 0 1 2.5-2.5h10A2.5 2.5 0 0 1 19.5 6v5h-15z"/>'], ["cr", '<path d="M8 6.2h8v1.6H8z"/>']],
+    "train": [["sk", '<path d="M5.5 6a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3v4h-13z"/>']],
+    "plane": [["wh", '<path d="M14.8 8 5.5 5.5 3.8 7.2l7.4 4.3z"/>'], ["dn", '<path d="M16.2 9.2l3.8 6.6-1.7 1.7-4.3-7.4z"/>']],
+    "ship": [["wh", '<path d="M5.5 14.5v-5h13v5z"/>'], ["mu", '<path d="M9 9.5V5.5h6v4z"/>'], ["dn", '<path d="M3 14.5h18l-.8 1.6H3.8z"/>']],
+    "fuel": [["wh", '<rect x="7" y="6.5" width="5" height="3" rx=".5"/>']],
+    "parking": [["wh", '<path d="M9.5 17V7.5h3.3a2.7 2.7 0 0 1 0 5.5H9.5"/>']],
+    "wrench": [["or", '<circle cx="5" cy="17.8" r="1"/>']],
+    "map-pin": [["wh", '<circle cx="12" cy="10" r="2.4"/>']],
+    "compass": [["tm", '<path d="m15.5 8.5-2 5-3-3z"/>'], ["dn", '<path d="m8.5 15.5 2-5 3 3z"/>']],
+    "luggage": [["mu", '<path d="M9.5 10.5h5v6h-5z"/>'], ["cf", '<path d="M9.5 7V4.5h5V7"/>']],
+    "ticket": [["ye", '<path d="M14.5 5.5h4.5A1.5 1.5 0 0 1 20.5 7v2.5a2.5 2.5 0 0 0 0 5V17a1.5 1.5 0 0 1-1.5 1.5h-4.5z"/>']],
+    "road": [["ye", '<path d="M11.3 5.5h1.4v2.5h-1.4zM11.3 11h1.4v2.5h-1.4zM11.3 16.5h1.4v3h-1.4z"/>'], ["gr", '<path d="M3.5 20.5 7 3.5h1l-3.5 17zM20.5 20.5 17 3.5h-1l3.5 17z"/>']],
+    // nhà cửa
+    "building": [["gy", '<path d="M15 9.5h3.5A1.5 1.5 0 0 1 20 11v9.5h-5z"/>'], ["sk", '<path d="M8.5 6.7h2.5v1.6H8.5zM8.5 10.2h2.5v1.6H8.5zM8.5 13.7h2.5v1.6H8.5z"/>']],
+    "droplet": [["wh", '<path d="M9 14.5a3 3 0 0 0 3 3"/>']],
+    "tv": [["sk", '<rect x="5" y="8.5" width="14" height="8" rx="1"/>'], ["or", '<path d="m8.5 3 3.5 3.5L15.5 3"/>']],
+    "bulb": [["gy", '<path d="M9 16.5h6v3.5H9z"/>'], ["wh", '<path d="M8.5 9a3.5 3.5 0 0 1 3-3.4"/>']],
+    "bed": [["wh", '<circle cx="6.8" cy="11.2" r="1.6"/>'], ["mu", '<path d="M3 17h18v-1.5H3z"/>'], ["br", '<path d="M3 5v15M21 13v7"/>']],
+    "bath": [["sk", '<path d="M3 12h18v1.5H3z"/>'], ["gy", '<path d="M6 12V5.5A2 2 0 0 1 8 3.5a2 2 0 0 1 2 2"/>']],
+    "sofa": [["mu", '<path d="M7 14.5h10V13H7z"/>']],
+    "fan": [["gy", '<path d="M12 16.5v4M8.5 20.5h7"/>']],
+    "plug": [["ye", '<path d="M9.5 8.5V3.5M14.5 8.5V3.5"/>'], ["cf", '<path d="M12 16.5v5"/>']],
+    "flame": [["ye", '<path d="M12 21.5a2.5 2.5 0 0 1-2.5-2.5c0-1.8 2.5-3.5 2.5-3.5s2.5 1.7 2.5 3.5a2.5 2.5 0 0 1-2.5 2.5z"/>']],
+    "tree": [["av", '<path d="M12 2.5 8.5 7.2h7z"/>'], ["br", '<path d="M12 16v5.5"/>']],
+    "sprout": [["gr", '<path d="M12 10.5c0-3.5 2.7-6 7.5-6 0 4.2-2.7 6.5-7.5 6.5z"/>'], ["br", '<path d="M8 21h8"/>']],
+    "bag": [["mu", '<path d="M5.2 10h13.6l.3 3.5H4.9z"/>']],
+    "shirt": [["wh", '<path d="M8.5 3.5c.5 1.5 2 2.5 3.5 2.5s3-1 3.5-2.5L14 2.8c-.5 1-1.2 1.4-2 1.4s-1.5-.4-2-1.4z"/>'], ["mu", '<path d="M3 6.5l2 4 1.5-.8-2-4zM21 6.5l-2 4-1.5-.8 2-4z"/>']],
+    "ao-dai": [["ye", '<path d="M9.5 3.5h5l.6.8L12 6.5 8.9 4.3z"/>'], ["pk", '<path d="M10 12h4l1.9 8H8.1z"/>']],
+    "shoe": [["wh", '<path d="M3 16.5h18v2H3z"/>'], ["ye", '<path d="M9 9.5l1.5-1.5M11 11l1.5-1.5"/>']],
+    "watch": [["br", '<path d="M9 7l.7-3.5h4.6L15 7zM9 17l.7 3.5h4.6L15 17z"/>']],
+    "glasses": [["cf", '<path d="M10 14.5c1.3-1 2.7-1 4 0"/>'], ["wh", '<path d="M4.5 13.5a2 2 0 0 1 2-2M15.5 13.5a2 2 0 0 1 2-2"/>']],
+    "gem": [["sk", '<path d="M3 9h18l-9 11.5z"/>'], ["wh", '<path d="M9.5 4 8 9h8l-1.5-5z"/>']],
+    "gift": [["ye", '<path d="M3 7h18v3H3z"/>'], ["mu", '<path d="M11 7h2v13.5h-2z"/>'], ["tm", '<path d="M12 7c-1-3.5-5.5-4-5.5-1.5S12 7 12 7zm0 0c1-3.5 5.5-4 5.5-1.5S12 7 12 7z"/>']],
+    "scissors": [["gy", '<path d="M9 8.5 20 18M9 15.5 20 6"/>']],
+    "package": [["br", '<path d="M12 11 20 7v10l-8 4z"/>'], ["cr", '<path d="M8 5l8 4-1.5.8-8-4z"/>']],
+    "lipstick": [["tm", '<path d="M10 11V6.5l4-3V11z"/>'], ["mu", '<path d="M9 11h6v2H9z"/>']],
+    "store": [["tm", '<path d="M3 9.5 5 4h14l2 5.5a2.5 2.5 0 0 1-4.5 1.5 2.5 2.5 0 0 1-4.5 0 2.5 2.5 0 0 1-4.5 0A2.5 2.5 0 0 1 3 9.5z"/>'], ["wh", '<path d="M7.5 4h3l-.8 7a2.5 2.5 0 0 1-2.2 0zM13.5 4h3l.3 7a2.5 2.5 0 0 1-2.3 0z"/>'], ["sk", '<path d="M9.5 20.5v-5h5v5z"/>']],
+    "crown": [["tm", '<circle cx="12" cy="13.5" r="1.4"/>'], ["te", '<circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>'], ["mu", '<path d="M5.2 18h13.6l-.3 2.5h-13z"/>']],
+    "umbrella": [["wh", '<path d="M12 3a9 9 0 0 0-3 .5c-1.6 2.3-2.3 4.8-2.5 8 1.5-1.5 3-1.5 4.5 0 .3-3 .7-5.7 1-8.5zM12 3a9 9 0 0 1 3 .5c1.6 2.3 2.3 4.8 2.5 8-1.5-1.5-3-1.5-4.5 0-.3-3-.7-5.7-1-8.5z"/>'], ["br", '<path d="M12 12v6.5a2 2 0 0 1-4 0"/>']],
+    "non-la": [["mu", '<path d="M7 17.2 12 4 9.5 17.4z"/>'], ["tm", '<path d="M2.5 15.5h19l-1.5.8H4z"/>']],
+    // công nghệ
+    "phone": [["sk", '<rect x="7.8" y="7" width="8.4" height="9" rx=".8"/>'], ["wh", '<circle cx="12" cy="18" r="1.1"/>']],
+    "laptop": [["dn", '<rect x="6.5" y="6.5" width="11" height="6.5" rx=".6"/>'], ["gy", '<path d="M2.5 18.5h19l-1.5-3.5H4z"/>']],
+    "headphones": [["te", '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/>'], ["cf", '<rect x="5" y="15" width="1.2" height="4" rx=".6"/><rect x="17.8" y="15" width="1.2" height="4" rx=".6"/>']],
+    "gamepad": [["te", '<path d="M7.5 10v4M5.5 12h4"/>']],
+    "monitor": [["dn", '<rect x="5" y="6" width="14" height="8.5" rx="1"/>'], ["gy", '<path d="M12 16.5v4M8 20.5h8"/>'], ["mu", '<circle cx="9" cy="9" r="1.4"/>']],
+    "printer": [["wh", '<path d="M7 9V3.5h10V9zM7 14h10v7H7z"/>'], ["av", '<circle cx="17.5" cy="12" r=".9"/>']],
+    "radio": [["cf", '<circle cx="15.5" cy="14.2" r="3"/>'], ["cr", '<path d="M6.5 11.2h4v1.6h-4zM6.5 14.2h4v1.6h-4z"/>']],
+    "cassette": [["cf", '<rect x="5" y="8" width="14" height="6" rx="1"/>'], ["wh", '<circle cx="8" cy="11" r="2"/><circle cx="16" cy="11" r="2"/>'], ["or", '<path d="M6.5 18.5l1.5-3h8l1.5 3z"/>']],
+    // tài chính
+    "briefcase": [["mu", '<path d="M10.5 12.5v2h3v-2z"/>'], ["cf", '<path d="M3 12.5h18v1H3z"/>']],
+    "hand-coins": [["pk", '<path d="M2.5 13.5h3l3.5-1.5h4a1.5 1.5 0 0 1 0 3H10m3.5 0 5-2.5a1.6 1.6 0 0 1 1.8 2.6L15 19.5H5.5L2.5 21z"/>'], ["mu", '<circle cx="15.5" cy="6.5" r="1.6"/>']],
+    "safe": [["mu", '<circle cx="12" cy="11" r="3.5"/>'], ["cf", '<path d="M6.5 18.5v2M17.5 18.5v2"/>']],
+    "handshake": [["pk", '<path d="m11.5 8-3 3a1.4 1.4 0 0 0 2 2l2-2 3 3.5-2.5 3c-.8.8-1.8.8-2.5 0L3 11l4.5-5z"/>']],
+    "salary": [["ye", '<circle cx="12" cy="12" r="3.6"/>'], ["gr", '<path d="M3 9a2.5 2.5 0 0 0 2.5-2.5M21 9a2.5 2.5 0 0 1-2.5-2.5M3 15a2.5 2.5 0 0 1 2.5 2.5M21 15a2.5 2.5 0 0 0-2.5 2.5"/>']],
+    // sức khỏe
+    "heart-pulse": [["wh", '<path d="M5 12.5h3.5l1.5-3 2.5 5.5 1.5-2.5H19"/>']],
+    "pill": [["tm", '<path d="m4.9 12.4 3.8-3.7 6.6 6.6-3.8 3.7a4.6 4.6 0 0 1-6.6-6.6z"/>']],
+    "stethoscope": [["gy", '<path d="M5.5 3.5H4v5a5 5 0 0 0 10 0v-5h-1.5"/>'], ["te", '<circle cx="19" cy="11" r="1"/>']],
+    "dumbbell": [["cf", '<rect x="5.5" y="7" width="3" height="10" rx="1"/><rect x="15.5" y="7" width="3" height="10" rx="1"/>'], ["gy", '<path d="M8.5 12h7"/>']],
+    "syringe": [["tm", '<path d="m12.8 6.2 5 5-4.2 4.2-5-5z"/>'], ["gy", '<path d="m17 3 4 4M5.5 13.5 3 21"/>']],
+    "tooth": [["sk", '<path d="M7 7.5c0-1.2.8-2 2-2.2"/>']],
+    "baby": [["ro", '<circle cx="7.6" cy="14" r="1.2"/><circle cx="16.4" cy="14" r="1.2"/>'], ["mu", '<path d="M12 4.5c-1.5 0-2 2 0 2.5"/>']],
+    "cross": [["wh", '<path d="M11 6h2v12h-2zM6 11h12v2H6z"/>']],
+    "yoga": [["te", '<path d="M12 7.5v6M5 10l7 1.5 7-1.5"/>'], ["mu", '<path d="M4 20.5h16v-1H4z"/>']],
+    // giải trí
+    "film": [["mu", '<path d="M7.5 3.5h9v8.5h-9z"/>'], ["or", '<path d="M7.5 12h9v8.5h-9z"/>']],
+    "music": [["cf", '<path d="M9 17.5V5.5l11-2v4l-11 2z"/>']],
+    "guitar": [["cf", '<circle cx="8.5" cy="15.5" r="1.6"/>'], ["br", '<path d="m12 12.5 8-8M18 3l3 3"/>']],
+    "party": [["tm", '<path d="M5.6 14.5l3.9 3.9-3.2 1.1-1.5-1.5z"/>'], ["te", '<path d="M7.1 10.2l6.7 6.7-2.4.8-5-5z"/>'], ["pl", '<path d="M13 3.5c.5 1.5 0 3-1.5 3.5M20.5 11c-1.5-.5-3 0-3.5 1.5"/>']],
+    "paw": [["pk", '<path d="M10.5 15.5h3l-1.5 1.8z"/>']],
+    "cat": [["pk", '<path d="M5.8 6.2V5.6l1.7 1.3zM18.2 6.2V5.6l-1.7 1.3zM11 15.5h2l-1 1z"/>'], ["or", '<path d="M10.5 7h3l-1.5 2.5z"/>']],
+    "dog": [["cf", '<path d="M7.5 7 4 5c-1 2-.5 5 1.5 6.5zM16.5 7 20 5c1 2 .5 5-1.5 6.5z"/>'], ["cr", '<path d="M9.5 15a2.5 2.5 0 0 0 5 0c0-1-1-1.5-2.5-1.5S9.5 14 9.5 15z"/>']],
+    "palm": [["br", '<path d="M12 21.5c0-5 .5-9 2-12.5"/>'], ["av", '<path d="M14 9c-2.5-3-6.5-3.5-9-1.5C8 7 11 7.5 14 9zM14 9c3 0 6 2 7 5-3 0-5.5-1.5-7-5z"/>'], ["mu", '<path d="M8 21.5h8v-1H8z"/>']],
+    "tent": [["mu", '<path d="M12 11l-3.5 9h7z"/>'], ["tm", '<path d="M12 4l-1.2-2M12 4l1.2-2"/>']],
+    "mountain": [["wh", '<path d="M7.2 11.8 9 8.5l1.5 2.5L9 13z"/>'], ["gr", '<path d="M12.5 14l2.5-3.5 6.5 9.5h-6z"/>'], ["ye", '<circle cx="18" cy="5.5" r="1.8"/>']],
+    "vinyl": [["tm", '<circle cx="12" cy="12" r="2.5"/>'], ["gy", '<path d="M12 6.5a5.5 5.5 0 0 0-5.5 5.5M17.5 12a5.5 5.5 0 0 1-5.5 5.5"/>']],
+    "disco": [["sk", '<path d="M4.5 13a7.5 7.5 0 0 1 1.5-4.2h6V13zM12 13h7.5a7.5 7.5 0 0 1-1.5 4.2h-6z"/>'], ["pk", '<path d="M12 5.5V8.8h6a7.5 7.5 0 0 0-6-3.3zM12 20.5v-3.3H6a7.5 7.5 0 0 0 6 3.3z"/>'], ["ye", '<path d="M12 2.5v3"/>']],
+    // học tập & gia đình
+    "graduation": [["mu", '<path d="M21.5 9.5v5.5"/><circle cx="21.5" cy="15.8" r="1.2"/>'], ["dn", '<path d="M6.5 11.5V16c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.5L12 14z"/>']],
+    "school": [["cr", '<path d="M10 20.5v-5h4v5z"/>'], ["ye", '<path d="M12 5.5V2.5h3"/><circle cx="12" cy="11" r="1.6"/>']],
+    "lamp": [["gy", '<path d="M12 10.5v8M8 20.5h8"/>'], ["ye", '<path d="M8 10.5h8l-1 2H9z"/>']],
+    "phone-call": [["or", '<path d="M14.5 3.5a6 6 0 0 1 6 6M14.5 7a2.5 2.5 0 0 1 2.5 2.5"/>']],
+    "envelope-red": [["ye", '<circle cx="12" cy="13" r="2.2"/>'], ["mu", '<path d="M5 7.5c2.3 2 4.7 3 7 3s4.7-1 7-3V4.3A1.8 1.8 0 0 0 17.2 2.5H6.8A1.8 1.8 0 0 0 5 4.3z"/>']],
+    "pagoda": [["mu", '<path d="M8.5 14.5v6h7v-6zM8 9.5v2h8v-2z"/>'], ["ye", '<path d="M12 2.5v4"/>']],
+    "flag": [["ye", '<circle cx="10.5" cy="7.5" r="1.6"/>'], ["br", '<path d="M5.5 21.5V4"/>']],
+    "home-heart": [["mu", '<path d="M10 20v-1.5h4V20z"/>']]
+  };
+  X["bell-ring"] = X["bell"]; C["bell-ring"] = C["bell"]; X["key-house"] = X["key"]; C["key-house"] = C["key"];
+  X["trash-can"] = X["trash"]; C["trash-can"] = C["trash"]; C["pen"] = C["pencil"]; X["pen"] = X["pencil"];
+  C["tag"] = C["tags"]; C["bolt"] = C["zap"]; C["chart-up"] = C["trend-up"]; C["shield-check"] = C["shield"]; X["shield-check"] = X["shield"];
+  C["heart-pulse"] = C["heart"];
+
+  var EL = /<(path|rect|circle|ellipse)\b([^>]*?)\/>/g;
+  function paint(el, attrs, fill, stroke) {
+    return "<" + el + attrs.replace(/\sclass="\w"/, "") + ' style="fill:' + fill + ";stroke:" + stroke + '"/>';
+  }
+  var cache = {};
+  // mono = true -> bản đơn sắc cũ (dùng khi icon nằm trên nền màu đặc)
+  function build(key, mono) {
+    var body = I[key], colors = (C[key] || "").split(" ").filter(Boolean), k = 0;
+    var under = "", lines = "", m;
+    EL.lastIndex = 0;
+    var top = body.replace(EL, function (all, el, attrs) {
+      var c = (attrs.match(/class="(\w)"/) || [])[1];
+      if (!c) return all;
+      var tok = colors[k++] || (c === "s" ? "ink" : "mu");
+      if (mono) {
+        if (c === "s") return paint(el, attrs, "currentColor", "none");
+        under += paint(el, attrs, "currentColor;fill-opacity:.2", "none");
+        return c === "d" ? "" : paint(el, attrs, "none", "currentColor");
+      }
+      if (c === "s") return paint(el, attrs, col(tok), "none");
+      under += paint(el, attrs, col(tok), "none");
+      return c === "d" ? "" : paint(el, attrs, "none", "currentColor");
+    });
+    if (!mono && X[key]) X[key].forEach(function (a) {
+      a[1].replace(EL, function (all, el, attrs) {
+        var line = el === "path" && !/z\s*"/i.test(attrs) && !/z/i.test((attrs.match(/\sd="([^"]*)"/) || [])[1] || "");
+        if (line) lines += paint(el, attrs, "none", col(a[0]));
+        else under += paint(el, attrs, col(a[0]), "none");
+      });
+    });
+    return under + top + lines;
+  }
+  function svg(name, cls, opts) {
+    var key = resolve(name), mono = !!(opts && opts.mono), ck = key + (mono ? "|m" : "");
+    if (!cache[ck]) cache[ck] = build(key, mono);
+    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + cache[ck] + "</svg>";
   }
 
   // Bộ chọn icon khi tạo hạng mục
@@ -311,5 +558,5 @@
   GROUPS.forEach(function (g) { g.icons.forEach(function (n) { if (all.indexOf(n) === -1) all.push(n); }); });
   GROUPS.unshift({ name: "Tất cả", icon: "grid", icons: all });
 
-  root.VinaIcons = { svg: svg, resolve: resolve, has: function (n) { return !!I[n]; }, names: Object.keys(I), GROUPS: GROUPS, ALIASES: A };
+  root.VinaIcons = { svg: svg, PALETTE: P, COLORS: C, resolve: resolve, has: function (n) { return !!I[n]; }, names: Object.keys(I), GROUPS: GROUPS, ALIASES: A };
 })(typeof window !== "undefined" ? window : globalThis);
