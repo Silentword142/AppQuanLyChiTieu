@@ -904,7 +904,7 @@
       // ==========================================
       const isAndroidApp = typeof window !== "undefined" && !!window.MaiBridge;
       const canListen = isAndroidApp && (() => { try { return window.MaiBridge.canListen ? !!window.MaiBridge.canListen() : true; } catch(e) { return true; } })();
-      const [maiSettings, setMaiSettings] = useState(() => ({ autoSave: true, speak: false, syncBalance: true, ...safeJsonParse("vina_mai_settings", {}) }));
+      const [maiSettings, setMaiSettings] = useState(() => ({ autoSave: true, speak: false, syncBalance: true, cloudLearn: true, community: false, ...safeJsonParse("vina_mai_settings", {}) }));
       const [maiInbox, setMaiInbox] = useState(() => safeJsonParse("vina_mai_inbox", []));
       const [maiMemory, setMaiMemory] = useState(() => safeJsonParse("vina_mai_memory", {}));
       // Bộ não học hỏi của Mai (web/mai.js): học từ mọi lần anh sửa hạng mục / thu-chi / bỏ qua
@@ -915,7 +915,10 @@
       const [maiAccess, setMaiAccess] = useState(() => { try { return !!(window.MaiBridge && window.MaiBridge.hasNotificationAccess()); } catch(e) { return false; } });
       const maiSeenRef = React.useRef(safeJsonParse("vina_mai_seen", []));
       const stateRef = React.useRef({});
-      stateRef.current = { accounts, categories, maiMemory, maiSettings, transactions, maiBrain };
+      const [maiCommunity, setMaiCommunity] = useState(() => safeJsonParse("vina_mai_community", null));
+      const [maiCloud, setMaiCloud] = useState({ state: "idle" }); // idle | syncing | synced | denied | error
+      stateRef.current = { accounts, categories, maiMemory, maiSettings, transactions, maiBrain, maiCommunity };
+      const maiOpts = () => ({ brain: stateRef.current.maiBrain, community: stateRef.current.maiSettings.community ? stateRef.current.maiCommunity : null });
 
       useEffect(() => { localStorage.setItem("vina_mai_settings", JSON.stringify(maiSettings)); }, [maiSettings]);
       useEffect(() => { localStorage.setItem("vina_mai_inbox", JSON.stringify(maiInbox.slice(0, 100))); }, [maiInbox]);
@@ -1025,7 +1028,7 @@
       const maiIngest = (raw, source = "notification") => {
         if (!window.MaiAgent) return { status: "error" };
         const { maiSettings: st, maiBrain: brain } = stateRef.current;
-        const r = window.MaiAgent.parse(raw, { brain });
+        const r = window.MaiAgent.parse(raw, maiOpts());
         if (!r.ok) return { status: "ignored", reason: r.reason };
         if (window.MaiAgent.shouldIgnore(brain, r.signature)) return { status: "ignored", reason: "learned_ignore", result: r };
         const recent = maiSeenRef.current;
@@ -1069,9 +1072,9 @@
         const text = maiInput.trim();
         if (!text || !window.MaiAgent) return;
         const looksLikeBank = /(vnd|vnđ|₫|số dư|so du|\bsd\b|\btk\b|tài khoản|giao dịch|\bgd\b|\bps\b|[+\-]\s?\d{1,3}([.,]\d{3})+)/i.test(text);
-        let r = looksLikeBank ? window.MaiAgent.parse(text, { brain: maiBrain }) : null;
+        let r = looksLikeBank ? window.MaiAgent.parse(text, maiOpts()) : null;
         if (!r || !r.ok) {
-          const q = window.MaiAgent.parseQuick(text, { brain: maiBrain, accounts });
+          const q = window.MaiAgent.parseQuick(text, { ...maiOpts(), accounts });
           if (q.ok) r = q;
         }
         if (!r || !r.ok) {
@@ -1111,6 +1114,111 @@
         setMaiLog(prev => prev.filter(x => x.id !== logItem.id));
         showToast("Đã hoàn tác giao dịch Mai ghi", "info");
       };
+
+      // ===== Mai học qua Firebase =====
+      // 1) Bộ não riêng của anh: vinaspends_backups/{uid}/mai/brain (gộp 2 chiều, mọi máy cùng tài khoản dùng chung)
+      // 2) Học cùng mọi người (tự chọn bật): mai_community/{từ khoá} = { t, u: { uid: hạng mục } }
+      //    Chỉ chia sẻ từ khoá cửa hàng/dịch vụ anh đã SỬA, hạng mục chuẩn; không gửi tên người, số tiền, số tài khoản.
+      const brainSyncRef = React.useRef({ last: "", timer: null, busy: false });
+      const fbReady = () => !!(window.firebase && window.firebase.firestore && window.firebase.auth && window.firebase.auth().currentUser);
+      const syncMaiBrain = async () => {
+        if (!fbReady() || !window.MaiAgent || brainSyncRef.current.busy) return;
+        if (stateRef.current.maiSettings.cloudLearn === false) return;
+        const uid = window.firebase.auth().currentUser.uid;
+        const db = window.firebase.firestore();
+        const ref = db.collection("vinaspends_backups").doc(uid).collection("mai").doc("brain");
+        brainSyncRef.current.busy = true;
+        setMaiCloud(c => ({ ...c, state: "syncing" }));
+        try {
+          let merged = null;
+          await db.runTransaction(async (trx) => {
+            const snap = await trx.get(ref);
+            let remote = null;
+            try { remote = snap.exists ? JSON.parse(snap.data().json || "null") : null; } catch (e) {}
+            merged = window.MaiAgent.mergeBrain(stateRef.current.maiBrain, remote);
+            const str = JSON.stringify(merged);
+            if (!remote || JSON.stringify(remote) !== str) trx.set(ref, { json: str, v: 1, updatedAt: window.firebase.firestore.FieldValue.serverTimestamp() });
+          });
+          const str = JSON.stringify(merged);
+          brainSyncRef.current.last = str;
+          if (str !== JSON.stringify(stateRef.current.maiBrain)) setMaiBrain(merged);
+          setMaiCloud(c => ({ ...c, state: "synced", at: Date.now() }));
+        } catch (e) {
+          console.warn("Mai brain sync", e);
+          setMaiCloud(c => ({ ...c, state: e && e.code === "permission-denied" ? "denied" : "error" }));
+        } finally { brainSyncRef.current.busy = false; }
+      };
+
+      const DEFAULT_CAT_NAMES = React.useMemo(() => [...DEFAULT_PARENT_CATEGORIES, ...DEFAULT_SUBCATEGORIES].map(c => c.name), []);
+      const communityBusyRef = React.useRef(false);
+      const syncMaiCommunity = async (opts = {}) => {
+        if (!fbReady() || !window.MaiAgent || communityBusyRef.current) return;
+        const st = stateRef.current.maiSettings;
+        const uid = window.firebase.auth().currentUser.uid;
+        const db = window.firebase.firestore();
+        const col = db.collection("mai_community");
+        const FV = window.firebase.firestore.FieldValue;
+        const sentKey = `vina_mai_community_sent_${uid}`;
+        communityBusyRef.current = true;
+        try {
+          // Đóng góp / rút lại phần của mình
+          const sent = safeJsonParse(sentKey, {});
+          const want = {};
+          if (st.community && !opts.withdraw) window.MaiAgent.communityExport(stateRef.current.maiBrain, DEFAULT_CAT_NAMES).forEach(x => { want[x.t.replace(/ /g, "_")] = x.c; });
+          const batch = db.batch(); let ops = 0;
+          Object.keys(want).forEach(id => { if (ops < 400 && sent[id] !== want[id]) { batch.set(col.doc(id), { t: id, u: { [uid]: want[id] }, at: FV.serverTimestamp() }, { merge: true }); ops++; } });
+          Object.keys(sent).forEach(id => { if (ops < 450 && !(id in want)) { batch.update(col.doc(id), { [`u.${uid}`]: FV.delete(), at: FV.serverTimestamp() }); ops++; } });
+          if (ops) { await batch.commit(); localStorage.setItem(sentKey, JSON.stringify(want)); }
+          if (!st.community || opts.withdraw) return;
+          // Tải kinh nghiệm của mọi người (6 giờ/lần, hoặc khi anh bấm cập nhật)
+          const lastAt = Number(localStorage.getItem("vina_mai_community_at") || 0);
+          if (!opts.force && !ops && Date.now() - lastAt < 6 * 3600000 && stateRef.current.maiCommunity) return;
+          const snap = await col.orderBy("at", "desc").limit(3000).get();
+          const table = {};
+          snap.forEach(d => {
+            const x = d.data() || {}, counts = {};
+            Object.values(x.u || {}).forEach(c => { if (typeof c === "string") counts[c] = (counts[c] || 0) + 1; });
+            if (Object.keys(counts).length) table[String(x.t || d.id).replace(/_/g, " ")] = counts;
+          });
+          setMaiCommunity(table);
+          try { localStorage.setItem("vina_mai_community", JSON.stringify(table)); localStorage.setItem("vina_mai_community_at", String(Date.now())); } catch (e) {}
+          setMaiCloud(c => ({ ...c, community: "ok", communityAt: Date.now() }));
+        } catch (e) {
+          console.warn("Mai community sync", e);
+          setMaiCloud(c => ({ ...c, community: e && e.code === "permission-denied" ? "denied" : "error" }));
+        } finally { communityBusyRef.current = false; }
+      };
+
+      // Khi đăng nhập / mở lại app: kéo về điều Mai đã học ở máy khác
+      useEffect(() => {
+        if (!googleUser?.uid) return;
+        let tries = 0, t = null;
+        const run = () => {
+          if (!fbReady()) { if (tries++ < 8) t = setTimeout(run, 2500); return; }
+          syncMaiBrain(); syncMaiCommunity();
+        };
+        t = setTimeout(run, 1500);
+        const onVis = () => { if (document.visibilityState === "visible") run(); };
+        document.addEventListener("visibilitychange", onVis);
+        return () => { clearTimeout(t); document.removeEventListener("visibilitychange", onVis); };
+      }, [googleUser?.uid]);
+      // Khi Mai vừa học thêm: đẩy lên sau 3 giây
+      useEffect(() => {
+        if (!googleUser?.uid || !maiBrain) return;
+        if (JSON.stringify(maiBrain) === brainSyncRef.current.last) return;
+        clearTimeout(brainSyncRef.current.timer);
+        brainSyncRef.current.timer = setTimeout(() => { syncMaiBrain(); syncMaiCommunity(); }, 3000);
+      }, [maiBrain, googleUser?.uid]);
+      // Bật/tắt học cùng mọi người: tắt thì rút lại phần đã chia sẻ
+      const firstCommunityRef = React.useRef(true);
+      useEffect(() => {
+        if (firstCommunityRef.current) { firstCommunityRef.current = false; return; }
+        if (!googleUser?.uid) return;
+        if (maiSettings.community) syncMaiCommunity({ force: true });
+        else { syncMaiCommunity({ withdraw: true }); setMaiCommunity(null); try { localStorage.removeItem("vina_mai_community"); } catch (e) {} }
+      }, [maiSettings.community]);
+      useEffect(() => { if (googleUser?.uid && maiSettings.cloudLearn) syncMaiBrain(); }, [maiSettings.cloudLearn]);
+      const maiCommunitySize = maiCommunity ? Object.keys(maiCommunity).length : 0;
 
       const parentCategories = React.useMemo(() => {
         const seen = new Set();
@@ -1361,6 +1469,10 @@
       const resetLocalFinancialData = () => {
         deletedTxIdsRef.current = [];
         try { localStorage.removeItem("vina_deleted_tx_ids"); } catch(e) {}
+        // Điều Mai học thuộc về tài khoản cũ -> không mang sang tài khoản mới
+        try { localStorage.removeItem("vina_mai_brain_trained"); } catch(e) {}
+        if (window.MaiAgent) setMaiBrain(window.MaiAgent.newBrain());
+        setMaiMemory({});
         updateData(
           [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }],
           [],
@@ -2176,7 +2288,7 @@
           const result = await window.Tesseract.recognize(file, 'vie+eng', ocrOpts);
           const text = result.data.text;
           // Ưu tiên bộ đọc của Mai: hiểu được ảnh chụp thông báo/biên lai của hầu hết ngân hàng & ví
-          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, { brain: maiBrain }) : null;
+          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, maiOpts()) : null;
           if (maiR && maiR.ok) {
             setIsAddTxModalOpen(false);
             const m = maiMatchAccount(maiR, accounts);
@@ -2275,7 +2387,8 @@
       const suggestFromNote = (note) => {
         if (!window.MaiAgent || !maiBrain || !note || note.trim().length < 2) { setAddTxHint(null); return; }
         const type = document.querySelector('#addTxForm input[name="type"]:checked')?.value || "EXPENSE";
-        const p = window.MaiAgent.predictCategory(maiBrain, note, type, window.MaiAgent.memoryKey(null, note));
+        const p = window.MaiAgent.predictCategory(maiBrain, note, type, window.MaiAgent.memoryKey(null, note))
+          || (maiSettings.community && maiCommunity ? window.MaiAgent.predictCommunity(maiCommunity, note, type) : null);
         setAddTxHint(p && categories.some(c => c && c.name === p.category) ? p.category : null);
       };
       const applyAddTxHint = () => {
@@ -3433,7 +3546,9 @@
                   {[
                     { k: "autoSave", t: "Tự ghi khi chắc chắn", d: "Thông báo rõ ràng được ghi ngay; chỗ nào mơ hồ Mai để anh duyệt." },
                     { k: "syncBalance", t: "Khớp số dư theo ngân hàng", d: "Dùng số dư trong thông báo để cập nhật số dư ví." },
-                    { k: "speak", t: "Mai đọc to khi ghi", d: "Dùng giọng tiếng Việt có sẵn trên máy." }
+                    { k: "speak", t: "Mai đọc to khi ghi", d: "Dùng giọng tiếng Việt có sẵn trên máy." },
+                    { k: "cloudLearn", t: "Đồng bộ điều Mai học", d: "Lưu lên Firebase của anh; mọi máy đăng nhập cùng tài khoản dùng chung một Mai." },
+                    { k: "community", t: "Học cùng mọi người (ẩn danh)", d: "Chia sẻ từ khoá cửa hàng → hạng mục anh đã sửa và nhận lại khi nhiều người cùng xếp giống nhau. Không gửi tên người, số tiền, số tài khoản." }
                   ].map(o => (
                     <label key={o.k} className="flex items-center gap-3 cursor-pointer">
                       <div className="flex-1">
@@ -3512,6 +3627,19 @@
                     {(maiLearned.length > 0 || maiIgnoredCount > 0) && <button onClick={maiForgetAll} className="text-xs font-bold text-theme-textSecondary underline">Quên hết</button>}
                   </div>
                   <div className="bg-theme-surface border rounded-3xl p-4 space-y-3">
+                    <div className="flex flex-wrap gap-2 text-[11px] font-bold">
+                      <span className="px-2 py-1 rounded-full border border-theme-border bg-theme-background text-theme-textSecondary">
+                        {!googleUser ? "Chưa đồng bộ · đăng nhập Firebase trong Cài đặt" : !maiSettings.cloudLearn ? "Đồng bộ đang tắt" :
+                          maiCloud.state === "synced" ? "Đã đồng bộ Firebase" : maiCloud.state === "syncing" ? "Đang đồng bộ…" :
+                          maiCloud.state === "denied" ? "Firebase chặn: cần cập nhật luật (Rules)" : maiCloud.state === "error" ? "Chưa đồng bộ được, sẽ thử lại" : "Chờ đồng bộ"}
+                      </span>
+                      {maiSettings.community && (
+                        <span className="px-2 py-1 rounded-full border border-theme-border bg-theme-background text-theme-textSecondary">
+                          {!googleUser ? "Học cùng mọi người: cần đăng nhập" : maiCloud.community === "denied" ? "Cộng đồng: cần cập nhật luật Firebase" : `Cộng đồng: ${maiCommunitySize} từ khoá`}
+                        </span>
+                      )}
+                      {googleUser && <button onClick={() => { syncMaiBrain(); syncMaiCommunity({ force: true }); }} className="px-2 py-1 rounded-full border border-theme-border text-theme-primary">Đồng bộ ngay</button>}
+                    </div>
                     <p className="text-xs text-theme-textSecondary">Mỗi lần anh <b>sửa hạng mục</b>, <b>đổi Thu/Chi</b> hay <b>bỏ qua</b> một tin, Mai ghi nhớ và lần sau tự làm đúng. Mai cũng học từ các giao dịch anh tự ghi có ghi chú.</p>
                     {maiLearned.length === 0 && maiIgnoredCount === 0 ? (
                       <p className="text-sm text-theme-textSecondary italic">Chưa có gì. Thử sửa hạng mục một giao dịch, Mai sẽ nhớ ngay.</p>
@@ -4214,7 +4342,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.6 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.7 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

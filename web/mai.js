@@ -373,7 +373,92 @@
     var cats = brain.keys[key].c || {};
     tokenize(key).forEach(function (t) { var d = brain.tok[t]; if (d) for (var c in cats) delete d[c]; });
     delete brain.keys[key];
+    brain.gone = brain.gone || {}; brain.gone[key] = Date.now();
+    var g = Object.keys(brain.gone); if (g.length > 300) g.sort(function (a, b) { return brain.gone[a] - brain.gone[b]; }).slice(0, g.length - 300).forEach(function (x) { delete brain.gone[x]; });
     return brain;
+  }
+
+
+  // ---------- Đồng bộ & học cùng cộng đồng ----------
+  // Gộp 2 bộ não (máy này + Firebase): đối tác nào sửa gần hơn thì theo bản đó, các đếm lấy lớn nhất (không cộng dồn
+  // để đồng bộ nhiều lần không bị nhân đôi).
+  function mergeBrain(a, b) {
+    if (!a || !a.keys) return b && b.keys ? JSON.parse(JSON.stringify(b)) : newBrain();
+    if (!b || !b.keys) return JSON.parse(JSON.stringify(a));
+    var out = newBrain(), k, c;
+    var keys = {}; for (k in a.keys) keys[k] = 1; for (k in b.keys) keys[k] = 1;
+    for (k in keys) {
+      var x = a.keys[k], y = b.keys[k];
+      if (!x || !y) { out.keys[k] = JSON.parse(JSON.stringify(x || y)); continue; }
+      var newer = (y.at || 0) > (x.at || 0) ? y : x;
+      out.keys[k] = JSON.parse(JSON.stringify(newer));
+    }
+    [["tok", true], ["cats", true]].forEach(function (pair) {
+      var f = pair[0], A = a[f] || {}, B = b[f] || {}, t;
+      var all = {}; for (t in A) all[t] = 1; for (t in B) all[t] = 1;
+      for (t in all) {
+        var m = {}, aa = A[t] || {}, bb = B[t] || {};
+        for (c in aa) m[c] = aa[c];
+        for (c in bb) m[c] = Math.max(m[c] || 0, bb[c]);
+        out[f][t] = m;
+      }
+    });
+    var ig = {}; for (k in (a.ignore || {})) ig[k] = a.ignore[k]; for (k in (b.ignore || {})) ig[k] = Math.max(ig[k] || 0, b.ignore[k]);
+    out.ignore = ig;
+    // Đối tác đã bị "quên" ở máy kia: ghi nhận danh sách quên (giữ 300 mục gần nhất)
+    var gone = {}; [a.gone || {}, b.gone || {}].forEach(function (g) { for (k in g) gone[k] = Math.max(gone[k] || 0, g[k]); });
+    for (k in gone) if (out.keys[k] && (out.keys[k].at || 0) <= gone[k]) delete out.keys[k];
+    out.gone = gone;
+    out.n = Math.max(a.n || 0, b.n || 0);
+    return out;
+  }
+
+  // Họ, tên đệm, tên phổ biến -> KHÔNG BAO GIỜ chia sẻ (tránh lộ tên người nhận/người gửi)
+  var NAMES = {};
+  ("nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly dinh trinh truong lam mai luong ha " +
+   "cao tang chau ta quach lu thai kieu khuc doan la van thi duc huu cong minh anh hoa lan linh huong thu thao " +
+   "trang ngoc hai hung dung tuan nam long son thanh trung kien hieu phuong quang khanh tam tien nga hang yen " +
+   "nhung huyen loan giang vy my nhi tu quoc bao gia hoai kim tuyet xuan thuy diep hien hanh tai phat loc toan " +
+   "dat thang vinh hoan an binh chi hong nhat nhan uyen tran ngan oanh trinh dieu nhu tuong luan khoa phong " +
+   "duy tung viet hao hau sang quan cuong dong hoang em chi anh chu co bac ong ba me bo").split(" ").forEach(function (w) { NAMES[w] = 1; });
+
+  function shareableTokens(text) {
+    return tokenize(text).filter(function (t) {
+      var parts = t.split(" ");
+      if (parts.some(function (w) { return w.length < 3 || /\d/.test(w); })) return false;
+      return !parts.some(function (w) { return NAMES[w]; });
+    }).slice(0, 4);
+  }
+
+  // Điều đáng chia sẻ: chỉ những gì anh đã CHẤN CHỈNH (trọng số >= 3) -> [{ t: từ khoá, c: hạng mục }]
+  function communityExport(brain, allowedCats) {
+    var out = {}, list = [];
+    if (!brain || !brain.keys) return list;
+    Object.keys(brain.keys).forEach(function (k) {
+      var it = brain.keys[k], top = topOf(it.c || {});
+      if (!top.name || top.value < 3) return;
+      if (allowedCats && allowedCats.indexOf(top.name) === -1) return;
+      shareableTokens(it.l || "").concat(shareableTokens(k)).forEach(function (t) { if (!out[t]) { out[t] = top.name; list.push({ t: t, c: top.name }); } });
+    });
+    return list.slice(0, 300);
+  }
+
+  // Bảng cộng đồng: { từ khoá: { hạng mục: số người } } -> gợi ý khi nhiều người cùng xếp giống nhau
+  function predictCommunity(table, text, type, okCat) {
+    if (!table) return null;
+    var votes = {};
+    tokenize(text).forEach(function (t) {
+      var d = table[t]; if (!d) return;
+      var tot = 0, c; for (c in d) tot += d[c];
+      for (c in d) if (!okCat || okCat(c)) {
+        var v = votes[c] || (votes[c] = { users: 0, share: 0 });
+        v.users = Math.max(v.users, d[c]); v.share = Math.max(v.share, d[c] / tot);
+      }
+    });
+    var best = null;
+    for (var c in votes) if (!best || votes[c].users > votes[best].users || (votes[c].users === votes[best].users && votes[c].share > votes[best].share)) best = c;
+    if (!best || votes[best].users < 2 || votes[best].share < 0.6) return null;
+    return { category: best, source: "community", strong: votes[best].users >= 3 && votes[best].share >= 0.75, users: votes[best].users };
   }
 
   // Thứ tự: điều người dùng đã dạy (đúng đối tác) -> học mạnh từ từ khoá -> luật có sẵn -> học yếu -> mặc định
@@ -382,9 +467,12 @@
     if (opts.memory && memKey && opts.memory[memKey]) return { category: opts.memory[memKey], source: "memory" };
     var p = opts.brain ? predictCategory(opts.brain, ctx, type, memKey) : null;
     if (p && p.strong) return p;
+    var com = opts.community ? predictCommunity(opts.community, ctx, type, opts.brain ? typeOk(opts.brain, type) : null) : null;
+    if (com && com.strong) return com;
     var rule = suggestCategory(fold(ctx), type, null, null);
     if (rule.source === "rule") return rule;
     if (p) return p;
+    if (com) return com;
     return rule;
   }
 
@@ -562,7 +650,7 @@
     var lt = dirSource !== "sign" ? learnedType(opts.brain, memKey) : null;
     if (lt && lt !== type) { type = lt; dirSource = "learned"; }
     var cat = categorize(noteCtx, type, opts, memKey);
-    if (cat.source === "default") cat = categorize((title || "") + " " + body, type, { brain: opts.brain }, null);
+    if (cat.source === "default") cat = categorize((title || "") + " " + body, type, { brain: opts.brain, community: opts.community }, null);
 
     // độ tin cậy
     var conf = 0.35;
@@ -665,6 +753,10 @@
     forget: forget,
     signature: signature,
     tokenize: tokenize,
+    mergeBrain: mergeBrain,
+    communityExport: communityExport,
+    predictCommunity: predictCommunity,
+    shareableTokens: shareableTokens,
     parse: parse,
     parseQuick: parseQuick,
     parseMoney: parseMoney,

@@ -186,6 +186,42 @@ check("memory", Mai.parse(n("com.mbmobile", "MB", "TK 0123xxx456|GD: -60,000VND 
   if (Mai.learnedList(br).some(x => x.key === r1.memoryKey)) { fail++; console.log("✗ brain: quên không được"); } else pass++;
 }
 
+
+// ---- đồng bộ & cộng đồng
+{
+  const A = Mai.newBrain(), B = Mai.newBrain();
+  Mai.learn(A, { text: "pho thin", category: "Ăn sáng", type: "EXPENSE", weight: 3 });
+  Mai.learn(B, { text: "bun cha huong lien", category: "Ăn trưa", type: "EXPENSE", weight: 3 });
+  let M = Mai.mergeBrain(A, B);
+  check("sync: gộp 2 máy", Mai.parseQuick("phở thìn 60k", { brain: M }), { category: "Ăn sáng" });
+  check("sync: gộp 2 máy (2)", Mai.parseQuick("bún chả hương liên 80k", { brain: M }), { category: "Ăn trưa" });
+  const M2 = Mai.mergeBrain(M, M);
+  if (JSON.stringify(M2.tok) !== JSON.stringify(M.tok)) { fail++; console.log("✗ sync: gộp lặp lại làm thay đổi số đếm"); } else pass++;
+  // Máy B sửa sau -> thắng
+  const B2 = JSON.parse(JSON.stringify(M));
+  B2.keys["pho thin"].at = Date.now() + 1000; B2.keys["pho thin"].c = { "Ăn trưa": 3 };
+  if (Mai.mergeBrain(M, B2).keys["pho thin"].c["Ăn trưa"] !== 3) { fail++; console.log("✗ sync: lần sửa mới hơn không thắng"); } else pass++;
+  // Quên ở 1 máy -> máy kia cũng quên sau khi gộp
+  const F = Mai.forget(JSON.parse(JSON.stringify(M)), "pho thin");
+  if (Mai.mergeBrain(M, F).keys["pho thin"]) { fail++; console.log("✗ sync: quên không lan sang máy khác"); } else pass++;
+  // Chia sẻ cộng đồng: không lộ tên người, số
+  const P = Mai.newBrain();
+  Mai.learn(P, { text: "NGUYEN VAN AN chuyen tien", key: "nguyen van an", category: "Gia đình", type: "EXPENSE", weight: 3 });
+  Mai.learn(P, { text: "TT DIEN MAY XANH 0123456", category: "Mua sắm", type: "EXPENSE", weight: 3 });
+  Mai.learn(P, { text: "cafe sang", category: "Cà phê & Trà", type: "EXPENSE", weight: 1 });
+  const ex = Mai.communityExport(P);
+  const bad = ex.filter(e => /nguyen|van|an\b|\d/.test(e.t) || e.c === "Cà phê & Trà");
+  if (bad.length || !ex.some(e => e.t === "dien may" || e.t === "xanh")) { fail++; console.log("✗ community: chia sẻ sai", JSON.stringify(ex)); } else pass++;
+  // Nhiều người cùng xếp -> Mai dùng; 1 người thì chưa
+  const table = { "tokyolife": { "Mua sắm": 1 } };
+  check("community: 1 người chưa đủ", Mai.parseQuick("tokyolife 89k", { community: table }), { category: "Khác" });
+  table["tokyolife"]["Mua sắm"] = 3;
+  check("community: 3 người đồng ý", Mai.parseQuick("tokyolife 89k", { community: table }), { category: "Mua sắm" });
+  // Điều anh tự dạy luôn thắng cộng đồng
+  const mine = Mai.newBrain(); Mai.learn(mine, { text: "tokyolife", category: "Quà tặng", type: "EXPENSE", weight: 3 });
+  check("community: thua điều anh dạy", Mai.parseQuick("tokyolife 89k", { community: table, brain: mine }), { category: "Quà tặng" });
+}
+
 // ---- chống trùng: cùng giao dịch qua SMS và app
 const a = Mai.parse(n("com.VCB", "VCB", "Số dư TK VCB 0071000123456 -50,000 VND lúc 06-11-2026 10:15:32. Số dư 1,234,567 VND. Ref ABC"));
 const b = Mai.parse(n("com.google.android.apps.messaging", "Vietcombank", "SD TK 0071000123456 -50,000VND luc 06-11-2026 10:15:40. SD 1,234,567VND. Ref ABC"));
