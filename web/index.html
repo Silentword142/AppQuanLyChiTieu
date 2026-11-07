@@ -184,26 +184,52 @@
     };
 
     // Ngân hàng & ví: tem chữ tự vẽ (không tải logo từ internet). code = chữ trên tem, color = màu tem.
+    // Logo gốc của ngân hàng / ví (đóng gói sẵn trong web/logos, dùng được offline)
     const BANK_LOGOS = [
-      { name: "Vietcombank", code: "VCB", color: "#2E7D4F", keys: ["vietcombank", "vcb"] },
-      { name: "Techcombank", code: "TCB", color: "#C8341F", keys: ["techcombank", "tcb"] },
-      { name: "MB Bank", code: "MB", color: "#24408E", keys: ["mbbank", "mbb"] },
-      { name: "BIDV", code: "BIDV", color: "#1E6C74", keys: ["bidv"] },
-      { name: "VietinBank", code: "CTG", color: "#1B5E9A", keys: ["vietinbank", "ctg", "icb"] },
-      { name: "Agribank", code: "AGR", color: "#9C3A1A", keys: ["agribank", "agr"] },
-      { name: "ACB", code: "ACB", color: "#2A55A2", keys: ["acb"] },
-      { name: "TPBank", code: "TPB", color: "#6B3FA0", keys: ["tpbank", "tpb"] },
-      { name: "VPBank", code: "VPB", color: "#3E8E3E", keys: ["vpbank", "vpb"] },
-      { name: "Sacombank", code: "STB", color: "#1F6FB2", keys: ["sacombank", "stb"] },
-      { name: "VIB", code: "VIB", color: "#E0A526", keys: ["vib"] },
-      { name: "SHB", code: "SHB", color: "#D9822B", keys: ["shb"] },
-      { name: "HDBank", code: "HDB", color: "#C8341F", keys: ["hdbank"] },
-      { name: "Shinhan Bank", code: "SHN", color: "#2459A8", keys: ["shinhan"] },
-      { name: "Cake", code: "CK", color: "#D9467A", keys: ["cake"] },
-      { name: "Ví MoMo", code: "MoMo", color: "#A33A72", keys: ["momo"] },
-      { name: "ZaloPay", code: "ZLP", color: "#1E78C8", keys: ["zalopay", "zalo"] },
-      { name: "Ví ShopeePay", code: "SPP", color: "#E0602A", keys: ["shopeepay", "spp"] },
-      { name: "Viettel Money", code: "VTM", color: "#C2272D", keys: ["viettelmoney", "vtm"] },
+      { name: "Vietcombank", code: "VCB", logo: "vcb", color: "#2E7D4F", keys: ["vietcombank", "vcb"] },
+      { name: "Techcombank", code: "TCB", logo: "tcb", color: "#C8341F", keys: ["techcombank", "tcb"] },
+      { name: "MB Bank", code: "MB", logo: "mb", color: "#24408E", keys: ["mbbank", "mbb", "mb"] },
+      { name: "BIDV", code: "BIDV", logo: "bidv", color: "#1E6C74", keys: ["bidv"] },
+      { name: "VietinBank", code: "CTG", logo: "ctg", color: "#1B5E9A", keys: ["vietinbank", "ctg", "icb"] },
+      { name: "Agribank", code: "AGR", logo: "agr", color: "#9C3A1A", keys: ["agribank", "agr"] },
+      { name: "ACB", code: "ACB", logo: "acb", color: "#2A55A2", keys: ["acb"] },
+      { name: "TPBank", code: "TPB", logo: "tpb", color: "#6B3FA0", keys: ["tpbank", "tpb"] },
+      { name: "VPBank", code: "VPB", logo: "vpb", color: "#3E8E3E", keys: ["vpbank", "vpb"] },
+      { name: "Sacombank", code: "STB", logo: "stb", color: "#1F6FB2", keys: ["sacombank", "stb"] },
+      { name: "VIB", code: "VIB", logo: "vib", color: "#E0A526", keys: ["vib"] },
+      { name: "SHB", code: "SHB", logo: "shb", color: "#D9822B", keys: ["shb"] },
+      { name: "HDBank", code: "HDB", logo: "hdb", color: "#C8341F", keys: ["hdbank", "hdb"] },
+      { name: "OCB", code: "OCB", logo: "ocb", color: "#2E7D4F", keys: ["ocb", "phuongdong"] },
+      { name: "MSB", code: "MSB", logo: "msb", color: "#C8341F", keys: ["msb", "maritimebank"] },
+      { name: "LPBank", code: "LPB", logo: "lpb", color: "#7A4A1E", keys: ["lpbank", "lienvietpostbank", "lpb"] },
+      { name: "SeABank", code: "SEAB", logo: "seab", color: "#C8341F", keys: ["seabank", "seab"] },
+      { name: "Eximbank", code: "EIB", logo: "eib", color: "#1F6FB2", keys: ["eximbank", "eib"] },
+      { name: "Nam A Bank", code: "NAB", logo: "nab", color: "#1F6FB2", keys: ["namabank", "nab"] },
+      { name: "Bac A Bank", code: "BAB", logo: "bab", color: "#3A2618", keys: ["bacabank", "bab"] },
+      { name: "PVcomBank", code: "PVB", logo: "pvcb", color: "#1F6FB2", keys: ["pvcombank", "pvcb"] },
+      { name: "ABBANK", code: "ABB", logo: "abb", color: "#2E8C86", keys: ["abbank", "abb"] },
+      { name: "Bản Việt", code: "BVB", logo: "bvcap", color: "#24408E", keys: ["banviet", "vietcapitalbank", "bvbank"] },
+      { name: "KienlongBank", code: "KLB", logo: "klb", color: "#E0702F", keys: ["kienlongbank", "klb"] },
+      { name: "NCB", code: "NCB", logo: "ncb", color: "#24408E", keys: ["ncb"] },
+      { name: "BaoViet Bank", code: "BVBK", logo: "bvbank", color: "#1F6FB2", keys: ["baovietbank"] },
+      { name: "VietBank", code: "VBB", logo: "vbb", color: "#C8341F", keys: ["vietbank"] },
+      { name: "VietABank", code: "VAB", logo: "vab", color: "#C8341F", keys: ["vietabank"] },
+      { name: "MBV", code: "MBV", logo: "mbv", color: "#C8341F", keys: ["mbv", "oceanbank"] },
+      { name: "Vikki", code: "VIK", logo: "vikki", color: "#946096", keys: ["vikki", "dongabank"] },
+      { name: "Shinhan Bank", code: "SHN", logo: "shinhan", color: "#2459A8", keys: ["shinhan", "shinhanbank"] },
+      { name: "HSBC", code: "HSBC", logo: "hsbc", color: "#C8341F", keys: ["hsbc"] },
+      { name: "Standard Chartered", code: "SC", logo: "scvn", color: "#2E8C86", keys: ["standardchartered", "scb"] },
+      { name: "UOB", code: "UOB", logo: "uob", color: "#24408E", keys: ["uob"] },
+      { name: "Woori Bank", code: "WOO", logo: "woori", color: "#1F6FB2", keys: ["woori", "wooribank"] },
+      { name: "Cake", code: "CK", logo: "cake", color: "#D9467A", keys: ["cake", "cakebyvpbank"] },
+      { name: "Ubank", code: "UB", logo: "ubank", color: "#E0A526", keys: ["ubank"] },
+      { name: "Timo", code: "TIMO", logo: "timo", color: "#7D4E7A", keys: ["timo"] },
+      { name: "Ví MoMo", code: "MoMo", logo: "momo", color: "#A33A72", keys: ["momo", "vimomo"] },
+      { name: "ZaloPay", code: "ZLP", logo: "zalopay", color: "#1E78C8", keys: ["zalopay", "zalo"] },
+      { name: "Ví ShopeePay", code: "SPP", logo: "shopeepay", color: "#E0602A", keys: ["shopeepay", "spp", "vishopeepay"] },
+      { name: "Viettel Money", code: "VTM", logo: "vtm", color: "#C2272D", keys: ["viettelmoney", "vtm", "viettelpay"] },
+      { name: "VNPT Money", code: "VNPT", logo: "vnptmoney", color: "#1F6FB2", keys: ["vnptmoney", "vnptpay"] },
+      { name: "Ví VNPAY", code: "VNP", logo: "vnpay", color: "#1F6FB2", keys: ["vnpay", "vivnpay"] },
       { name: "Tiền mặt", code: null, color: "#5E7A2B", icon: "banknote", keys: ["tienmat", "cash"] }
     ];
 
@@ -219,8 +245,19 @@
     const getBankLogo = (bankName) => { const b = bankStyleOf(bankName); return b ? (b.code || b.name) : null; };
 
     // Tem ngân hàng: vòng tròn màu, viền mực, chữ mã ngân hàng kiểu tem thư
+    // Thẻ ngân hàng: giữ nguyên logo gốc trên nền trắng, viền mực kiểu vintage.
+    // Ngân hàng chưa có logo -> tem tròn chữ viết tắt.
     const BankBadge = ({ name, size = 40 }) => {
       const b = bankStyleOf(name);
+      const [broken, setBroken] = React.useState(false);
+      if (b && b.logo && !broken) {
+        return (
+          <span className="inline-flex items-center justify-center shrink-0 rounded-xl bg-white border-2 border-retro-ink overflow-hidden"
+            style={{ width: Math.round(size * 1.5), height: size, padding: Math.max(2, Math.round(size * 0.1)), boxShadow: "2px 2px 0 #3A2618" }}>
+            <img src={`logos/${b.logo}.webp`} alt={b.name} draggable="false" onError={() => setBroken(true)} className="max-w-full max-h-full object-contain" />
+          </span>
+        );
+      }
       const color = b ? b.color : "#6B4F3A";
       const label = b ? b.code : ((name || "?").replace(/^(ví|vi)\s+/i, "").trim().slice(0, 2).toUpperCase());
       const fs = !label ? 0 : label.length >= 4 ? size * 0.27 : label.length === 3 ? size * 0.3 : size * 0.38;
@@ -4342,7 +4379,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.7 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.8 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

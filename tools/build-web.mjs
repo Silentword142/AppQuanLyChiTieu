@@ -37,6 +37,9 @@ for (const f of fs.readdirSync(path.join(ROOT, "assets-src", "fonts"))) {
   fs.copyFileSync(path.join(ROOT, "assets-src", "fonts", f), path.join(OUT, "fonts", f));
 }
 for (const f of ["mai.js", "icons.js"]) fs.copyFileSync(path.join(ROOT, "web", f), path.join(OUT, f));
+// Logo gốc ngân hàng / ví điện tử (offline)
+fs.mkdirSync(path.join(OUT, "logos"), { recursive: true });
+for (const f of fs.readdirSync(path.join(ROOT, "web", "logos"))) fs.copyFileSync(path.join(ROOT, "web", "logos", f), path.join(OUT, "logos", f));
 
 let html = fs.readFileSync(path.join(ROOT, "web", "index.html"), "utf8");
 

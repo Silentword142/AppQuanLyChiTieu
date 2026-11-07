@@ -326,6 +326,7 @@ public class MainActivity extends Activity {
             mime.put("json", "application/json");
             mime.put("woff2", "font/woff2");
             mime.put("png", "image/png");
+            mime.put("webp", "image/webp");
             mime.put("svg", "image/svg+xml");
             mime.put("wasm", "application/wasm");
             mime.put("gz", "application/octet-stream");
