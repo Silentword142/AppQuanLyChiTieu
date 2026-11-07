@@ -88,6 +88,16 @@
     .font-display { font-family: 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 1; letter-spacing: -0.01em; }
     .tabular { font-variant-numeric: tabular-nums; }
     .vi { width: 100%; height: 100%; display: block; overflow: visible; }
+    /* Dải thẻ ví: trượt vào lần lượt, vệt sáng lướt qua, thanh hạn mức chạy */
+    @keyframes walletIn { from { opacity: 0; transform: translateX(36px) rotate(1.5deg); } to { opacity: 1; transform: none; } }
+    @keyframes walletSheen { 0%, 62% { transform: translateX(-120%) skewX(-18deg); } 100% { transform: translateX(260%) skewX(-18deg); } }
+    @keyframes walletBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .wallet-in { animation: walletIn .55s cubic-bezier(.2,.8,.2,1) both; }
+    .wallet-sheen { position: absolute; top: 0; bottom: 0; left: 0; width: 38%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: walletSheen 5.5s ease-in-out infinite; pointer-events: none; }
+    .wallet-card:nth-child(2n) .wallet-sheen { animation-delay: 1.4s; }
+    .wallet-card:nth-child(3n) .wallet-sheen { animation-delay: 2.6s; }
+    .wallet-bar { transform-origin: left; animation: walletBar 1s .35s cubic-bezier(.2,.8,.2,1) both; }
+    @media (prefers-reduced-motion: reduce) { .wallet-in, .wallet-sheen, .wallet-bar { animation: none; } }
 
     /* ======= Phong cách Vintage 70s ======= */
     html[data-retro="1"] body {
@@ -245,6 +255,17 @@
     const getBankLogo = (bankName) => { const b = bankStyleOf(bankName); return b ? (b.code || b.name) : null; };
 
     // Tem ngân hàng: vòng tròn màu, viền mực, chữ mã ngân hàng kiểu tem thư
+    // Thẻ tín dụng: balance lưu số âm = dư nợ; limit = hạn mức
+    const isCreditAcc = (a) => !!(a && a.kind === "credit");
+    // Số tài khoản / số thẻ: hiển thị như số thẻ (nhóm 4 số), thẻ tín dụng chỉ hiện 4 số cuối
+    const formatAccNo = (no, credit) => {
+      const d = String(no || "").replace(/[\s.,-]/g, "");
+      if (!d || d === "N/A" || d === "CASH") return "";
+      if (/^x+\d+$/i.test(d)) return "•••• " + d.replace(/^x+/i, "");
+      if (credit && /^\d{8,19}$/.test(d)) return "•••• •••• " + d.slice(-4);
+      return d.replace(/(\w{4})(?=\w)/g, "$1 ");
+    };
+
     // Thẻ ngân hàng: giữ nguyên logo gốc trên nền trắng, viền mực kiểu vintage.
     // Ngân hàng chưa có logo -> tem tròn chữ viết tắt.
     const BankBadge = ({ name, size = 40 }) => {
@@ -267,6 +288,58 @@
           {label ? <span className="font-display font-black text-white leading-none relative" style={{ fontSize: fs, letterSpacing: "-0.02em" }}>{label}</span>
                  : <Icon name={b && b.icon || "wallet"} className="w-1/2 h-1/2 text-white relative" />}
         </span>
+      );
+    };
+
+    const darkenHex = (hex, f) => {
+      const n = parseInt(String(hex).replace("#", "").slice(0, 6), 16);
+      if (isNaN(n)) return hex;
+      const c = (v) => Math.round(v * f).toString(16).padStart(2, "0");
+      return "#" + c((n >> 16) & 255) + c((n >> 8) & 255) + c(n & 255);
+    };
+    // Thẻ ví dạng ngang (dải vuốt ở Tổng quan): logo gốc, số TK dạng số thẻ, số dư; thẻ tín dụng có thanh hạn mức
+    const WalletCard = ({ acc, index = 0, onClick }) => {
+      const b = bankStyleOf(acc.name);
+      const color = (b && b.color) || "#6B4F3A";
+      const credit = isCreditAcc(acc);
+      const bal = Number(acc.balance) || 0;
+      const debt = Math.max(0, -bal), limit = Number(acc.limit) || 0;
+      const usedPct = credit && limit > 0 ? Math.min(100, Math.round(debt / limit * 100)) : 0;
+      const no = formatAccNo(acc.accountNo, credit);
+      const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
+      return (
+        <button type="button" onClick={onClick}
+          className="wallet-in wallet-card snap-start shrink-0 w-[248px] text-left rounded-2xl border-2 border-retro-ink relative overflow-hidden active:scale-[0.98] transition-transform"
+          style={{ animationDelay: `${index * 70}ms`, background: `linear-gradient(135deg, ${color} 0%, ${color} 46%, ${darkenHex(color, 0.7)} 100%)`, boxShadow: "3px 3px 0 #3A2618" }}>
+          <span className="absolute -right-10 -top-12 w-40 h-40 rounded-full border-[14px] border-white/10" />
+          <span className="absolute -right-4 -top-6 w-24 h-24 rounded-full border-[10px] border-white/10" />
+          <span className="wallet-sheen" />
+          <div className="relative p-3.5 text-white h-full flex flex-col">
+            <div className="flex items-center justify-between gap-2">
+              <BankBadge name={acc.name} size={30} />
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/20">{credit ? "Tín dụng" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "Tiền mặt" : "Tài khoản"}</span>
+            </div>
+            <p className="mt-2.5 font-bold text-[15px] leading-tight truncate">{acc.name}</p>
+            <p className="font-mono text-[12px] tracking-[0.12em] text-white/80 h-4 truncate">{no || "\u00A0"}</p>
+            {credit ? (
+              <div className="mt-auto pt-2">
+                <div className="flex items-end justify-between">
+                  <span className="text-[10px] font-bold uppercase text-white/75">Dư nợ</span>
+                  <span className="font-display font-black text-xl tabular leading-none">{fmt(debt)} ₫</span>
+                </div>
+                <div className="mt-1.5 h-2 rounded-full bg-black/25 overflow-hidden">
+                  <div className="wallet-bar h-full rounded-full bg-[#F4CF5D]" style={{ width: `${usedPct}%` }} />
+                </div>
+                <p className="mt-1 text-[10px] font-semibold text-white/80">{limit > 0 ? `Khả dụng ${fmt(limit - debt)} / ${fmt(limit)} ₫` : "Chưa nhập hạn mức"}</p>
+              </div>
+            ) : (
+              <div className="mt-auto pt-2 flex items-end justify-between">
+                <span className="text-[10px] font-bold uppercase text-white/75">Số dư</span>
+                <span className={`font-display font-black text-xl tabular leading-none ${bal < 0 ? "text-[#FFD2C2]" : ""}`}>{fmt(bal)} ₫</span>
+              </div>
+            )}
+          </div>
+        </button>
       );
     };
 
@@ -583,7 +656,9 @@
 
       const [name, setName] = React.useState(editingCategory?.name || "");
       const [selectedIcon, setSelectedIcon] = React.useState(editingCategory?.icon || "tag");
-      const [selectedColor, setSelectedColor] = React.useState(editingCategory?.color || "#2F6F6A");
+      // Màu hạng mục tự chọn (không cần người dùng chọn): sửa thì giữ màu cũ; hạng mục con theo màu nhóm lớn;
+      // nhóm lớn mới lấy 1 màu vintage theo tên.
+      const [selectedColorState] = React.useState(editingCategory?.color || null);
       const [isChild, setIsChild] = React.useState(() => {
         if (editingCategory) {
           return !editingCategory.isParent && !!(editingCategory.parent || categoryParentMap[editingCategory.name]);
@@ -615,6 +690,13 @@
         }
         return baseList;
       }, [iconGroup, iconSearch]);
+
+      const selectedColor = React.useMemo(() => {
+        if (selectedColorState) return selectedColorState;
+        if (isChild) { const p = parentCategories.find(x => x.name === parentName); if (p && p.color) return p.color; }
+        const n = (name || "x").split("").reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+        return CATEGORY_COLOR_PALETTE[n % CATEGORY_COLOR_PALETTE.length];
+      }, [selectedColorState, isChild, parentName, name, parentCategories]);
 
       const handleSubmit = (e) => {
         e.preventDefault();
@@ -660,7 +742,7 @@
                   </span>
                 </div>
                 <p className="text-[11px] text-theme-textSecondary font-medium mt-1">
-                  Mã màu: <span className="font-mono font-bold" style={{ color: selectedColor }}>{selectedColor}</span> • Biểu tượng: <span className="font-mono font-semibold">{selectedIcon}</span>
+                  Biểu tượng: <span className="font-mono font-semibold">{selectedIcon}</span>
                 </p>
               </div>
             </div>
@@ -705,45 +787,6 @@
                     </select>
                   </div>
                 )}
-              </div>
-
-              {/* COLOR SELECTION SECTION */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-theme-textSecondary block uppercase tracking-wider">Chọn màu sắc biểu tượng</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono font-bold" style={{ color: selectedColor }}>{selectedColor}</span>
-                    {/* Native Color Picker button */}
-                    <label className="relative cursor-pointer flex items-center gap-1 text-[11px] font-bold text-theme-primary bg-theme-background hover:bg-theme-variant px-2 py-1 rounded-lg border border-theme-border transition-all">
-                      <Icon name="palette" className="w-3.5 h-3.5" style={{ color: selectedColor }} />
-                      <span>Tự pha màu</span>
-                      <input 
-                        type="color" 
-                        value={selectedColor.startsWith("#") ? selectedColor : "#2F6F6A"}
-                        onChange={(e) => setSelectedColor(e.target.value)}
-                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Preset Color Swatches */}
-                <div className="flex flex-wrap gap-2 p-2.5 bg-theme-background border border-theme-border rounded-2xl max-h-[110px] overflow-y-auto no-scrollbar shadow-inner">
-                  {CATEGORY_COLOR_PALETTE.map(hex => {
-                    const isSelected = selectedColor.toLowerCase() === hex.toLowerCase();
-                    return (
-                      <button
-                        key={hex}
-                        type="button"
-                        onClick={() => setSelectedColor(hex)}
-                        title={hex}
-                        className={`w-7 h-7 rounded-xl transition-all flex items-center justify-center ${isSelected ? 'scale-110 shadow-md ring-2 ring-offset-2 ring-offset-theme-surface ring-theme-textPrimary' : 'hover:scale-105 opacity-90 hover:opacity-100'}`}
-                        style={{ backgroundColor: hex }}>
-                        {isSelected && <Icon name="check" className="w-3.5 h-3.5 text-white drop-shadow" />}
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
 
               {/* ICON SELECTION SECTION */}
@@ -885,6 +928,8 @@
       const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
       const [editingBank, setEditingBank] = useState(null);
       const [bankNameType, setBankNameType] = useState("preset"); // "preset" or "custom"
+      const [bankKind, setBankKind] = useState("account"); // "account" | "credit"
+      useEffect(() => { if (isAddBankModalOpen) setBankKind(editingBank && editingBank.kind === "credit" ? "credit" : "account"); }, [isAddBankModalOpen, editingBank]);
       const [txParentFilter, setTxParentFilter] = useState("Tất cả");
 
       // Reports State
@@ -1047,7 +1092,11 @@
           return list.map(a => {
             if (a.name !== bankName) return a;
             // Số dư trong thông báo là số liệu thật của ngân hàng -> khớp theo, nếu được bật
-            if (stateRef.current.maiSettings.syncBalance && draft.balance != null && !draft.edited) return { ...a, balance: draft.balance };
+            if (stateRef.current.maiSettings.syncBalance && draft.balance != null && !draft.edited) {
+              // Thẻ tín dụng: số trong thông báo là "hạn mức khả dụng" -> dư nợ = khả dụng - hạn mức
+              if (a.kind === "credit") return Number(a.limit) > 0 ? { ...a, balance: Math.min(0, draft.balance - Number(a.limit)) } : { ...a, balance: (Number(a.balance) || 0) + eff };
+              return { ...a, balance: draft.balance };
+            }
             return { ...a, balance: (Number(a.balance) || 0) + eff };
           });
         });
@@ -2079,7 +2128,9 @@
       };
 
       // Calculate totals
-      const totalOwned = accounts.reduce((sum, acc) => sum + (Number(acc.balance)||0), 0);
+      const totalOwned = accounts.reduce((sum, acc) => sum + (Number(acc.balance)||0), 0); // đã trừ dư nợ thẻ tín dụng
+      const totalCash = accounts.filter(a => !isCreditAcc(a)).reduce((sum, acc) => sum + (Number(acc.balance)||0), 0);
+      const totalCardDebt = accounts.filter(isCreditAcc).reduce((sum, acc) => sum + Math.max(0, -(Number(acc.balance)||0)), 0);
       const totalIncome = transactions.filter(t => t.type === "INCOME").reduce((sum, t) => sum + t.amount, 0);
       const totalExpense = transactions.filter(t => t.type === "EXPENSE").reduce((sum, t) => sum + t.amount, 0);
       const totalDebtLent = debts.filter(d => d.type === "CHO_VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
@@ -2661,12 +2712,16 @@
       const handleAddBank = (e) => {
         e.preventDefault();
         const bName = bankNameType === "preset" ? e.target.bankName.value : e.target.customBankName.value;
-        const acctNo = e.target.accountNo.value || "N/A";
+        const acctNo = (e.target.accountNo.value || "").replace(/\s+/g, "") || "N/A";
+        const credit = bankKind === "credit";
+        const extra = credit
+          ? { kind: "credit", limit: Number(e.target.limit.value) || 0, balance: -Math.abs(Number(e.target.debt.value) || 0) }
+          : { kind: "account", limit: undefined, balance: Number(e.target.balance.value) || 0 };
         if (editingBank) {
-            const updated = accounts.map(a => a.id === editingBank.id ? { ...a, name: bName, balance: Number(e.target.balance.value) || 0, accountNo: acctNo } : a);
+            const updated = accounts.map(a => a.id === editingBank.id ? { ...a, name: bName, accountNo: acctNo, ...extra } : a);
             updateData(updated, null, null, null);
         } else {
-            const b = { id: Date.now(), name: bName, balance: Number(e.target.balance.value) || 0, accountNo: acctNo };
+            const b = { id: Date.now(), name: bName, accountNo: acctNo, ...extra };
             updateData([...accounts, b], null, null, null);
         }
         setIsAddBankModalOpen(false);
@@ -2773,7 +2828,7 @@
                     <div className="relative">
                       <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/85">Tài sản ròng</p>
                       <h2 className="font-display font-black text-[38px] md:text-5xl leading-none mt-2 tabular">{formatVND(totalOwned - totalDebtBorrowed)}</h2>
-                      <p className="text-[12px] font-semibold text-white/85 mt-2">{accounts.length} ví · {formatVND(totalOwned)} đang có{totalDebtBorrowed > 0 ? ` · nợ ${formatVND(totalDebtBorrowed)}` : ""}</p>
+                      <p className="text-[12px] font-semibold text-white/85 mt-2">{accounts.length} ví · {formatVND(totalCash)} đang có{totalCardDebt > 0 ? ` · nợ thẻ ${formatVND(totalCardDebt)}` : ""}{totalDebtBorrowed > 0 ? ` · nợ vay ${formatVND(totalDebtBorrowed)}` : ""}</p>
                     </div>
                   </div>
                   {/* Thống kê tháng – nổi lên trên dải màu */}
@@ -2811,38 +2866,24 @@
                     })()}
                   </div>
 
-                  {/* Danh sách ví (mở/đóng) */}
-                  <button type="button" onClick={() => setIsOwnedAssetsExpanded(!isOwnedAssetsExpanded)} className="w-full px-5 py-3 border-t-2 border-dashed border-theme-border flex items-center justify-between text-sm font-bold text-theme-textPrimary">
-                    <span className="flex items-center gap-2"><Icon name="landmark" className="w-4 h-4 text-theme-primary" /> Các ví & tài khoản</span>
-                    <span className="flex items-center gap-1 text-theme-textSecondary text-xs">{isOwnedAssetsExpanded ? "Thu gọn" : "Xem & sửa"} <Icon name={isOwnedAssetsExpanded ? "chevron-up" : "chevron-down"} className="w-4 h-4" /></span>
-                  </button>
-                  {isOwnedAssetsExpanded && (
-                    <div className="px-4 pb-4 space-y-2">
-                      {accounts.map(acc => {
-                        const logo = getBankLogo(acc.name);
-                        return (
-                          <div key={acc.id} onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }}
-                            className="bg-theme-background border-2 border-theme-border p-3 rounded-2xl flex items-center justify-between cursor-pointer active:scale-[0.99] transition">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <BankBadge name={acc.name} size={40} />
-                              <div className="min-w-0">
-                                <p className="font-bold text-sm text-theme-textPrimary truncate">{acc.name}</p>
-                                {acc.accountNo && acc.accountNo !== "N/A" && acc.accountNo !== "CASH" && <p className="text-[11px] text-theme-textSecondary font-mono">{acc.accountNo}</p>}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-display font-extrabold text-[15px] text-theme-textPrimary tabular">{formatVND(acc.balance)}</p>
-                              <Icon name="chevron-right" className="w-4 h-4 text-theme-textSecondary" />
-                            </div>
-                          </div>
-                        );
-                      })}
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
-                        className="w-full py-3 rounded-2xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm flex items-center justify-center gap-2">
-                        <Icon name="plus" className="w-4 h-4" /> Thêm ví / tài khoản
+                  {/* Danh sách ví: dải thẻ ngang, vuốt ngang, có chuyển động */}
+                  <div className="border-t-2 border-dashed border-theme-border pt-3 pb-4">
+                    <div className="px-5 flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-bold text-theme-textPrimary"><Icon name="landmark" className="w-5 h-5" /> Các ví & tài khoản <span className="text-theme-textSecondary font-semibold">({accounts.length})</span></span>
+                      <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="text-xs font-bold text-theme-primary flex items-center gap-1"><Icon name="plus" className="w-4 h-4" /> Thêm</button>
+                    </div>
+                    <div className="wallet-strip mt-3 flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory px-5 pb-2 scroll-px-5">
+                      {accounts.map((acc, i) => (
+                        <WalletCard key={acc.id} acc={acc} index={i}
+                          onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} />
+                      ))}
+                      <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
+                        className="wallet-in snap-start shrink-0 w-[132px] rounded-2xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm flex flex-col items-center justify-center gap-2"
+                        style={{ animationDelay: `${accounts.length * 70}ms` }}>
+                        <Icon name="plus" className="w-7 h-7" /> Thêm ví
                       </button>
                     </div>
-                  )}
+                  </div>
                 </section>
 
                 {/* HÀNH ĐỘNG NHANH */}
@@ -3732,7 +3773,7 @@
                                <BankBadge name={acc.name} size={44} />
                                <div className="flex flex-col">
                                  <p className="font-bold text-base text-theme-textPrimary">{acc.name}</p>
-                                 {acc.accountNo && acc.accountNo !== "N/A" && <p className="text-[10px] text-theme-textSecondary font-mono tracking-wider">{acc.accountNo}</p>}
+                                 {formatAccNo(acc.accountNo, isCreditAcc(acc)) && <p className="text-[12px] text-theme-textSecondary font-mono tracking-[0.12em]">{formatAccNo(acc.accountNo, isCreditAcc(acc))}</p>}
                                </div>
                              </div>
                              <div className="flex gap-2">
@@ -3740,7 +3781,18 @@
                                <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-[var(--expense)] bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
                              </div>
                           </div>
-                          <p className="text-2xl font-black text-theme-textPrimary z-10 tracking-tight mt-1">{formatVND(acc.balance)}</p>
+                          {isCreditAcc(acc) ? (
+                            <div className="z-10">
+                              <p className="text-[11px] font-bold uppercase text-theme-textSecondary">Thẻ tín dụng · dư nợ</p>
+                              <p className="text-2xl font-black text-[var(--expense)] tracking-tight">{formatVND(Math.max(0, -(Number(acc.balance) || 0)))}</p>
+                              {Number(acc.limit) > 0 && (<>
+                                <div className="mt-2 h-2.5 rounded-full bg-theme-variant border border-retro-ink/40 overflow-hidden"><div className="wallet-bar h-full bg-retro-mustard" style={{ width: `${Math.min(100, Math.round(Math.max(0, -(Number(acc.balance) || 0)) / Number(acc.limit) * 100))}%` }} /></div>
+                                <p className="text-[11px] font-semibold text-theme-textSecondary mt-1">Khả dụng {formatVND(Number(acc.limit) + Math.min(0, Number(acc.balance) || 0))} / hạn mức {formatVND(acc.limit)}</p>
+                              </>)}
+                            </div>
+                          ) : (
+                            <p className="text-2xl font-black text-theme-textPrimary z-10 tracking-tight mt-1">{formatVND(acc.balance)}</p>
+                          )}
                           <Icon name="credit-card" className="w-32 h-32 absolute -bottom-8 -right-6 text-theme-primary opacity-[0.03] group-hover:opacity-[0.08] transition-opacity rotate-[-15deg]" />
                         </div>
                       )})}
@@ -4213,6 +4265,16 @@
                   </div>
                   <form onSubmit={handleAddBank} className="space-y-4">
                     
+                    {/* Loại ví: tài khoản thường / thẻ tín dụng */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[{ k: "account", t: "Tài khoản / Ví", i: "wallet" }, { k: "credit", t: "Thẻ tín dụng", i: "credit-card" }].map(o => (
+                        <button key={o.k} type="button" onClick={() => setBankKind(o.k)}
+                          className={`py-3 rounded-2xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all ${bankKind === o.k ? 'border-retro-ink bg-[#F6E3B0] text-[#3A2618] shadow-[2px_2px_0_#3A2618]' : 'border-theme-border text-theme-textSecondary'}`}>
+                          <Icon name={o.i} className="w-6 h-6" /> {o.t}
+                        </button>
+                      ))}
+                    </div>
+
                     {/* Segmented Control for Preset vs Custom */}
                     <div className="flex bg-theme-background border border-theme-border p-1 rounded-xl shadow-sm mb-4">
                         <button type="button" onClick={()=>setBankNameType("preset")} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${bankNameType==="preset" ? 'bg-theme-primary text-theme-background shadow-sm' : 'text-theme-textSecondary'}`}>Chọn từ danh sách</button>
@@ -4242,13 +4304,29 @@
 
                     <div className="space-y-3">
                         <div>
-                          <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Số tài khoản (không bắt buộc)</label>
-                          <input name="accountNo" type="text" defaultValue={(editingBank?.accountNo && editingBank?.accountNo !== "N/A") ? editingBank?.accountNo : ""} placeholder="Nhập số tài khoản..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                          <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">{bankKind === "credit" ? "Số thẻ (không bắt buộc)" : "Số tài khoản (không bắt buộc)"}</label>
+                          <input name="accountNo" type="text" inputMode="numeric" autoComplete="off" defaultValue={(editingBank?.accountNo && editingBank?.accountNo !== "N/A") ? formatAccNo(editingBank.accountNo, false) : ""}
+                            onChange={e => { const raw = e.target.value.replace(/[^0-9A-Za-z]/g, "").slice(0, 19); e.target.value = raw.replace(/(\w{4})(?=\w)/g, "$1 "); }}
+                            placeholder={bankKind === "credit" ? "4 số cuối hoặc số thẻ…" : "Nhập số tài khoản…"} className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-base font-mono tracking-wider shadow-inner transition-all" />
                         </div>
+                        {bankKind === "credit" ? (
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Hạn mức</label>
+                              <CurrencyInput name="limit" defaultValue={editingBank?.limit || ""} placeholder="0 VND" required={true} className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary text-base font-bold shadow-inner" />
+                            </div>
+                            <div>
+                              <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Dư nợ hiện tại</label>
+                              <CurrencyInput name="debt" defaultValue={editingBank && editingBank.kind === "credit" ? Math.abs(Math.min(0, Number(editingBank.balance) || 0)) || "" : ""} placeholder="0 VND" className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary text-base font-bold shadow-inner" />
+                            </div>
+                            <p className="col-span-2 text-[11px] text-theme-textSecondary">Chi tiêu bằng thẻ làm tăng dư nợ; khoản trả thẻ ghi là "Thu" vào thẻ. Mai tự khớp "hạn mức khả dụng" trong thông báo ngân hàng.</p>
+                          </div>
+                        ) : (
                         <div>
                           <label className="text-xs font-bold text-theme-textSecondary mb-2 block uppercase">Số dư hiện tại</label>
                           <CurrencyInput name="balance" defaultValue={editingBank?.balance || ""} placeholder="0 VND" required={true} className="w-full bg-theme-background border border-theme-border rounded-xl p-4 text-theme-textPrimary focus:border-theme-primary text-base font-bold shadow-inner transition-all" />
                         </div>
+                        )}
                     </div>
                     <button type="submit" className="w-full py-4 bg-theme-primary text-theme-background font-bold rounded-xl mt-2 flex justify-center items-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg"><Icon name={editingBank ? "save" : "link"} className="w-5 h-5" /> {editingBank ? "Lưu thay đổi" : "Liên kết ngay"}</button>
                   </form>
@@ -4379,7 +4457,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.8 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.9 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

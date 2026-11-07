@@ -512,10 +512,10 @@
   function paint(el, attrs, fill, stroke) {
     return "<" + el + attrs.replace(/\sclass="\w"/, "") + ' style="fill:' + fill + ";stroke:" + stroke + '"/>';
   }
-  var cache = {};
+  var cache = {}, uid = 0;
   // mono = true -> bản đơn sắc cũ (dùng khi icon nằm trên nền màu đặc)
   function build(key, mono) {
-    var body = I[key], colors = (C[key] || "").split(" ").filter(Boolean), k = 0;
+    var body = I[key], colors = (C[key] || "").split(" ").filter(Boolean), k = 0, gid = 0;
     var under = "", lines = "", m;
     EL.lastIndex = 0;
     var top = body.replace(EL, function (all, el, attrs) {
@@ -531,7 +531,11 @@
       // Mảng màu có đổ bóng trong: lớp tối hơn phía dưới, lớp chính lệch lên trái -> viền tối mảnh ở góc phải-dưới
       if (P[tok] && tok !== "ink") {
         under += paint(el, attrs, shade(P[tok]), "none");
-        under += paint(el, attrs.replace(/\/?$/, "") + ' transform="translate(-.7 -.7)"', col(tok), "none");
+        under += paint(el, attrs.replace(/\/?$/, "") + ' transform="translate(-.6 -.6)"', col(tok), "none");
+        // Vệt sáng bên trong mảng màu (góc trên-trái) -> icon có khối, rõ chi tiết
+        var id = "{ID}" + (gid++);
+        under += '<clipPath id="' + id + '">' + "<" + el + attrs.replace(/\sclass="\w"/, "") + "/></clipPath>" +
+          '<g clip-path="url(#' + id + ')">' + paint(el, attrs.replace(/\/?$/, "") + ' transform="translate(.75 .75)"', "none;stroke-width:2.2;stroke-opacity:.42", "#fff") + "</g>";
       } else under += paint(el, attrs, col(tok), "none");
       return c === "d" ? "" : paint(el, attrs, "none", "currentColor");
     });
@@ -547,7 +551,8 @@
   function svg(name, cls, opts) {
     var key = resolve(name), mono = !!(opts && opts.mono), ck = key + (mono ? "|m" : "");
     if (!cache[ck]) cache[ck] = build(key, mono);
-    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + cache[ck] + "</svg>";
+    var body = cache[ck].indexOf("{ID}") === -1 ? cache[ck] : cache[ck].split("{ID}").join("vi" + (++uid) + "_");
+    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + "</svg>";
   }
 
   // Bộ chọn icon khi tạo hạng mục
