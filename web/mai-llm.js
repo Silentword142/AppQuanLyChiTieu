@@ -40,7 +40,12 @@ let abortCtl = null;
 let queue = Promise.resolve(); // chạy lần lượt từng việc
 let waitingFg = 0;          // số câu chat của anh đang chờ -> việc nền nhường chỗ
 let bgStopper = null;       // dừng việc nền đang chạy (xếp hạng mục, nạp sẵn)
-let fgStopper = null;       // nút "Dừng" của anh
+let fg = null;              // câu chat của anh đang chờ/chạy: { stopper, kill, writing }
+let resetP = null, resetFire = null; // khi tắt hẳn bộ não, mọi việc đang treo đều thoát ra
+let loadingP = null, loadingId = null;
+const KILLED = { killed: true };
+const newReset = () => { resetP = new Promise((r) => { resetFire = () => r(KILLED); }); };
+newReset();
 
 const state = { status: "idle", modelId: null, progress: 0, loaded: 0, total: 0, error: null, downloaded: [], threads: 0, speed: 0, readSpeed: 0 };
 const subs = new Set();
@@ -111,7 +116,13 @@ async function remove(id) {
   await refreshDownloaded();
 }
 
-async function load(id) {
+function load(id) {
+  if (loadingP && loadingId === id) return loadingP;
+  loadingId = id;
+  loadingP = loadInner(id).finally(() => { loadingP = null; loadingId = null; });
+  return loadingP;
+}
+async function loadInner(id) {
   const m = byId(id);
   if (!m) throw new Error("Không có mô hình này");
   if (loadedId === id && wllama && wllama.isModelLoaded()) return;
@@ -153,9 +164,19 @@ async function unload() {
 // opts.background = true: việc nền, tự nhường khi anh nhắn. opts.onStage("reading"|"writing")
 function chat(opts) {
   const bg = !!opts.background;
-  if (!bg) { waitingFg++; if (bgStopper) bgStopper.abort(); }
+  let me = null;
+  let killP = resetP;
+  if (!bg) {
+    waitingFg++;
+    if (bgStopper) bgStopper.abort();
+    me = { stopper: new AbortController(), writing: false };
+    killP = Promise.race([resetP, new Promise((r) => { me.kill = () => r(KILLED); })]);
+    fg = me;
+  }
+  const myReset = resetP;
   const run = async () => {
     if (!bg) waitingFg--;
+    if (myReset !== resetP || (me && me.stopper.signal.aborted)) return { content: "", toolCalls: [], stopped: !bg, skipped: bg };
     if (!wllama || !wllama.isModelLoaded()) throw new Error("Mai chưa bật bộ não AI");
     if (bg && waitingFg > 0) return { content: "", toolCalls: [], skipped: true };
     const t0 = performance.now();
@@ -170,44 +191,51 @@ function chat(opts) {
       presence_penalty: 0.2,
       stream: true,
     };
-    const stopper = new AbortController();
-    if (bg) bgStopper = stopper; else fgStopper = stopper;
+    const stopper = bg ? new AbortController() : me.stopper;
+    if (bg) bgStopper = stopper;
     params.abortSignal = stopper.signal;
     if (opts.onStage) opts.onStage("reading");
     if (opts.tools && opts.tools.length) { params.tools = opts.tools; params.tool_choice = "auto"; }
     let content = "";
     const calls = [];
     let n = 0;
-    const stream = await wllama.createChatCompletion(params);
+    let killed = false;
     try {
-    for await (const chunk of stream) {
-      const d = chunk && chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
-      if (!d) continue;
-      if ((d.content || d.tool_calls) && !tFirst) { tFirst = performance.now(); if (opts.onStage) opts.onStage("writing"); }
-      if (d.content) {
-        content += d.content; n++;
-        if (opts.onToken) opts.onToken(cleanText(content));
-        // Mô hình nhỏ đôi khi lặp lại một câu mãi -> cắt
-        if (content.length > 160 && n % 8 === 0) {
-          const tail = content.slice(-48);
-          if (content.slice(0, -48).split(tail).length > 2) { content = content.slice(0, content.indexOf(tail) + tail.length); stopper.abort(); break; }
+      const stream = await Promise.race([wllama.createChatCompletion(params), killP]);
+      if (stream === KILLED) throw KILLED;
+      const iter = stream[Symbol.asyncIterator]();
+      while (true) {
+        const step = await Promise.race([iter.next(), killP]);
+        if (step === KILLED) throw KILLED;
+        if (step.done) break;
+        const d = step.value && step.value.choices && step.value.choices[0] && step.value.choices[0].delta;
+        if (!d) continue;
+        if ((d.content || d.tool_calls) && !tFirst) { tFirst = performance.now(); if (me) me.writing = true; if (opts.onStage) opts.onStage("writing"); }
+        if (d.content) {
+          content += d.content; n++;
+          if (opts.onToken) opts.onToken(cleanText(content));
+          // Mô hình nhỏ đôi khi lặp lại một câu mãi -> cắt
+          if (content.length > 160 && n % 8 === 0) {
+            const tail = content.slice(-48);
+            if (content.slice(0, -48).split(tail).length > 2) { content = content.slice(0, content.indexOf(tail) + tail.length); stopper.abort(); break; }
+          }
+        }
+        if (d.tool_calls) {
+          d.tool_calls.forEach((tc) => {
+            const i = tc.index == null ? calls.length : tc.index;
+            const c = calls[i] || (calls[i] = { name: "", args: "" });
+            if (tc.function && tc.function.name) c.name += tc.function.name;
+            if (tc.function && tc.function.arguments) c.args += tc.function.arguments;
+          });
         }
       }
-      if (d.tool_calls) {
-        d.tool_calls.forEach((tc) => {
-          const i = tc.index == null ? calls.length : tc.index;
-          const c = calls[i] || (calls[i] = { name: "", args: "" });
-          if (tc.function && tc.function.name) c.name += tc.function.name;
-          if (tc.function && tc.function.arguments) c.args += tc.function.arguments;
-        });
-      }
-    }
     } catch (e) {
-      if (!stopper.signal.aborted) throw e;
+      if (e === KILLED) killed = true;
+      else if (!stopper.signal.aborted) throw e;
     } finally {
       if (bgStopper === stopper) bgStopper = null;
-      if (fgStopper === stopper) fgStopper = null;
     }
+    if (killed) return { content: "", toolCalls: [], stopped: !bg, skipped: bg };
     const tEnd = performance.now();
     if (n > 3 && tFirst) emit({ speed: Math.round((n / ((tEnd - tFirst) / 1000)) * 10) / 10 });
     if (tFirst && opts.promptChars) emit({ readSpeed: Math.round(opts.promptChars / 3.5 / ((tFirst - t0) / 1000)) });
@@ -220,7 +248,10 @@ function chat(opts) {
   };
   const p = queue.then(run, run);
   queue = p.catch(() => {});
-  return p;
+  if (bg) return p;
+  const out = Promise.race([p, killP.then(() => ({ content: "", toolCalls: [], stopped: true }))]);
+  out.finally(() => { if (fg === me) fg = null; }).catch(() => {});
+  return out;
 }
 
 function cleanText(s) {
@@ -246,7 +277,26 @@ function warm(messages, tools) {
 }
 
 // Nút "Dừng": dừng câu trả lời đang chạy
-function stop() { if (fgStopper) fgStopper.abort(); }
+// Nút "Dừng". Đang viết thì dừng nhẹ nhàng; còn đang đọc/đang chờ thì máy không ngắt giữa chừng được
+// -> tắt hẳn bộ não (mọi việc đang treo thoát ra) rồi bật lại ở nền.
+function stop() {
+  const me = fg;
+  if (!me) return;
+  me.stopper.abort();
+  if (me.writing) return;
+  if (me.kill) me.kill();
+  const id = loadedId, w = wllama;
+  if (!w) return;
+  wllama = null; loadedId = null;
+  try { w.proxy && w.proxy.worker && w.proxy.worker.terminate(); } catch (e) {}
+  const fire = resetFire;
+  newReset();
+  fire();
+  queue = Promise.resolve();
+  waitingFg = 0;
+  emit({ status: "idle" });
+  if (id) setTimeout(() => load(id).catch(() => {}), 50);
+}
 
 const MaiLLM = {
   MODELS, IMPORTED,

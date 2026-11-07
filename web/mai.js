@@ -804,6 +804,9 @@
     var subj = null, target = null;
     if ((m = f.match(/^(?:xep|cho|ghi|dua|tinh)\s+(.+?)\s+(?:vao|la|thanh|sang)\s+(?:muc|hang muc|danh muc)?\s*(.+)$/))) { subj = m[1]; target = m[2]; }
     else if ((m = f.match(/^(.+?)\s+(?:la|thuoc|tinh la|tinh vao|ghi vao|xep vao|cho vao|vao|la khoan|la tien)\s+(?:muc|hang muc|danh muc)?\s*(.+)$/))) { subj = m[1]; target = m[2]; }
+    // câu hỏi ("tiêu nhiều nhất vào đâu?", "... là bao nhiêu") không phải câu dạy
+    var isQuestion = /\?\s*$/.test(raw) || /\b(dau|gi|nao|bao nhieu|khong|chua|sao|may|ko)$/.test(f) || /\b(bao nhieu|nhieu nhat|it nhat|tai sao|the nao)\b/.test(f);
+    if (isQuestion) { subj = null; target = null; }
     if (subj && target) {
       var s2 = cleanSubject(subj);
       var tg = squash(target);
@@ -827,7 +830,7 @@
   }
 
   var MaiAgent = {
-    version: "1.2.0",
+    version: "1.2.1",
     newBrain: newBrain,
     learn: learn,
     predictCategory: predictCategory,

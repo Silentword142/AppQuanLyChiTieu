@@ -265,5 +265,13 @@ if (!Mai.parse(n("com.mservice.momowallet", "MoMo", "Thanh toán thành công 55
   if (Mai.isBlocked("Đơn hàng 50.000đ", "com.shopee.vn", ["shopee"]) !== "shopee" || Mai.isBlocked("TK +50,000", "com.VCB", ["shopee"])) { fail++; console.log("✗ chat: chặn tin sai"); } else pass++;
 }
 
+{
+  const cats = ["Ăn uống", "Di chuyển", "Mua sắm"];
+  [["Tháng này anh tiêu nhiều nhất vào đâu?", "unknown"], ["Tiền ăn là bao nhiêu", "unknown"], ["Hello mai", "greet"], ["Grab là Di chuyển", "teach"], ["xếp Shopee vào Mua sắm", "teach"]].forEach(([q, want]) => {
+    const it = Mai.chatIntent(q, cats);
+    if (it.intent !== want) { fail++; console.log("✗ câu hỏi/dạy:", q, it); } else pass++;
+  });
+}
+
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
