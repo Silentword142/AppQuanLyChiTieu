@@ -1000,6 +1000,8 @@
       const [maiLog, setMaiLog] = useState(() => safeJsonParse("vina_mai_log", []));
       const [maiDraft, setMaiDraft] = useState(null);
       const [maiInput, setMaiInput] = useState("");
+      const [maiChat, setMaiChat] = useState(() => safeJsonParse("vina_mai_chat", []));
+      const maiChatEndRef = React.useRef(null);
       const [maiAccess, setMaiAccess] = useState(() => { try { return !!(window.MaiBridge && window.MaiBridge.hasNotificationAccess()); } catch(e) { return false; } });
       const maiSeenRef = React.useRef(safeJsonParse("vina_mai_seen", []));
       const stateRef = React.useRef({});
@@ -1032,6 +1034,8 @@
         localStorage.setItem("vina_mai_brain_trained", "1");
       }, [transactions.length]);
       useEffect(() => { localStorage.setItem("vina_mai_log", JSON.stringify(maiLog.slice(0, 60))); }, [maiLog]);
+      useEffect(() => { try { localStorage.setItem("vina_mai_chat", JSON.stringify(maiChat.slice(-80))); } catch(e) {} }, [maiChat]);
+      useEffect(() => { if (maiChatEndRef.current) { const el = maiChatEndRef.current.parentElement; if (el) el.scrollTop = el.scrollHeight; } }, [maiChat.length]);
 
       const maiSpeak = (text) => {
         if (!stateRef.current.maiSettings.speak) return;
@@ -1122,6 +1126,7 @@
         const { maiSettings: st, maiBrain: brain } = stateRef.current;
         const r = window.MaiAgent.parse(raw, maiOpts());
         if (!r.ok) return { status: "ignored", reason: r.reason };
+        if (window.MaiAgent.isBlocked(r.raw, r.packageName, st.blockWords)) return { status: "ignored", reason: "user_block", result: r };
         if (window.MaiAgent.shouldIgnore(brain, r.signature)) return { status: "ignored", reason: "learned_ignore", result: r };
         const recent = maiSeenRef.current;
         const now = Date.now();
@@ -1159,23 +1164,88 @@
         return () => { document.removeEventListener("visibilitychange", onVis); window.onMaiNotification = null; window.onMaiResume = null; };
       }, []);
 
-      // Người dùng dán thông báo hoặc gõ câu nhanh ("cafe 35k") vào ô chat của Mai
-      const handleMaiAsk = () => {
-        const text = maiInput.trim();
-        if (!text || !window.MaiAgent) return;
+      // Dán thông báo hoặc gõ câu nhanh ("cafe 35k") -> mở phiếu xác nhận. Trả lời của Mai (chuỗi).
+      const maiAnalyzeText = (text) => {
         const looksLikeBank = /(vnd|vnđ|₫|số dư|so du|\bsd\b|\btk\b|tài khoản|giao dịch|\bgd\b|\bps\b|[+\-]\s?\d{1,3}([.,]\d{3})+)/i.test(text);
-        let r = looksLikeBank ? window.MaiAgent.parse(text, maiOpts()) : null;
+        // Anh tự dán vào thì Mai đọc dễ tính hơn (loose), thông báo tự đến mới lọc chặt
+        let r = looksLikeBank ? window.MaiAgent.parse(text, { ...maiOpts(), loose: true }) : null;
         if (!r || !r.ok) {
           const q = window.MaiAgent.parseQuick(text, { ...maiOpts(), accounts });
           if (q.ok) r = q;
         }
         if (!r || !r.ok) {
-          const why = { otp: "Đây là tin OTP, Mai không ghi sổ.", promo: "Đây là tin khuyến mãi, không phải giao dịch.", failed_or_pending: "Giao dịch này chưa thành công nên Mai bỏ qua.", reminder: "Đây là tin nhắc thanh toán, chưa phải giao dịch." }[r && r.reason];
-          showToast(why || "Mai chưa thấy số tiền. Thử: \"cafe 35k\" hoặc dán nguyên thông báo ngân hàng.", "error");
-          return;
+          const why = { otp: "Đây là tin OTP, em không ghi sổ ạ.", promo: "Đây là tin khuyến mãi, không phải giao dịch ạ.", failed_or_pending: "Giao dịch này chưa thành công nên em bỏ qua.", reminder: "Đây là tin nhắc thanh toán, chưa phải giao dịch ạ." }[r && r.reason];
+          return why || "Em chưa thấy số tiền ạ. Anh thử \"cafe 35k\", dán nguyên thông báo ngân hàng, hoặc gõ \"hướng dẫn\" để xem em hiểu những câu nào.";
         }
         const m = maiMatchAccount(r, accounts);
-        setMaiDraft({ ...r, category: maiResolveCategory(r.category, r.type, categories), bankName: (r.bank && m ? m.name : null) || (r.bank ? null : (m?.name || accounts[0]?.name)), inboxId: null });
+        const cat = maiResolveCategory(r.category, r.type, categories);
+        setMaiDraft({ ...r, category: cat, bankName: (r.bank && m ? m.name : null) || (r.bank ? null : (m?.name || accounts[0]?.name)), inboxId: null });
+        return `Em hiểu là ${r.type === "INCOME" ? "khoản thu" : "khoản chi"} ${formatVND(r.amount)} · ${cat}. Anh xem lại phiếu rồi bấm lưu nhé.`;
+      };
+      // Trò chuyện: anh dặn Mai bằng câu thường, Mai học ngay (offline, theo luật – không gửi đi đâu)
+      const maiCatType = (name) => (name === "Lương & Thu nhập" || DEFAULT_CATEGORY_PARENT_MAP[name] === "Lương & Thu nhập" || categories.some(c => c.name === name && c.parent === "Lương & Thu nhập")) ? "INCOME" : "EXPENSE";
+      const maiReply = (text) => {
+        const A = window.MaiAgent;
+        const names = categories.map(c => c && c.name).filter(Boolean);
+        const it = A.chatIntent(text, names);
+        const blocks = maiSettings.blockWords || [];
+        switch (it.intent) {
+          case "greet": return "Em chào anh! Anh cứ dặn em kiểu \"Grab là Di chuyển\" hay \"bỏ qua tin từ Shopee\" là em nhớ ngay ạ.";
+          case "thanks": return "Dạ không có gì ạ, có gì anh cứ nhắc em nhé!";
+          case "help": return "Em hiểu mấy kiểu câu này ạ:\n• \"Grab là Di chuyển\" / \"xếp Tokyolife vào Quần áo\" – em nhớ hạng mục\n• \"Chuyển khoản từ mẹ là thu nhập\" – em nhớ là khoản thu\n• \"Bỏ qua tin từ Shopee\" / \"bỏ chặn Shopee\"\n• \"Grab là mục gì?\" – hỏi em đang hiểu thế nào\n• \"Quên Grab\" – xoá điều đã dạy\n• \"Em đã học được gì?\"\n• \"cafe 35k\" hoặc dán thông báo ngân hàng – em ghi giao dịch";
+          case "teach": {
+            maiTeach([{ text: it.key, key: it.key, label: it.key, category: it.category, type: maiCatType(it.category), weight: 4 }]);
+            return `Dạ em nhớ rồi: giao dịch có "${it.key}" em sẽ xếp vào ${it.category}.`;
+          }
+          case "teach_type": {
+            maiTeach([{ text: it.key, key: it.key, label: it.key, category: it.type === "INCOME" ? maiResolveCategory("Lương & Thu nhập", "INCOME", categories) : null, type: it.type, weight: 4, typeFix: it.type }]);
+            return `Dạ em nhớ rồi: "${it.key}" là ${it.type === "INCOME" ? "khoản thu (tiền vào)" : "khoản chi (tiền ra)"}.`;
+          }
+          case "teach_unknown": {
+            const sug = names.filter(n => n !== "Khác").slice(0, 6).join(", ");
+            return `Em chưa tìm thấy hạng mục "${it.target}" ạ. Anh chọn một trong các hạng mục đang có, ví dụ: ${sug}…`;
+          }
+          case "block": {
+            if (blocks.includes(it.word)) return `Em vẫn đang bỏ qua tin có "${it.word}" rồi ạ.`;
+            setMaiSettings(prev => ({ ...prev, blockWords: [...(prev.blockWords || []), it.word].slice(-50) }));
+            setMaiInbox(prev => prev.filter(x => !A.isBlocked(x.raw, x.packageName, [it.word])));
+            return `Dạ, từ giờ thông báo có "${it.word}" em sẽ bỏ qua, không ghi vào sổ.`;
+          }
+          case "unblock": {
+            if (!blocks.includes(it.word)) return `Em đâu có chặn "${it.word}" ạ. Đang bỏ qua: ${blocks.length ? blocks.join(", ") : "chưa có gì"}.`;
+            setMaiSettings(prev => ({ ...prev, blockWords: (prev.blockWords || []).filter(w => w !== it.word) }));
+            return `Dạ, em sẽ đọc lại thông báo có "${it.word}".`;
+          }
+          case "forget": {
+            const hit = maiLearned.find(x => A.fold(x.key) === it.key || A.fold(x.label || "") === it.key);
+            if (!hit) return `Em chưa học gì về "${it.key}" ạ.`;
+            maiForget(hit.key);
+            return `Dạ em quên "${hit.label || hit.key}" rồi ạ.`;
+          }
+          case "ask": {
+            const p = A.parseQuick(it.key + " 1k", maiOpts());
+            const t = A.learnedType(maiBrain, it.key);
+            const cat = p && p.ok ? maiResolveCategory(p.category, t || p.type, categories) : null;
+            const src = p && /learn|memory|personal/.test(p.categorySource || "") ? "theo điều anh đã dạy" : "theo hiểu biết sẵn có";
+            if (!cat || cat === "Khác") return `Em chưa biết "${it.key}" thuộc mục nào ạ. Anh dạy em: "${it.key} là …" nhé.`;
+            return `"${it.key}" em đang xếp vào ${cat}${t ? ` (${t === "INCOME" ? "khoản thu" : "khoản chi"})` : ""}, ${src}.`;
+          }
+          case "list": {
+            const top = maiLearned.slice(0, 8).map(x => `• ${x.label || x.key} → ${x.category || (x.type === "INCOME" ? "khoản thu" : "khoản chi")}`).join("\n");
+            return (maiLearned.length ? `Em đã học ${maiLearned.length} điều, gần nhất:\n${top}` : "Em chưa được dạy gì ạ.") + (blocks.length ? `\nĐang bỏ qua tin có: ${blocks.join(", ")}.` : "");
+          }
+          case "txn": return maiAnalyzeText(text);
+          default: return "Em chưa hiểu câu này ạ. Anh gõ \"hướng dẫn\" để xem em hiểu những câu nào nhé.";
+        }
+      };
+      const handleMaiSend = (preset) => {
+        const text = String(preset != null ? preset : maiInput).trim();
+        if (!text || !window.MaiAgent) return;
+        const now = Date.now();
+        let reply;
+        try { reply = maiReply(text); } catch (e) { console.warn(e); reply = "Ui, em bị rối một chút. Anh nói lại giúp em nhé."; }
+        setMaiChat(prev => [...prev, { id: `u${now}`, from: "me", text, at: now }, { id: `m${now}`, from: "mai", text: reply, at: now + 1 }].slice(-80));
+        setMaiInput("");
       };
 
       const maiApproveInbox = (item) => {
@@ -3672,18 +3742,47 @@
                   ))}
                 </section>
 
-                {/* Ô nhập */}
-                <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
-                  <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="message-circle" className="w-4 h-4 text-theme-primary" /> Nói với Mai</p>
-                  <textarea rows={3} value={maiInput} onChange={e => setMaiInput(e.target.value)} placeholder={"Gõ nhanh: cafe 35k, đổ xăng 1tr2, nhận lương 15tr\nhoặc dán nguyên thông báo ngân hàng…"} className="w-full bg-theme-background border-2 rounded-2xl p-3.5 text-[15px] text-theme-textPrimary" />
-                  <div className="flex flex-wrap gap-2">
-                    {["cafe 35k", "ăn trưa 50k", "grab 42k", "nhận lương 15tr"].map(x => (
-                      <button key={x} type="button" onClick={() => setMaiInput(x)} className="px-3 py-1.5 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary bg-theme-background">{x}</button>
+                {/* Trò chuyện với Mai */}
+                <section className="bg-theme-surface border rounded-3xl overflow-hidden">
+                  <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                    <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="message-circle" className="w-4 h-4" /> Trò chuyện với Mai</p>
+                    {maiChat.length > 0 && <button type="button" onClick={() => setMaiChat([])} className="text-[11px] font-bold text-theme-textSecondary">Xoá đoạn chat</button>}
+                  </div>
+                  <div className="mai-chat px-3 pb-2 max-h-[360px] min-h-[150px] overflow-y-auto space-y-2">
+                    {maiChat.length === 0 && (
+                      <div className="flex gap-2 items-end">
+                        <MaiAvatar size={28} className="shrink-0" />
+                        <div className="max-w-[82%] bg-theme-background border-2 border-theme-border rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[14px] text-theme-textPrimary leading-relaxed">
+                          Anh cứ dặn em bằng câu thường nhé, ví dụ <b>"Grab là Di chuyển"</b>, <b>"bỏ qua tin từ Shopee"</b>, hay gõ <b>"cafe 35k"</b> để ghi nhanh. Em nhớ ngay và áp dụng cho các thông báo sau.
+                        </div>
+                      </div>
+                    )}
+                    {maiChat.map(m => m.from === "me" ? (
+                      <div key={m.id} className="flex justify-end">
+                        <div className="max-w-[82%] bg-theme-primary text-white rounded-2xl rounded-br-md px-3.5 py-2 text-[14px] leading-relaxed whitespace-pre-line break-words">{m.text}</div>
+                      </div>
+                    ) : (
+                      <div key={m.id} className="flex gap-2 items-end">
+                        <MaiAvatar size={28} className="shrink-0" />
+                        <div className="max-w-[82%] bg-theme-background border-2 border-theme-border rounded-2xl rounded-bl-md px-3.5 py-2 text-[14px] text-theme-textPrimary leading-relaxed whitespace-pre-line break-words">{m.text}</div>
+                      </div>
+                    ))}
+                    <div ref={maiChatEndRef} />
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar px-3 pb-2">
+                    {["Grab là Di chuyển", "Bỏ qua tin từ Shopee", "Em đã học được gì?", "cafe 35k", "Hướng dẫn"].map(x => (
+                      <button key={x} type="button" onClick={() => handleMaiSend(x)} className="shrink-0 px-3 py-1.5 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary bg-theme-background">{x}</button>
                     ))}
                   </div>
-                  <button onClick={handleMaiAsk} disabled={!maiInput.trim()} className="w-full py-3.5 bg-theme-primary text-white font-bold rounded-2xl flex justify-center items-center gap-2 disabled:opacity-50">
-                    <Icon name="sparkles" className="w-5 h-5" /> Mai phân tích
-                  </button>
+                  <form onSubmit={e => { e.preventDefault(); handleMaiSend(); }} className="flex items-end gap-2 p-3 border-t-2 border-dashed border-theme-border">
+                    <textarea rows={1} value={maiInput} onChange={e => setMaiInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleMaiSend(); } }}
+                      placeholder="Nhắn cho Mai…"
+                      className="flex-1 resize-none max-h-32 bg-theme-background border-2 rounded-2xl px-3.5 py-2.5 text-[15px] text-theme-textPrimary" />
+                    <button type="submit" disabled={!maiInput.trim()} aria-label="Gửi" className="w-11 h-11 shrink-0 rounded-full bg-theme-primary text-white flex items-center justify-center disabled:opacity-50">
+                      <Icon name="send" className="w-5 h-5" />
+                    </button>
+                  </form>
                 </section>
 
                 {/* Hộp chờ duyệt */}
@@ -4472,7 +4571,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.10 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.11 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

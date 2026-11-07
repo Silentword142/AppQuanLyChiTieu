@@ -559,6 +559,8 @@
   var PROMO_RE = /\b(uu dai|khuyen mai|giam gia|giam ngay|voucher|qua tang|hoan tien (len|toi) den|len den|chi tu|co hoi|trung thuong|mien phi|flash sale|sale\b|nhan ngay|tang ngay|dang ky ngay|mo the|vay tieu dung)\b/;
   var LOGIN_RE = /\b(dang nhap|login|thiet bi moi|doi mat khau|cap nhat ung dung|phien ban moi)\b/;
   var PENDING_RE = /\b(that bai|khong thanh cong|bi tu choi|da huy|failed|declined|dang xu ly|cho xu ly)\b/;
+  // Dấu hiệu tiền thực sự đi vào / ra khỏi một tài khoản (chuyển khoản, nhận tiền, biến động số dư, quẹt thẻ...)
+  var MOVE_RE = /\b(tk|stk|tai khoan|acc|account|the \*|the so|so du|sd|bien dong|ghi co|ghi no|chuyen tien|chuyen khoan|ck|nhan tien|nhan duoc|da nhan|vua nhan|da chuyen|vua chuyen|tu tk|den tk|nap tien|da nap|rut tien|thanh toan thanh cong|giao dich thanh cong|da thanh toan|vua thanh toan|hoan tien|ps|phat sinh|credit|debit|gd|giao dich)\b/;
   var REMIND_RE = /\b(nhac no|den han|sap den han|vui long thanh toan|du no|sao ke|han thanh toan|can thanh toan)\b/;
 
   function parse(input, opts) {
@@ -606,6 +608,10 @@
       return Object.assign(result, { reason: isPromo ? "promo" : "account_notice" });
     }
     if (!cands.length) return Object.assign(result, { reason: "no_amount" });
+    // Chỉ nhận tin có tiền chuyển đi/đến một tài khoản; tin có số tiền khác (đơn hàng, quảng cáo, hóa đơn...) bỏ qua
+    if (!opts.loose && !balanceTok && !cands.some(function (c) { return c.sign; }) && !extractAccount(lower) && !MOVE_RE.test(lower)) {
+      return Object.assign(result, { reason: "not_transfer" });
+    }
 
     // Thông báo từ app lạ (chat, mạng xã hội...) mà không có dấu hiệu ngân hàng -> không phải biến động số dư
     if (pkg && pkg !== "share" && !isKnownPackage(pkg) && !bankFromText(lower) && !balanceTok && !extractAccount(lower)) {
@@ -741,8 +747,87 @@
     return Math.abs(new Date(a.date) - new Date(b.date)) <= windowMs;
   }
 
+
+  // ---------- Trò chuyện: hiểu câu anh dặn Mai ----------
+  function squash(s) { return fold(s).replace(/[^a-z0-9]+/g, " ").trim(); }
+  // Tìm hạng mục khớp nhất với cụm từ anh gõ ("an uong", "cafe", "di chuyen"...)
+  function matchCategory(target, names) {
+    var t = squash(target).replace(/^(muc|hang muc|danh muc|loai|nhom)\s+/, "");
+    if (!t) return null;
+    var best = null, bestScore = 0;
+    (names || []).forEach(function (n) {
+      var f = squash(n), sc = 0;
+      if (!f) return;
+      if (f === t) sc = 100;
+      else if (f.replace(/ /g, "") === t.replace(/ /g, "")) sc = 95;
+      else if (f.indexOf(t) === 0) sc = 80;
+      else {
+        var parts = fold(n).split(/[&,\/]| va /).map(squash).filter(Boolean);
+        if (parts.some(function (p) { return p === t; })) sc = 85;
+        else if (parts.some(function (p) { return p.indexOf(t) === 0 || t.indexOf(p) === 0; })) sc = 60;
+        else if (t.length >= 3 && f.indexOf(t) >= 0) sc = 50;
+      }
+      if (sc > bestScore || (sc === bestScore && sc > 0 && best && n.length < best.length)) { bestScore = sc; best = n; }
+    });
+    return bestScore >= 50 ? best : null;
+  }
+  var TYPE_WORDS = { INCOME: /^(thu|thu nhap|khoan thu|tien vao|tien ve|duoc nhan|tien nhan)$/, EXPENSE: /^(chi|khoan chi|chi tieu|tien ra|tien chi)$/ };
+  function cleanSubject(x) {
+    return squash(x).replace(/^(tin|thong bao|giao dich|khoan|cac khoan|nhung khoan|chuyen khoan|chuyen tien|ck|tien chuyen)\s+/, "").replace(/^(tu|cua|co chu|ve|chua chu|gui toi|toi|den)\s+/, "")
+      .replace(/^(tin|thong bao)\s+/, "").replace(/\s+di$/, "").trim();
+  }
+  // Trả về { intent, ... }: teach | teach_type | block | unblock | forget | ask | list | help | greet | thanks | txn | unknown
+  function chatIntent(text, categoryNames) {
+    var raw = String(text || "").trim();
+    // bỏ lời gọi đầu câu và tiểu từ cuối câu (nhé, nha, ạ) – không đụng chữ "nhà"
+    var tail = raw.normalize("NFC").replace(/[\s.!?,~]+$/, "").replace(/(\s*,?\s*(nhé|nha|nhá|ạ|nhe|nhen)(\s+(mai|em))?)+$/i, "");
+    var f = squash(tail).replace(/^(mai oi|mai|em oi)\s+/, "");
+    if (!f) return { intent: "unknown" };
+    if (/^(chao|xin chao|hi|hello|alo)\b/.test(f) && f.split(" ").length <= 4) return { intent: "greet" };
+    if (/\b(cam on|thank|thanks|tot lam|gioi lam)\b/.test(f) && f.split(" ").length <= 6) return { intent: "thanks" };
+    if (/\b(huong dan|giup|lam duoc gi|biet lam gi|help|cach day|day the nao)\b/.test(f)) return { intent: "help" };
+    if (/\b(da hoc|hoc duoc|nho duoc|nho gi|biet gi|hoc gi)\b/.test(f)) return { intent: "list" };
+    var m;
+    if ((m = f.match(/^(?:bo chan|cho phep|ghi lai|van ghi|doc lai|lai ghi)\s+(.+)$/))) {
+      var sub2 = cleanSubject(m[1]);
+      if (sub2) return { intent: "unblock", word: sub2 };
+    }
+    if ((m = f.match(/^(?:dung|khong|dung co|khong duoc|cam)\s+(?:ghi|doc|nhan|lay|dua)(?:\s+vao)?\s+(.+)$/)) || (m = f.match(/^(?:bo qua|chan|loai bo|loai|bo)\s+(.+)$/))) {
+      var sub = cleanSubject(m[1]);
+      if (sub) return { intent: "block", word: sub };
+    }
+    if ((m = f.match(/^(?:quen|xoa|bo nho)\s+(?:di\s+)?(?:dieu\s+|viec\s+)?(.+)$/))) {
+      var k = cleanSubject(m[1]);
+      if (k) return { intent: "forget", key: k };
+    }
+    if ((m = f.match(/^(.+?)\s+(?:la|thuoc|vao)\s+(?:muc|hang muc|danh muc)?\s*(?:gi|nao)$/))) return { intent: "ask", key: cleanSubject(m[1]) };
+    var subj = null, target = null;
+    if ((m = f.match(/^(?:xep|cho|ghi|dua|tinh)\s+(.+?)\s+(?:vao|la|thanh|sang)\s+(?:muc|hang muc|danh muc)?\s*(.+)$/))) { subj = m[1]; target = m[2]; }
+    else if ((m = f.match(/^(.+?)\s+(?:la|thuoc|tinh la|tinh vao|ghi vao|xep vao|cho vao|vao|la khoan|la tien)\s+(?:muc|hang muc|danh muc)?\s*(.+)$/))) { subj = m[1]; target = m[2]; }
+    if (subj && target) {
+      var s2 = cleanSubject(subj);
+      var tg = squash(target);
+      if (s2) {
+        if (TYPE_WORDS.INCOME.test(tg)) return { intent: "teach_type", key: s2, type: "INCOME" };
+        if (TYPE_WORDS.EXPENSE.test(tg)) return { intent: "teach_type", key: s2, type: "EXPENSE" };
+        var cat = matchCategory(target, categoryNames);
+        if (cat && !/\d/.test(s2.replace(/\s/g, "").slice(-3)) ) return { intent: "teach", key: s2, category: cat };
+        if (!findMoneyTokens(fold(raw)).length) return { intent: "teach_unknown", key: s2, target: target.trim() };
+      }
+    }
+    if (findMoneyTokens(fold(raw)).length || /\d/.test(raw)) return { intent: "txn" };
+    return { intent: "unknown" };
+  }
+  // Tin có chứa cụm từ anh đã dặn bỏ qua?
+  function isBlocked(text, pkg, words) {
+    if (!words || !words.length) return null;
+    var hay = " " + squash((pkg || "") + " " + (text || "")) + " ";
+    for (var i = 0; i < words.length; i++) { var w = squash(words[i]); if (w && hay.indexOf(" " + w + " ") >= 0) return words[i]; }
+    return null;
+  }
+
   var MaiAgent = {
-    version: "1.1.0",
+    version: "1.2.0",
     newBrain: newBrain,
     learn: learn,
     predictCategory: predictCategory,
@@ -758,6 +843,9 @@
     predictCommunity: predictCommunity,
     shareableTokens: shareableTokens,
     parse: parse,
+    chatIntent: chatIntent,
+    matchCategory: matchCategory,
+    isBlocked: isBlocked,
     parseQuick: parseQuick,
     parseMoney: parseMoney,
     fingerprint: fingerprint,

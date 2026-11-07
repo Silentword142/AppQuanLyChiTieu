@@ -229,5 +229,41 @@ if (!Mai.isDuplicate(a, b)) { fail++; console.log("✗ duplicate SMS + app"); } 
 const c = Mai.parse(n("com.VCB", "VCB", "Số dư TK VCB 0071000123456 -50,000 VND lúc 06-11-2026 10:25:32. Số dư 1,184,567 VND. Ref ABC"));
 if (Mai.isDuplicate(a, c)) { fail++; console.log("✗ 2 giao dịch khác số dư bị coi là trùng"); } else pass++;
 
+// ---- chỉ nhận tin tiền đi/đến tài khoản
+for (const [pkg, ti, b] of [["com.shopee.vn","Shopee","Đơn hàng 250.000đ đã được giao thành công"],["com.grabtaxi.passenger","Grab","Chuyến xe của bạn hết 45.000đ"],["com.vietinbank.ipay","VietinBank","Hóa đơn điện tháng 11 của quý khách là 450.000đ"]]) {
+  const r = Mai.parse(n(pkg, ti, b));
+  if (r.ok || r.reason !== "not_transfer") { fail++; console.log("✗ không phải chuyển tiền mà vẫn ghi:", b, r.reason); } else pass++;
+}
+if (!Mai.parse(n("com.mservice.momowallet", "MoMo", "Thanh toán thành công 55.000đ cho Highlands Coffee")).ok) { fail++; console.log("✗ MoMo thanh toán bị bỏ"); } else pass++;
+
+// ---- trò chuyện với Mai
+{
+  const cats = ["Ăn uống", "Cà phê & Trà", "Di chuyển", "Quần áo & Giày dép", "Hóa đơn & Dịch vụ", "Lương & Thu nhập", "Khác"];
+  const cases = [
+    ["Grab là di chuyển", { intent: "teach", key: "grab", category: "Di chuyển" }],
+    ["Mai ơi, highlands là cà phê nhé", { intent: "teach", key: "highlands", category: "Cà phê & Trà" }],
+    ["xếp tokyolife vào quần áo", { intent: "teach", key: "tokyolife", category: "Quần áo & Giày dép" }],
+    ["tiền nhà là hóa đơn", { intent: "teach", key: "tien nha", category: "Hóa đơn & Dịch vụ" }],
+    ["Bỏ qua tin từ Shopee", { intent: "block", word: "shopee" }],
+    ["đừng ghi thông báo của Lazada nhé", { intent: "block", word: "lazada" }],
+    ["bỏ chặn shopee", { intent: "unblock", word: "shopee" }],
+    ["quên grab đi", { intent: "forget", key: "grab" }],
+    ["grab là mục gì?", { intent: "ask", key: "grab" }],
+    ["Mai đã học được gì", { intent: "list" }],
+    ["cafe 35k", { intent: "txn" }]
+  ];
+  for (const [t, exp] of cases) {
+    const r = Mai.chatIntent(t, cats);
+    const bad = Object.keys(exp).filter(k => r[k] !== exp[k]);
+    if (bad.length) { fail++; console.log("✗ chat:", t, JSON.stringify(r)); } else pass++;
+  }
+  // Dạy qua chat -> thông báo ngân hàng sau đó xếp đúng
+  const B = Mai.newBrain();
+  Mai.learn(B, { text: "highlands", key: "highlands", label: "highlands", category: "Cà phê & Trà", type: "EXPENSE", weight: 4 });
+  const r = Mai.parse(n("com.VCB", "VCB", "Số dư TK VCB 0071000123456 -59,000 VND lúc 06-11-2026 08:15. Số dư 1,000,000 VND. ND: THANH TOAN HIGHLANDS COFFEE Q1"), { brain: B });
+  if (r.category !== "Cà phê & Trà") { fail++; console.log("✗ chat: dạy xong vẫn xếp sai", r.category); } else pass++;
+  if (Mai.isBlocked("Đơn hàng 50.000đ", "com.shopee.vn", ["shopee"]) !== "shopee" || Mai.isBlocked("TK +50,000", "com.VCB", ["shopee"])) { fail++; console.log("✗ chat: chặn tin sai"); } else pass++;
+}
+
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
