@@ -298,6 +298,11 @@
     cr: "#F7E8C8", wh: "#FFF8EA", br: "#9A6240", cf: "#5C3A26", pl: "#946096", gy: "#BDB3A2",
     ink: "currentColor"
   };
+  function shade(hex) {
+    var n = parseInt(hex.slice(1), 16), f = 0.8;
+    var r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+    return "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+  }
   function col(t) { return t === "ink" ? "currentColor" : "var(--ic-" + t + "," + (P[t] || P.mu) + ")"; }
 
   // Màu cho từng vùng tô (theo thứ tự các phần tử class f / d / s trong icon)
@@ -523,7 +528,11 @@
         return c === "d" ? "" : paint(el, attrs, "none", "currentColor");
       }
       if (c === "s") return paint(el, attrs, col(tok), "none");
-      under += paint(el, attrs, col(tok), "none");
+      // Mảng màu có đổ bóng trong: lớp tối hơn phía dưới, lớp chính lệch lên trái -> viền tối mảnh ở góc phải-dưới
+      if (P[tok] && tok !== "ink") {
+        under += paint(el, attrs, shade(P[tok]), "none");
+        under += paint(el, attrs.replace(/\/?$/, "") + ' transform="translate(-.7 -.7)"', col(tok), "none");
+      } else under += paint(el, attrs, col(tok), "none");
       return c === "d" ? "" : paint(el, attrs, "none", "currentColor");
     });
     if (!mono && X[key]) X[key].forEach(function (a) {
@@ -538,7 +547,7 @@
   function svg(name, cls, opts) {
     var key = resolve(name), mono = !!(opts && opts.mono), ck = key + (mono ? "|m" : "");
     if (!cache[ck]) cache[ck] = build(key, mono);
-    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + cache[ck] + "</svg>";
+    return '<svg class="vi ' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + cache[ck] + "</svg>";
   }
 
   // Bộ chọn icon khi tạo hạng mục

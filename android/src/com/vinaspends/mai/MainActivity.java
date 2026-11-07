@@ -142,10 +142,21 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    // Vuốt cạnh màn hình / nút Back: để app web tự xử lý (đóng cửa sổ, về mục trước).
+    // App không thoát bằng vuốt; chỉ thoát nếu trang web chưa tải được.
     @Override
     public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        if (web == null) { super.onBackPressed(); return; }
+        web.evaluateJavascript("(function(){try{return window.onAndroidBack?(window.onAndroidBack()?'1':'0'):'x'}catch(e){return 'x'}})()",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String v) {
+                        if (v != null && v.contains("x")) {
+                            if (web.canGoBack()) web.goBack();
+                            else MainActivity.super.onBackPressed();
+                        }
+                    }
+                });
     }
 
     /** Gọi từ dịch vụ nghe thông báo khi có giao dịch mới mà app đang mở. */

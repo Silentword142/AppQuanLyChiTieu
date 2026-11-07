@@ -1194,6 +1194,63 @@
         setTimeout(() => setSyncMessage(null), 4000);
       };
 
+      // ===== Điều hướng "quay lại" (vuốt cạnh màn hình / nút Back Android) =====
+      // Thứ tự: đóng cửa sổ đang mở -> về mục trước -> về Tổng quan. Không bao giờ thoát app bằng vuốt.
+      const tabHistoryRef = React.useRef([]);
+      const prevTabRef = React.useRef(activeTab);
+      const navBackRef = React.useRef(false);
+      useEffect(() => {
+        if (prevTabRef.current !== activeTab) {
+          if (!navBackRef.current) {
+            const h = tabHistoryRef.current;
+            h.push(prevTabRef.current);
+            if (h.length > 30) h.shift();
+          }
+          navBackRef.current = false;
+          prevTabRef.current = activeTab;
+        }
+      }, [activeTab]);
+      const lastRootBackRef = React.useRef(0);
+      const handleBack = () => {
+        if (maiDraft) { setMaiDraft(null); return true; }
+        if (isCategoryModalOpen) { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryParent(""); return true; }
+        if (isBudgetModalOpen) { setIsBudgetModalOpen(false); setEditingBudgetCat(null); return true; }
+        if (isAddBankModalOpen) { setIsAddBankModalOpen(false); setEditingBank(null); return true; }
+        if (isAddTxModalOpen) { setIsAddTxModalOpen(false); setEditingTx(null); return true; }
+        if (showSettingsDialog) { setShowSettingsDialog(false); return true; }
+        if (drillDownParent) { setDrillDownParent(null); return true; }
+        const h = tabHistoryRef.current;
+        while (h.length) {
+          const t = h.pop();
+          if (t && t !== activeTab) { navBackRef.current = true; setActiveTab(t); window.scrollTo({ top: 0 }); return true; }
+        }
+        if (activeTab !== "overview") { navBackRef.current = true; setActiveTab("overview"); window.scrollTo({ top: 0 }); return true; }
+        const now = Date.now();
+        if (now - lastRootBackRef.current > 2500) { lastRootBackRef.current = now; showToast("Anh đang ở màn hình chính. Bấm nút Home nếu muốn rời app nhé.", "info"); }
+        return true; // chặn thoát app
+      };
+      const handleBackRef = React.useRef(handleBack);
+      handleBackRef.current = handleBack;
+      useEffect(() => {
+        window.onAndroidBack = () => { try { return !!handleBackRef.current(); } catch (e) { return false; } };
+        // Vuốt từ rìa trái/phải vào trong (trình duyệt, hoặc máy dùng 3 nút điều hướng)
+        let sx = 0, sy = 0, edge = false;
+        const EDGE = 24;
+        const onStart = (e) => {
+          const t = e.touches[0]; sx = t.clientX; sy = t.clientY;
+          edge = (sx <= EDGE || sx >= window.innerWidth - EDGE) && !(e.target.closest && e.target.closest(".overflow-x-auto, .no-scrollbar, input, textarea"));
+        };
+        const onEnd = (e) => {
+          if (!edge) return; edge = false;
+          const t = e.changedTouches[0], dx = t.clientX - sx, dy = Math.abs(t.clientY - sy);
+          const inward = sx <= EDGE ? dx : -dx;
+          if (inward > 70 && dy < 60) handleBackRef.current();
+        };
+        document.addEventListener("touchstart", onStart, { passive: true });
+        document.addEventListener("touchend", onEnd, { passive: true });
+        return () => { window.onAndroidBack = null; document.removeEventListener("touchstart", onStart); document.removeEventListener("touchend", onEnd); };
+      }, []);
+
       const updateData = (newAcc, newTx, newCat, newDebts, newCatParentMap, isRemote = false, newBudgets = null, newMonthlyBudget = null, newReportSettings = null) => {
         if (isRemote) {
           isApplyingRemoteUpdate.current = true;
@@ -4060,7 +4117,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.4 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.5 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>
