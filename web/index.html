@@ -48,6 +48,7 @@
   </script>
   <!-- BUILD:CDN-END -->
   <script src="mai.js"></script>
+  <script type="module" src="mai-llm.js"></script>
   <script src="icons.js"></script>
   <script>
     // Trong app Android, WebView không tải được link blob: -> chuyển sang hộp thoại "Lưu tệp" của Android
@@ -96,6 +97,10 @@
     .wallet-sheen { position: absolute; top: 0; bottom: 0; left: 0; width: 38%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: walletSheen 5.5s ease-in-out infinite; pointer-events: none; }
     .wallet-card:nth-child(2n) .wallet-sheen { animation-delay: 1.4s; }
     .wallet-card:nth-child(3n) .wallet-sheen { animation-delay: 2.6s; }
+    .mai-typing i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; animation: maiDot 1s infinite; }
+    .mai-typing i:nth-child(2) { animation-delay: .15s; } .mai-typing i:nth-child(3) { animation-delay: .3s; }
+    @keyframes maiDot { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: .9; transform: translateY(-3px); } }
+    .mai-caret { display: inline-block; width: 7px; height: 14px; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: .5; animation: maiDot 1s infinite; }
     @keyframes walletRow { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
     .wallet-row { animation: walletRow .45s cubic-bezier(.2,.8,.2,1) both; }
     .wallet-bar { transform-origin: left; animation: walletBar 1s .35s cubic-bezier(.2,.8,.2,1) both; }
@@ -1035,7 +1040,7 @@
       }, [transactions.length]);
       useEffect(() => { localStorage.setItem("vina_mai_log", JSON.stringify(maiLog.slice(0, 60))); }, [maiLog]);
       useEffect(() => { try { localStorage.setItem("vina_mai_chat", JSON.stringify(maiChat.slice(-80))); } catch(e) {} }, [maiChat]);
-      useEffect(() => { if (maiChatEndRef.current) { const el = maiChatEndRef.current.parentElement; if (el) el.scrollTop = el.scrollHeight; } }, [maiChat.length]);
+      useEffect(() => { if (maiChatEndRef.current) { const el = maiChatEndRef.current.parentElement; if (el) el.scrollTop = el.scrollHeight; } }, [maiChat]);
 
       const maiSpeak = (text) => {
         if (!stateRef.current.maiSettings.speak) return;
@@ -1115,6 +1120,7 @@
         if (!opts.auto) maiTeach([{ text: [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: draft.note || draft.rawNote, category, type,
           weight: (draft.categoryEdited || draft.typeEdited) ? 3 : 1, typeFix: draft.typeEdited ? type : null }]);
         setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
+        if (opts.auto && (!draft.categorySource || draft.categorySource === "default")) { aiTxQueueRef.current.push({ txId: tx.id, item: { ...draft, amount, type } }); setAiTxTick(x => x + 1); }
         if (!opts.silent) showToast(`Mai đã ghi ${type === "INCOME" ? "+" : "-"}${formatVND(amount)} · ${category}`);
         maiSpeak(`${type === "INCOME" ? "Nhận" : "Chi"} ${new Intl.NumberFormat('vi-VN').format(amount)} đồng, ${category}`);
         return tx;
@@ -1175,24 +1181,24 @@
         }
         if (!r || !r.ok) {
           const why = { otp: "Đây là tin OTP, em không ghi sổ ạ.", promo: "Đây là tin khuyến mãi, không phải giao dịch ạ.", failed_or_pending: "Giao dịch này chưa thành công nên em bỏ qua.", reminder: "Đây là tin nhắc thanh toán, chưa phải giao dịch ạ." }[r && r.reason];
-          return why || "Em chưa thấy số tiền ạ. Anh thử \"cafe 35k\", dán nguyên thông báo ngân hàng, hoặc gõ \"hướng dẫn\" để xem em hiểu những câu nào.";
+          return { ok: false, text: why || "Em chưa thấy số tiền ạ. Anh thử \"cafe 35k\", dán nguyên thông báo ngân hàng, hoặc gõ \"hướng dẫn\" để xem em hiểu những câu nào.", reason: r && r.reason };
         }
         const m = maiMatchAccount(r, accounts);
         const cat = maiResolveCategory(r.category, r.type, categories);
         setMaiDraft({ ...r, category: cat, bankName: (r.bank && m ? m.name : null) || (r.bank ? null : (m?.name || accounts[0]?.name)), inboxId: null });
-        return `Em hiểu là ${r.type === "INCOME" ? "khoản thu" : "khoản chi"} ${formatVND(r.amount)} · ${cat}. Anh xem lại phiếu rồi bấm lưu nhé.`;
+        return { ok: true, text: `Em hiểu là ${r.type === "INCOME" ? "khoản thu" : "khoản chi"} ${formatVND(r.amount)} · ${cat}. Anh xem lại phiếu rồi bấm lưu nhé.` };
       };
       // Trò chuyện: anh dặn Mai bằng câu thường, Mai học ngay (offline, theo luật – không gửi đi đâu)
       const maiCatType = (name) => (name === "Lương & Thu nhập" || DEFAULT_CATEGORY_PARENT_MAP[name] === "Lương & Thu nhập" || categories.some(c => c.name === name && c.parent === "Lương & Thu nhập")) ? "INCOME" : "EXPENSE";
-      const maiReply = (text) => {
+      // Thực hiện 1 việc Mai được dặn (từ bộ luật hoặc từ AI gọi công cụ) -> câu trả lời
+      const maiDo = (it, text) => {
         const A = window.MaiAgent;
         const names = categories.map(c => c && c.name).filter(Boolean);
-        const it = A.chatIntent(text, names);
         const blocks = maiSettings.blockWords || [];
         switch (it.intent) {
           case "greet": return "Em chào anh! Anh cứ dặn em kiểu \"Grab là Di chuyển\" hay \"bỏ qua tin từ Shopee\" là em nhớ ngay ạ.";
           case "thanks": return "Dạ không có gì ạ, có gì anh cứ nhắc em nhé!";
-          case "help": return "Em hiểu mấy kiểu câu này ạ:\n• \"Grab là Di chuyển\" / \"xếp Tokyolife vào Quần áo\" – em nhớ hạng mục\n• \"Chuyển khoản từ mẹ là thu nhập\" – em nhớ là khoản thu\n• \"Bỏ qua tin từ Shopee\" / \"bỏ chặn Shopee\"\n• \"Grab là mục gì?\" – hỏi em đang hiểu thế nào\n• \"Quên Grab\" – xoá điều đã dạy\n• \"Em đã học được gì?\"\n• \"cafe 35k\" hoặc dán thông báo ngân hàng – em ghi giao dịch";
+          case "help": return "Em hiểu mấy kiểu câu này ạ:\n• \"Grab là Di chuyển\" / \"xếp Tokyolife vào Quần áo\" – em nhớ hạng mục\n• \"Chuyển khoản từ mẹ là thu nhập\" – em nhớ là khoản thu\n• \"Bỏ qua tin từ Shopee\" / \"bỏ chặn Shopee\"\n• \"Grab là mục gì?\" – hỏi em đang hiểu thế nào\n• \"Quên Grab\" – xoá điều đã dạy\n• \"Em đã học được gì?\"\n• \"cafe 35k\" hoặc dán thông báo ngân hàng – em ghi giao dịch" + (window.MaiLLM && window.MaiLLM.isLoaded() ? "\nBộ não AI đang bật nên anh cứ hỏi tự nhiên, ví dụ \"tháng này em thấy anh tiêu nhiều nhất vào đâu?\"" : "\nMuốn em trò chuyện tự nhiên hơn, anh bật \"Bộ não AI\" ở ngay dưới khung chat.");
           case "teach": {
             maiTeach([{ text: it.key, key: it.key, label: it.key, category: it.category, type: maiCatType(it.category), weight: 4 }]);
             return `Dạ em nhớ rồi: giao dịch có "${it.key}" em sẽ xếp vào ${it.category}.`;
@@ -1234,19 +1240,199 @@
             const top = maiLearned.slice(0, 8).map(x => `• ${x.label || x.key} → ${x.category || (x.type === "INCOME" ? "khoản thu" : "khoản chi")}`).join("\n");
             return (maiLearned.length ? `Em đã học ${maiLearned.length} điều, gần nhất:\n${top}` : "Em chưa được dạy gì ạ.") + (blocks.length ? `\nĐang bỏ qua tin có: ${blocks.join(", ")}.` : "");
           }
-          case "txn": return maiAnalyzeText(text);
+          case "add_tx": {
+            const amount = Math.round(Number(it.amount) || 0);
+            if (!(amount > 0)) return "Em chưa rõ số tiền ạ.";
+            const cat = maiResolveCategory(A.matchCategory(it.category || "", names) || (it.type === "INCOME" ? "Lương & Thu nhập" : "Khác"), it.type, categories);
+            setMaiDraft({ ok: true, amount, type: it.type, category: cat, note: it.note || "", date: new Date().toISOString(), confidence: 0.8, bankName: accounts[0]?.name, inboxId: null, source: "chat" });
+            return `Em mở phiếu ${it.type === "INCOME" ? "khoản thu" : "khoản chi"} ${formatVND(amount)} · ${cat}, anh xem rồi bấm lưu nhé.`;
+          }
+          case "txn": return maiAnalyzeText(text).text;
           default: return "Em chưa hiểu câu này ạ. Anh gõ \"hướng dẫn\" để xem em hiểu những câu nào nhé.";
         }
       };
-      const handleMaiSend = (preset) => {
-        const text = String(preset != null ? preset : maiInput).trim();
-        if (!text || !window.MaiAgent) return;
-        const now = Date.now();
-        let reply;
-        try { reply = maiReply(text); } catch (e) { console.warn(e); reply = "Ui, em bị rối một chút. Anh nói lại giúp em nhé."; }
-        setMaiChat(prev => [...prev, { id: `u${now}`, from: "me", text, at: now }, { id: `m${now}`, from: "mai", text: reply, at: now + 1 }].slice(-80));
-        setMaiInput("");
+
+      // ---------- Bộ não AI chạy trên máy ----------
+      const [aiState, setAiState] = useState(() => (window.MaiLLM ? window.MaiLLM.getState() : null));
+      const [maiBusy, setMaiBusy] = useState(false);
+      useEffect(() => {
+        let unsub = null;
+        const hook = () => { if (window.MaiLLM && !unsub) unsub = window.MaiLLM.subscribe(setAiState); };
+        hook();
+        window.addEventListener("maillm-ready", hook);
+        return () => { window.removeEventListener("maillm-ready", hook); if (unsub) unsub(); };
+      }, []);
+      const aiModelId = maiSettings.aiModel || null;
+      const aiReady = !!(aiState && aiModelId && aiState.downloaded.includes(aiModelId));
+      const aiLoaded = !!(aiState && aiState.status === "loaded" && aiState.modelId === aiModelId);
+      const aiEnsure = async () => {
+        if (!window.MaiLLM || !aiReady) return false;
+        if (window.MaiLLM.isLoaded() && window.MaiLLM.loadedId() === aiModelId) return true;
+        try { await window.MaiLLM.load(aiModelId); return true; } catch (e) { return false; }
       };
+      // Tự bật bộ não khi mở tab Mai (đã tải mô hình)
+      useEffect(() => {
+        if (activeTab === "mai" && aiReady && maiSettings.aiAuto !== false && aiState && aiState.status === "idle" && !aiState.error) aiEnsure();
+      }, [activeTab, aiReady, aiState && aiState.status]);
+
+      const vnd = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n || 0)) + "đ";
+      // Ngữ cảnh gửi cho mô hình (chỉ trong máy): số liệu đã tính sẵn để mô hình nhỏ không phải tự cộng trừ
+      const maiAiContext = () => {
+        const now = new Date();
+        const y = now.getFullYear(), m = now.getMonth();
+        const startWeek = new Date(now); startWeek.setHours(0, 0, 0, 0); startWeek.setDate(startWeek.getDate() - ((startWeek.getDay() + 6) % 7));
+        const today0 = new Date(now); today0.setHours(0, 0, 0, 0);
+        const agg = (from, to) => {
+          let inc = 0, exp = 0; const byCat = {};
+          transactions.forEach(t => {
+            const d = new Date(t.date); if (d < from || d >= to) return;
+            const a = Number(t.amount) || 0;
+            if (t.type === "INCOME") inc += a; else { exp += a; byCat[t.category || "Khác"] = (byCat[t.category || "Khác"] || 0) + a; }
+          });
+          return { inc, exp, byCat };
+        };
+        const thisM = agg(new Date(y, m, 1), new Date(y, m + 1, 1));
+        const lastM = agg(new Date(y, m - 1, 1), new Date(y, m, 1));
+        const week = agg(startWeek, new Date(8640000000000000));
+        const today = agg(today0, new Date(8640000000000000));
+        const topCats = Object.entries(thisM.byCat).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([c, v]) => `${c} ${vnd(v)}`).join("; ");
+        const lastCats = Object.entries(lastM.byCat).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c, v]) => `${c} ${vnd(v)}`).join("; ");
+        const accs = accounts.map(a => isCreditAcc(a) ? `${a.name} (thẻ tín dụng): dư nợ ${vnd(Math.max(0, -(Number(a.balance) || 0)))}${Number(a.limit) > 0 ? `, hạn mức ${vnd(a.limit)}` : ""}` : `${a.name}: ${vnd(a.balance)}`).join("; ");
+        const recent = transactions.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8)
+          .map(t => { const d = new Date(t.date); return `${d.getDate()}/${d.getMonth() + 1} ${t.type === "INCOME" ? "+" : "-"}${vnd(t.amount)} ${t.category || ""}${t.note ? ` (${String(t.note).slice(0, 40)})` : ""}`; }).join("\n");
+        const taught = maiLearned.slice(0, 10).map(x => `${x.label || x.key}→${x.category || (x.type === "INCOME" ? "thu" : "chi")}`).join("; ");
+        const budget = Number(monthlyBudget) || 0;
+        return [
+          `Hôm nay: ${now.toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" })}.`,
+          `Ví/tài khoản: ${accs || "chưa có"}. Tổng tiền đang có: ${vnd(accounts.filter(a => !isCreditAcc(a)).reduce((s, a) => s + (Number(a.balance) || 0), 0))}.`,
+          `Tháng ${m + 1}: thu ${vnd(thisM.inc)}, chi ${vnd(thisM.exp)}, còn lại ${vnd(thisM.inc - thisM.exp)}${budget ? `, ngân sách tháng ${vnd(budget)} (đã dùng ${Math.round(thisM.exp / budget * 100)}%)` : ""}.`,
+          `Chi tháng này theo hạng mục: ${topCats || "chưa có"}.`,
+          `Tháng trước: thu ${vnd(lastM.inc)}, chi ${vnd(lastM.exp)}. Nhiều nhất: ${lastCats || "chưa có"}.`,
+          `Tuần này đã chi ${vnd(week.exp)}; hôm nay đã chi ${vnd(today.exp)}.`,
+          `Giao dịch gần nhất:\n${recent || "chưa có"}`,
+          `Điều anh đã dạy em: ${taught || "chưa có"}.`,
+          (maiSettings.blockWords || []).length ? `Đang bỏ qua thông báo có: ${(maiSettings.blockWords || []).join(", ")}.` : "",
+        ].filter(Boolean).join("\n");
+      };
+      const MAI_TOOLS = [
+        { type: "function", function: { name: "remember_category", description: "Ghi nhớ: giao dịch có từ khoá này thì xếp vào hạng mục này. Dùng khi anh dặn cách xếp hạng mục.", parameters: { type: "object", properties: { keyword: { type: "string", description: "tên cửa hàng / người / nội dung, ví dụ: grab" }, category: { type: "string", description: "tên hạng mục có trong danh sách" } }, required: ["keyword", "category"] } } },
+        { type: "function", function: { name: "remember_direction", description: "Ghi nhớ giao dịch có từ khoá này là tiền vào (thu) hay tiền ra (chi).", parameters: { type: "object", properties: { keyword: { type: "string" }, direction: { type: "string", enum: ["thu", "chi"] } }, required: ["keyword", "direction"] } } },
+        { type: "function", function: { name: "ignore_notifications", description: "Từ giờ bỏ qua, không ghi các thông báo có chứa từ khoá này.", parameters: { type: "object", properties: { keyword: { type: "string" } }, required: ["keyword"] } } },
+        { type: "function", function: { name: "add_transaction", description: "Ghi một giao dịch anh vừa kể (mở phiếu để anh xác nhận).", parameters: { type: "object", properties: { direction: { type: "string", enum: ["thu", "chi"] }, amount: { type: "number", description: "số tiền VND, ví dụ 35000" }, category: { type: "string" }, note: { type: "string" } }, required: ["direction", "amount"] } } },
+      ];
+      const maiRunTool = (tc) => {
+        const A = window.MaiAgent;
+        const a = tc.args || {};
+        const names = categories.map(c => c && c.name).filter(Boolean);
+        const kw = A.fold(String(a.keyword || "")).replace(/[^a-z0-9 ]+/g, " ").trim();
+        if (tc.name === "remember_category") {
+          const cat = A.matchCategory(String(a.category || ""), names);
+          if (!kw) return null;
+          return cat ? maiDo({ intent: "teach", key: kw, category: cat }) : maiDo({ intent: "teach_unknown", key: kw, target: String(a.category || "") });
+        }
+        if (tc.name === "remember_direction" && kw) return maiDo({ intent: "teach_type", key: kw, type: /thu|in/i.test(a.direction) ? "INCOME" : "EXPENSE" });
+        if (tc.name === "ignore_notifications" && kw) return maiDo({ intent: "block", word: kw });
+        if (tc.name === "add_transaction") return maiDo({ intent: "add_tx", type: /thu|in/i.test(a.direction) ? "INCOME" : "EXPENSE", amount: a.amount, category: a.category, note: a.note });
+        return null;
+      };
+      const maiAskAI = async (text, history, onToken) => {
+        const names = categories.map(c => c && c.name).filter(Boolean);
+        const sys = `Bạn là Mai, trợ lý quản lý chi tiêu trong app VinaSpends. Luôn trả lời bằng tiếng Việt có dấu, xưng "em", gọi người dùng là "anh", giọng thân thiện, ngắn gọn (1–4 câu), đi thẳng vào ý.
+Chỉ dùng số liệu trong phần DỮ LIỆU bên dưới; không có thì nói em chưa có số liệu, tuyệt đối không bịa số. Tiền viết dạng 1.250.000đ.
+Khi anh dặn cách xếp hạng mục, dặn bỏ qua thông báo, hoặc kể một khoản thu/chi cần ghi, hãy gọi công cụ phù hợp. Hạng mục phải lấy đúng tên trong danh sách.
+Em chạy ngay trên điện thoại của anh, không gửi dữ liệu đi đâu.
+
+DANH SÁCH HẠNG MỤC: ${names.join(", ")}
+
+DỮ LIỆU:
+${maiAiContext()}`;
+        const msgs = [{ role: "system", content: sys }];
+        history.slice(-8).forEach(m => { if (m.text && !m.pending) msgs.push({ role: m.from === "me" ? "user" : "assistant", content: String(m.text).slice(0, 600) }); });
+        msgs.push({ role: "user", content: text });
+        return window.MaiLLM.chat({ messages: msgs, tools: MAI_TOOLS, maxTokens: 300, temperature: 0.4, onToken });
+      };
+
+      // Câu nào bộ luật làm chắc chắn được thì làm ngay; còn lại để bộ não AI (nếu đã bật) trả lời tự nhiên
+      const RULE_SURE = ["teach", "teach_type", "block", "unblock", "forget", "list"];
+      const handleMaiSend = async (preset) => {
+        const text = String(preset != null ? preset : maiInput).trim();
+        if (!text || !window.MaiAgent || maiBusy) return;
+        const now = Date.now();
+        const history = maiChat;
+        setMaiInput("");
+        setMaiChat(prev => [...prev, { id: `u${now}`, from: "me", text, at: now }].slice(-80));
+        const say = (reply, extra) => setMaiChat(prev => [...prev.filter(x => x.id !== `m${now}`), { id: `m${now}`, from: "mai", text: reply, at: now + 1, ...extra }].slice(-80));
+        const names = categories.map(c => c && c.name).filter(Boolean);
+        let it;
+        try { it = window.MaiAgent.chatIntent(text, names); } catch (e) { it = { intent: "unknown" }; }
+        try {
+          if (RULE_SURE.includes(it.intent)) return say(maiDo(it, text));
+          if (it.intent === "txn") {
+            const r = maiAnalyzeText(text);
+            if (r.ok || !aiReady) return say(r.text);
+          }
+          if (!aiReady) return say(maiDo(it, text));
+          setMaiBusy(true);
+          if (!aiLoaded) say("Em đang khởi động bộ não AI, anh chờ em chút nhé…", { pending: true });
+          else say("", { pending: true });
+          const ok = await aiEnsure();
+          if (!ok) return say(maiDo(it, text) + "\n(Bộ não AI chưa khởi động được, em trả lời theo cách cơ bản.)");
+          say("", { pending: true });
+          let last = 0;
+          const res = await maiAskAI(text, history, (partial) => { const t = Date.now(); if (t - last > 80) { last = t; say(partial, { pending: true, ai: true }); } });
+          const acts = (res.toolCalls || []).map(maiRunTool).filter(Boolean);
+          let reply = res.content;
+          if (acts.length) reply = (reply && !/^\s*$/.test(reply) ? reply + "\n" : "") + acts.join("\n");
+          if (!reply) reply = maiDo(it, text);
+          say(reply, { ai: true });
+        } catch (e) {
+          console.warn(e);
+          say("Ui, em bị rối một chút. Anh nói lại giúp em nhé.");
+        } finally {
+          setMaiBusy(false);
+        }
+      };
+
+      const aiTxQueueRef = React.useRef([]);
+      const [aiTxTick, setAiTxTick] = useState(0);
+      // AI tự xếp hạng mục cho giao dịch bộ luật chưa biết (đang chờ duyệt)
+      const aiTriedRef = React.useRef(new Set());
+      const maiAiClassify = async (item) => {
+        const A = window.MaiAgent;
+        const type = item.type === "INCOME" ? "INCOME" : "EXPENSE";
+        const names = categories.filter(c => c && c.name && (maiCatType(c.name) === type)).map(c => c.name);
+        if (!names.length) return null;
+        const desc = [item.rawNote, item.counterparty && `đối tác ${item.counterparty}`, item.note].filter(Boolean).join(" · ").slice(0, 200);
+        const res = await window.MaiLLM.chat({
+          messages: [
+            { role: "system", content: "Bạn phân loại giao dịch ngân hàng ở Việt Nam vào đúng một hạng mục. Chỉ trả lời đúng tên một hạng mục trong danh sách, không giải thích." },
+            { role: "user", content: `Danh sách hạng mục: ${names.join(", ")}\nGiao dịch: ${type === "INCOME" ? "tiền vào" : "tiền ra"} ${vnd(item.amount)}, nội dung: "${desc}"\nHạng mục:` },
+          ],
+          maxTokens: 16, temperature: 0,
+        });
+        const cat = A.matchCategory(res.content.split("\n")[0], names);
+        return cat && cat !== "Khác" ? cat : null;
+      };
+      useEffect(() => {
+        if (!aiLoaded || maiSettings.aiClassify === false || maiBusy) return;
+        const item = maiInbox.find(x => x.inboxId && !aiTriedRef.current.has(x.inboxId) && (!x.categorySource || x.categorySource === "default" || x.category === "Khác"));
+        if (!item) return;
+        aiTriedRef.current.add(item.inboxId);
+        maiAiClassify(item).then(cat => {
+          if (cat) setMaiInbox(prev => prev.map(x => x.inboxId === item.inboxId ? { ...x, category: cat, categorySource: "ai" } : x));
+        }).catch(() => {});
+      }, [aiLoaded, maiInbox, maiBusy]);
+      // Giao dịch Mai đã tự ghi vào "Khác" -> AI xếp lại cho đúng
+      useEffect(() => {
+        if (!aiLoaded || maiSettings.aiClassify === false || maiBusy || !aiTxQueueRef.current.length) return;
+        const job = aiTxQueueRef.current.shift();
+        maiAiClassify(job.item).then(cat => {
+          if (cat) {
+            setTransactions(prev => prev.map(t => t.id === job.txId && (t.category === "Khác" || t.category === "Lương & Thu nhập") ? { ...t, category: cat, updatedAt: Date.now() } : t));
+            setMaiLog(prev => prev.map(l => l.id === job.txId ? { ...l, category: cat, ai: true } : l));
+          }
+        }).catch(() => {}).finally(() => setAiTxTick(x => x + 1));
+      }, [aiLoaded, aiTxTick, maiBusy]);
 
       const maiApproveInbox = (item) => {
         const tx = maiCommit(item);
@@ -3745,7 +3931,9 @@
                 {/* Trò chuyện với Mai */}
                 <section className="bg-theme-surface border rounded-3xl overflow-hidden">
                   <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-                    <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="message-circle" className="w-4 h-4" /> Trò chuyện với Mai</p>
+                    <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="message-circle" className="w-4 h-4" /> Trò chuyện với Mai
+                      {aiLoaded ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-retro-avocado text-white border border-retro-ink">AI đang bật</span>
+                        : aiState && aiState.status === "loading" ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-retro-mustard text-retro-ink border border-retro-ink">Đang khởi động AI…</span> : null}</p>
                     {maiChat.length > 0 && <button type="button" onClick={() => setMaiChat([])} className="text-[11px] font-bold text-theme-textSecondary">Xoá đoạn chat</button>}
                   </div>
                   <div className="mai-chat px-3 pb-2 max-h-[360px] min-h-[150px] overflow-y-auto space-y-2">
@@ -3764,14 +3952,17 @@
                     ) : (
                       <div key={m.id} className="flex gap-2 items-end">
                         <MaiAvatar size={28} className="shrink-0" />
-                        <div className="max-w-[82%] bg-theme-background border-2 border-theme-border rounded-2xl rounded-bl-md px-3.5 py-2 text-[14px] text-theme-textPrimary leading-relaxed whitespace-pre-line break-words">{m.text}</div>
+                        <div className="max-w-[82%] bg-theme-background border-2 border-theme-border rounded-2xl rounded-bl-md px-3.5 py-2 text-[14px] text-theme-textPrimary leading-relaxed whitespace-pre-line break-words">
+                          {m.text || (m.pending ? <span className="mai-typing inline-flex gap-1 py-1"><i /><i /><i /></span> : "")}
+                          {m.text && m.pending && <span className="mai-caret" />}
+                        </div>
                       </div>
                     ))}
                     <div ref={maiChatEndRef} />
                   </div>
                   <div className="flex gap-2 overflow-x-auto no-scrollbar px-3 pb-2">
-                    {["Grab là Di chuyển", "Bỏ qua tin từ Shopee", "Em đã học được gì?", "cafe 35k", "Hướng dẫn"].map(x => (
-                      <button key={x} type="button" onClick={() => handleMaiSend(x)} className="shrink-0 px-3 py-1.5 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary bg-theme-background">{x}</button>
+                    {(aiLoaded ? ["Tháng này anh tiêu nhiều nhất vào đâu?", "Tuần này anh chi bao nhiêu?", "Anh nên tiết kiệm khoản nào?", "Grab là Di chuyển", "Bỏ qua tin từ Shopee"] : ["Grab là Di chuyển", "Bỏ qua tin từ Shopee", "Em đã học được gì?", "cafe 35k", "Hướng dẫn"]).map(x => (
+                      <button key={x} type="button" disabled={maiBusy} onClick={() => handleMaiSend(x)} className="shrink-0 px-3 py-1.5 rounded-full border-2 border-theme-border text-xs font-semibold text-theme-textSecondary bg-theme-background">{x}</button>
                     ))}
                   </div>
                   <form onSubmit={e => { e.preventDefault(); handleMaiSend(); }} className="flex items-end gap-2 p-3 border-t-2 border-dashed border-theme-border">
@@ -3779,11 +3970,79 @@
                       onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleMaiSend(); } }}
                       placeholder="Nhắn cho Mai…"
                       className="flex-1 resize-none max-h-32 bg-theme-background border-2 rounded-2xl px-3.5 py-2.5 text-[15px] text-theme-textPrimary" />
-                    <button type="submit" disabled={!maiInput.trim()} aria-label="Gửi" className="w-11 h-11 shrink-0 rounded-full bg-theme-primary text-white flex items-center justify-center disabled:opacity-50">
+                    <button type="submit" disabled={!maiInput.trim() || maiBusy} aria-label="Gửi" className="w-11 h-11 shrink-0 rounded-full bg-theme-primary text-white flex items-center justify-center disabled:opacity-50">
                       <Icon name="send" className="w-5 h-5" />
                     </button>
                   </form>
                 </section>
+
+                {/* Bộ não AI chạy trên máy */}
+                {aiState && (() => {
+                  const LL = window.MaiLLM;
+                  const models = LL ? LL.MODELS : [];
+                  const busy = ["downloading", "importing", "loading"].includes(aiState.status);
+                  const mb = (b) => b >= 1e9 ? (b / 1e9).toFixed(2).replace(".", ",") + " GB" : Math.round(b / 1e6) + " MB";
+                  const all = [...models, ...(aiState.downloaded.includes("imported") ? [LL.IMPORTED] : [])];
+                  const rec = LL ? LL.recommended() : null;
+                  return (
+                    <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-bold text-sm text-theme-textPrimary flex items-center gap-2"><Icon name="sparkles" className="w-4 h-4" /> Bộ não AI của Mai</p>
+                        {aiLoaded && <button type="button" onClick={() => LL.unload()} className="text-[11px] font-bold text-theme-textSecondary">Tắt để nhẹ máy</button>}
+                      </div>
+                      <p className="text-xs text-theme-textSecondary leading-relaxed">Mô hình ngôn ngữ chạy ngay trên điện thoại: Mai trò chuyện tự nhiên, trả lời câu hỏi về chi tiêu của anh và tự xếp hạng mục cho giao dịch lạ. Tải về một lần (cần Wi-Fi), sau đó chạy offline, không gửi dữ liệu đi đâu.</p>
+                      <div className="space-y-2">
+                        {all.map(m => {
+                          const have = aiState.downloaded.includes(m.id);
+                          const chosen = aiModelId === m.id;
+                          const dl = aiState.status === "downloading" && aiState.modelId === m.id;
+                          const ld = aiState.status === "loading" && aiState.modelId === m.id;
+                          return (
+                            <div key={m.id} className={`rounded-2xl border-2 p-3 ${chosen ? "border-theme-primary bg-theme-primary/5" : "border-theme-border bg-theme-background"}`}>
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="font-bold text-[14px] text-theme-textPrimary">{m.name}{m.size ? <span className="font-semibold text-theme-textSecondary"> · {mb(m.size)}</span> : null}{m.id === rec && !have && <span className="ml-1.5 text-[10px] font-bold uppercase text-theme-primary">hợp máy anh</span>}</p>
+                                  <p className="text-[11px] text-theme-textSecondary leading-snug mt-0.5">{m.desc}</p>
+                                </div>
+                                {have ? (
+                                  chosen ? <span className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-full bg-retro-avocado text-white border border-retro-ink">{aiLoaded ? "Đang dùng" : ld ? "Đang bật…" : "Đã chọn"}</span>
+                                    : <button type="button" disabled={busy} onClick={() => { setMaiSettings(p => ({ ...p, aiModel: m.id })); LL.load(m.id).catch(() => {}); }} className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-theme-primary text-white disabled:opacity-50">Dùng</button>
+                                ) : dl ? (
+                                  <button type="button" onClick={() => LL.cancel()} className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full border-2 border-theme-border text-theme-textSecondary">Huỷ</button>
+                                ) : (
+                                  <button type="button" disabled={busy} onClick={() => { setMaiSettings(p => ({ ...p, aiModel: m.id })); LL.download(m.id).then(() => LL.load(m.id)).catch(() => {}); }} className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-full bg-theme-primary text-white disabled:opacity-50">Tải về</button>
+                                )}
+                              </div>
+                              {dl && (
+                                <div className="mt-2">
+                                  <div className="h-2 rounded-full bg-theme-variant border border-retro-ink/30 overflow-hidden"><div className="h-full bg-retro-mustard transition-all" style={{ width: `${Math.round((aiState.progress || 0) * 100)}%` }} /></div>
+                                  <p className="text-[11px] text-theme-textSecondary mt-1">{mb(aiState.loaded || 0)} / {mb(aiState.total || m.size)} · {Math.round((aiState.progress || 0) * 100)}% · giữ app mở cho đến khi xong</p>
+                                </div>
+                              )}
+                              {have && !busy && <button type="button" onClick={() => { if (confirm(`Xoá "${m.name}" khỏi máy? (giải phóng ${mb(m.size || 0)})`)) { LL.remove(m.id); if (chosen) setMaiSettings(p => ({ ...p, aiModel: null })); } }} className="mt-1.5 text-[11px] font-bold text-theme-textSecondary underline">Xoá khỏi máy</button>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {aiState.status === "importing" && <p className="text-xs text-theme-textSecondary">Đang chép file vào app… {Math.round((aiState.progress || 0) * 100)}%</p>}
+                      {aiState.status === "loading" && <p className="text-xs text-theme-textSecondary">Đang nạp mô hình vào bộ nhớ, lần đầu có thể mất 10–40 giây…</p>}
+                      {aiState.error && <p className="text-xs font-semibold text-[var(--expense)]">{aiState.error}</p>}
+                      {aiLoaded && <p className="text-[11px] text-theme-textSecondary">Đang chạy {aiState.threads > 1 ? `${aiState.threads} luồng` : "1 luồng"}{aiState.speed ? ` · khoảng ${aiState.speed} chữ/giây` : ""}.</p>}
+                      <label className="flex items-center justify-between gap-3 text-xs font-semibold text-theme-textPrimary">
+                        <span>AI tự xếp hạng mục cho giao dịch lạ</span>
+                        <input type="checkbox" checked={maiSettings.aiClassify !== false} onChange={e => setMaiSettings(p => ({ ...p, aiClassify: e.target.checked }))} className="w-5 h-5 accent-[#C8551B]" />
+                      </label>
+                      <label className="flex items-center justify-between gap-3 text-xs font-semibold text-theme-textPrimary">
+                        <span>Tự bật AI khi mở tab Mai</span>
+                        <input type="checkbox" checked={maiSettings.aiAuto !== false} onChange={e => setMaiSettings(p => ({ ...p, aiAuto: e.target.checked }))} className="w-5 h-5 accent-[#C8551B]" />
+                      </label>
+                      <label className={`block text-center text-xs font-bold text-theme-primary py-2 rounded-xl border-2 border-dashed border-theme-primary/50 ${busy ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}>
+                        Nhập file .gguf có sẵn trên máy
+                        <input type="file" accept=".gguf,application/octet-stream" className="hidden" onChange={e => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (f) LL.importFile(f).then(() => { setMaiSettings(p => ({ ...p, aiModel: "imported" })); return LL.load("imported"); }).catch(err => showToast(String(err.message || err), "error")); }} />
+                      </label>
+                    </section>
+                  );
+                })()}
 
                 {/* Hộp chờ duyệt */}
                 {maiInbox.length > 0 && (
@@ -3798,6 +4057,7 @@
                           </div>
                           <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">Chắc {Math.round((item.confidence || 0) * 100)}%</span>
                         </div>
+                        <p className="text-sm font-bold text-theme-textPrimary mt-2 flex items-center gap-1.5">{maiResolveCategory(item.category, item.type, categories)}{item.categorySource === "ai" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-retro-avocado/20 text-theme-textPrimary border border-retro-ink/40">AI gợi ý</span>}</p>
                         <p className="text-xs text-theme-textSecondary mt-2 line-clamp-2 italic">“{item.raw}”</p>
                         <div className="flex gap-2 mt-3">
                           <button onClick={() => setMaiDraft({ ...item, category: maiResolveCategory(item.category, item.type, categories), bankName: maiMatchAccount(item, accounts)?.name || null })} className="flex-1 py-2.5 rounded-xl border-2 border-retro-ink text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
