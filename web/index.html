@@ -3294,6 +3294,22 @@
                       <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className={`px-3 py-2 rounded-xl text-xs font-bold border-2 border-retro-ink ${maiAccess ? 'bg-theme-background text-theme-textPrimary' : 'bg-theme-primary text-white retro-btn'}`}>{maiAccess ? "Quản lý" : "Cấp quyền"}</button>
                     )}
                   </div>
+                  {canListen && !maiAccess && (
+                    <div className="rounded-2xl border-2 border-dashed border-retro-ink/40 bg-[#F6E3B0]/60 p-3 text-xs text-[#3A2618] space-y-2">
+                      <p className="font-bold text-sm">Không bật được quyền?</p>
+                      <p>Android 13 trở lên chặn quyền này với app cài từ file APK (nút bật bị mờ hoặc báo "Chế độ cài đặt bị hạn chế"). Mở khoá một lần là xong:</p>
+                      <ol className="list-decimal pl-5 space-y-1">
+                        <li>Bấm <b>"Mở thông tin ứng dụng"</b> bên dưới.</li>
+                        <li>Bấm dấu <b>⋮</b> góc trên bên phải → <b>"Cho phép chế độ cài đặt bị hạn chế"</b> (Allow restricted settings), xác nhận vân tay/mã PIN.</li>
+                        <li>Quay lại đây, bấm <b>"Cấp quyền"</b> và bật VinaSpends.</li>
+                      </ol>
+                      <p className="opacity-80">Không thấy dấu ⋮? Thử bấm "Cấp quyền" một lần cho máy hiện cảnh báo trước, rồi mới vào lại thông tin ứng dụng.</p>
+                      <div className="flex gap-2 pt-1">
+                        <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="flex-1 px-3 py-2 rounded-xl font-bold border-2 border-retro-ink bg-theme-surface text-theme-textPrimary">Mở thông tin ứng dụng</button>
+                        <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="flex-1 px-3 py-2 rounded-xl font-bold border-2 border-retro-ink bg-theme-primary text-white">Cấp quyền</button>
+                      </div>
+                    </div>
+                  )}
                   <div className="retro-dash" />
                   {[
                     { k: "autoSave", t: "Tự ghi khi chắc chắn", d: "Thông báo rõ ràng được ghi ngay; chỗ nào mơ hồ Mai để anh duyệt." },
@@ -4045,7 +4061,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.2 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.3 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

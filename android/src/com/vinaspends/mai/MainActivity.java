@@ -217,6 +217,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void openNotificationAccessSettings() {
             ui.post(new Runnable() {
                 @Override public void run() {
+                    // Android 11+: mở thẳng trang bật quyền của riêng VinaSpends
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        try {
+                            Intent d = new Intent("android.settings.NOTIFICATION_LISTENER_DETAIL_SETTINGS");
+                            d.putExtra("android.provider.extra.NOTIFICATION_LISTENER_COMPONENT_NAME",
+                                    new ComponentName(MainActivity.this, MaiNotificationListener.class).flattenToString());
+                            startActivity(d);
+                            return;
+                        } catch (Exception ignored) {
+                        }
+                    }
                     try {
                         startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
                     } catch (Exception e) {
@@ -225,6 +236,20 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        /** Trang "Thông tin ứng dụng" – nơi có menu ⋮ "Cho phép chế độ cài đặt bị hạn chế" (Android 13+). */
+        @JavascriptInterface public void openAppInfo() {
+            ui.post(new Runnable() {
+                @Override public void run() {
+                    try {
+                        startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                    } catch (Exception e) {
+                        startActivity(new Intent(Settings.ACTION_SETTINGS));
+                    }
+                }
+            });
+        }
+        @JavascriptInterface public int sdk() { return Build.VERSION.SDK_INT; }
 
         @JavascriptInterface public void speak(String text) {
             if (ttsReady && text != null) tts.speak(text, TextToSpeech.QUEUE_ADD, null, "mai" + System.nanoTime());
