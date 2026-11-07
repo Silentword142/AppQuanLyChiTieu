@@ -205,12 +205,18 @@ function explain(e) {
   return m.slice(0, 160) || "Lỗi không rõ";
 }
 
+// Nạp sẵn phần dặn dò (system prompt) vào bộ nhớ đệm để câu hỏi đầu tiên trả lời nhanh
+function warm(messages, tools) {
+  if (!wllama || !wllama.isModelLoaded()) return Promise.resolve();
+  return chat({ messages: messages.concat([{ role: "user", content: "." }]), tools, maxTokens: 1, temperature: 0 }).catch(() => {});
+}
+
 const MaiLLM = {
   MODELS, IMPORTED,
   getState: () => ({ ...state }),
   subscribe: (fn) => { subs.add(fn); fn({ ...state }); return () => subs.delete(fn); },
   refresh: refreshDownloaded,
-  download, cancel, importFile, remove, load, unload, chat,
+  download, cancel, importFile, remove, load, unload, chat, warm,
   isLoaded: () => !!(wllama && loadedId && wllama.isModelLoaded()),
   loadedId: () => loadedId,
   recommended: () => ((navigator.deviceMemory || 4) >= 6 ? "qwen2.5-1.5b" : "qwen2.5-0.5b"),

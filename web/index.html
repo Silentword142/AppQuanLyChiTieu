@@ -1270,6 +1270,13 @@
         if (window.MaiLLM.isLoaded() && window.MaiLLM.loadedId() === aiModelId) return true;
         try { await window.MaiLLM.load(aiModelId); return true; } catch (e) { return false; }
       };
+      const aiWarmedRef = React.useRef(false);
+      useEffect(() => {
+        if (!aiLoaded) { aiWarmedRef.current = false; return; }
+        if (aiWarmedRef.current || maiBusy) return;
+        aiWarmedRef.current = true;
+        window.MaiLLM.warm([{ role: "system", content: maiSystemPrompt() }], MAI_TOOLS);
+      }, [aiLoaded]);
       // Tự bật bộ não khi mở tab Mai (đã tải mô hình)
       useEffect(() => {
         if (activeTab === "mai" && aiReady && maiSettings.aiAuto !== false && aiState && aiState.status === "idle" && !aiState.error) aiEnsure();
@@ -1335,9 +1342,9 @@
         if (tc.name === "add_transaction") return maiDo({ intent: "add_tx", type: /thu|in/i.test(a.direction) ? "INCOME" : "EXPENSE", amount: a.amount, category: a.category, note: a.note });
         return null;
       };
-      const maiAskAI = async (text, history, onToken) => {
+      const maiSystemPrompt = () => {
         const names = categories.map(c => c && c.name).filter(Boolean);
-        const sys = `Bạn là Mai, trợ lý quản lý chi tiêu trong app VinaSpends. Luôn trả lời bằng tiếng Việt có dấu, xưng "em", gọi người dùng là "anh", giọng thân thiện, ngắn gọn (1–4 câu), đi thẳng vào ý.
+        return `Bạn là Mai, trợ lý quản lý chi tiêu trong app VinaSpends. Luôn trả lời bằng tiếng Việt có dấu, xưng "em", gọi người dùng là "anh", giọng thân thiện, ngắn gọn (1–4 câu), đi thẳng vào ý.
 Chỉ dùng số liệu trong phần DỮ LIỆU bên dưới; không có thì nói em chưa có số liệu, tuyệt đối không bịa số. Tiền viết dạng 1.250.000đ.
 Khi anh dặn cách xếp hạng mục, dặn bỏ qua thông báo, hoặc kể một khoản thu/chi cần ghi, hãy gọi công cụ phù hợp. Hạng mục phải lấy đúng tên trong danh sách.
 Em chạy ngay trên điện thoại của anh, không gửi dữ liệu đi đâu.
@@ -1346,7 +1353,9 @@ DANH SÁCH HẠNG MỤC: ${names.join(", ")}
 
 DỮ LIỆU:
 ${maiAiContext()}`;
-        const msgs = [{ role: "system", content: sys }];
+      };
+      const maiAskAI = async (text, history, onToken) => {
+        const msgs = [{ role: "system", content: maiSystemPrompt() }];
         history.slice(-8).forEach(m => { if (m.text && !m.pending) msgs.push({ role: m.from === "me" ? "user" : "assistant", content: String(m.text).slice(0, 600) }); });
         msgs.push({ role: "user", content: text });
         return window.MaiLLM.chat({ messages: msgs, tools: MAI_TOOLS, maxTokens: 300, temperature: 0.4, onToken });
