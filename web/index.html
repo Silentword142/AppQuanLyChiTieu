@@ -96,8 +96,10 @@
     .wallet-sheen { position: absolute; top: 0; bottom: 0; left: 0; width: 38%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent); animation: walletSheen 5.5s ease-in-out infinite; pointer-events: none; }
     .wallet-card:nth-child(2n) .wallet-sheen { animation-delay: 1.4s; }
     .wallet-card:nth-child(3n) .wallet-sheen { animation-delay: 2.6s; }
+    @keyframes walletRow { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .wallet-row { animation: walletRow .45s cubic-bezier(.2,.8,.2,1) both; }
     .wallet-bar { transform-origin: left; animation: walletBar 1s .35s cubic-bezier(.2,.8,.2,1) both; }
-    @media (prefers-reduced-motion: reduce) { .wallet-in, .wallet-sheen, .wallet-bar { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .wallet-in, .wallet-sheen, .wallet-bar, .wallet-row { animation: none; } }
 
     /* ======= Phong cách Vintage 70s ======= */
     html[data-retro="1"] body {
@@ -297,7 +299,7 @@
       const c = (v) => Math.round(v * f).toString(16).padStart(2, "0");
       return "#" + c((n >> 16) & 255) + c((n >> 8) & 255) + c(n & 255);
     };
-    // Thẻ ví dạng ngang (dải vuốt ở Tổng quan): logo gốc, số TK dạng số thẻ, số dư; thẻ tín dụng có thanh hạn mức
+    // Thẻ ví dạng ngang (dải vuốt ở tab Ví & Nợ): logo gốc, số TK dạng số thẻ, số dư; thẻ tín dụng có thanh hạn mức
     const WalletCard = ({ acc, index = 0, onClick }) => {
       const b = bankStyleOf(acc.name);
       const color = (b && b.color) || "#6B4F3A";
@@ -2866,23 +2868,50 @@
                     })()}
                   </div>
 
-                  {/* Danh sách ví: dải thẻ ngang, vuốt ngang, có chuyển động */}
-                  <div className="border-t-2 border-dashed border-theme-border pt-3 pb-4">
-                    <div className="px-5 flex items-center justify-between">
+                  {/* Danh sách ví gọn: tên ngân hàng + thanh tỉ trọng số dư trên tổng */}
+                  <div className="border-t-2 border-dashed border-theme-border pt-3 pb-4 px-5">
+                    <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-sm font-bold text-theme-textPrimary"><Icon name="landmark" className="w-5 h-5" /> Các ví & tài khoản <span className="text-theme-textSecondary font-semibold">({accounts.length})</span></span>
-                      <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="text-xs font-bold text-theme-primary flex items-center gap-1"><Icon name="plus" className="w-4 h-4" /> Thêm</button>
+                      <button type="button" onClick={() => { setActiveTab("wallet_ai"); setSubTab("wallet"); }} className="text-xs font-bold text-theme-primary flex items-center gap-0.5">Xem thẻ <Icon name="chevron-right" className="w-4 h-4" /></button>
                     </div>
-                    <div className="wallet-strip mt-3 flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory px-5 pb-2 scroll-px-5">
-                      {accounts.map((acc, i) => (
-                        <WalletCard key={acc.id} acc={acc} index={i}
-                          onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} />
-                      ))}
-                      <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
-                        className="wallet-in snap-start shrink-0 w-[132px] rounded-2xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm flex flex-col items-center justify-center gap-2"
-                        style={{ animationDelay: `${accounts.length * 70}ms` }}>
-                        <Icon name="plus" className="w-7 h-7" /> Thêm ví
-                      </button>
-                    </div>
+                    {(() => {
+                      const pos = accounts.reduce((s, a) => s + Math.max(0, isCreditAcc(a) ? 0 : (Number(a.balance) || 0)), 0);
+                      const rows = [...accounts].sort((x, y) => {
+                        const vx = isCreditAcc(x) ? -1e15 : (Number(x.balance) || 0), vy = isCreditAcc(y) ? -1e15 : (Number(y.balance) || 0);
+                        return vy - vx;
+                      });
+                      if (!rows.length) return <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="mt-3 w-full py-3 rounded-xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm">+ Thêm ví đầu tiên</button>;
+                      return (
+                        <div className="mt-3 space-y-3">
+                          {rows.map((acc, i) => {
+                            const credit = isCreditAcc(acc);
+                            const bal = Number(acc.balance) || 0;
+                            const debt = Math.max(0, -bal), limit = Number(acc.limit) || 0;
+                            const color = (bankStyleOf(acc.name) || {}).color || "#6B4F3A";
+                            const pct = credit ? (limit > 0 ? Math.min(100, debt / limit * 100) : 0) : (pos > 0 && bal > 0 ? bal / pos * 100 : 0);
+                            const label = credit ? (limit > 0 ? `nợ ${Math.round(debt / limit * 100)}% hạn mức` : "thẻ tín dụng") : (bal < 0 ? "đang âm" : `${pos > 0 ? (bal / pos * 100).toFixed(pct >= 10 ? 0 : 1).replace(".", ",") : 0}% tổng`);
+                            return (
+                              <button key={acc.id} type="button" className="wallet-row w-full text-left block" style={{ animationDelay: `${i * 60}ms` }}
+                                onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }}>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="flex items-center gap-2 min-w-0">
+                                    <BankBadge name={acc.name} size={20} />
+                                    <span className="font-bold text-[14px] text-theme-textPrimary truncate">{acc.name}</span>
+                                  </span>
+                                  <span className={`font-display font-black text-[15px] tabular whitespace-nowrap ${credit || bal < 0 ? "text-[var(--expense)]" : "text-theme-textPrimary"}`}>{credit ? "−" + formatVND(debt) : formatVND(bal)}</span>
+                                </div>
+                                <div className="mt-1.5 flex items-center gap-2">
+                                  <div className="flex-1 h-2.5 rounded-full bg-theme-variant border border-retro-ink/30 overflow-hidden">
+                                    <div className="wallet-bar h-full rounded-full" style={{ width: `${Math.max(pct > 0 ? 2 : 0, pct)}%`, background: credit || bal < 0 ? "var(--expense)" : color, animationDelay: `${0.25 + i * 0.06}s` }} />
+                                  </div>
+                                  <span className="text-[11px] font-semibold text-theme-textSecondary w-[104px] text-right whitespace-nowrap">{label}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </section>
 
@@ -3760,43 +3789,35 @@
                 {subTab === "wallet" && (
                   <div className="space-y-6">
                     <div className="flex justify-between items-center mt-2">
-                      <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" className="w-5 h-5" /> Quản lý Tài khoản</h3>
-                      <button onClick={()=>setIsAddBankModalOpen(true)} className="text-xs bg-theme-primary/10 text-theme-primary px-3 py-2 rounded-lg font-bold flex items-center gap-1"><Icon name="plus" className="w-3 h-3" /> Liên kết ví</button>
+                      <h3 className="text-lg font-bold text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" className="w-5 h-5" /> Thẻ & tài khoản</h3>
+                      <button onClick={()=>{ setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="text-xs bg-theme-primary/10 text-theme-primary px-3 py-2 rounded-lg font-bold flex items-center gap-1"><Icon name="plus" className="w-3 h-3" /> Liên kết ví</button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {accounts.map(acc => {
-                        const logo = getBankLogo(acc.name);
-                        return (
-                        <div key={acc.id} className="bg-gradient-to-br from-theme-surface to-theme-background border border-theme-border p-5 rounded-3xl flex flex-col gap-3 relative overflow-hidden group hover:border-theme-primary/50 transition-colors shadow-lg">
-                          <div className="flex justify-between items-start z-10">
-                             <div className="flex items-center gap-3">
-                               <BankBadge name={acc.name} size={44} />
-                               <div className="flex flex-col">
-                                 <p className="font-bold text-base text-theme-textPrimary">{acc.name}</p>
-                                 {formatAccNo(acc.accountNo, isCreditAcc(acc)) && <p className="text-[12px] text-theme-textSecondary font-mono tracking-[0.12em]">{formatAccNo(acc.accountNo, isCreditAcc(acc))}</p>}
-                               </div>
-                             </div>
-                             <div className="flex gap-2">
-                               <button onClick={()=>{ setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} className="text-theme-textSecondary hover:text-theme-primary bg-theme-background p-2 rounded-full"><Icon name="edit-2" className="w-4 h-4" /></button>
-                               <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-[var(--expense)] bg-theme-background p-2 rounded-full"><Icon name="trash-2" className="w-4 h-4" /></button>
-                             </div>
-                          </div>
-                          {isCreditAcc(acc) ? (
-                            <div className="z-10">
-                              <p className="text-[11px] font-bold uppercase text-theme-textSecondary">Thẻ tín dụng · dư nợ</p>
-                              <p className="text-2xl font-black text-[var(--expense)] tracking-tight">{formatVND(Math.max(0, -(Number(acc.balance) || 0)))}</p>
-                              {Number(acc.limit) > 0 && (<>
-                                <div className="mt-2 h-2.5 rounded-full bg-theme-variant border border-retro-ink/40 overflow-hidden"><div className="wallet-bar h-full bg-retro-mustard" style={{ width: `${Math.min(100, Math.round(Math.max(0, -(Number(acc.balance) || 0)) / Number(acc.limit) * 100))}%` }} /></div>
-                                <p className="text-[11px] font-semibold text-theme-textSecondary mt-1">Khả dụng {formatVND(Number(acc.limit) + Math.min(0, Number(acc.balance) || 0))} / hạn mức {formatVND(acc.limit)}</p>
-                              </>)}
+                    <div className="wallet-strip -mx-4 flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 pb-2 scroll-px-4">
+                      {accounts.map((acc, i) => (
+                        <WalletCard key={acc.id} acc={acc} index={i}
+                          onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} />
+                      ))}
+                      <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
+                        className="wallet-in snap-start shrink-0 w-[132px] min-h-[150px] rounded-2xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm flex flex-col items-center justify-center gap-2"
+                        style={{ animationDelay: `${accounts.length * 70}ms` }}>
+                        <Icon name="plus" className="w-7 h-7" /> Thêm ví
+                      </button>
+                    </div>
+                    {accounts.length > 0 && (
+                      <div className="bg-theme-surface border border-theme-border rounded-3xl divide-y divide-theme-border/60">
+                        {accounts.map(acc => (
+                          <div key={acc.id} className="flex items-center gap-3 px-4 py-3">
+                            <BankBadge name={acc.name} size={26} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-[14px] text-theme-textPrimary truncate">{acc.name}{isCreditAcc(acc) && <span className="ml-1.5 text-[10px] font-bold uppercase text-theme-primary">· tín dụng</span>}</p>
+                              <p className="text-[12px] text-theme-textSecondary font-mono tracking-[0.1em] truncate">{formatAccNo(acc.accountNo, isCreditAcc(acc)) || "—"}</p>
                             </div>
-                          ) : (
-                            <p className="text-2xl font-black text-theme-textPrimary z-10 tracking-tight mt-1">{formatVND(acc.balance)}</p>
-                          )}
-                          <Icon name="credit-card" className="w-32 h-32 absolute -bottom-8 -right-6 text-theme-primary opacity-[0.03] group-hover:opacity-[0.08] transition-opacity rotate-[-15deg]" />
-                        </div>
-                      )})}
-                    </div>
+                            <button onClick={()=>{ setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }} className="text-theme-textSecondary hover:text-theme-primary bg-theme-background p-2 rounded-full" aria-label="Sửa"><Icon name="edit-2" className="w-4 h-4" /></button>
+                            <button onClick={()=>{ if(confirm("Xóa ví/tài khoản này?")) updateData(accounts.filter(a=>a.id!==acc.id), null, null, null); }} className="text-theme-textSecondary hover:text-[var(--expense)] bg-theme-background p-2 rounded-full" aria-label="Xóa"><Icon name="trash-2" className="w-4 h-4" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <button onClick={() => setActiveTab("mai")} className="w-full text-left bg-theme-surface border rounded-3xl p-4 flex items-center gap-3">
                       <MaiAvatar size={44} />
@@ -4457,7 +4478,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.9 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.10 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>
