@@ -125,6 +125,67 @@ for (const [s, exp] of quick) check("quick: " + s, Mai.parseQuick(s), { ok: true
 const mem = { [Mai.memoryKey(null, "PHO THIN BO HO")]: "Ăn sáng" };
 check("memory", Mai.parse(n("com.mbmobile", "MB", "TK 0123xxx456|GD: -60,000VND 06/11/26 07:30|SD: 1,140,000VND|ND: PHO THIN BO HO"), { memory: mem }), { ok: true, category: "Ăn sáng" });
 
+
+// ---- bộ não học hỏi
+{
+  const mb = (nd, sign = "-") => n("com.mbmobile", "MB", `TK 0123xxx456|GD: ${sign}60,000VND 06/11/26 07:30|SD: 1,140,000VND|ND: ${nd}`);
+  // 1) Người dùng sửa hạng mục 1 lần -> lần sau gặp đúng nội dung đó Mai xếp theo
+  let br = Mai.newBrain();
+  const r1 = Mai.parse(mb("THANH TOAN QR GRAB"), { brain: br });
+  check("brain: trước khi học", r1, { category: "Grab & Taxi" });
+  br = Mai.learn(br, { text: r1.rawNote, key: r1.memoryKey, category: "Đi làm", type: "EXPENSE", weight: 3 });
+  check("brain: sửa 1 lần là nhớ", Mai.parse(mb("THANH TOAN QR GRAB"), { brain: br }), { category: "Đi làm" });
+  // 2) Sửa lại lần nữa sang hạng mục khác -> Mai theo lần sửa mới nhất
+  br = Mai.learn(br, { text: r1.rawNote, key: r1.memoryKey, category: "Grab & Taxi", type: "EXPENSE", weight: 3 });
+  check("brain: theo lần sửa mới nhất", Mai.parse(mb("THANH TOAN QR GRAB"), { brain: br }), { category: "Grab & Taxi" });
+  // 3) Học từ khoá: nội dung khác nhưng cùng từ đặc trưng
+  let b2 = Mai.newBrain();
+  ["CO LAN BAN XOI SANG", "XOI CO LAN", "an xoi co lan ngo 5"].forEach(t => Mai.learn(b2, { text: t, category: "Ăn sáng", type: "EXPENSE", weight: 1 }));
+  check("brain: tổng quát theo từ khoá", Mai.parse(mb("CK XOI CO LAN 0912"), { brain: b2 }), { category: "Ăn sáng" });
+  check("brain: nhập nhanh cũng dùng", Mai.parseQuick("xôi cô lan 25k", { brain: b2 }), { category: "Ăn sáng", amount: 25000 });
+  // 4) Không để từ khoá đã học lấn át luật rõ ràng khi chỉ học yếu
+  let b3 = Mai.newBrain();
+  Mai.learn(b3, { text: "highlands", category: "Tiếp khách", type: "EXPENSE", weight: 1 });
+  check("brain: học yếu không phá luật", Mai.parse(mb("thanh toan Highlands Coffee"), { brain: b3 }), { category: "Cà phê & Trà" });
+  // 5) Không dùng hạng mục chi cho khoản thu
+  let b4 = Mai.newBrain();
+  Mai.learn(b4, { text: "NGUYEN VAN C", key: "nguyen van c", category: "Ăn sáng", type: "EXPENSE", weight: 3 });
+  const inc = Mai.parse(mb("NGUYEN VAN C chuyen tien", "+"), { brain: b4 });
+  if (inc.category === "Ăn sáng") { fail++; console.log("✗ brain: gán hạng mục chi cho khoản thu"); } else pass++;
+  // 6) Học chiều tiền khi người dùng sửa Thu/Chi (thông báo không có dấu)
+  const noSign = n("com.vnpay.bidv", "BIDV", "BIDV: TK 31410001234567 so tien 300,000VND luc 06/11/2026. SD: 9,500,000VND. ND: QUY LOP 12A");
+  const before = Mai.parse(noSign);
+  let b5 = Mai.newBrain();
+  Mai.learn(b5, { text: before.rawNote, key: before.memoryKey, type: before.type === "INCOME" ? "EXPENSE" : "INCOME", typeFix: before.type === "INCOME" ? "EXPENSE" : "INCOME", weight: 3 });
+  const after = Mai.parse(noSign, { brain: b5 });
+  if (after.type === before.type) { fail++; console.log("✗ brain: không học được chiều thu/chi", before.type, after.type); } else pass++;
+  // Dấu +/- của ngân hàng luôn thắng điều đã học
+  let b6 = Mai.newBrain();
+  Mai.learn(b6, { key: Mai.memoryKey(null, "QUY LOP 12A"), typeFix: "INCOME", weight: 3 });
+  check("brain: dấu - thắng điều đã học", Mai.parse(mb("QUY LOP 12A"), { brain: b6 }), { type: "EXPENSE" });
+  // 7) Bỏ qua 2 lần cùng loại tin -> tự bỏ qua
+  const promo = n("com.mbmobile", "MB", "TK 0123xxx456|GD: +1,000VND 06/11/26|SD: 1,141,000VND|ND: LAI TIET KIEM KHONG KY HAN");
+  const sig = Mai.parse(promo).signature;
+  const promo2 = Mai.parse(n("com.mbmobile", "MB", "TK 0123xxx456|GD: +1,200VND 07/11/26|SD: 1,142,200VND|ND: LAI TIET KIEM KHONG KY HAN")).signature;
+  let b7 = Mai.newBrain();
+  Mai.learnIgnore(b7, sig);
+  if (Mai.shouldIgnore(b7, promo2)) { fail++; console.log("✗ brain: bỏ qua quá sớm"); } else pass++;
+  Mai.learnIgnore(b7, sig);
+  if (!Mai.shouldIgnore(b7, promo2) || sig !== promo2) { fail++; console.log("✗ brain: không nhận ra cùng khuôn tin", sig, promo2); } else pass++;
+  const other = Mai.parse(n("com.mbmobile", "MB", "TK 0123xxx456|GD: +5,000,000VND 07/11/26|SD: 6,142,200VND|ND: CTY ABC TRA LUONG")).signature;
+  if (Mai.shouldIgnore(b7, other)) { fail++; console.log("✗ brain: bỏ qua lan sang tin khác cùng ngân hàng"); } else pass++;
+  // 9) Sửa 1 lần cho "grab đi làm" -> các giao dịch grab khác cũng theo (thắng luật có sẵn)
+  let b8 = Mai.newBrain();
+  Mai.learn(b8, { text: "grab đi làm", category: "Đi làm", type: "EXPENSE", weight: 3 });
+  check("brain: 1 lần sửa thắng luật", Mai.parseQuick("grab về nhà 30k", { brain: b8 }), { category: "Đi làm" });
+  // 10) Sau đó anh xác nhận nhiều lần là Grab & Taxi -> Mai quay lại
+  for (let i = 0; i < 4; i++) Mai.learn(b8, { text: "grab " + i, category: "Grab & Taxi", type: "EXPENSE", weight: 1 });
+  check("brain: xác nhận nhiều lần đảo lại", Mai.parseQuick("grab đi chơi 50k", { brain: b8 }), { category: "Grab & Taxi" });
+  // 8) Quên điều đã học
+  Mai.forget(br, r1.memoryKey);
+  if (Mai.learnedList(br).some(x => x.key === r1.memoryKey)) { fail++; console.log("✗ brain: quên không được"); } else pass++;
+}
+
 // ---- chống trùng: cùng giao dịch qua SMS và app
 const a = Mai.parse(n("com.VCB", "VCB", "Số dư TK VCB 0071000123456 -50,000 VND lúc 06-11-2026 10:15:32. Số dư 1,234,567 VND. Ref ABC"));
 const b = Mai.parse(n("com.google.android.apps.messaging", "Vietcombank", "SD TK 0071000123456 -50,000VND luc 06-11-2026 10:15:40. SD 1,234,567VND. Ref ABC"));

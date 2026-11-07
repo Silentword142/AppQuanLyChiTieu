@@ -907,17 +907,39 @@
       const [maiSettings, setMaiSettings] = useState(() => ({ autoSave: true, speak: false, syncBalance: true, ...safeJsonParse("vina_mai_settings", {}) }));
       const [maiInbox, setMaiInbox] = useState(() => safeJsonParse("vina_mai_inbox", []));
       const [maiMemory, setMaiMemory] = useState(() => safeJsonParse("vina_mai_memory", {}));
+      // Bộ não học hỏi của Mai (web/mai.js): học từ mọi lần anh sửa hạng mục / thu-chi / bỏ qua
+      const [maiBrain, setMaiBrain] = useState(() => { const b = safeJsonParse("vina_mai_brain", null); return b && b.keys ? b : (window.MaiAgent ? window.MaiAgent.newBrain() : null); });
       const [maiLog, setMaiLog] = useState(() => safeJsonParse("vina_mai_log", []));
       const [maiDraft, setMaiDraft] = useState(null);
       const [maiInput, setMaiInput] = useState("");
       const [maiAccess, setMaiAccess] = useState(() => { try { return !!(window.MaiBridge && window.MaiBridge.hasNotificationAccess()); } catch(e) { return false; } });
       const maiSeenRef = React.useRef(safeJsonParse("vina_mai_seen", []));
       const stateRef = React.useRef({});
-      stateRef.current = { accounts, categories, maiMemory, maiSettings, transactions };
+      stateRef.current = { accounts, categories, maiMemory, maiSettings, transactions, maiBrain };
 
       useEffect(() => { localStorage.setItem("vina_mai_settings", JSON.stringify(maiSettings)); }, [maiSettings]);
       useEffect(() => { localStorage.setItem("vina_mai_inbox", JSON.stringify(maiInbox.slice(0, 100))); }, [maiInbox]);
       useEffect(() => { localStorage.setItem("vina_mai_memory", JSON.stringify(maiMemory)); }, [maiMemory]);
+      useEffect(() => { try { if (maiBrain) localStorage.setItem("vina_mai_brain", JSON.stringify(maiBrain)); } catch(e) {} }, [maiBrain]);
+      // Dạy Mai: examples = [{ text, key, category, type, weight, typeFix }]; ignoreSig = khuôn tin bị bỏ qua
+      const maiTeach = (examples, ignoreSig) => {
+        if (!window.MaiAgent) return;
+        setMaiBrain(prev => {
+          const b = JSON.parse(JSON.stringify(prev && prev.keys ? prev : window.MaiAgent.newBrain()));
+          (examples || []).forEach(ex => { if (ex && (ex.category || ex.typeFix) && (ex.text || ex.key)) window.MaiAgent.learn(b, ex); });
+          if (ignoreSig) window.MaiAgent.learnIgnore(b, ignoreSig);
+          return b;
+        });
+      };
+      // Lần đầu: Mai tự học từ lịch sử giao dịch đã có + những gì đã nhớ ở bản cũ
+      useEffect(() => {
+        if (!window.MaiAgent || localStorage.getItem("vina_mai_brain_trained") === "1" || !transactions.length) return;
+        const ex = transactions.filter(t => t && t.note && t.category).slice(0, 3000)
+          .map(t => ({ text: t.note, key: t.maiKey || window.MaiAgent.memoryKey(null, t.note), category: t.category, type: t.type, weight: 1 }));
+        Object.entries(maiMemory || {}).forEach(([k, c]) => ex.push({ text: k, key: k, category: c, type: "EXPENSE", weight: 3 }));
+        maiTeach(ex);
+        localStorage.setItem("vina_mai_brain_trained", "1");
+      }, [transactions.length]);
       useEffect(() => { localStorage.setItem("vina_mai_log", JSON.stringify(maiLog.slice(0, 60))); }, [maiLog]);
 
       const maiSpeak = (text) => {
@@ -990,7 +1012,9 @@
           });
         });
         setTransactions(prev => [tx, ...prev]);
-        if (draft.memoryKey && draft.category && draft.categoryEdited) setMaiMemory(prev => ({ ...prev, [draft.memoryKey]: category }));
+        // Học: anh sửa (chấn chỉnh) -> nhớ mạnh; anh duyệt nguyên -> củng cố nhẹ. Mai tự ghi thì không tự học (tránh tự tin sai).
+        if (!opts.auto) maiTeach([{ text: [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: draft.note || draft.rawNote, category, type,
+          weight: (draft.categoryEdited || draft.typeEdited) ? 3 : 1, typeFix: draft.typeEdited ? type : null }]);
         setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
         if (!opts.silent) showToast(`Mai đã ghi ${type === "INCOME" ? "+" : "-"}${formatVND(amount)} · ${category}`);
         maiSpeak(`${type === "INCOME" ? "Nhận" : "Chi"} ${new Intl.NumberFormat('vi-VN').format(amount)} đồng, ${category}`);
@@ -1000,9 +1024,10 @@
       // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> phân tích -> chống trùng -> ghi / chờ duyệt
       const maiIngest = (raw, source = "notification") => {
         if (!window.MaiAgent) return { status: "error" };
-        const { maiMemory: memory, maiSettings: st } = stateRef.current;
-        const r = window.MaiAgent.parse(raw, { memory });
+        const { maiSettings: st, maiBrain: brain } = stateRef.current;
+        const r = window.MaiAgent.parse(raw, { brain });
         if (!r.ok) return { status: "ignored", reason: r.reason };
+        if (window.MaiAgent.shouldIgnore(brain, r.signature)) return { status: "ignored", reason: "learned_ignore", result: r };
         const recent = maiSeenRef.current;
         const now = Date.now();
         if (recent.some(x => window.MaiAgent.isDuplicate(x, r, 5 * 60000) && now - (x.seenAt || 0) < 30 * 60000)) return { status: "duplicate", result: r };
@@ -1044,9 +1069,9 @@
         const text = maiInput.trim();
         if (!text || !window.MaiAgent) return;
         const looksLikeBank = /(vnd|vnđ|₫|số dư|so du|\bsd\b|\btk\b|tài khoản|giao dịch|\bgd\b|\bps\b|[+\-]\s?\d{1,3}([.,]\d{3})+)/i.test(text);
-        let r = looksLikeBank ? window.MaiAgent.parse(text, { memory: maiMemory }) : null;
+        let r = looksLikeBank ? window.MaiAgent.parse(text, { brain: maiBrain }) : null;
         if (!r || !r.ok) {
-          const q = window.MaiAgent.parseQuick(text, { memory: maiMemory, accounts });
+          const q = window.MaiAgent.parseQuick(text, { brain: maiBrain, accounts });
           if (q.ok) r = q;
         }
         if (!r || !r.ok) {
@@ -1062,7 +1087,21 @@
         const tx = maiCommit(item);
         if (tx) setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
       };
-      const maiDismissInbox = (item) => setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
+      const maiDismissInbox = (item) => {
+        setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
+        if (item.signature && window.MaiAgent) {
+          const n = ((maiBrain && maiBrain.ignore && maiBrain.ignore[item.signature]) || 0) + 1;
+          maiTeach(null, item.signature);
+          showToast(n >= 2 ? "Mai đã học: từ giờ tự bỏ qua loại tin này." : "Đã bỏ qua. Bỏ qua thêm 1 lần nữa, Mai sẽ tự bỏ qua loại tin này.", "info");
+        }
+      };
+      const maiForget = (key) => setMaiBrain(prev => window.MaiAgent.forget(JSON.parse(JSON.stringify(prev)), key));
+      const maiForgetAll = () => {
+        if (!confirm("Mai sẽ quên mọi điều đã học (hạng mục, thu/chi, tin bỏ qua). Anh chắc chứ?")) return;
+        setMaiBrain(window.MaiAgent.newBrain()); setMaiMemory({});
+      };
+      const maiLearned = React.useMemo(() => (window.MaiAgent && maiBrain ? window.MaiAgent.learnedList(maiBrain) : []), [maiBrain]);
+      const maiIgnoredCount = maiBrain && maiBrain.ignore ? Object.values(maiBrain.ignore).filter(v => v >= 2).length : 0;
       const maiUndo = (logItem) => {
         const tx = transactions.find(t => t.id === logItem.id);
         if (!tx) { setMaiLog(prev => prev.filter(x => x.id !== logItem.id)); return; }
@@ -2137,7 +2176,7 @@
           const result = await window.Tesseract.recognize(file, 'vie+eng', ocrOpts);
           const text = result.data.text;
           // Ưu tiên bộ đọc của Mai: hiểu được ảnh chụp thông báo/biên lai của hầu hết ngân hàng & ví
-          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, { memory: maiMemory }) : null;
+          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, { brain: maiBrain }) : null;
           if (maiR && maiR.ok) {
             setIsAddTxModalOpen(false);
             const m = maiMatchAccount(maiR, accounts);
@@ -2225,7 +2264,27 @@
         const newTx = [tx, ...transactions];
         const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? tx.amount : -tx.amount) } : a);
         updateData(newAcc, newTx, null, null);
+        if (tx.note && tx.category) maiTeach([{ text: tx.note, category: tx.category, type: tx.type, weight: 1 }]);
         setIsAddTxModalOpen(false);
+        setAddTxHint(null);
+      };
+
+      // Gợi ý hạng mục khi gõ ghi chú (dựa trên thói quen Mai đã học)
+      const [addTxHint, setAddTxHint] = useState(null);
+      useEffect(() => { if (!isAddTxModalOpen) setAddTxHint(null); }, [isAddTxModalOpen]);
+      const suggestFromNote = (note) => {
+        if (!window.MaiAgent || !maiBrain || !note || note.trim().length < 2) { setAddTxHint(null); return; }
+        const type = document.querySelector('#addTxForm input[name="type"]:checked')?.value || "EXPENSE";
+        const p = window.MaiAgent.predictCategory(maiBrain, note, type, window.MaiAgent.memoryKey(null, note));
+        setAddTxHint(p && categories.some(c => c && c.name === p.category) ? p.category : null);
+      };
+      const applyAddTxHint = () => {
+        if (!addTxHint) return;
+        setTxParentFilter("Tất cả");
+        setTimeout(() => {
+          const el = Array.from(document.querySelectorAll('#addTxForm input[name="category"]')).find(i => i.value === addTxHint);
+          if (el) { el.click(); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+        }, 50);
       };
 
       const handleUpdateTx = (e) => {
@@ -2278,8 +2337,12 @@
 
         const newTx = transactions.map(t => t.id === editingTx.id ? updatedTx : t);
         // Mai học: người dùng sửa hạng mục của giao dịch Mai ghi -> lần sau gặp lại sẽ phân loại đúng
-        if (editingTx.source === "mai" && editingTx.maiKey && newCategory !== editingTx.category) {
-          setMaiMemory(prev => ({ ...prev, [editingTx.maiKey]: newCategory }));
+        // Mai học khi anh chấn chỉnh: đổi hạng mục (mọi giao dịch có ghi chú) hoặc đổi Thu/Chi của giao dịch Mai ghi
+        const catChanged = newCategory !== editingTx.category, typeChanged = newType !== editingTx.type;
+        if (window.MaiAgent && (catChanged || (typeChanged && editingTx.source === "mai")) && (newNote || editingTx.maiKey)) {
+          maiTeach([{ text: newNote || editingTx.maiKey, key: editingTx.maiKey || window.MaiAgent.memoryKey(null, newNote), category: catChanged ? newCategory : null,
+            type: newType, weight: 3, typeFix: typeChanged && editingTx.source === "mai" ? newType : null }]);
+          if (catChanged) showToast(`Mai đã ghi nhớ: "${(newNote || editingTx.maiKey || "").slice(0, 30)}" → ${newCategory}`, "info");
         }
         updateData(newAcc, newTx, null, null);
         setEditingTx(null);
@@ -3331,7 +3394,7 @@
                   <div className="grid grid-cols-3 border-t-2 border-dashed border-theme-border text-center">
                     <div className="p-3"><p className="font-display font-black text-xl text-theme-textPrimary tabular">{monthStats.maiCount}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Đã ghi tháng này</p></div>
                     <div className="p-3 border-x-2 border-dashed border-theme-border"><p className="font-display font-black text-xl text-theme-primary tabular">{maiInbox.length}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Chờ anh duyệt</p></div>
-                    <div className="p-3"><p className="font-display font-black text-xl text-theme-textPrimary tabular">{Object.keys(maiMemory).length}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Thói quen đã học</p></div>
+                    <div className="p-3"><p className="font-display font-black text-xl text-theme-textPrimary tabular">{maiLearned.length}</p><p className="text-[11px] font-semibold text-theme-textSecondary">Thói quen đã học</p></div>
                   </div>
                 </section>
 
@@ -3441,6 +3504,34 @@
                       ))}
                     </div>
                   )}
+                </section>
+                {/* Điều Mai đã học */}
+                <section className="space-y-2">
+                  <div className="flex items-end justify-between px-1">
+                    <h3 className="font-display font-black text-xl text-theme-textPrimary">Mai đã học</h3>
+                    {(maiLearned.length > 0 || maiIgnoredCount > 0) && <button onClick={maiForgetAll} className="text-xs font-bold text-theme-textSecondary underline">Quên hết</button>}
+                  </div>
+                  <div className="bg-theme-surface border rounded-3xl p-4 space-y-3">
+                    <p className="text-xs text-theme-textSecondary">Mỗi lần anh <b>sửa hạng mục</b>, <b>đổi Thu/Chi</b> hay <b>bỏ qua</b> một tin, Mai ghi nhớ và lần sau tự làm đúng. Mai cũng học từ các giao dịch anh tự ghi có ghi chú.</p>
+                    {maiLearned.length === 0 && maiIgnoredCount === 0 ? (
+                      <p className="text-sm text-theme-textSecondary italic">Chưa có gì. Thử sửa hạng mục một giao dịch, Mai sẽ nhớ ngay.</p>
+                    ) : (
+                      <div className="divide-y divide-theme-border/70">
+                        {maiLearned.slice(0, 12).map(x => (
+                          <div key={x.key} className="py-2 flex items-center gap-3">
+                            {x.category ? <Icon name={getIconForCategoryName(x.category) || "tag"} className="w-7 h-7" /> : <Icon name="swap" className="w-7 h-7" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-theme-textPrimary truncate">“{x.label}”</p>
+                              <p className="text-[11px] text-theme-textSecondary truncate">→ {x.category || ""}{x.type ? `${x.category ? " · " : ""}luôn là ${x.type === "INCOME" ? "khoản thu" : "khoản chi"}` : ""}</p>
+                            </div>
+                            <button onClick={() => maiForget(x.key)} aria-label="Quên" className="w-8 h-8 rounded-full border-2 border-theme-border text-theme-textSecondary flex items-center justify-center"><Icon name="x" className="w-3.5 h-3.5" /></button>
+                          </div>
+                        ))}
+                        {maiLearned.length > 12 && <p className="pt-2 text-[11px] text-theme-textSecondary">…và {maiLearned.length - 12} thói quen khác</p>}
+                        {maiIgnoredCount > 0 && <p className="pt-2 text-[11px] text-theme-textSecondary">Mai đang tự bỏ qua {maiIgnoredCount} loại tin anh đã gạt đi nhiều lần.</p>}
+                      </div>
+                    )}
+                  </div>
                 </section>
               </div>
             )}
@@ -3655,6 +3746,7 @@
                   const f = e.target;
                   const draft = { ...maiDraft, type: f.type.value, amount: Number(f.amount.value) || 0, category: f.category.value, bankName: f.bankName.value, note: f.note.value };
                   draft.categoryEdited = draft.category !== maiDraft.category;
+                  draft.typeEdited = draft.type !== maiDraft.type;
                   draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || (maiDraft.bankName && draft.bankName !== maiDraft.bankName);
                   if (f.date && f.date.value) { const [y, m, d] = f.date.value.split("-").map(Number); const old = new Date(maiDraft.date || Date.now()); draft.date = new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString(); }
                   const tx = maiCommit(draft);
@@ -3810,7 +3902,12 @@
                     <div className="grid grid-cols-[1fr_auto] gap-3">
                       <div>
                         <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ghi chú</label>
-                        <input name="note" type="text" placeholder="Ví dụ: Ăn phở sáng..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                        <input name="note" type="text" onChange={e => suggestFromNote(e.target.value)} placeholder="Ví dụ: Ăn phở sáng..." className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all" />
+                        {addTxHint && (
+                          <button type="button" onClick={applyAddTxHint} className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-retro-ink bg-[#F6E3B0] text-[#3A2618] text-xs font-bold">
+                            <Icon name={getIconForCategoryName(addTxHint) || "tag"} className="w-5 h-5" /> Mai gợi ý: {addTxHint}
+                          </button>
+                        )}
                       </div>
                       <div>
                         <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Ngày</label>
@@ -4117,7 +4214,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.5 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 2.6 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

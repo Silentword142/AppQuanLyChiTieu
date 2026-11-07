@@ -245,6 +245,149 @@
     return { category: type === "INCOME" ? "Lương & Thu nhập" : "Khác", source: "default" };
   }
 
+
+  // ---------- Bộ não học hỏi của Mai ----------
+  // Học từ: người dùng sửa hạng mục / sửa thu-chi / bấm Bỏ qua, và từ lịch sử giao dịch đã ghi.
+  // Lưu dạng JSON nhỏ gọn trên máy: keys (đối tác/nội dung cụ thể), tok (từ khoá -> hạng mục), ignore (mẫu tin bỏ qua).
+  var STOP = {};
+  ("chuyen tien tk stk so du sd vnd vnđ dong giao dich gd thanh toan tai cho tu den qua ngan hang nhan cua ban la va " +
+   "ck nd noi dung ma luc ngay thang nam gio phi the tai khoan tien tai the vi so ref ft mbvcb ibft trace acsp bank " +
+   "toi den di vao ra mot cac nhung duoc da vua con co khong em anh chi ban minh ok nhe a").split(" ").forEach(function (w) { STOP[w] = 1; });
+
+  function tokenize(text) {
+    var words = fold(text || "").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(function (w) {
+      return w.length >= 2 && !STOP[w] && !/^\d+$/.test(w) && !/^[a-z]{0,3}\d{4,}/.test(w);
+    });
+    var out = {};
+    words.forEach(function (w, i) {
+      out[w] = 1;
+      if (i + 1 < words.length) out[w + " " + words[i + 1]] = 1;
+    });
+    return Object.keys(out);
+  }
+
+  function newBrain() { return { v: 1, keys: {}, tok: {}, cats: {}, ignore: {}, n: 0 }; }
+
+  function bump(map, k, w, decayOthers) {
+    if (decayOthers) Object.keys(map).forEach(function (o) { if (o !== k) map[o] = Math.round(map[o] * 50) / 100; });
+    map[k] = Math.round(((map[k] || 0) + w) * 100) / 100;
+  }
+
+  // ex = { text, key, category, type, weight, typeFix }
+  //  weight 1 = xác nhận / ghi tay, weight 3 = người dùng sửa (chấn chỉnh) -> ưu tiên mạnh, làm nhạt lựa chọn cũ
+  function learn(brain, ex) {
+    brain = brain || newBrain();
+    if (!ex) return brain;
+    var w = ex.weight || 1, fix = w >= 3, type = ex.type === "INCOME" ? "INCOME" : "EXPENSE";
+    var key = ex.key || memoryKeyFrom(null, ex.text);
+    if (ex.category) {
+      var cs = brain.cats[ex.category] || (brain.cats[ex.category] = { INCOME: 0, EXPENSE: 0 });
+      cs[type] = (cs[type] || 0) + w;
+      if (key) { var k = brain.keys[key] || (brain.keys[key] = { c: {}, t: {} }); bump(k.c, ex.category, w, fix); k.at = Date.now(); if (ex.label || ex.text) k.l = String(ex.label || ex.text).trim().slice(0, 40); }
+      tokenize(ex.text).forEach(function (t) { bump(brain.tok[t] || (brain.tok[t] = {}), ex.category, w, fix); });
+    }
+    if (ex.typeFix && key) {
+      var kk = brain.keys[key] || (brain.keys[key] = { c: {}, t: {} });
+      bump(kk.t, ex.typeFix === "INCOME" ? "INCOME" : "EXPENSE", w, true);
+    }
+    brain.n = (brain.n || 0) + 1;
+    // Giữ gọn: tối đa ~5000 từ khoá, bỏ những từ ít gặp nhất
+    var tk = Object.keys(brain.tok);
+    if (tk.length > 5000) {
+      tk.map(function (t) { var d = brain.tok[t], s = 0; for (var c in d) s += d[c]; return [t, s]; })
+        .sort(function (a, b) { return a[1] - b[1]; }).slice(0, tk.length - 4000)
+        .forEach(function (x) { delete brain.tok[x[0]]; });
+    }
+    return brain;
+  }
+
+  function topOf(map, ok) {
+    var best = null, bv = 0, total = 0;
+    for (var c in map) { if (ok && !ok(c)) continue; total += map[c]; if (map[c] > bv) { bv = map[c]; best = c; } }
+    return { name: best, value: bv, total: total };
+  }
+
+  // Hạng mục này có dùng được cho chiều tiền này không (không gợi ý hạng mục chi cho khoản thu)
+  function typeOk(brain, type) {
+    return function (c) {
+      var s = brain.cats && brain.cats[c];
+      if (!s || !type) return true;
+      var other = type === "INCOME" ? "EXPENSE" : "INCOME";
+      return (s[type] || 0) > 0 || !(s[other] > 0);
+    };
+  }
+
+  // -> { category, source: "learned-key" | "learned", strong } hoặc null
+  function predictCategory(brain, text, type, key) {
+    if (!brain || !brain.keys) return null;
+    var ok = typeOk(brain, type);
+    if (key && brain.keys[key]) {
+      var t = topOf(brain.keys[key].c, ok);
+      if (t.name && t.value >= 1 && t.value / t.total >= 0.6) return { category: t.name, source: "learned-key", strong: true };
+    }
+    var scores = {}, toks = tokenize(text);
+    toks.forEach(function (tk) {
+      var d = brain.tok[tk]; if (!d) return;
+      var tot = 0, c; for (c in d) tot += d[c];
+      if (tot <= 0) return;
+      var conf = Math.min(1.5, tot / 2) * (tk.indexOf(" ") > 0 ? 1.5 : 1); // 1 lần anh sửa (trọng số 3) đủ mạnh để thắng luật
+      for (c in d) if (ok(c)) scores[c] = (scores[c] || 0) + (d[c] / tot) * conf;
+    });
+    var arr = Object.keys(scores).map(function (c) { return [c, scores[c]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    if (!arr.length || arr[0][1] < 0.6) return null;
+    var second = arr[1] ? arr[1][1] : 0;
+    if (arr[0][1] < second * 1.4) return null;
+    return { category: arr[0][0], source: "learned", strong: arr[0][1] >= 1.2 && arr[0][1] >= second * 2 };
+  }
+
+  function learnedType(brain, key) {
+    if (!brain || !key || !brain.keys || !brain.keys[key]) return null;
+    var t = brain.keys[key].t || {}, i = t.INCOME || 0, e = t.EXPENSE || 0;
+    if (i >= 1 && i > e) return "INCOME";
+    if (e >= 1 && e > i) return "EXPENSE";
+    return null;
+  }
+
+  // "Khuôn" của một thông báo (bỏ số, giữ chữ) -> nhận ra loại tin người dùng hay bấm Bỏ qua
+  function signature(text, pkg) {
+    var f = fold(text || "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim().split(" ").filter(function (w) { return w.length > 1; }).slice(0, 8).join(" ");
+    return (pkg || "") + "|" + f;
+  }
+  function learnIgnore(brain, sig) {
+    brain = brain || newBrain();
+    if (sig) brain.ignore[sig] = (brain.ignore[sig] || 0) + 1;
+    return brain;
+  }
+  function shouldIgnore(brain, sig) { return !!(brain && brain.ignore && sig && brain.ignore[sig] >= 2); }
+
+  // Danh sách điều Mai đã học (để hiển thị / cho người dùng xoá)
+  function learnedList(brain) {
+    if (!brain || !brain.keys) return [];
+    return Object.keys(brain.keys).map(function (k) {
+      var it = brain.keys[k], t = topOf(it.c || {});
+      return { key: k, label: it.l || k, category: t.name, weight: t.value, type: learnedType(brain, k), at: it.at || 0 };
+    }).filter(function (x) { return x.category || x.type; }).sort(function (a, b) { return b.at - a.at || b.weight - a.weight; });
+  }
+  function forget(brain, key) {
+    if (!brain || !brain.keys || !brain.keys[key]) return brain;
+    var cats = brain.keys[key].c || {};
+    tokenize(key).forEach(function (t) { var d = brain.tok[t]; if (d) for (var c in cats) delete d[c]; });
+    delete brain.keys[key];
+    return brain;
+  }
+
+  // Thứ tự: điều người dùng đã dạy (đúng đối tác) -> học mạnh từ từ khoá -> luật có sẵn -> học yếu -> mặc định
+  function categorize(ctx, type, opts, memKey) {
+    opts = opts || {};
+    if (opts.memory && memKey && opts.memory[memKey]) return { category: opts.memory[memKey], source: "memory" };
+    var p = opts.brain ? predictCategory(opts.brain, ctx, type, memKey) : null;
+    if (p && p.strong) return p;
+    var rule = suggestCategory(fold(ctx), type, null, null);
+    if (rule.source === "rule") return rule;
+    if (p) return p;
+    return rule;
+  }
+
   // ---------- Hướng tiền ----------
   var INCOME_WORDS = /\b(nhan duoc|vua nhan|da nhan|nhan tien|nhan chuyen khoan|ghi co|cong tien|tien vao|tien ve|duoc cong|da cong|hoan tien|hoan tra|credit|received|bien dong tang|tang\b|nap tien vao vi|chuyen den tai khoan cua ban|nhan \d)/;
   var EXPENSE_WORDS = /\b(thanh toan|da chuyen|chuyen tien den|chuyen tien toi|chuyen khoan den|tru tien|bi tru|ghi no|rut tien|da tra|da mua|debit|paid|chi tieu|bien dong giam|giam\b|nap tien dien thoai|nap dt|phi\b)/;
@@ -414,13 +557,16 @@
 
     var memKey = memoryKeyFrom(counterparty, rawNote);
     // Ưu tiên nội dung chuyển khoản / nơi giao dịch; chỉ khi không ra mới xét cả thông báo
-    var noteCtx = fold((rawNote || "") + " " + (counterparty || "") + " " + (merchant || ""));
-    var cat = suggestCategory(noteCtx, type, opts.memory, memKey);
-    if (cat.source === "default") cat = suggestCategory(fold((title || "") + " " + body), type, null, null);
+    var noteCtx = (rawNote || "") + " " + (counterparty || "") + " " + (merchant || "");
+    // Mai đã được dạy chiều tiền cho đối tác này (chỉ áp dụng khi thông báo không có dấu +/-)
+    var lt = dirSource !== "sign" ? learnedType(opts.brain, memKey) : null;
+    if (lt && lt !== type) { type = lt; dirSource = "learned"; }
+    var cat = categorize(noteCtx, type, opts, memKey);
+    if (cat.source === "default") cat = categorize((title || "") + " " + body, type, { brain: opts.brain }, null);
 
     // độ tin cậy
     var conf = 0.35;
-    if (dirSource === "sign") conf += 0.3; else if (dirSource === "prefix") conf += 0.22; else if (dirSource === "words") conf += 0.15;
+    if (dirSource === "sign") conf += 0.3; else if (dirSource === "prefix" || dirSource === "learned") conf += 0.22; else if (dirSource === "words") conf += 0.15;
     if (bank) conf += 0.12;
     if (balanceTok) conf += 0.12;
     if (accountTail) conf += 0.05;
@@ -449,6 +595,8 @@
       categorySource: cat.source,
       memoryKey: memKey,
       directionSource: dirSource,
+      // khuôn tin dựa vào nội dung giao dịch (không phải phần đầu chung của ngân hàng) + chiều tiền
+      signature: signature((rawNote || counterparty || merchant || text), (bank || pkg || "")) + "|" + type,
       confidence: Math.round(conf * 100) / 100
     });
   }
@@ -475,7 +623,9 @@
     var type = /\b(nhan|thu|luong|thuong|duoc cho|ban duoc|lai|hoan tien|tien ve|income)\b/.test(lower) && !/\b(tra|mua|chi|nop|dong)\b/.test(lower.replace(/\bthu nhap\b/, "")) ? "INCOME" : "EXPENSE";
     var note = (src.slice(0, pick.index) + " " + src.slice(pick.index + pick.len)).replace(/\s{2,}/g, " ").replace(/^[\s,.:\-]+|[\s,.:\-]+$/g, "");
     var memKey = memoryKeyFrom(null, note);
-    var cat = suggestCategory(fold(note), type, opts.memory, memKey);
+    var lt = learnedType(opts.brain, memKey);
+    if (lt) type = lt;
+    var cat = categorize(note, type, opts, memKey);
     var bank = null;
     (opts.accounts || []).forEach(function (a) { if (!bank && a && a.name && lower.indexOf(fold(a.name)) !== -1) bank = a.name; });
     return { ok: true, amount: pick.value, type: type, note: note, category: cat.category, categorySource: cat.source, memoryKey: memKey, bank: bank, date: new Date().toISOString(), confidence: 0.9, raw: src };
@@ -504,7 +654,17 @@
   }
 
   var MaiAgent = {
-    version: "1.0.0",
+    version: "1.1.0",
+    newBrain: newBrain,
+    learn: learn,
+    predictCategory: predictCategory,
+    learnedType: learnedType,
+    learnIgnore: learnIgnore,
+    shouldIgnore: shouldIgnore,
+    learnedList: learnedList,
+    forget: forget,
+    signature: signature,
+    tokenize: tokenize,
     parse: parse,
     parseQuick: parseQuick,
     parseMoney: parseMoney,

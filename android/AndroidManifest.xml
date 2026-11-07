@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vinaspends.mai"
     android:versionCode="1"
-    android:versionName="2.5.0">
+    android:versionName="2.6.0">
 
     <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="34" />
     <!-- Chỉ dùng cho đồng bộ Firebase / Google (tuỳ chọn). Mai không cần mạng. -->
