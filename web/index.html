@@ -1033,7 +1033,7 @@
       useEffect(() => {
         if (!window.MaiAgent || localStorage.getItem("vina_mai_brain_trained") === "1" || !transactions.length) return;
         const ex = transactions.filter(t => t && t.note && t.category).slice(0, 3000)
-          .map(t => ({ text: t.note, key: t.maiKey || window.MaiAgent.memoryKey(null, t.note), category: t.category, type: t.type, weight: 1 }));
+          .map(t => ({ text: t.maiText != null ? t.maiText : t.note, key: t.maiKey || window.MaiAgent.memoryKey(null, t.note), label: t.maiKey ? maiKeyLabel(t) : null, category: t.category, type: t.type, weight: 1 }));
         Object.entries(maiMemory || {}).forEach(([k, c]) => ex.push({ text: k, key: k, category: c, type: "EXPENSE", weight: 3 }));
         maiTeach(ex);
         localStorage.setItem("vina_mai_brain_trained", "1");
@@ -1098,6 +1098,7 @@
           updatedAt: Date.now(),
           source: "mai",
           maiKey: draft.memoryKey || null,
+          maiText: draft.learnText != null ? draft.learnText : null,
           maiConfidence: draft.confidence || null
         };
         const eff = type === "INCOME" ? amount : -amount;
@@ -1117,7 +1118,7 @@
         });
         setTransactions(prev => [tx, ...prev]);
         // Học: anh sửa (chấn chỉnh) -> nhớ mạnh; anh duyệt nguyên -> củng cố nhẹ. Mai tự ghi thì không tự học (tránh tự tin sai).
-        if (!opts.auto) maiTeach([{ text: [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: draft.note || draft.rawNote, category, type,
+        if (!opts.auto) maiTeach([{ text: draft.learnText != null && !draft.noteEdited ? draft.learnText : [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: maiKeyLabel(draft), category, type,
           weight: (draft.categoryEdited || draft.typeEdited) ? 3 : 1, typeFix: draft.typeEdited ? type : null }]);
         setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
         if (opts.auto && (!draft.categorySource || draft.categorySource === "default")) { aiTxQueueRef.current.push({ txId: tx.id, item: { ...draft, amount, type } }); setAiTxTick(x => x + 1); }
@@ -1127,6 +1128,20 @@
       };
 
       // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> phân tích -> chống trùng -> ghi / chờ duyệt
+      // Tên dễ hiểu cho điều Mai học (khoản không có nội dung thì nhớ theo ngân hàng + số tiền)
+      const maiKeyLabel = (d) => {
+        const k = d.memoryKey || d.maiKey || "";
+        if (k.indexOf("amt:") === 0) return `${d.bank || d.bankName || "Ngân hàng"} ${new Intl.NumberFormat("vi-VN").format(d.amount)}đ`;
+        return d.note || d.rawNote || k;
+      };
+      // Anh sửa 1 giao dịch đã ghi -> Mai nhớ mạnh để lần sau đúng ngay
+      const maiLearnFix = (tx, category, typeFix) => {
+        if (!window.MaiAgent) return;
+        const key = tx.maiKey || window.MaiAgent.memoryKey(null, tx.note);
+        if (!key) return;
+        maiTeach([{ text: tx.maiText != null ? tx.maiText : tx.note, key, label: maiKeyLabel(tx), category: category || null,
+          type: typeFix || tx.type, weight: 3, typeFix: typeFix || null }]);
+      };
       const maiIngest = (raw, source = "notification") => {
         if (!window.MaiAgent) return { status: "error" };
         const { maiSettings: st, maiBrain: brain } = stateRef.current;
@@ -1140,7 +1155,8 @@
         maiSeenRef.current = [{ amount: r.amount, type: r.type, bank: r.bank, balance: r.balance, date: r.date, seenAt: now }, ...recent].slice(0, 200);
         try { localStorage.setItem("vina_mai_seen", JSON.stringify(maiSeenRef.current)); } catch(e) {}
         const draft = { ...r, source, receivedAt: now, inboxId: `mi_${now}_${Math.random().toString(36).slice(2, 7)}` };
-        if (st.autoSave && r.confidence >= window.MaiAgent.AUTO_SAVE_THRESHOLD && source === "notification") {
+        // Chỉ tự ghi khi chắc cả số tiền, chiều tiền LẪN hạng mục; chưa chắc hạng mục thì hỏi anh (anh chọn 1 lần, Mai nhớ mãi)
+        if (st.autoSave && r.confidence >= window.MaiAgent.AUTO_SAVE_THRESHOLD && r.certain && source === "notification") {
           maiCommit(draft, { auto: true });
           return { status: "saved", result: r };
         }
@@ -1252,6 +1268,38 @@
             const cat = maiResolveCategory(A.matchCategory(it.category || "", names) || (it.type === "INCOME" ? "Lương & Thu nhập" : "Khác"), it.type, categories);
             setMaiDraft({ ok: true, amount, type: it.type, category: cat, note: it.note || "", date: new Date().toISOString(), confidence: 0.8, bankName: accounts[0]?.name, inboxId: null, source: "chat" });
             return `Em mở phiếu ${it.type === "INCOME" ? "khoản thu" : "khoản chi"} ${formatVND(amount)} · ${cat}, anh xem rồi bấm lưu nhé.`;
+          }
+          case "fix_tx": {
+            // Đang nằm trong hộp chờ duyệt -> ghi luôn với mục anh nói
+            const inb = maiInbox.find(x => Math.round(Number(x.amount)) === Math.round(it.amount));
+            if (inb) {
+              const type = it.type || inb.type;
+              const cat = maiResolveCategory(it.category || (type === "INCOME" ? "Lương & Thu nhập" : "Khác"), type, categories);
+              const tx = maiCommit({ ...inb, type, category: cat, categoryEdited: !!it.category, typeEdited: type !== inb.type });
+              if (tx) setMaiInbox(prev => prev.filter(x => x.inboxId !== inb.inboxId));
+              return `Dạ em đã ghi khoản ${formatVND(inb.amount)} đang chờ duyệt vào ${cat}${type !== inb.type ? ` (${type === "INCOME" ? "khoản thu" : "khoản chi"})` : ""}, và nhớ cho lần sau ạ.`;
+            }
+            const since = Date.now() - 45 * 86400000;
+            const tx = transactions.filter(t => Math.round(Number(t.amount)) === Math.round(it.amount) && new Date(t.date).getTime() >= since)
+              .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+            if (!tx) return `Em không thấy giao dịch ${formatVND(it.amount)} nào trong 45 ngày qua ạ.`;
+            const when = new Date(tx.date).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+            if (it.type) {
+              if (tx.type === it.type) return `Khoản ${formatVND(tx.amount)} ngày ${when} đã là ${it.type === "INCOME" ? "khoản thu" : "khoản chi"} rồi ạ.`;
+              const cat = maiResolveCategory(it.type === "INCOME" ? "Lương & Thu nhập" : "Khác", it.type, categories);
+              const d = (it.type === "INCOME" ? 2 : -2) * Number(tx.amount);
+              lastLocalEditTime.current = Date.now();
+              setAccounts(prev => prev.map(a => a.name === tx.bankName ? { ...a, balance: (Number(a.balance) || 0) + d } : a));
+              setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, type: it.type, category: cat, updatedAt: Date.now() } : t));
+              maiLearnFix(tx, null, it.type);
+              return `Dạ em đã đổi khoản ${formatVND(tx.amount)} ngày ${when} thành ${it.type === "INCOME" ? "khoản thu" : "khoản chi"}, và nhớ cho lần sau ạ.`;
+            }
+            const cat = maiResolveCategory(it.category, tx.type, categories);
+            lastLocalEditTime.current = Date.now();
+            setTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, category: cat, updatedAt: Date.now() } : t));
+            setMaiLog(prev => prev.map(l => l.id === tx.id ? { ...l, category: cat } : l));
+            maiLearnFix(tx, cat, null);
+            return `Dạ em đã chuyển khoản ${formatVND(tx.amount)} ngày ${when}${tx.note ? ` (${String(tx.note).slice(0, 30)})` : ""} sang ${cat}. Lần sau gặp khoản như vậy em xếp đúng luôn ạ.`;
           }
           case "txn": return maiAnalyzeText(text).text;
           default: return "Em chưa hiểu câu này ạ. Anh gõ \"hướng dẫn\" để xem em hiểu những câu nào nhé.";
@@ -1378,7 +1426,7 @@ ${maiAiContext()}`;
       };
 
       // Câu nào bộ luật làm chắc chắn được thì làm ngay; còn lại để bộ não AI (nếu đã bật) trả lời tự nhiên
-      const RULE_SURE = ["teach", "teach_type", "block", "unblock", "forget", "list", "greet", "thanks"];
+      const RULE_SURE = ["teach", "teach_type", "block", "unblock", "forget", "list", "greet", "thanks", "fix_tx"];
       const handleMaiSend = async (preset) => {
         const text = String(preset != null ? preset : maiInput).trim();
         if (!text || !window.MaiAgent || maiBusy) return;
@@ -1464,6 +1512,25 @@ ${maiAiContext()}`;
         }).catch(() => {}).finally(() => setAiTxTick(x => x + 1));
       }, [aiLoaded, aiTxTick, maiBusy]);
 
+      // Hạng mục hay dùng nhất của anh (theo chiều tiền) để chọn nhanh trong hộp chờ duyệt
+      const maiQuickCats = (type, current) => {
+        const ok = categories.filter(c => c && c.name && maiCatType(c.name) === (type === "INCOME" ? "INCOME" : "EXPENSE") && !categories.some(x => x && x.parent === c.name)).map(c => c.name);
+        const freq = {};
+        transactions.slice(0, 400).forEach(t => { if (ok.includes(t.category)) freq[t.category] = (freq[t.category] || 0) + 1; });
+        // mục anh hay dùng trước; còn lại lấy xen kẽ mỗi nhóm lớn một mục cho đa dạng
+        const used = ok.filter(c => freq[c] && c !== "Khác").sort((a, b) => freq[b] - freq[a]);
+        const groups = {};
+        ok.filter(c => !freq[c] && c !== "Khác").forEach(c => { const g = categoryParentMap[c] || categories.find(x => x.name === c)?.parent || c; (groups[g] = groups[g] || []).push(c); });
+        const rr = []; const gl = Object.values(groups);
+        for (let i = 0; rr.length < 12 && gl.some(g => g[i]); i++) gl.forEach(g => { if (g[i]) rr.push(g[i]); });
+        const top = used.concat(rr).slice(0, 7);
+        if (current && ok.includes(current) && current !== "Khác" && !top.includes(current)) top.unshift(current);
+        return top.slice(0, 8);
+      };
+      const maiPickInbox = (item, category) => {
+        const tx = maiCommit({ ...item, category, categoryEdited: category !== item.category || !item.certain });
+        if (tx) setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
+      };
       const maiApproveInbox = (item) => {
         const tx = maiCommit(item);
         if (tx) setMaiInbox(prev => prev.filter(x => x.inboxId !== item.inboxId));
@@ -2833,9 +2900,10 @@ ${maiAiContext()}`;
         // Mai học khi anh chấn chỉnh: đổi hạng mục (mọi giao dịch có ghi chú) hoặc đổi Thu/Chi của giao dịch Mai ghi
         const catChanged = newCategory !== editingTx.category, typeChanged = newType !== editingTx.type;
         if (window.MaiAgent && (catChanged || (typeChanged && editingTx.source === "mai")) && (newNote || editingTx.maiKey)) {
-          maiTeach([{ text: newNote || editingTx.maiKey, key: editingTx.maiKey || window.MaiAgent.memoryKey(null, newNote), category: catChanged ? newCategory : null,
-            type: newType, weight: 3, typeFix: typeChanged && editingTx.source === "mai" ? newType : null }]);
-          if (catChanged) showToast(`Mai đã ghi nhớ: "${(newNote || editingTx.maiKey || "").slice(0, 30)}" → ${newCategory}`, "info");
+          const noteChanged = newNote !== editingTx.note;
+          const base = noteChanged ? { ...editingTx, note: newNote, maiText: null, maiKey: editingTx.maiKey && editingTx.maiKey.indexOf("amt:") === 0 ? null : editingTx.maiKey } : editingTx;
+          maiLearnFix({ ...base, type: newType, amount: newAmount }, catChanged ? newCategory : null, typeChanged && editingTx.source === "mai" ? newType : null);
+          if (catChanged) showToast(`Mai đã ghi nhớ: "${maiKeyLabel({ ...base, amount: newAmount }).slice(0, 30)}" → ${newCategory}`, "info");
         }
         updateData(newAcc, newTx, null, null);
         setEditingTx(null);
@@ -4098,10 +4166,30 @@ ${maiAiContext()}`;
                             <p className={`font-display font-black text-2xl tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
                             <p className="text-xs text-theme-textSecondary mt-0.5 truncate">{item.bank || "Không rõ nguồn"} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                           </div>
-                          <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">Chắc {Math.round((item.confidence || 0) * 100)}%</span>
+                          <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">{item.certain || item.categorySource === "ai" ? `Chắc ${Math.round((item.confidence || 0) * 100)}%` : "Chưa rõ mục"}</span>
                         </div>
-                        <p className="text-sm font-bold text-theme-textPrimary mt-2 flex items-center gap-1.5">{maiResolveCategory(item.category, item.type, categories)}{item.categorySource === "ai" && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-retro-avocado/20 text-theme-textPrimary border border-retro-ink/40">AI gợi ý</span>}</p>
-                        <p className="text-xs text-theme-textSecondary mt-2 line-clamp-2 italic">“{item.raw}”</p>
+                        <p className="text-sm font-bold text-theme-textPrimary mt-2 truncate">{item.note}</p>
+                        <p className="text-xs text-theme-textSecondary mt-1 line-clamp-2 italic">“{item.raw}”</p>
+                        {(() => {
+                          const cur = maiResolveCategory(item.category, item.type, categories);
+                          const sure = item.certain || item.categorySource === "ai";
+                          const picks = maiQuickCats(item.type, cur);
+                          return (
+                            <div className="mt-3">
+                              <p className="text-xs font-bold text-theme-textSecondary mb-1.5">
+                                {sure ? <>Mai đoán: <span className="text-theme-textPrimary">{cur}</span>{item.categorySource === "ai" && " (AI gợi ý)"}. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : "Mai chưa chắc khoản này thuộc mục nào. Anh chọn giúp em, lần sau em tự nhận ra:"}
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {picks.map(c => (
+                                  <button key={c} type="button" onClick={() => maiPickInbox(item, c)}
+                                    className={`px-2.5 py-1.5 rounded-full border-2 text-xs font-bold ${sure && c === cur ? "border-retro-ink bg-[#F6E3B0] text-[#3A2618]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>{c}</button>
+                                ))}
+                                <button type="button" onClick={() => setMaiDraft({ ...item, category: cur, bankName: maiMatchAccount(item, accounts)?.name || null })}
+                                  className="px-2.5 py-1.5 rounded-full border-2 border-dashed border-theme-border text-xs font-bold text-theme-textSecondary">Mục khác…</button>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         <div className="flex gap-2 mt-3">
                           <button onClick={() => setMaiDraft({ ...item, category: maiResolveCategory(item.category, item.type, categories), bankName: maiMatchAccount(item, accounts)?.name || null })} className="flex-1 py-2.5 rounded-xl border-2 border-retro-ink text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
                           <button onClick={() => maiApproveInbox(item)} className="flex-1 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold">Ghi luôn</button>
@@ -4376,6 +4464,7 @@ ${maiAiContext()}`;
                   const f = e.target;
                   const draft = { ...maiDraft, type: f.type.value, amount: Number(f.amount.value) || 0, category: f.category.value, bankName: f.bankName.value, note: f.note.value };
                   draft.categoryEdited = draft.category !== maiDraft.category;
+                  draft.noteEdited = draft.note !== (maiDraft.note || "");
                   draft.typeEdited = draft.type !== maiDraft.type;
                   draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || (maiDraft.bankName && draft.bankName !== maiDraft.bankName);
                   if (f.date && f.date.value) { const [y, m, d] = f.date.value.split("-").map(Number); const old = new Date(maiDraft.date || Date.now()); draft.date = new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString(); }
@@ -4874,7 +4963,7 @@ ${maiAiContext()}`;
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 3.1 · Mai đọc thông báo hoàn toàn trên máy</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 3.2 · Mai đọc thông báo hoàn toàn trên máy</p>
                 </div>
               </div>
             </div>

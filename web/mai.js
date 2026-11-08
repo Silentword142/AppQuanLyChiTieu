@@ -252,7 +252,11 @@
   var STOP = {};
   ("chuyen tien tk stk so du sd vnd vnđ dong giao dich gd thanh toan tai cho tu den qua ngan hang nhan cua ban la va " +
    "ck nd noi dung ma luc ngay thang nam gio phi the tai khoan tien tai the vi so ref ft mbvcb ibft trace acsp bank " +
-   "toi den di vao ra mot cac nhung duoc da vua con co khong em anh chi ban minh ok nhe a").split(" ").forEach(function (w) { STOP[w] = 1; });
+   "toi den di vao ra mot cac nhung duoc da vua con co khong em anh chi ban minh ok nhe a " +
+   // tên ngân hàng / ví: có trong mọi thông báo nên không nói lên hạng mục
+   "techcombank tcb vietcombank vcb mbbank mb bidv vietinbank agribank acb tpbank vpbank sacombank hdbank vib shb ocb msb seabank " +
+   "lpbank lienviet eximbank namabank abbank bacabank pvcombank kienlongbank cake timo ubank momo zalopay viettelpay vnpay shopeepay " +
+   "tieu nhan thu visa mastercard napas debit credit vnd").split(" ").forEach(function (w) { STOP[w] = 1; });
 
   function tokenize(text) {
     var words = fold(text || "").replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(function (w) {
@@ -283,8 +287,8 @@
     if (ex.category) {
       var cs = brain.cats[ex.category] || (brain.cats[ex.category] = { INCOME: 0, EXPENSE: 0 });
       cs[type] = (cs[type] || 0) + w;
-      if (key) { var k = brain.keys[key] || (brain.keys[key] = { c: {}, t: {} }); bump(k.c, ex.category, w, fix); k.at = Date.now(); if (ex.label || ex.text) k.l = String(ex.label || ex.text).trim().slice(0, 40); }
-      tokenize(ex.text).forEach(function (t) { bump(brain.tok[t] || (brain.tok[t] = {}), ex.category, w, fix); });
+      if (key) { var k = brain.keys[key] || (brain.keys[key] = { c: {}, t: {} }); bump(k.c, ex.category, w, fix); k.at = Date.now(); if (ex.label || (ex.text && !k.l)) k.l = String(ex.label || ex.text).trim().slice(0, 40); }
+      if (!(key && key.indexOf("amt:") === 0)) tokenize(ex.text).forEach(function (t) { bump(brain.tok[t] || (brain.tok[t] = {}), ex.category, w, fix); });
     }
     if (ex.typeFix && key) {
       var kk = brain.keys[key] || (brain.keys[key] = { c: {}, t: {} });
@@ -323,7 +327,7 @@
     var ok = typeOk(brain, type);
     if (key && brain.keys[key]) {
       var t = topOf(brain.keys[key].c, ok);
-      if (t.name && t.value >= 1 && t.value / t.total >= 0.6) return { category: t.name, source: "learned-key", strong: true };
+      if (t.name && t.value >= 1 && t.value / t.total >= 0.6) return { category: t.name, source: "learned-key", strong: true, weight: t.value };
     }
     var scores = {}, toks = tokenize(text);
     toks.forEach(function (tk) {
@@ -641,22 +645,29 @@
     var rawNote = extractNote(text, lower);
     var counterparty = extractCounterparty(text, lower);
     var merchant = extractMerchant(text, lower);
-    var note = cleanNote(rawNote) || (counterparty ? ((type === "INCOME" ? "Từ " : "Cho ") + counterparty) : "") || (merchant ? "Tại " + merchant : "");
-    if (!note) {
-      var t1 = (title || "").trim();
-      note = t1 && t1.length < 60 ? t1 : "";
-    }
+    var bankNm = bank || "";
+    var note = cleanNote(rawNote) || (counterparty ? ((type === "INCOME" ? "Từ " : "Cho ") + counterparty) : "") || (merchant ? merchant : "");
+    // Không có nội dung / nơi giao dịch: ghi ngắn gọn, không chép nguyên thông báo
+    var generic = !note;
+    if (!note) note = (type === "INCOME" ? "Nhận tiền" : "Chi tiêu") + (bankNm ? " · " + bankNm : "");
     var when = parseDateTime(lower.replace(/\b(?:sd|so du|tk|stk)[^|\n]{0,40}/g, function (s) { return s.replace(/\d/g, "#"); }), postTime || opts.now || null);
     var accountTail = extractAccount(lower);
 
-    var memKey = memoryKeyFrom(counterparty, rawNote);
+    var memKey = memoryKeyFrom(counterparty, rawNote || merchant);
+    var keyKind = memKey ? "content" : null;
+    // Không có nội dung gì: nhớ theo "ngân hàng + số tiền" (gói cước, thuê bao... thường lặp đúng số tiền).
+    // Bỏ qua số tròn (50.000, 100.000...) vì quá nhiều khoản khác nhau trùng số đó.
     // Ưu tiên nội dung chuyển khoản / nơi giao dịch; chỉ khi không ra mới xét cả thông báo
     var noteCtx = (rawNote || "") + " " + (counterparty || "") + " " + (merchant || "");
     // Mai đã được dạy chiều tiền cho đối tác này (chỉ áp dụng khi thông báo không có dấu +/-)
     var lt = dirSource !== "sign" ? learnedType(opts.brain, memKey) : null;
     if (lt && lt !== type) { type = lt; dirSource = "learned"; }
+    if (!memKey && pick.value >= 20000 && pick.value % 50000 !== 0) { memKey = "amt:" + (fold(bankNm).replace(/[^a-z0-9]/g, "") || "?") + ":" + pick.value + ":" + (type === "INCOME" ? "I" : "E"); keyKind = "amount"; }
     var cat = categorize(noteCtx, type, opts, memKey);
     if (cat.source === "default") cat = categorize((title || "") + " " + body, type, { brain: opts.brain, community: opts.community }, null);
+    // Chắc chắn hạng mục? (luật rõ ràng, hoặc anh đã dạy). Không chắc thì Mai hỏi anh, không đoán bừa.
+    var certain = cat.category !== "Khác" && cat.category !== "Lương & Thu nhập" && dirSource !== "default" &&
+      (cat.source === "rule" || cat.source === "memory" || (cat.source === "learned-key" && (keyKind !== "amount" || (cat.weight || 0) >= 3)) || (cat.source === "learned" && cat.strong) || (cat.source === "community" && cat.strong));
 
     // độ tin cậy
     var conf = 0.35;
@@ -688,6 +699,10 @@
       category: cat.category,
       categorySource: cat.source,
       memoryKey: memKey,
+      keyKind: keyKind,
+      learnText: (noteCtx || "").trim(),
+      genericNote: generic,
+      certain: !!certain,
       directionSource: dirSource,
       // khuôn tin dựa vào nội dung giao dịch (không phải phần đầu chung của ngân hàng) + chiều tiền
       signature: signature((rawNote || counterparty || merchant || text), (bank || pkg || "")) + "|" + type,
@@ -810,6 +825,20 @@
     if (subj && target) {
       var s2 = cleanSubject(subj);
       var tg = squash(target);
+      // "khoản 149k hôm qua là Giải trí" -> sửa giao dịch đã ghi (và Mai nhớ luôn)
+      var amtM = s2.match(/(\d+(?:[.,]\d+)*)\s*(k|nghin|ngan|tr|trieu|cu|d|dong|vnd)?(\d{1,3})?\b/);
+      if (amtM) {
+        var unit = amtM[2] || "", v;
+        if (/^(k|nghin|ngan|tr|trieu|cu)$/.test(unit)) v = parseSpokenMoney(amtM[1].replace(/[.,](?=\d{3})/g, ""), unit, amtM[3]);
+        else v = parseMoney(amtM[1]);
+        if (!unit && v < 1000) v = v * 1000;
+        if (v > 0) {
+          if (TYPE_WORDS.INCOME.test(tg)) return { intent: "fix_tx", amount: v, type: "INCOME" };
+          if (TYPE_WORDS.EXPENSE.test(tg)) return { intent: "fix_tx", amount: v, type: "EXPENSE" };
+          var fc = matchCategory(target, categoryNames);
+          if (fc) return { intent: "fix_tx", amount: v, category: fc };
+        }
+      }
       if (s2) {
         if (TYPE_WORDS.INCOME.test(tg)) return { intent: "teach_type", key: s2, type: "INCOME" };
         if (TYPE_WORDS.EXPENSE.test(tg)) return { intent: "teach_type", key: s2, type: "EXPENSE" };
@@ -830,7 +859,7 @@
   }
 
   var MaiAgent = {
-    version: "1.2.1",
+    version: "1.3.0",
     newBrain: newBrain,
     learn: learn,
     predictCategory: predictCategory,

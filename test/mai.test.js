@@ -273,5 +273,23 @@ if (!Mai.parse(n("com.mservice.momowallet", "MoMo", "Thanh toán thành công 55
   });
 }
 
+{
+  // Khoản không có nội dung: hỏi anh; anh chọn 1 lần -> lần sau tự nhận (theo ngân hàng + số tiền)
+  const b = Mai.newBrain();
+  const tn = (t) => ({ packageName: "vn.com.techcombank.bb.app", title: "Techcombank", text: t });
+  let r = Mai.parse(tn("Chi tiêu: - VND 149,000 vào 06/11/2026 lúc 21:57"), { brain: b });
+  const ok1 = r.ok && !r.certain && r.note === "Chi tiêu · Techcombank" && /^amt:/.test(r.memoryKey);
+  Mai.learn(b, { text: r.learnText, key: r.memoryKey, category: "Giải trí", type: "EXPENSE", weight: 3 });
+  r = Mai.parse(tn("Chi tiêu: - VND 149,000 vào 06/12/2026 lúc 08:00"), { brain: b });
+  const ok2 = r.category === "Giải trí" && r.certain;
+  r = Mai.parse(tn("Chi tiêu: - VND 89,000 vào 06/12/2026 lúc 08:00"), { brain: b });
+  const ok3 = !r.certain && Object.keys(b.tok).length === 0;
+  const fx = Mai.chatIntent("khoản 149k hôm qua là Giải trí", ["Giải trí", "Khác"]);
+  const ok4 = fx.intent === "fix_tx" && fx.amount === 149000 && fx.category === "Giải trí";
+  [ok1, ok2, ok3, ok4].forEach((ok, i) => { if (ok) pass++; else { fail++; console.log("✗ học khoản không nội dung", i + 1); } });
+  const g = Mai.parse(n("com.VCB", "VCB", "Số dư TK VCB 0071000123456 -59,000 VND lúc 06-11-2026 08:15. Số dư 1,000,000 VND. ND: THANH TOAN GRAB"));
+  if (!g.certain) { fail++; console.log("✗ Grab phải chắc chắn"); } else pass++;
+}
+
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
