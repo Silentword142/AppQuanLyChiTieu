@@ -345,10 +345,6 @@ public class MainActivity extends Activity {
             Map<String, String> headers = new HashMap<String, String>();
             headers.put("Access-Control-Allow-Origin", "*");
             headers.put("Cache-Control", "no-cache");
-            // Cô lập nguồn gốc -> bật SharedArrayBuffer cho AI chạy đa luồng (llama.cpp WebAssembly)
-            headers.put("Cross-Origin-Opener-Policy", "same-origin");
-            headers.put("Cross-Origin-Embedder-Policy", "require-corp");
-            headers.put("Cross-Origin-Resource-Policy", "same-origin");
             try {
                 InputStream in = getAssets().open("www" + path);
                 String enc = type.startsWith("text/") || type.equals("application/javascript") ? "UTF-8" : null;

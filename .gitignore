@@ -21,3 +21,6 @@ dist/
 android/build/
 *.apk
 *.keystore
+
+# Gemini API key (chỉ nhúng vào APK lúc build, KHÔNG commit)
+.gemini.key

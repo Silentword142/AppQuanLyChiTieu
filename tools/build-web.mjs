@@ -36,13 +36,16 @@ for (const l of ["vie", "eng"]) {
 for (const f of fs.readdirSync(path.join(ROOT, "assets-src", "fonts"))) {
   fs.copyFileSync(path.join(ROOT, "assets-src", "fonts", f), path.join(OUT, "fonts", f));
 }
-// AI chạy trên máy (llama.cpp WebAssembly) cho Mai
-fs.mkdirSync(path.join(OUT, "lib", "wllama", "compat"), { recursive: true });
-copy("@wllama/wllama/esm/index.js", "lib/wllama/index.js");
-copy("@wllama/wllama/esm/wasm/wllama.wasm", "lib/wllama/wllama.wasm");
-copy("@wllama/wllama-compat/wasm/wllama.wasm", "lib/wllama/compat/wllama.wasm");
-copy("@wllama/wllama-compat/wasm/wllama.js", "lib/wllama/compat/wllama.js");
-for (const f of ["mai.js", "icons.js", "mai-llm.js"]) fs.copyFileSync(path.join(ROOT, "web", f), path.join(OUT, f));
+for (const f of ["mai.js", "icons.js", "gemini.js"]) fs.copyFileSync(path.join(ROOT, "web", f), path.join(OUT, f));
+// Gemini API key: chỉ nhúng vào bản đóng gói (APK), lấy từ biến môi trường GEMINI_API_KEY hoặc file .gemini.key
+// (file này đã nằm trong .gitignore – repo công khai nên tuyệt đối không commit key).
+{
+  let key = (process.env.GEMINI_API_KEY || "").trim();
+  const kf = path.join(ROOT, ".gemini.key");
+  if (!key && fs.existsSync(kf)) key = fs.readFileSync(kf, "utf8").trim();
+  fs.writeFileSync(path.join(OUT, "config.js"), `window.VINA_CONFIG = ${JSON.stringify({ geminiKey: key })};\n`);
+  console.log(key ? "Đã nhúng Gemini API key vào bản đóng gói" : "CHÚ Ý: chưa có Gemini API key (.gemini.key) – người dùng phải nhập trong app");
+}
 // Logo gốc ngân hàng / ví điện tử (offline)
 fs.mkdirSync(path.join(OUT, "logos"), { recursive: true });
 for (const f of fs.readdirSync(path.join(ROOT, "web", "logos"))) fs.copyFileSync(path.join(ROOT, "web", "logos", f), path.join(OUT, "logos", f));
