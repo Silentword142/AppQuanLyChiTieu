@@ -1198,9 +1198,9 @@
         const now = Date.now();
         const ready = gemQueue.filter(j => (j.nextAt || 0) <= now);
         if (!ready.length) return;
-        // Gom tin: chờ 45 giây sau tin đầu tiên để nhiều giao dịch đi chung 1 lần gọi (trừ tin anh dán tay)
+        // Gom tin: chờ 15 giây sau tin đầu tiên để nhiều giao dịch đi chung 1 lần gọi (trừ tin anh dán tay)
         const oldest = Math.min(...ready.map(j => j.at || 0));
-        if (!ready.some(j => j.source !== "notification") && now - oldest < 45000 && ready.length < 8) { const t = setTimeout(() => setGemTick(x => x + 1), 45000 - (now - oldest) + 200); return () => clearTimeout(t); }
+        if (!ready.some(j => j.source !== "notification") && now - oldest < 15000 && ready.length < 8) { const t = setTimeout(() => setGemTick(x => x + 1), 15000 - (now - oldest) + 200); return () => clearTimeout(t); }
         if (!window.VinaGemini.hasKey()) { setGemStatus(s => ({ ...s, error: "Chưa có Gemini API key. Nhập key ở mục Cài đặt Gemini bên dưới." })); return; }
         if (typeof navigator !== "undefined" && navigator.onLine === false) { setGemStatus(s => ({ ...s, error: "Đang mất mạng – thông báo được giữ lại, có mạng em gửi Gemini ngay." })); return; }
         const batch = ready.slice(0, 10);
@@ -1220,7 +1220,7 @@
           else if (inbox) showToast("Có 1 giao dịch chờ anh duyệt", "info");
         }).catch(err => {
           const msg = window.VinaGemini.explain(err);
-          const waits = [20000, 60000, 3 * 60000, 10 * 60000, 30 * 60000, 60 * 60000]; // 503 "hết chỗ" của 3.8 Flash thường qua nhanh
+          const waits = [20000, 60000, 3 * 60000, 10 * 60000, 30 * 60000, 60 * 60000]; // lỗi quá tải thường qua nhanh
           const ids = new Set(batch.map(j => j.id));
           const failed = [];
           setGemQueue(prev => prev.map(j => {
@@ -1228,7 +1228,7 @@
             const tries = (j.tries || 0) + 1;
             if (err.code !== "no_key" && err.code !== "bad_key" && tries > waits.length) { failed.push(j); return null; }
             // hết lượt trong ngày: chờ đúng thời gian Google báo, không tính là 1 lần thử hỏng
-            if (err.code === "quota" && err.retryMs) return { ...j, nextAt: Date.now() + err.retryMs + 5000 };
+            if ((err.code === "quota" || err.allModels) && err.retryMs && err.code !== "network" && err.code !== "server") return { ...j, nextAt: Date.now() + err.retryMs + 5000 };
             return { ...j, tries, nextAt: Date.now() + waits[Math.min(tries - 1, waits.length - 1)] };
           }).filter(Boolean));
           // Gemini lỗi mãi -> đưa vào hộp chờ duyệt để anh tự ghi (dùng số tiền bộ đọc nhanh đã thấy)
@@ -3592,7 +3592,7 @@
                     <span className="w-14 h-14 shrink-0 rounded-full bg-retro-mustard border-2 border-retro-ink flex items-center justify-center"><Icon name="sparkles" className="w-7 h-7 text-retro-ink" /></span>
                     <div className="flex-1">
                       <h2 className="font-display font-black text-2xl text-theme-textPrimary leading-tight">Ghi tự động</h2>
-                      <p className="text-sm text-theme-textSecondary mt-1 leading-relaxed">Thông báo biến động số dư của ngân hàng và ví điện tử được gửi cho <b>Gemini 3.8 Flash</b> phân tích (số tiền, thu/chi, hạng mục, tài khoản) rồi tự ghi vào sổ. Cần có mạng.</p>
+                      <p className="text-sm text-theme-textSecondary mt-1 leading-relaxed">Thông báo biến động số dư của ngân hàng và ví điện tử được gửi cho <b>Gemini Flash-Lite</b> (miễn phí) phân tích (số tiền, thu/chi, hạng mục, tài khoản) rồi tự ghi vào sổ. Cần có mạng.</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 border-t-2 border-dashed border-theme-border text-center">
@@ -3614,7 +3614,7 @@
                       <p className="text-sm font-bold text-theme-textPrimary">{gemQueue.length} thông báo đang chờ gửi Gemini{(() => { const n = Math.min(...gemQueue.map(j => j.nextAt || 0)); return n > Date.now() ? ` · thử lại sau ${Math.ceil((n - Date.now()) / 60000)} phút` : ""; })()}</p>
                     ) : null}
                     {gemStatus.error && <p className="text-xs font-semibold text-[var(--expense)] mt-1">{gemStatus.error}</p>}
-                    {gemStatus.busy && <p className="text-[11px] text-theme-textSecondary mt-1">Model 3.8 Flash đôi lúc mất 1–4 phút khi máy chủ Google đông. Anh cứ dùng app bình thường.</p>}
+                    {gemStatus.busy && <p className="text-[11px] text-theme-textSecondary mt-1">Thường chỉ vài giây. Model nào hết lượt miễn phí, app tự chuyển sang model khác.</p>}
                     {!gemStatus.busy && gemQueue.length > 0 && <button onClick={() => { setGemQueue(prev => prev.map(j => ({ ...j, nextAt: 0 }))); setGemTick(x => x + 1); }} className="mt-2 px-3 py-1.5 rounded-xl border-2 border-retro-ink text-xs font-bold text-theme-textPrimary bg-theme-background">Thử lại ngay</button>}
                   </section>
                 )}
@@ -3746,8 +3746,25 @@
                   <div className="flex items-center gap-2">
                     <Icon name="sparkles" className="w-4 h-4 text-theme-textSecondary" />
                     <h3 className="font-bold text-theme-textPrimary flex-1">Cài đặt Gemini</h3>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-retro-ink/40 text-theme-textSecondary">{window.VinaGemini ? window.VinaGemini.MODEL : ""} · medium</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-retro-ink/40 text-theme-textSecondary">Miễn phí</span>
                   </div>
+                  {window.VinaGemini && (
+                    <div className="rounded-2xl border-2 border-dashed border-theme-border p-3 space-y-1.5">
+                      <p className="text-xs font-bold text-theme-textSecondary">Model dùng lần lượt (hết lượt thì chuyển model sau):</p>
+                      {window.VinaGemini.MODELS.map((m, i) => {
+                        const until = (window.VinaGemini.blockedUntil() || {})[m.id];
+                        const off = until && until > Date.now();
+                        const used = window.VinaGemini.lastModel() === m.id;
+                        return (
+                          <div key={m.id} className="flex items-center gap-2 text-xs">
+                            <span className="w-5 h-5 rounded-full border border-retro-ink/50 flex items-center justify-center font-bold text-theme-textSecondary">{i + 1}</span>
+                            <span className="flex-1 font-semibold text-theme-textPrimary">{m.id}</span>
+                            <span className={`font-bold ${off ? "text-[var(--expense)]" : used ? "text-[var(--income)]" : "text-theme-textSecondary"}`}>{off ? `nghỉ ${until - Date.now() >= 3600000 ? Math.round((until - Date.now()) / 3600000) + " giờ" : Math.max(1, Math.round((until - Date.now()) / 60000)) + " phút"}` : used ? "đang dùng" : "sẵn sàng"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-theme-textSecondary mb-1.5">API key: {window.VinaGemini && window.VinaGemini.keySource() === "custom" ? "đang dùng key anh nhập" : window.VinaGemini && window.VinaGemini.keySource() === "built-in" ? "đang dùng key cài sẵn trong app" : "chưa có"}</p>
                     <div className="flex gap-2">
@@ -4477,7 +4494,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 4.0 · Ghi tự động bằng Gemini 3.8 Flash</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 4.1 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
                 </div>
               </div>
             </div>
