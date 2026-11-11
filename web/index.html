@@ -1170,9 +1170,9 @@
           examples: stateRef.current.gemExamples.slice(0, 40),
         };
       };
-      const gemApply = (job, g) => {
-        const { categories: cats, accounts: accs, maiSettings: st } = stateRef.current;
-        if (!g || g.is_transaction === false || !(Number(g.amount) > 0)) return "skip";
+      const gemDraft = (job, g) => {
+        const { categories: cats, accounts: accs } = stateRef.current;
+        if (!g || g.is_transaction === false || !(Number(g.amount) > 0)) return null;
         const type = g.type === "INCOME" ? "INCOME" : "EXPENSE";
         const named = cats.find(c => c && c.name === g.category);
         const category = maiResolveCategory(named ? g.category : (window.MaiAgent.matchCategory(String(g.category || ""), cats.map(c => c.name)) || null), type, cats);
@@ -1189,10 +1189,58 @@
           learnText: [job.title, job.text].filter(Boolean).join(" "), categorySource: "gemini", certain: conf >= 0.8 && category !== "Khác",
           source: job.source, receivedAt: job.at, inboxId: `mi_${job.id}`,
         };
+        return draft;
+      };
+      const gemApply = (job, g) => {
+        const st = stateRef.current.maiSettings;
+        const draft = gemDraft(job, g);
+        if (!draft) return "skip";
         if (st.autoSave && job.source === "notification" && draft.certain) { maiCommit(draft, { auto: true }); return "saved"; }
         setMaiInbox(prev => [draft, ...prev.filter(x => x.inboxId !== draft.inboxId)].slice(0, 100));
         return "inbox";
       };
+      // Ảnh chụp màn hình (biên lai, lịch sử giao dịch, hoá đơn) -> Gemini đọc ảnh -> phiếu xác nhận / hộp chờ duyệt
+      const [gemImgBusy, setGemImgBusy] = useState(false);
+      const gemImgInputRef = React.useRef(null);
+      const gemAnalyzeImages = async (files) => {
+        const list = Array.from(files || []).filter(f => f && /^image\//.test(f.type || "image/"));
+        if (!list.length) return 0;
+        if (!window.VinaGemini || !window.VinaGemini.hasKey()) throw Object.assign(new Error("no key"), { code: "no_key" });
+        setGemImgBusy(true);
+        try {
+          const drafts = []; let dup = 0;
+          for (let i = 0; i < list.length; i++) {
+            if (list.length > 1) showToast(`Gemini đang đọc ảnh ${i + 1}/${list.length}…`, "info");
+            const img = await window.VinaGemini.prepareImage(list[i]);
+            const res = await window.VinaGemini.analyzeImage(img, gemContext());
+            const now = Date.now();
+            res.forEach((g, k) => {
+              const d = gemDraft({ id: `img${now.toString(36)}_${i}_${k}`, title: "", text: "", source: "image", at: now, postTime: now, local: null }, g);
+              if (!d) return;
+              // số dư trong ảnh cũ có thể đã lỗi thời -> không dùng để chỉnh số dư ví
+              d.balance = null;
+              d.raw = `Ảnh chụp: ${list[i].name || "ảnh"}${g.note ? ` · ${g.note}` : ""}`;
+              d.learnText = [g.note, g.account].filter(Boolean).join(" ");
+              // đã ghi rồi? (cùng số tiền, cùng chiều, lệch dưới 10 phút)
+              const t0 = new Date(d.date).getTime();
+              if (stateRef.current.transactions.some(t => t.type === d.type && Math.round(t.amount) === d.amount && Math.abs(new Date(t.date).getTime() - t0) < 10 * 60000)) { dup++; return; }
+              drafts.push(d);
+            });
+          }
+          if (drafts.length === 1 && list.length === 1) {
+            setMaiDraft({ ...drafts[0], inboxId: null });
+            showToast("Gemini đã đọc xong ảnh, anh kiểm tra lại rồi lưu nhé", "info");
+          } else if (drafts.length) {
+            setMaiInbox(prev => [...drafts, ...prev].slice(0, 100));
+            setActiveTab("mai");
+            showToast(`Gemini thấy ${drafts.length} giao dịch${dup ? ` (bỏ ${dup} khoản đã ghi)` : ""} – xem ở “Chờ anh duyệt”`, "success");
+          } else {
+            showToast(dup ? `Các giao dịch trong ảnh đã được ghi rồi (${dup} khoản)` : "Gemini không thấy giao dịch nào trong ảnh", "info");
+          }
+          return drafts.length;
+        } finally { setGemImgBusy(false); }
+      };
+
       useEffect(() => {
         if (gemBusyRef.current || !window.VinaGemini) return;
         const now = Date.now();
@@ -2122,6 +2170,8 @@
       const totalExpense = transactions.filter(t => t.type === "EXPENSE").reduce((sum, t) => sum + t.amount, 0);
       const totalDebtLent = debts.filter(d => d.type === "CHO_VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
       const totalDebtBorrowed = debts.filter(d => d.type === "VAY" && !d.isPaid).reduce((sum, d) => sum + d.amount, 0);
+      // Tài sản ròng = tiền đang có + khoản cho vay (người khác còn nợ mình) − dư nợ thẻ tín dụng − khoản đi vay
+      const netWorth = totalOwned + totalDebtLent - totalDebtBorrowed; // totalOwned đã trừ dư nợ thẻ
 
       // Tháng này: thu, chi, so với ngân sách
       const monthStats = React.useMemo(() => {
@@ -2358,11 +2408,22 @@
         setIsOcrScanning(true);
         showToast("Đang phân tích ảnh giao dịch...", "info");
         try {
+          // Ưu tiên Gemini đọc ảnh (hiểu tiếng Việt, nhiều mẫu ngân hàng); lỗi / mất mạng thì đọc chữ trên máy như cũ
+          if (window.VinaGemini && window.VinaGemini.hasKey() && navigator.onLine !== false) {
+            try {
+              const n = await gemAnalyzeImages([file]);
+              if (n > 0) setIsAddTxModalOpen(false);
+              return;
+            } catch (gerr) {
+              console.warn("Gemini ảnh", gerr);
+              showToast(window.VinaGemini.explain(gerr) + " Đang đọc chữ trên máy…", "info");
+            }
+          }
           if (!window.Tesseract) throw new Error("Chưa tải xong thư viện OCR");
           const ocrOpts = window.VINA_OFFLINE_OCR ? { ...window.VINA_OFFLINE_OCR, logger: () => {} } : { logger: () => {} };
           const result = await window.Tesseract.recognize(file, 'vie+eng', ocrOpts);
           const text = result.data.text;
-          // Ưu tiên bộ đọc của Mai: hiểu được ảnh chụp thông báo/biên lai của hầu hết ngân hàng & ví
+          // Bộ đọc nhanh trên máy: hiểu được chữ của ảnh chụp thông báo/biên lai nhiều ngân hàng & ví
           const maiR = window.MaiAgent ? window.MaiAgent.parse(text, maiOpts()) : null;
           if (maiR && maiR.ok) {
             setIsAddTxModalOpen(false);
@@ -2814,8 +2875,13 @@
                     <div className="absolute -right-10 -bottom-24 w-56 h-56 rounded-full border-[14px] border-transparent" style={{ boxShadow: "0 0 0 14px #D9822B, 0 0 0 28px #8E3B1B" }} />
                     <div className="relative">
                       <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/85">Tài sản ròng</p>
-                      <h2 className="font-display font-black text-[38px] md:text-5xl leading-none mt-2 tabular">{formatVND(totalOwned - totalDebtBorrowed)}</h2>
-                      <p className="text-[12px] font-semibold text-white/85 mt-2">{accounts.length} ví · {formatVND(totalCash)} đang có{totalCardDebt > 0 ? ` · nợ thẻ ${formatVND(totalCardDebt)}` : ""}{totalDebtBorrowed > 0 ? ` · nợ vay ${formatVND(totalDebtBorrowed)}` : ""}</p>
+                      <h2 className="font-display font-black text-[38px] md:text-5xl leading-none mt-2 tabular">{formatVND(netWorth)}</h2>
+                      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px] font-semibold text-white/90 max-w-[300px]">
+                        <span>+ Tiền trong {accounts.filter(a => !isCreditAcc(a)).length} ví</span><span className="text-right tabular">{formatVND(totalCash)}</span>
+                        {totalDebtLent > 0 && <><span>+ Cho vay</span><span className="text-right tabular">{formatVND(totalDebtLent)}</span></>}
+                        {totalCardDebt > 0 && <><span>− Dư nợ thẻ tín dụng</span><span className="text-right tabular">{formatVND(totalCardDebt)}</span></>}
+                        {totalDebtBorrowed > 0 && <><span>− Đi vay</span><span className="text-right tabular">{formatVND(totalDebtBorrowed)}</span></>}
+                      </div>
                     </div>
                   </div>
                   {/* Thống kê tháng – nổi lên trên dải màu */}
@@ -3667,6 +3733,17 @@
                   ))}
                 </section>
 
+                {/* Ảnh chụp màn hình */}
+                <section className="bg-theme-surface border rounded-3xl p-4 space-y-2">
+                  <p className="text-sm font-bold text-theme-textPrimary">Phân tích ảnh chụp màn hình</p>
+                  <p className="text-xs text-theme-textSecondary">Chụp màn hình biên lai chuyển khoản, lịch sử giao dịch trong app ngân hàng, hoá đơn… Gemini đọc ảnh và lấy ra từng giao dịch. Chọn được nhiều ảnh một lúc.</p>
+                  <input ref={gemImgInputRef} type="file" accept="image/*" multiple className="hidden" onChange={async e => { const fs = e.target.files; try { await gemAnalyzeImages(fs); } catch (err) { showToast(window.VinaGemini ? window.VinaGemini.explain(err) : String(err.message || err), "error"); } finally { e.target.value = ""; } }} />
+                  <button disabled={gemImgBusy} onClick={() => gemImgInputRef.current && gemImgInputRef.current.click()}
+                    className="w-full py-3 rounded-2xl border-2 border-dashed border-retro-ink/70 bg-[#F6E3B0] text-[#3A2618] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
+                    {gemImgBusy ? <><Icon name="loader-2" className="w-5 h-5 animate-spin" /> Gemini đang đọc ảnh…</> : <><Icon name="image" className="w-5 h-5" /> Chọn ảnh chụp màn hình</>}
+                  </button>
+                </section>
+
                 {/* Dán thông báo (web / bản Lite) */}
                 <section className="bg-theme-surface border rounded-3xl p-4 space-y-2">
                   <p className="text-sm font-bold text-theme-textPrimary">Dán thông báo ngân hàng</p>
@@ -3798,7 +3875,7 @@
 
             {/* TAB: VÍ & TRỢ LÝ AI */}
             {activeTab === "wallet_ai" && (
-              <div className="max-w-3xl mx-auto space-y-6 flex flex-col h-full">
+              <div className="max-w-3xl mx-auto space-y-6">
                 
                 {/* Segmented Control */}
                 <div className="flex bg-theme-surface/50 border border-theme-border p-1 rounded-2xl shadow-sm">
@@ -4084,7 +4161,7 @@
                         className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#F6E3B0] text-[#3A2618] font-bold rounded-2xl border-2 border-dashed border-retro-ink/70 cursor-pointer disabled:opacity-50"
                       >
                         {isOcrScanning ? (
-                          <><Icon name="loader-2" className="w-5 h-5 animate-spin" /> Đang phân tích OCR...</>
+                          <><Icon name="loader-2" className="w-5 h-5 animate-spin" /> {gemImgBusy ? "Gemini đang đọc ảnh…" : "Đang đọc chữ trong ảnh…"}</>
                         ) : (
                           <><Icon name="scan-text" className="w-5 h-5" /> Quét ảnh chụp thông báo / hoá đơn</>
                         )}
@@ -4494,7 +4571,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 4.1 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">VinaSpends 4.2 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
                 </div>
               </div>
             </div>

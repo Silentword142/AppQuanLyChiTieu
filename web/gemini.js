@@ -60,16 +60,7 @@
   ].join("\n");
 
   function buildPrompt(items, ctx) {
-    var lines = [];
-    lines.push("HÔM NAY: " + (ctx.today || new Date().toISOString().slice(0, 10)));
-    lines.push("HẠNG MỤC CHI: " + (ctx.expenseCats || []).join(", "));
-    lines.push("HẠNG MỤC THU: " + (ctx.incomeCats || []).join(", "));
-    lines.push("TÀI KHOẢN CỦA NGƯỜI DÙNG: " + ((ctx.accounts || []).join("; ") || "chưa có"));
-    if (ctx.rules && ctx.rules.trim()) lines.push("ĐIỀU NGƯỜI DÙNG DẶN:\n" + ctx.rules.trim());
-    if (ctx.examples && ctx.examples.length) {
-      lines.push("CÁC LẦN NGƯỜI DÙNG ĐÃ SỬA (làm theo y hệt khi gặp lại):");
-      ctx.examples.forEach(function (e) { lines.push("- \"" + e.text + "\" → " + (e.ignore ? "KHÔNG phải giao dịch cần ghi, bỏ qua (is_transaction=false)" : e.category + (e.type === "INCOME" ? " (thu)" : " (chi)"))); });
-    }
+    var lines = contextLines(ctx);
     lines.push("");
     lines.push("THÔNG BÁO:");
     items.forEach(function (it) {
@@ -81,10 +72,35 @@
     return lines.join("\n");
   }
 
-  async function callModel(m, key, items, ctx) {
+  function contextLines(ctx) {
+    var lines = [];
+    lines.push("HÔM NAY: " + (ctx.today || new Date().toISOString().slice(0, 10)));
+    lines.push("HẠNG MỤC CHI: " + (ctx.expenseCats || []).join(", "));
+    lines.push("HẠNG MỤC THU: " + (ctx.incomeCats || []).join(", "));
+    lines.push("TÀI KHOẢN CỦA NGƯỜI DÙNG: " + ((ctx.accounts || []).join("; ") || "chưa có"));
+    if (ctx.rules && ctx.rules.trim()) lines.push("ĐIỀU NGƯỜI DÙNG DẶN:\n" + ctx.rules.trim());
+    if (ctx.examples && ctx.examples.length) {
+      lines.push("CÁC LẦN NGƯỜI DÙNG ĐÃ SỬA (làm theo y hệt khi gặp lại):");
+      ctx.examples.forEach(function (e) { lines.push("- \"" + e.text + "\" → " + (e.ignore ? "KHÔNG phải giao dịch cần ghi, bỏ qua (is_transaction=false)" : e.category + (e.type === "INCOME" ? " (thu)" : " (chi)"))); });
+    }
+    return lines;
+  }
+
+  // Ảnh chụp màn hình: biên lai chuyển khoản, lịch sử giao dịch, hoá đơn, thông báo...
+  function imagePrompt(ctx) {
+    var lines = contextLines(ctx);
+    lines.push("");
+    lines.push("ẢNH ĐÍNH KÈM là ảnh chụp màn hình điện thoại hoặc ảnh chụp hoá đơn/biên lai.");
+    lines.push("Liệt kê TỪNG giao dịch tiền nhìn thấy trong ảnh (ảnh lịch sử giao dịch có thể có nhiều dòng; biên lai/hoá đơn thường chỉ 1 giao dịch – lấy TỔNG TIỀN phải trả, không lấy từng món).");
+    lines.push("Đặt id lần lượt img1, img2, ... Đọc kỹ dấu +/-, chữ 'nhận', 'chuyển', 'thanh toán' để biết thu hay chi. Số dư, hạn mức, mã giao dịch KHÔNG phải số tiền giao dịch.");
+    lines.push("Nếu ảnh không có giao dịch nào thì trả về 1 phần tử id=img1, is_transaction=false và ghi lý do.");
+    return lines.join("\n");
+  }
+
+  async function callModel(m, key, userParts) {
     var body = {
       systemInstruction: { parts: [{ text: SYSTEM }] },
-      contents: [{ role: "user", parts: [{ text: buildPrompt(items, ctx || {}) }] }],
+      contents: [{ role: "user", parts: userParts }],
       generationConfig: {
         temperature: 0.2,
         thinkingConfig: m.thinking,
@@ -127,7 +143,35 @@
   }
 
   // items: [{ id, packageName, title, text, postTime }] -> [{ id, is_transaction, amount, type, ... }]
-  async function analyze(items, ctx) {
+  function analyze(items, ctx) { return run([{ text: buildPrompt(items, ctx || {}) }]); }
+
+  // image: { mimeType, data (base64) } -> [{ id: img1.., is_transaction, amount, ... }]
+  function analyzeImage(image, ctx) {
+    return run([{ inline_data: { mime_type: image.mimeType, data: image.data } }, { text: imagePrompt(ctx || {}) }]);
+  }
+
+  // Thu nhỏ ảnh (tối đa 1600px, JPEG) cho nhanh và đỡ tốn lượt
+  function prepareImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 1600, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+          var c = document.createElement("canvas");
+          c.width = Math.round(w * k); c.height = Math.round(h * k);
+          var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+          var d = c.toDataURL("image/jpeg", 0.85);
+          URL.revokeObjectURL(url);
+          resolve({ mimeType: "image/jpeg", data: d.slice(d.indexOf(",") + 1) });
+        } catch (e) { URL.revokeObjectURL(url); reject(e); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Không đọc được ảnh")); };
+      img.src = url;
+    });
+  }
+
+  async function run(userParts) {
     var key = getKey();
     if (!key) throw Object.assign(new Error("Chưa có Gemini API key"), { code: "no_key" });
     var b = blocked(), now = Date.now(), last = null, soonest = Infinity;
@@ -135,7 +179,7 @@
       var m = MODELS[i];
       if (b[m.id] && b[m.id] > now) { soonest = Math.min(soonest, b[m.id] - now); continue; }
       try {
-        var out = await callModel(m, key, items, ctx);
+        var out = await callModel(m, key, userParts);
         lastModel = m.id;
         try { localStorage.setItem("vina_gem_last_model", m.id); } catch (e) {}
         return out;
@@ -168,5 +212,5 @@
     return (e && e.message) || "Lỗi không rõ";
   }
 
-  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
+  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, analyzeImage: analyzeImage, prepareImage: prepareImage, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
 })();
