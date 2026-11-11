@@ -86,6 +86,23 @@
     return lines;
   }
 
+  // Câu nói: "Mai ơi, nãy anh chi hết 45k tiền mặt ăn trưa"
+  function speechPrompt(text, ctx) {
+    var lines = contextLines(ctx);
+    var now = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).slice(0, 16);
+    lines.push("BÂY GIỜ: " + now);
+    lines.push("");
+    lines.push("Người dùng vừa NÓI với trợ lý Mai (văn bản do máy nhận giọng nói chuyển ra, có thể sai chính tả, thiếu dấu):");
+    lines.push("\"" + String(text || "").slice(0, 500) + "\"");
+    lines.push("Đây là người dùng tự kể khoản thu/chi của MÌNH, nên mỗi khoản tiền được kể là một giao dịch (is_transaction=true). Đặt id lần lượt v1, v2, ...");
+    lines.push("Cách nói tiền: 45k/45 nghìn/45 ngàn = 45000; 2 trăm rưỡi = 250000; 1 củ/1 triệu/1 chai = 1000000; 1 triệu 2 / 1 tr 2 = 1200000; 50 = 50000 nếu nói về tiêu vặt.");
+    lines.push("Chi (tiêu, trả, mua, ăn, đổ xăng, chuyển cho, cho vay...) = EXPENSE; thu (nhận, được, lương, thưởng, bán...) = INCOME.");
+    lines.push("account: 'tiền mặt' → tài khoản tiền mặt; nhắc tên ngân hàng/ví/thẻ → tài khoản đó; không nói thì để trống.");
+    lines.push("date: tính từ BÂY GIỜ ('nãy', 'vừa xong' = bây giờ; 'sáng nay' = 08:00 hôm nay; 'trưa' = 12:00; 'tối qua' = 19:00 hôm qua; 'hôm qua' = cùng giờ hôm qua).");
+    lines.push("note: ngắn gọn, có dấu, ví dụ 'Ăn trưa'. Nếu câu nói không có khoản tiền nào thì trả 1 phần tử id=v1, is_transaction=false.");
+    return lines.join("\n");
+  }
+
   // Ảnh chụp màn hình: biên lai chuyển khoản, lịch sử giao dịch, hoá đơn, thông báo...
   function imagePrompt(ctx) {
     var lines = contextLines(ctx);
@@ -144,6 +161,8 @@
 
   // items: [{ id, packageName, title, text, postTime }] -> [{ id, is_transaction, amount, type, ... }]
   function analyze(items, ctx) { return run([{ text: buildPrompt(items, ctx || {}) }]); }
+
+  function analyzeSpeech(text, ctx) { return run([{ text: speechPrompt(text, ctx || {}) }]); }
 
   // image: { mimeType, data (base64) } -> [{ id: img1.., is_transaction, amount, ... }]
   function analyzeImage(image, ctx) {
@@ -212,5 +231,5 @@
     return (e && e.message) || "Lỗi không rõ";
   }
 
-  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, analyzeImage: analyzeImage, prepareImage: prepareImage, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
+  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, analyzeImage: analyzeImage, analyzeSpeech: analyzeSpeech, prepareImage: prepareImage, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
 })();

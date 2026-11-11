@@ -5,13 +5,15 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-SDK_JAR="${ANDROID_JAR:-/usr/lib/android-sdk/platforms/android-23/android.jar}"
+# Cần android.jar API 34 trở lên (thuộc tính foregroundServiceType cho dịch vụ nghe "Mai ơi").
+# Ví dụ: ANDROID_JAR=/đường/dẫn/android-34/android.jar ./build-apk.sh
+SDK_JAR="${ANDROID_JAR:-/usr/lib/android-sdk/platforms/android-34/android.jar}"
 OUT=build
 APK_NAME="${APK_NAME:-VinaSpends-Mai.apk}"
 KEYSTORE="${KEYSTORE:-vinaspends.keystore}"
 KS_PASS="${KS_PASS:-vinaspends}"
 
-[ -f "$SDK_JAR" ] || { echo "Thiếu $SDK_JAR (apt-get install android-sdk-platform-23)"; exit 1; }
+[ -f "$SDK_JAR" ] || { echo "Thiếu $SDK_JAR – cần android.jar API 34+ (Android SDK platform 34), đặt đường dẫn qua ANDROID_JAR"; exit 1; }
 [ -f ../dist/www/index.html ] || { echo "Chưa có dist/www – chạy: npm run build:web"; exit 1; }
 
 rm -rf "$OUT" && mkdir -p "$OUT"/{gen,classes,assets,dex}

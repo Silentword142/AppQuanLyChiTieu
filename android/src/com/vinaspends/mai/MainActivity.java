@@ -1,6 +1,13 @@
 package com.vinaspends.mai;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.pm.PackageManager;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import java.util.ArrayList;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -37,8 +44,13 @@ public class MainActivity extends Activity {
     static final String START_URL = "https://" + HOST + "/index.html";
     private static final int REQ_FILE = 41;
     private static final int REQ_SAVE = 42;
+    private static final int REQ_MIC = 43;
+    private SpeechRecognizer recognizer;
+    private boolean pendingVoiceStart;
 
     private static volatile MainActivity live;
+    private static volatile MainActivity current; // còn sống (kể cả khi khoá màn hình / chạy nền)
+    private static final int REQ_MIC_LOCK = 44;
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private String pendingSave;
@@ -76,6 +88,7 @@ public class MainActivity extends Activity {
                 String type = (types != null && types.length > 0 && types[0] != null && !types[0].isEmpty()) ? types[0] : "*/*";
                 if (type.startsWith(".")) type = "*/*";
                 i.setType(type);
+                if (p.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 try {
                     startActivityForResult(Intent.createChooser(i, "Chọn tệp"), REQ_FILE);
                 } catch (ActivityNotFoundException e) {
@@ -96,6 +109,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        current = this;
         handleShare(getIntent());
         web.loadUrl(START_URL);
     }
@@ -128,17 +142,109 @@ public class MainActivity extends Activity {
         super.onResume();
         live = this;
         callJs("window.onMaiResume && window.onMaiResume()");
+        // báo trang web: app vừa được mở lên (vd. "Hey Google, mở Mai") -> Mai có thể nghe luôn
+        callJs("window.onMaiAppOpen && window.onMaiAppOpen()");
     }
 
     @Override
     protected void onPause() {
         live = null;
+        stopVoice();
+        callJs("window.onMaiVoice && window.onMaiVoice({type:'paused'})");
         super.onPause();
+    }
+
+    // ---------- Nhận giọng nói (SpeechRecognizer của Android, tiếng Việt) ----------
+    private void voiceEvent(String type, String text, int code) {
+        try {
+            JSONObject o = new JSONObject();
+            o.put("type", type);
+            if (text != null) o.put("text", text);
+            if (code != 0) o.put("code", code);
+            callJs("window.onMaiVoice && window.onMaiVoice(" + o.toString() + ")");
+        } catch (Exception ignored) {
+        }
+    }
+
+    private boolean hasMic() {
+        return Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void startVoice() {
+        if (!hasMic()) {
+            pendingVoiceStart = true;
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC);
+            return;
+        }
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) { voiceEvent("error", "unavailable", -1); return; }
+        if (recognizer == null) {
+            recognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            recognizer.setRecognitionListener(new RecognitionListener() {
+                @Override public void onReadyForSpeech(Bundle b) { voiceEvent("ready", null, 0); }
+                @Override public void onBeginningOfSpeech() { voiceEvent("speech", null, 0); }
+                @Override public void onRmsChanged(float v) { }
+                @Override public void onBufferReceived(byte[] b) { }
+                @Override public void onEndOfSpeech() { voiceEvent("end", null, 0); }
+                @Override public void onError(int error) { MaiVoiceService.resume(); voiceEvent("error", null, error); }
+                @Override public void onResults(Bundle b) {
+                    MaiVoiceService.resume();
+                    ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    voiceEvent("final", r != null && !r.isEmpty() ? r.get(0) : "", 0);
+                }
+                @Override public void onPartialResults(Bundle b) {
+                    ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (r != null && !r.isEmpty()) voiceEvent("partial", r.get(0), 0);
+                }
+                @Override public void onEvent(int t, Bundle b) { }
+            });
+        }
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "vi-VN");
+        i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+        // im lặng 2,5 giây mới coi là nói xong (câu dài có ngập ngừng)
+        i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
+        i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L);
+        try {
+            MaiVoiceService.pause();
+            recognizer.cancel();
+            recognizer.startListening(i);
+            voiceEvent("start", null, 0);
+        } catch (Exception e) {
+            voiceEvent("error", e.getMessage(), -2);
+        }
+    }
+
+    private void stopVoice() {
+        if (recognizer != null) {
+            try { recognizer.cancel(); } catch (Exception ignored) { }
+            MaiVoiceService.resume();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == REQ_MIC_LOCK) {
+            boolean okLock = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
+            if (okLock) startLockVoice(); else voiceEvent("perm_denied", null, 0);
+            return;
+        }
+        if (requestCode != REQ_MIC) return;
+        boolean ok = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
+        voiceEvent(ok ? "perm_ok" : "perm_denied", null, 0);
+        if (ok && pendingVoiceStart) startVoice();
+        pendingVoiceStart = false;
     }
 
     @Override
     protected void onDestroy() {
+        if (current == this) current = null;
         if (tts != null) tts.shutdown();
+        if (recognizer != null) { try { recognizer.destroy(); } catch (Exception ignored) { } }
         super.onDestroy();
     }
 
@@ -157,6 +263,31 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+    }
+
+    /** Dịch vụ nghe "Mai ơi" vừa nhận một câu -> nếu app còn sống thì xử lý ngay. */
+    static boolean deliverVoice() {
+        final MainActivity a = current;
+        if (a == null) return false;
+        a.callJs("window.onMaiResume && window.onMaiResume()");
+        return true;
+    }
+
+    static void voiceServiceChanged() {
+        final MainActivity a = current;
+        if (a != null) a.callJs("window.onMaiVoiceService && window.onMaiVoiceService(" + MaiVoiceService.isRunning() + ")");
+    }
+
+    private void startLockVoice() {
+        if (!hasMic()) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC_LOCK);
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission("android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_MIC_LOCK + 1);
+        }
+        try { MaiVoiceService.start(this); } catch (Exception e) { voiceEvent("lock_error", e.getMessage(), 0); }
+        ui.postDelayed(new Runnable() { @Override public void run() { voiceServiceChanged(); } }, 800);
     }
 
     /** Gọi từ dịch vụ nghe thông báo khi có giao dịch mới mà app đang mở. */
@@ -179,7 +310,13 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_FILE && fileCallback != null) {
             Uri[] res = null;
-            if (resultCode == RESULT_OK && data != null && data.getData() != null) res = new Uri[]{data.getData()};
+            if (resultCode == RESULT_OK && data != null) {
+                ClipData clip = data.getClipData();
+                if (clip != null && clip.getItemCount() > 0) {
+                    res = new Uri[clip.getItemCount()];
+                    for (int k = 0; k < clip.getItemCount(); k++) res[k] = clip.getItemAt(k).getUri();
+                } else if (data.getData() != null) res = new Uri[]{data.getData()};
+            }
             fileCallback.onReceiveValue(res);
             fileCallback = null;
         } else if (requestCode == REQ_SAVE) {
@@ -261,6 +398,13 @@ public class MainActivity extends Activity {
             });
         }
         @JavascriptInterface public int sdk() { return Build.VERSION.SDK_INT; }
+        @JavascriptInterface public boolean canVoice() { return SpeechRecognizer.isRecognitionAvailable(MainActivity.this); }
+        @JavascriptInterface public boolean hasMicPermission() { return hasMic(); }
+        @JavascriptInterface public void startVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.startVoice(); } }); }
+        @JavascriptInterface public boolean isLockVoice() { return MaiVoiceService.isRunning(); }
+        @JavascriptInterface public void startLockVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.startLockVoice(); } }); }
+        @JavascriptInterface public void stopLockVoice() { ui.post(new Runnable() { @Override public void run() { MaiVoiceService.stop(MainActivity.this); ui.postDelayed(new Runnable() { @Override public void run() { voiceServiceChanged(); } }, 500); } }); }
+        @JavascriptInterface public void stopVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.stopVoice(); } }); }
 
         @JavascriptInterface public void speak(String text) {
             if (ttsReady && text != null) tts.speak(text, TextToSpeech.QUEUE_ADD, null, "mai" + System.nanoTime());
