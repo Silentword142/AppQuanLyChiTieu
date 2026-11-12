@@ -87,13 +87,18 @@
   }
 
   // Câu nói: "Mai ơi, nãy anh chi hết 45k tiền mặt ăn trưa"
-  function speechPrompt(text, ctx) {
+  function speechPrompt(text, ctx, alts) {
     var lines = contextLines(ctx);
     var now = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).slice(0, 16);
     lines.push("BÂY GIỜ: " + now);
     lines.push("");
     lines.push("Người dùng vừa NÓI với trợ lý Mai (văn bản do máy nhận giọng nói chuyển ra, có thể sai chính tả, thiếu dấu):");
     lines.push("\"" + String(text || "").slice(0, 500) + "\"");
+    if (alts && alts.length) {
+      lines.push("Máy còn nghe ra các cách khác của CÙNG câu đó (dùng để đoán chữ/số bị nghe sai, KHÔNG phải câu khác):");
+      alts.slice(0, 3).forEach(function (a) { lines.push("- \"" + String(a).slice(0, 300) + "\""); });
+    }
+    lines.push("Bỏ qua tiếng gọi 'Mai ơi' và các từ đệm (ờ, à, nhé, giúp anh...).");
     lines.push("Đây là người dùng tự kể khoản thu/chi của MÌNH, nên mỗi khoản tiền được kể là một giao dịch (is_transaction=true). Đặt id lần lượt v1, v2, ...");
     lines.push("Cách nói tiền: 45k/45 nghìn/45 ngàn = 45000; 2 trăm rưỡi = 250000; 1 củ/1 triệu/1 chai = 1000000; 1 triệu 2 / 1 tr 2 = 1200000; 50 = 50000 nếu nói về tiêu vặt.");
     lines.push("Chi (tiêu, trả, mua, ăn, đổ xăng, chuyển cho, cho vay...) = EXPENSE; thu (nhận, được, lương, thưởng, bán...) = INCOME.");
@@ -162,7 +167,7 @@
   // items: [{ id, packageName, title, text, postTime }] -> [{ id, is_transaction, amount, type, ... }]
   function analyze(items, ctx) { return run([{ text: buildPrompt(items, ctx || {}) }]); }
 
-  function analyzeSpeech(text, ctx) { return run([{ text: speechPrompt(text, ctx || {}) }]); }
+  function analyzeSpeech(text, ctx, alts) { return run([{ text: speechPrompt(text, ctx || {}, alts) }]); }
 
   // image: { mimeType, data (base64) } -> [{ id: img1.., is_transaction, amount, ... }]
   function analyzeImage(image, ctx) {

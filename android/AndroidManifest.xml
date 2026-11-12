@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vinaspends.mai"
     android:versionCode="1"
-    android:versionName="4.4.0">
+    android:versionName="4.5.0">
 
     <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="34" />
     <!-- Firebase, Gemini (phân tích giao dịch) -->
@@ -14,6 +14,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Gọi "Mai ơi" lúc khoá máy: bật sáng màn hình + hiện "Mai đang nghe" trên màn hình khoá, rung nhẹ báo đã nghe -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Xin chạy nền không giới hạn pin để Android không tắt Mai khi khoá máy -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Android 11+: được thấy dịch vụ nhận giọng nói của Google -->
     <queries>
         <intent>

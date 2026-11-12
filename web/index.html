@@ -1208,7 +1208,9 @@
         return "inbox";
       };
       // ===== GIỌNG NÓI: "Mai ơi, nãy anh chi hết 45k tiền mặt ăn trưa" -> Gemini hiểu câu -> tự ghi =====
-      const [voice, setVoice] = useState({ state: "idle", mode: null, text: "", result: null, error: null });
+      const lockWakeNow = () => { try { return !!(window.MaiBridge && window.MaiBridge.isLockWake && window.MaiBridge.isLockWake()); } catch (e) { return false; } };
+      // lock: đang trong lượt gọi "Mai ơi" từ dịch vụ nền -> hiện giao diện toàn màn hình (kể cả trên màn hình khoá)
+      const [voice, setVoice] = useState(() => lockWakeNow() ? { state: "thinking", mode: null, text: "", result: null, error: null, lock: true } : { state: "idle", mode: null, text: "", result: null, error: null, lock: false });
       const voiceRef = React.useRef({ mode: null, webRec: null, restartT: null, lastOpen: 0 });
       const voiceNative = () => { try { return !!(window.MaiBridge && window.MaiBridge.canVoice && window.MaiBridge.canVoice()); } catch (e) { return false; } };
       const VoiceWeb = typeof window !== "undefined" ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
@@ -1250,14 +1252,24 @@
         if (!stateRef.current.maiSettings.voiceWake || stateRef.current.maiSettings.voiceLock || document.visibilityState !== "visible") { setVoice(v => v.state === "thinking" ? v : ({ ...v, state: "idle", mode: null })); return; }
         voiceRef.current.restartT = setTimeout(() => voiceListen("wake"), delay);
       };
-      const voiceProcess = async (spoken) => {
+      // kết thúc lượt "Mai ơi" từ dịch vụ nền: ẩn giao diện khoá, báo dịch vụ nghe tiếp
+      const lockFinish = (delay = 0) => {
+        clearTimeout(voiceRef.current.lockT);
+        voiceRef.current.lockT = setTimeout(() => {
+          setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: null, text: "", lock: false }));
+          try { window.MaiBridge && window.MaiBridge.lockDone && window.MaiBridge.lockDone(); } catch (e) {}
+        }, delay);
+      };
+      const voiceProcess = async (spoken, opts = {}) => {
+        const lock = !!opts.lock;
         const text = String(spoken || "").replace(WAKE_RE, "").trim();
-        if (!text) return;
-        setVoice(v => ({ ...v, state: "thinking", text: spoken, error: null }));
+        if (!text) { if (lock) lockFinish(0); return; }
+        clearTimeout(voiceRef.current.lockT);
+        setVoice(v => ({ ...v, state: "thinking", text: spoken, error: null, lock: lock || v.lock }));
         let drafts = [];
         try {
           if (!window.VinaGemini || !window.VinaGemini.hasKey()) throw Object.assign(new Error("no key"), { code: "no_key" });
-          const res = await window.VinaGemini.analyzeSpeech(text, gemContext());
+          const res = await window.VinaGemini.analyzeSpeech(text, gemContext(), opts.alts);
           const now = Date.now();
           res.forEach((g, k) => {
             const d = gemDraft({ id: `v${now.toString(36)}_${k}`, title: "", text: "", source: "voice", at: now, postTime: now, local: null }, g);
@@ -1268,6 +1280,15 @@
         } catch (err) {
           // mất mạng / Gemini lỗi: bộ đọc nhanh trên máy hiểu "45k ăn trưa", mở phiếu cho anh xác nhận
           const q = window.MaiAgent ? window.MaiAgent.parseQuick(text, { accounts: stateRef.current.accounts.map(a => ({ name: a.name })) }) : null;
+          if (q && q.ok && lock) {
+            // đang ở màn hình khoá: không mở phiếu được -> để vào "Chờ anh duyệt"
+            const d = { ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), raw: `Giọng nói: “${spoken}”`, source: "voice", confidence: 0.5, certain: false, categorySource: "failed", inboxId: `mi_v${Date.now().toString(36)}` };
+            setMaiInbox(prev => [d, ...prev].slice(0, 100));
+            setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Mai chưa kết nối được Gemini. Khoản này Mai để ở “Chờ anh duyệt”." }));
+            sayNow("Mai chưa kết nối được, Mai để khoản này ở mục chờ duyệt nhé");
+            lockFinish(5000);
+            return;
+          }
           if (q && q.ok) {
             const acc = q.bank ? stateRef.current.accounts.find(a => a.name === q.bank) : (/tien mat|tiền mặt/i.test(text) ? stateRef.current.accounts.find(a => /tien mat|tiền mặt|cash/i.test(a.name + " " + a.accountNo)) : null);
             setMaiDraft({ ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), bankName: acc ? acc.name : stateRef.current.accounts[0]?.name, inboxId: null, raw: `Giọng nói: “${spoken}”`, source: "voice" });
@@ -1277,13 +1298,13 @@
           }
           setVoice(v => ({ ...v, state: "idle", mode: null, error: window.VinaGemini ? window.VinaGemini.explain(err) : "Mai chưa hiểu." }));
           sayNow("Mai chưa hiểu, anh nói lại giúp Mai nhé");
-          wakeResume(2500);
+          if (lock) lockFinish(4500); else wakeResume(2500);
           return;
         }
         if (!drafts.length) {
           setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Mai chưa nghe thấy số tiền. Anh thử: “nãy anh chi 45k tiền mặt ăn trưa”." }));
-          sayNow("Mai chưa nghe thấy số tiền, anh nói lại giúp Mai nhé");
-          wakeResume(2500);
+          sayNow("Mai chưa nghe thấy số tiền, anh gọi Mai nói lại nhé");
+          if (lock) lockFinish(5000); else wakeResume(2500);
           return;
         }
         const saved = drafts.map(d => maiCommit({ ...d, certain: true }, { auto: true, silent: true })).filter(Boolean);
@@ -1293,11 +1314,32 @@
         setVoice(v => ({ ...v, state: "done", mode: null, result: saved }));
         showToast(`Mai đã ghi ${saved.length} giao dịch từ giọng nói`, "success");
         clearTimeout(voiceRef.current.restartT);
+        if (lock) { lockFinish(7000); return; }
         voiceRef.current.restartT = setTimeout(() => { setVoice(v => v.state === "done" ? { ...v, state: "idle", result: null } : v); wakeResume(300); }, 7000);
       };
       const onVoiceEvent = (ev) => {
+        if (!ev) return;
+        // ---- lượt "Mai ơi" do dịch vụ nền điều khiển (kể cả khi khoá màn hình) ----
+        if (ev.type === "lock_wake") {
+          clearTimeout(voiceRef.current.restartT); clearTimeout(voiceRef.current.lockT);
+          voiceRef.current.mode = null;
+          try { voiceRef.current.webRec && voiceRef.current.webRec.abort(); } catch (e) {}
+          setVoice({ state: "listening", mode: "lock", text: "", result: null, error: null, lock: true });
+          // phòng khi dịch vụ không báo tiếp
+          voiceRef.current.lockT = setTimeout(() => lockFinish(0), 40000);
+          return;
+        }
+        if (ev.type === "lock_partial") { setVoice(v => v.lock ? { ...v, state: "listening", mode: "lock", text: ev.text || "" } : v); return; }
+        if (ev.type === "lock_thinking") { setVoice(v => v.lock ? { ...v, state: "thinking", text: ev.text || v.text } : v); return; }
+        if (ev.type === "lock_cancel") {
+          setVoice(v => ({ ...v, state: "idle", mode: null, lock: true, error: `${ev.text || "Mai chưa nghe rõ"}. Anh gọi “Mai ơi” rồi nói lại nhé.` }));
+          sayNow("Mai chưa nghe rõ, anh gọi Mai nói lại nhé");
+          lockFinish(3500);
+          return;
+        }
+        if (ev.type === "lock_end") { clearTimeout(voiceRef.current.lockT); setVoice(v => v.lock ? { ...v, state: "idle", mode: null, result: null, error: null, text: "", lock: false } : v); return; }
         const mode = voiceRef.current.mode;
-        if (!ev || !mode) return;
+        if (!mode) return;
         if (ev.type === "partial") { setVoice(v => ({ ...v, text: ev.text })); return; }
         if (ev.type === "final") {
           const t = String(ev.text || "").trim();
@@ -1308,7 +1350,7 @@
           }
           voiceRef.current.mode = null;
           if (!t) { setVoice(v => ({ ...v, state: "idle", mode: null, error: "Mai chưa nghe rõ." })); wakeResume(1500); return; }
-          voiceProcess(t);
+          voiceProcess(t, { alts: ev.alts });
           return;
         }
         if (ev.type === "perm_denied") { voiceRef.current.mode = null; setVoice(v => ({ ...v, state: "idle", mode: null, error: "Anh cần cho phép Mai dùng micro (Cài đặt → Ứng dụng → Mai → Quyền → Micro)." })); return; }
@@ -1329,7 +1371,7 @@
           if (now - voiceRef.current.lastOpen < 1500) return;
           voiceRef.current.lastOpen = now;
           const st = stateRef.current.maiSettings;
-          if (voiceRef.current.mode) return;
+          if (voiceRef.current.mode || lockWakeNow()) return;
           if (st.voiceOnOpen) setTimeout(() => voiceListen("command"), 600);
           else if (st.voiceWake) wakeResume(800);
         };
@@ -1337,12 +1379,17 @@
       });
       useEffect(() => { if (maiSettings.voiceWake && !voiceRef.current.mode && voice.state === "idle") wakeResume(500); if (!maiSettings.voiceWake && voiceRef.current.mode === "wake") voiceStop(); }, [maiSettings.voiceWake]);
       // câu nói từ dịch vụ nền: xử lý lần lượt từng câu
-      voiceRef.current.enqueue = (t) => { voiceRef.current.chain = (voiceRef.current.chain || Promise.resolve()).then(() => voiceProcess(t)).catch(() => {}); };
+      voiceRef.current.enqueue = (t, alts) => { voiceRef.current.chain = (voiceRef.current.chain || Promise.resolve()).then(() => voiceProcess(t, { alts, lock: lockWakeNow() })).catch(() => {}); };
+      // app vừa được mở bởi tiếng gọi mà không có câu nào chờ xử lý -> đừng kẹt ở màn "đang hiểu"
+      useEffect(() => { if (voice.lock && voice.state === "thinking" && !voice.text) { const t = setTimeout(() => setVoice(v => (v.lock && v.state === "thinking" && !v.text) ? (lockFinish(0), v) : v), 20000); return () => clearTimeout(t); } }, [voice.lock, voice.state, voice.text]);
       const lockVoiceOn = () => { try { return !!(window.MaiBridge && window.MaiBridge.isLockVoice && window.MaiBridge.isLockVoice()); } catch (e) { return false; } };
       const [lockVoice, setLockVoice] = useState(lockVoiceOn);
       useEffect(() => { window.onMaiVoiceService = (on) => setLockVoice(!!on); return () => { window.onMaiVoiceService = null; }; }, []);
       // bật lại dịch vụ khi mở app (nếu anh đã bật mà Android tắt nó đi)
       useEffect(() => { if (maiSettings.voiceLock && window.MaiBridge && window.MaiBridge.startLockVoice && !lockVoiceOn()) { try { window.MaiBridge.startLockVoice(); } catch (e) {} } }, []);
+      const [lockPerm, setLockPerm] = useState({ battery: true, full: true });
+      const refreshLockPerm = () => { try { setLockPerm({ battery: !window.MaiBridge.batteryUnrestricted || !!window.MaiBridge.batteryUnrestricted(), full: !window.MaiBridge.canFullScreen || !!window.MaiBridge.canFullScreen() }); } catch (e) {} };
+      useEffect(() => { if (!window.MaiBridge) return; refreshLockPerm(); const on = () => { if (document.visibilityState === "visible") refreshLockPerm(); }; document.addEventListener("visibilitychange", on); return () => document.removeEventListener("visibilitychange", on); }, []);
       const setVoiceLock = (on) => {
         setMaiSettings(prev => ({ ...prev, voiceLock: on, ...(on ? { voiceWake: false } : {}) }));
         try { on ? window.MaiBridge.startLockVoice() : window.MaiBridge.stopLockVoice(); } catch (e) {}
@@ -1458,7 +1505,7 @@
             const raw = window.MaiBridge.drainQueue();
             const list = raw ? JSON.parse(raw) : [];
             // câu nói nhận được khi khoá màn hình ("Mai ơi, ...") -> Gemini hiểu rồi ghi; còn lại là thông báo ngân hàng
-            list.forEach(n => { if (n && n.packageName === "voice") { if (voiceRef.current.enqueue) voiceRef.current.enqueue(n.text); } else maiIngest(n, "notification"); });
+            list.forEach(n => { if (n && n.packageName === "voice") { if (voiceRef.current.enqueue) voiceRef.current.enqueue(n.text, n.alts); } else maiIngest(n, "notification"); });
           } catch(e) { console.warn("Mai drain error", e); }
           try { setMaiAccess(!!window.MaiBridge.hasNotificationAccess()); } catch(e) {}
         };
@@ -3926,6 +3973,13 @@
                       <span className="w-12 h-7 shrink-0 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
                     </label>
                   )}
+                  {maiSettings.voiceLock && window.MaiBridge && (!lockPerm.battery || !lockPerm.full) && (
+                    <div className="rounded-2xl border-2 border-[var(--expense)]/50 bg-theme-background p-3 space-y-2">
+                      <p className="text-xs font-bold text-theme-textPrimary">Để gọi “Mai ơi” lúc khoá máy ổn định, anh bật giúp Mai:</p>
+                      {!lockPerm.battery && <button onClick={() => { try { window.MaiBridge.requestBatteryUnrestricted(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai chạy nền không giới hạn pin</button>}
+                      {!lockPerm.full && <button onClick={() => { try { window.MaiBridge.openFullScreenSettings(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai hiện trên màn hình khoá</button>}
+                    </div>
+                  )}
                   {[
                     ...(maiSettings.voiceLock ? [] : [{ k: "voiceWake", t: "Gọi “Mai ơi” khi đang mở app", d: "Mai nghe liên tục lúc app đang mở trên màn hình (máy có thể kêu “bíp” mỗi lần bắt đầu nghe, tốn pin hơn)." }]),
                     { k: "voiceOnOpen", t: "Mở app là Mai nghe luôn", d: "Nói “Hey Google, mở Mai” rồi kể khoản chi, không cần chạm máy." },
@@ -4273,8 +4327,35 @@
             </div>
           </nav>
 
+          {/* "MAI ƠI" – giao diện toàn màn hình (hiện cả trên màn hình khoá, che kín sổ chi tiêu) */}
+          {voice.lock && (
+            <div className="fixed inset-0 z-[80] bg-[#F2E6CC] flex flex-col items-center justify-center px-6 text-center" style={{ backgroundImage: "radial-gradient(circle at 50% 38%, #F6E3B0 0, #F2E6CC 60%)" }}>
+              <div className="absolute top-0 inset-x-0 h-3 retro-stripes-h" />
+              <span className={`w-36 h-36 rounded-full border-[3px] border-[#3A2618] flex items-center justify-center shadow-[5px_5px_0_#3A2618] ${voice.state === "listening" ? "bg-[#C8552B] text-white mai-pulse" : voice.state === "done" ? "bg-[#7A8B3C] text-white" : "bg-[#E0A526] text-[#3A2618]"}`}>
+                {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="check" className="w-16 h-16" /> : <MicIcon className="w-16 h-16" />}
+              </span>
+              <h2 className="font-display font-black text-[34px] text-[#3A2618] mt-7 leading-tight">
+                {voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang ghi…" : voice.state === "done" ? "Mai ghi rồi ạ" : voice.error ? "Mai chưa ghi được" : "Dạ, Mai bỏ rồi ạ"}
+              </h2>
+              {voice.state === "listening" && !voice.text && <p className="text-base text-[#6B4F3A] mt-3">Anh nói đi ạ, ví dụ:<br /><b>“nãy anh chi hết 45k tiền mặt ăn trưa”</b></p>}
+              {voice.text && voice.state !== "done" && <p className="text-xl font-semibold text-[#3A2618] mt-4 italic max-w-sm">“{voice.text}”</p>}
+              {voice.state === "done" && (voice.result || []).map(t => (
+                <div key={t.id} className="mt-4 w-full max-w-sm rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] px-4 py-3 text-left shadow-[3px_3px_0_#3A2618]">
+                  <p className={`font-display font-black text-3xl tabular ${t.type === "INCOME" ? "text-[#4F6B2A]" : "text-[#3A2618]"}`}>{t.type === "INCOME" ? "+" : "−"}{formatVND(t.amount)}</p>
+                  <p className="text-sm font-bold text-[#3A2618] mt-0.5">{t.category}{t.note ? ` · ${t.note}` : ""}</p>
+                  <p className="text-xs text-[#6B4F3A]">{t.bankName} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                </div>
+              ))}
+              {voice.error && voice.state === "idle" && <p className="text-base font-semibold text-[#A23B1E] mt-3 max-w-sm">{voice.error}</p>}
+              <div className="flex gap-3 mt-8 w-full max-w-sm">
+                {voice.state === "done" && <button onClick={() => { voiceUndo(); lockFinish(1200); }} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] text-[#3A2618] font-bold">Hoàn tác</button>}
+                <button onClick={() => lockFinish(0)} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#C8552B] text-white font-bold">{voice.state === "done" ? "Xong" : "Đóng"}</button>
+              </div>
+            </div>
+          )}
+
           {/* MAI ĐANG NGHE (giọng nói) */}
-          {(voice.state !== "idle" && !(voice.state === "listening" && voice.mode === "wake")) || voice.error ? (
+          {voice.lock ? null : (voice.state !== "idle" && !(voice.state === "listening" && voice.mode === "wake")) || voice.error ? (
             <div className="fixed inset-x-0 bottom-0 z-[60] p-3 pb-6 md:p-6 flex justify-center pointer-events-none">
               <div className="pointer-events-auto w-full max-w-md bg-theme-surface rounded-[26px] border-2 border-retro-ink shadow-[4px_4px_0_#3A2618] p-4">
                 <div className="flex items-center gap-3">
@@ -4817,7 +4898,7 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">Mai 4.4 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">Mai 4.5 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
                 </div>
               </div>
             </div>

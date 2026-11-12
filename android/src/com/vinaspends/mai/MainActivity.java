@@ -2,6 +2,10 @@ package com.vinaspends.mai;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.KeyguardManager;
+import android.app.NotificationManager;
+import android.os.PowerManager;
+import android.view.WindowManager;
 import android.content.ClipData;
 import android.content.pm.PackageManager;
 import android.speech.RecognitionListener;
@@ -51,6 +55,7 @@ public class MainActivity extends Activity {
     private static volatile MainActivity live;
     private static volatile MainActivity current; // còn sống (kể cả khi khoá màn hình / chạy nền)
     private static final int REQ_MIC_LOCK = 44;
+    private boolean lockShown; // đang được phép hiện trên màn hình khoá (lượt "Mai ơi")
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private String pendingSave;
@@ -110,6 +115,7 @@ public class MainActivity extends Activity {
         });
 
         current = this;
+        if (MaiVoiceService.lockWakeActive) applyLockShow(true);
         handleShare(getIntent());
         web.loadUrl(START_URL);
     }
@@ -117,6 +123,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (intent != null && intent.getBooleanExtra("voice_wake", false) && MaiVoiceService.lockWakeActive) applyLockShow(true);
         handleShare(intent);
         callJs("window.onMaiResume && window.onMaiResume()");
     }
@@ -189,7 +196,15 @@ public class MainActivity extends Activity {
                 @Override public void onResults(Bundle b) {
                     MaiVoiceService.resume();
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    voiceEvent("final", r != null && !r.isEmpty() ? r.get(0) : "", 0);
+                    try {
+                        JSONObject o = new JSONObject();
+                        o.put("type", "final");
+                        o.put("text", r != null && !r.isEmpty() ? r.get(0) : "");
+                        org.json.JSONArray alts = new org.json.JSONArray();
+                        if (r != null) for (int k = 1; k < r.size() && k < 4; k++) alts.put(r.get(k));
+                        o.put("alts", alts);
+                        callJs("window.onMaiVoice && window.onMaiVoice(" + o.toString() + ")");
+                    } catch (Exception e) { voiceEvent("final", r != null && !r.isEmpty() ? r.get(0) : "", 0); }
                 }
                 @Override public void onPartialResults(Bundle b) {
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
@@ -203,8 +218,13 @@ public class MainActivity extends Activity {
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN");
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "vi-VN");
         i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-        i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 4);
         i.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+        if (Build.VERSION.SDK_INT >= 33) {
+            ArrayList<String> bias = new ArrayList<String>();
+            bias.add("Mai ơi"); bias.add("tiền mặt"); bias.add("nghìn"); bias.add("triệu");
+            i.putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, bias);
+        }
         // im lặng 2,5 giây mới coi là nói xong (câu dài có ngập ngừng)
         i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2500L);
         i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L);
@@ -263,6 +283,65 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
+    }
+
+    // ---------- Lượt "Mai ơi": bật sáng màn hình, hiện giao diện đang nghe trên màn hình khoá ----------
+    private void applyLockShow(boolean on) {
+        lockShown = on;
+        try {
+            if (Build.VERSION.SDK_INT >= 27) {
+                setShowWhenLocked(on);
+                setTurnScreenOn(on);
+            } else if (on) {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            } else {
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            }
+            if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private boolean keyguardLocked() {
+        try { return ((KeyguardManager) getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked(); } catch (Exception e) { return false; }
+    }
+
+    /** Dịch vụ vừa nghe thấy "Mai ơi". */
+    static void onLockWake(final boolean locked) {
+        final MainActivity a = current;
+        if (a == null) return;
+        a.ui.post(new Runnable() {
+            @Override public void run() {
+                a.applyLockShow(true);
+                a.stopVoiceQuiet();
+                if (a.web != null) a.web.evaluateJavascript("window.onMaiVoice && window.onMaiVoice({type:'lock_wake',locked:" + locked + "})", null);
+            }
+        });
+    }
+
+    static void voiceJs(String json) {
+        final MainActivity a = current;
+        if (a != null) a.callJs("window.onMaiVoice && window.onMaiVoice(" + json + ")");
+    }
+
+    /** Trang web không báo xong kịp -> tự thu dọn. */
+    static void lockTimedOut() {
+        final MainActivity a = current;
+        if (a == null) return;
+        a.ui.post(new Runnable() { @Override public void run() { a.endLockShow(); a.callJs("window.onMaiVoice && window.onMaiVoice({type:'lock_end'})"); } });
+    }
+
+    private void endLockShow() {
+        if (!lockShown) return;
+        boolean locked = keyguardLocked();
+        applyLockShow(false);
+        // máy vẫn đang khoá -> ẩn app đi, không để sổ chi tiêu nằm trên màn hình khoá
+        if (locked) { try { moveTaskToBack(true); } catch (Exception ignored) { } }
+    }
+
+    private void stopVoiceQuiet() {
+        if (recognizer != null) { try { recognizer.cancel(); } catch (Exception ignored) { } }
     }
 
     /** Dịch vụ nghe "Mai ơi" vừa nhận một câu -> nếu app còn sống thì xử lý ngay. */
@@ -402,6 +481,30 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean hasMicPermission() { return hasMic(); }
         @JavascriptInterface public void startVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.startVoice(); } }); }
         @JavascriptInterface public boolean isLockVoice() { return MaiVoiceService.isRunning(); }
+        @JavascriptInterface public boolean isLockWake() { return MaiVoiceService.lockWakeActive; }
+        @JavascriptInterface public boolean isLocked() { return keyguardLocked(); }
+        /** Trang web xử lý xong lượt "Mai ơi" (đã ghi / báo lỗi xong). */
+        @JavascriptInterface public void lockDone() {
+            ui.post(new Runnable() { @Override public void run() { MaiVoiceService.lockDone(); endLockShow(); } });
+        }
+        @JavascriptInterface public boolean batteryUnrestricted() {
+            try { return Build.VERSION.SDK_INT < 23 || ((PowerManager) getSystemService(POWER_SERVICE)).isIgnoringBatteryOptimizations(getPackageName()); } catch (Exception e) { return true; }
+        }
+        @JavascriptInterface public void requestBatteryUnrestricted() {
+            ui.post(new Runnable() { @Override public void run() {
+                try { startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName()))); }
+                catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)); } catch (Exception ignored) { } }
+            } });
+        }
+        @JavascriptInterface public boolean canFullScreen() {
+            try { return Build.VERSION.SDK_INT < 34 || ((NotificationManager) getSystemService(NOTIFICATION_SERVICE)).canUseFullScreenIntent(); } catch (Exception e) { return true; }
+        }
+        @JavascriptInterface public void openFullScreenSettings() {
+            ui.post(new Runnable() { @Override public void run() {
+                try { startActivity(new Intent("android.settings.MANAGE_APP_USE_FULL_SCREEN_INTENT", Uri.parse("package:" + getPackageName()))); }
+                catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); } catch (Exception ignored) { } }
+            } });
+        }
         @JavascriptInterface public void startLockVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.startLockVoice(); } }); }
         @JavascriptInterface public void stopLockVoice() { ui.post(new Runnable() { @Override public void run() { MaiVoiceService.stop(MainActivity.this); ui.postDelayed(new Runnable() { @Override public void run() { voiceServiceChanged(); } }, 500); } }); }
         @JavascriptInterface public void stopVoice() { ui.post(new Runnable() { @Override public void run() { MainActivity.this.stopVoice(); } }); }
