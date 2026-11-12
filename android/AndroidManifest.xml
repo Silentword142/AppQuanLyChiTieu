@@ -49,6 +49,18 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <!-- Trợ lý ảo mặc định Android (giữ nút nguồn, giữ phím Home, vuốt góc màn hình như Gemini) -->
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VOICE_ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
 
         <service
@@ -64,5 +76,16 @@
             android:name=".MaiVoiceService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+        <!-- Ô "Gọi Mai" trên bảng Cài đặt nhanh Quick Settings (tiết kiệm pin 100% khi chờ) -->
+        <service
+            android:name=".MaiTileService"
+            android:label="@string/tile_name"
+            android:icon="@drawable/ic_launcher"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.TileService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

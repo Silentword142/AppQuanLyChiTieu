@@ -56,6 +56,8 @@ public class MainActivity extends Activity {
     private static volatile MainActivity current; // còn sống (kể cả khi khoá màn hình / chạy nền)
     private static final int REQ_MIC_LOCK = 44;
     private boolean lockShown; // đang được phép hiện trên màn hình khoá (lượt "Mai ơi")
+    private boolean assistActive; // đang trong một lượt gọi Trợ lý ảo (Assist / Quick Tile / Shortcut)
+    private boolean pendingAssistLaunch; // vừa mở app từ Intent Trợ lý -> chờ web tải xong sẽ kích hoạt
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private String pendingSave;
@@ -115,16 +117,23 @@ public class MainActivity extends Activity {
         });
 
         current = this;
+        Intent startIntent = getIntent();
         if (MaiVoiceService.lockWakeActive) applyLockShow(true);
-        handleShare(getIntent());
+        if (isAssistIntent(startIntent)) {
+            pendingAssistLaunch = true;
+            applyLockShow(true);
+        }
+        handleShare(startIntent);
         web.loadUrl(START_URL);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
         if (intent != null && intent.getBooleanExtra("voice_wake", false) && MaiVoiceService.lockWakeActive) applyLockShow(true);
         handleShare(intent);
+        handleAssist(intent);
         callJs("window.onMaiResume && window.onMaiResume()");
     }
 
@@ -149,8 +158,17 @@ public class MainActivity extends Activity {
         super.onResume();
         live = this;
         callJs("window.onMaiResume && window.onMaiResume()");
-        // báo trang web: app vừa được mở lên (vd. "Hey Google, mở Mai") -> Mai có thể nghe luôn
-        callJs("window.onMaiAppOpen && window.onMaiAppOpen()");
+        if (pendingAssistLaunch) {
+            pendingAssistLaunch = false;
+            ui.postDelayed(new Runnable() {
+                @Override public void run() {
+                    triggerAssistVoice(keyguardLocked());
+                }
+            }, 350);
+        } else {
+            // báo trang web: app vừa được mở lên (vd. "Hey Google, mở Mai") -> Mai có thể nghe luôn
+            callJs("window.onMaiAppOpen && window.onMaiAppOpen()");
+        }
     }
 
     @Override
@@ -333,11 +351,41 @@ public class MainActivity extends Activity {
     }
 
     private void endLockShow() {
-        if (!lockShown) return;
+        if (!lockShown && !assistActive) return;
         boolean locked = keyguardLocked();
+        boolean wasAssist = assistActive;
+        assistActive = false;
         applyLockShow(false);
-        // máy vẫn đang khoá -> ẩn app đi, không để sổ chi tiêu nằm trên màn hình khoá
-        if (locked) { try { moveTaskToBack(true); } catch (Exception ignored) { } }
+        // máy vẫn đang khoá hoặc vừa gọi từ chế độ Trợ lý ảo -> ẩn app đi, trả lại màn hình trước đó
+        if (locked || wasAssist) {
+            try { moveTaskToBack(true); } catch (Exception ignored) { }
+        }
+    }
+
+    private boolean isAssistIntent(Intent intent) {
+        if (intent == null) return false;
+        String action = intent.getAction();
+        return Intent.ACTION_ASSIST.equals(action)
+                || "android.intent.action.VOICE_ASSIST".equals(action)
+                || intent.getBooleanExtra("assist_launch", false);
+    }
+
+    private boolean handleAssist(Intent intent) {
+        if (!isAssistIntent(intent)) return false;
+        triggerAssistVoice(keyguardLocked());
+        return true;
+    }
+
+    private void triggerAssistVoice(final boolean locked) {
+        assistActive = true;
+        applyLockShow(true);
+        stopVoiceQuiet();
+        try {
+            android.os.Vibrator v = (android.os.Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (v != null) v.vibrate(50);
+        } catch (Exception ignored) {
+        }
+        callJs("window.onMaiAssist && window.onMaiAssist({locked:" + locked + "})");
     }
 
     private void stopVoiceQuiet() {
@@ -483,6 +531,32 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean isLockVoice() { return MaiVoiceService.isRunning(); }
         @JavascriptInterface public boolean isLockWake() { return MaiVoiceService.lockWakeActive; }
         @JavascriptInterface public boolean isLocked() { return keyguardLocked(); }
+        @JavascriptInterface public boolean isAssistAvailable() { return true; }
+        @JavascriptInterface public boolean isAssistActive() { return assistActive; }
+        @JavascriptInterface public void openAssistSettings() {
+            ui.post(new Runnable() {
+                @Override public void run() {
+                    try {
+                        startActivity(new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS));
+                        return;
+                    } catch (Exception ignored) {}
+                    try {
+                        startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS));
+                        return;
+                    } catch (Exception ignored) {}
+                    try {
+                        startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                    } catch (Exception ignored) {}
+                }
+            });
+        }
+        @JavascriptInterface public void testAssist() {
+            ui.post(new Runnable() {
+                @Override public void run() {
+                    triggerAssistVoice(keyguardLocked());
+                }
+            });
+        }
         /** Trang web xử lý xong lượt "Mai ơi" (đã ghi / báo lỗi xong). */
         @JavascriptInterface public void lockDone() {
             ui.post(new Runnable() { @Override public void run() { MaiVoiceService.lockDone(); endLockShow(); } });
@@ -612,6 +686,19 @@ public class MainActivity extends Activity {
                 return true;
             }
             return true;
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            if (pendingAssistLaunch) {
+                pendingAssistLaunch = false;
+                ui.postDelayed(new Runnable() {
+                    @Override public void run() {
+                        triggerAssistVoice(keyguardLocked());
+                    }
+                }, 400);
+            }
         }
     }
 }

@@ -1208,8 +1208,8 @@
         return "inbox";
       };
       // ===== GIỌNG NÓI: "Mai ơi, nãy anh chi hết 45k tiền mặt ăn trưa" -> Gemini hiểu câu -> tự ghi =====
-      const lockWakeNow = () => { try { return !!(window.MaiBridge && window.MaiBridge.isLockWake && window.MaiBridge.isLockWake()); } catch (e) { return false; } };
-      // lock: đang trong lượt gọi "Mai ơi" từ dịch vụ nền -> hiện giao diện toàn màn hình (kể cả trên màn hình khoá)
+      const lockWakeNow = () => { try { return !!(window.MaiBridge && ((window.MaiBridge.isLockWake && window.MaiBridge.isLockWake()) || (window.MaiBridge.isAssistActive && window.MaiBridge.isAssistActive()))); } catch (e) { return false; } };
+      // lock: đang trong lượt gọi "Mai ơi" / Trợ lý ảo -> hiện giao diện toàn màn hình (kể cả trên màn hình khoá)
       const [voice, setVoice] = useState(() => lockWakeNow() ? { state: "thinking", mode: null, text: "", result: null, error: null, lock: true } : { state: "idle", mode: null, text: "", result: null, error: null, lock: false });
       const voiceRef = React.useRef({ mode: null, webRec: null, restartT: null, lastOpen: 0 });
       const voiceNative = () => { try { return !!(window.MaiBridge && window.MaiBridge.canVoice && window.MaiBridge.canVoice()); } catch (e) { return false; } };
@@ -1252,10 +1252,11 @@
         if (!stateRef.current.maiSettings.voiceWake || stateRef.current.maiSettings.voiceLock || document.visibilityState !== "visible") { setVoice(v => v.state === "thinking" ? v : ({ ...v, state: "idle", mode: null })); return; }
         voiceRef.current.restartT = setTimeout(() => voiceListen("wake"), delay);
       };
-      // kết thúc lượt "Mai ơi" từ dịch vụ nền: ẩn giao diện khoá, báo dịch vụ nghe tiếp
+      // kết thúc lượt "Mai ơi" / Trợ lý ảo: ẩn giao diện khoá, báo dịch vụ hoặc đóng app trợ lý
       const lockFinish = (delay = 0) => {
         clearTimeout(voiceRef.current.lockT);
         voiceRef.current.lockT = setTimeout(() => {
+          voiceRef.current.isAssist = false;
           setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: null, text: "", lock: false }));
           try { window.MaiBridge && window.MaiBridge.lockDone && window.MaiBridge.lockDone(); } catch (e) {}
         }, delay);
@@ -1348,19 +1349,31 @@
             const rest = t.replace(WAKE_RE, "").trim();
             if (!rest) { sayNow("Dạ"); setTimeout(() => voiceListen("command"), 700); return; }
           }
+          const isAssist = !!voiceRef.current.isAssist;
           voiceRef.current.mode = null;
-          if (!t) { setVoice(v => ({ ...v, state: "idle", mode: null, error: "Mai chưa nghe rõ." })); wakeResume(1500); return; }
-          voiceProcess(t, { alts: ev.alts });
+          if (!t) {
+            setVoice(v => ({ ...v, state: "idle", mode: null, error: "Mai chưa nghe rõ." }));
+            if (isAssist || voice.lock) lockFinish(3000); else wakeResume(1500);
+            return;
+          }
+          voiceProcess(t, { alts: ev.alts, lock: lockWakeNow() || isAssist });
           return;
         }
-        if (ev.type === "perm_denied") { voiceRef.current.mode = null; setVoice(v => ({ ...v, state: "idle", mode: null, error: "Anh cần cho phép Mai dùng micro (Cài đặt → Ứng dụng → Mai → Quyền → Micro)." })); return; }
+        if (ev.type === "perm_denied") {
+          const isAssist = !!voiceRef.current.isAssist;
+          voiceRef.current.mode = null;
+          setVoice(v => ({ ...v, state: "idle", mode: null, error: "Anh cần cho phép Mai dùng micro (Cài đặt → Ứng dụng → Mai → Quyền → Micro)." }));
+          if (isAssist || voice.lock) lockFinish(4000);
+          return;
+        }
         if (ev.type === "paused") { setVoice(v => v.state === "listening" ? { ...v, state: "idle", mode: null } : v); return; }
         if (ev.type === "error") {
           if (mode === "wake" && ev.code !== 9) { wakeResume(ev.code === 7 || ev.code === 6 ? 150 : 1500); return; }
+          const isAssist = !!voiceRef.current.isAssist;
           voiceRef.current.mode = null;
           const msg = ev.code === 9 ? "Anh cần cho phép Mai dùng micro." : ev.code === -1 ? "Máy chưa có dịch vụ nhận giọng nói của Google." : ev.code === 2 || ev.code === 1 ? "Nhận giọng nói cần có mạng." : "Mai chưa nghe rõ, anh bấm micro nói lại nhé.";
           setVoice(v => ({ ...v, state: "idle", mode: null, error: msg }));
-          wakeResume(2500);
+          if (isAssist || voice.lock) lockFinish(3500); else wakeResume(2500);
         }
       };
       useEffect(() => {
@@ -1375,7 +1388,22 @@
           if (st.voiceOnOpen) setTimeout(() => voiceListen("command"), 600);
           else if (st.voiceWake) wakeResume(800);
         };
-        return () => { window.onMaiVoice = null; window.onMaiAppOpen = null; };
+        // Kích hoạt Trợ lý ảo Mai trên Android (giữ nút nguồn / vuốt góc / phím Home / Quick Settings tile)
+        window.onMaiAssist = (ev) => {
+          clearTimeout(voiceRef.current.restartT);
+          clearTimeout(voiceRef.current.lockT);
+          voiceRef.current.isAssist = true;
+          voiceRef.current.mode = "command";
+          setVoice({ state: "listening", mode: "command", text: "", result: null, error: null, lock: true });
+          if (window.MaiBridge && window.MaiBridge.startVoice) {
+            try { window.MaiBridge.startVoice(); } catch (e) { console.warn(e); }
+          } else {
+            voiceListen("command");
+          }
+          // Quá 25 giây im lặng thì tự đóng giao diện trợ lý
+          voiceRef.current.lockT = setTimeout(() => lockFinish(0), 25000);
+        };
+        return () => { window.onMaiVoice = null; window.onMaiAppOpen = null; window.onMaiAssist = null; };
       });
       useEffect(() => { if (maiSettings.voiceWake && !voiceRef.current.mode && voice.state === "idle") wakeResume(500); if (!maiSettings.voiceWake && voiceRef.current.mode === "wake") voiceStop(); }, [maiSettings.voiceWake]);
       // câu nói từ dịch vụ nền: xử lý lần lượt từng câu
@@ -3951,49 +3979,104 @@
                   ))}
                 </section>
 
-                {/* Giọng nói */}
-                <section className="bg-theme-surface border rounded-3xl p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <span className="w-10 h-10 rounded-full border-2 border-retro-ink bg-[#F6E3B0] flex items-center justify-center"><MicIcon className="w-5 h-5 text-retro-ink" /></span>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-theme-textPrimary">Ghi bằng giọng nói</p>
-                      <p className="text-xs text-theme-textSecondary">Nói tự nhiên: “Mai ơi, nãy anh chi hết 45k tiền mặt ăn trưa”, “sáng nay đổ xăng 80 nghìn thẻ VIB”, “hôm qua nhận lương 15 triệu”.</p>
+                {/* Trợ lý ảo Mai trên điện thoại (Chuẩn Android, như Gemini) */}
+                <section className="bg-theme-surface border rounded-3xl p-4 space-y-4">
+                  {/* Card Trợ lý ảo kiểu Gemini - 0% pin */}
+                  <div className="rounded-2xl border-2 border-retro-ink bg-[#FBF3E0] p-4 shadow-[3px_3px_0_#3A2618] space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="w-11 h-11 rounded-full border-2 border-retro-ink bg-[#E0A526] flex items-center justify-center shrink-0">
+                        <Icon name="sparkles" className="w-6 h-6 text-[#3A2618]" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <p className="text-base font-display font-black text-[#3A2618]">Trợ lý ảo Mai</p>
+                          <span className="px-2 py-0.5 rounded-full bg-retro-avocado text-white text-[10px] font-bold">0% pin lúc chờ</span>
+                          <span className="px-2 py-0.5 rounded-full bg-[#E0A526] text-[#3A2618] text-[10px] font-bold">Như Gemini</span>
+                        </div>
+                        <p className="text-xs text-[#6B4F3A] mt-0.5">Gọi Mai bất cứ lúc nào bằng nút nguồn hoặc cử chỉ như Gemini trên Android. Không chạy ngầm, không mở micro khi chờ.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      {window.MaiBridge && window.MaiBridge.openAssistSettings && (
+                        <button onClick={() => { try { window.MaiBridge.openAssistSettings(); } catch (e) {} }}
+                          className="w-full py-2.5 rounded-xl border-2 border-[#3A2618] bg-[#C8552B] text-white text-sm font-bold flex items-center justify-center gap-2 shadow-[2px_2px_0_#3A2618] active:translate-x-0.5 active:translate-y-0.5">
+                          <Icon name="settings" className="w-4 h-4" /> Đặt Mai làm Trợ lý mặc định của máy
+                        </button>
+                      )}
+                      <button onClick={() => { try { if (window.MaiBridge && window.MaiBridge.testAssist) window.MaiBridge.testAssist(); else if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command"); } catch (e) {} }}
+                        className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-white/80 text-[#3A2618] text-sm font-bold flex items-center justify-center gap-2">
+                        <MicIcon className="w-4 h-4 text-[#C8552B]" /> Thử gọi Trợ lý Mai ngay
+                      </button>
+                    </div>
+
+                    {/* Hướng dẫn các cách gọi */}
+                    <div className="border-t border-[#3A2618]/20 pt-2.5 space-y-2 text-xs text-[#6B4F3A]">
+                      <p className="font-bold text-[#3A2618] uppercase tracking-wider text-[11px]">3 cách gọi nhanh siêu tiết kiệm pin:</p>
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">⚡</span>
+                        <p><b>Giữ nút nguồn</b> (hoặc vuốt từ góc màn hình / giữ phím Home): Mai lập tức hiện lên lắng nghe câu nói của anh.</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">📲</span>
+                        <p><b>Bảng Cài đặt nhanh:</b> Vuốt thanh thông báo từ trên xuống, bấm ô <b>“Gọi Mai”</b> (kể cả khi màn hình đang khoá).</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm">🔘</span>
+                        <p><b>Lối tắt màn hình chính:</b> Đè biểu tượng app Mai ngoài màn hình chính → chọn <b>“Nói với Mai”</b>.</p>
+                      </div>
                     </div>
                   </div>
-                  <button disabled={!voiceAvailable} onClick={() => voice.state === "listening" ? voiceStop() : voiceListen("command")} className="w-full py-3 rounded-2xl bg-theme-primary text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
-                    <MicIcon className="w-5 h-5" /> {voiceAvailable ? (voice.state === "listening" ? "Đang nghe… (bấm để dừng)" : "Bấm và nói") : "Máy này chưa hỗ trợ nhận giọng nói"}
-                  </button>
+
+                  {/* Nút bấm nói trong app */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-theme-textSecondary uppercase tracking-wider">Hoặc nói ngay trong app:</p>
+                    <button disabled={!voiceAvailable} onClick={() => voice.state === "listening" ? voiceStop() : voiceListen("command")} className="w-full py-3 rounded-2xl bg-theme-primary text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
+                      <MicIcon className="w-5 h-5" /> {voiceAvailable ? (voice.state === "listening" ? "Đang nghe… (bấm để dừng)" : "Bấm và nói") : "Máy này chưa hỗ trợ nhận giọng nói"}
+                    </button>
+                    <p className="text-[11px] text-theme-textSecondary text-center">Ví dụ: “nãy anh chi hết 45k tiền mặt ăn trưa”, “sáng nay đổ xăng 80 nghìn thẻ VIB”.</p>
+                  </div>
+
+                  {/* Các tuỳ chọn phản hồi */}
+                  <div className="space-y-2 pt-1 border-t">
+                    {[
+                      { k: "voiceReply", t: "Mai đọc to khi ghi xong", d: "Ví dụ: “Dạ, Mai ghi rồi: chi 45 nghìn, Tiền mặt, mục Cơm trưa”." },
+                      { k: "voiceOnOpen", t: "Mở app là Mai nghe luôn", d: "Nói “Hey Google, mở Mai” rồi kể khoản chi, không cần chạm máy." }
+                    ].map(o => (
+                      <label key={o.k} className="flex items-center gap-3 cursor-pointer py-1">
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-theme-textPrimary">{o.t}</p>
+                          <p className="text-xs text-theme-textSecondary">{o.d}</p>
+                        </div>
+                        <input type="checkbox" className="sr-only peer" checked={o.k === "voiceReply" ? maiSettings.voiceReply !== false : !!maiSettings[o.k]} onChange={e => setMaiSettings(prev => ({ ...prev, [o.k]: e.target.checked }))} />
+                        <span className="w-12 h-7 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Tuỳ chọn phụ: Thử nghiệm rảnh tay chạy ngầm */}
                   {window.MaiBridge && window.MaiBridge.startLockVoice && (
-                    <label className="flex items-center gap-3 cursor-pointer rounded-2xl border-2 border-dashed border-retro-ink/40 bg-[#F6E3B0]/50 p-3">
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-theme-textPrimary">Gọi “Mai ơi” cả khi khoá màn hình {lockVoice && <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-retro-avocado text-white">đang nghe</span>}</p>
-                        <p className="text-xs text-theme-textSecondary">Mai chạy nền, luôn có thông báo “Mai đang nghe” (bấm “Tắt” ngay trên thông báo). Tốn pin và dữ liệu mạng hơn vì micro mở liên tục; nên tắt khi không cần.</p>
-                      </div>
-                      <input type="checkbox" className="sr-only peer" checked={!!maiSettings.voiceLock} onChange={e => setVoiceLock(e.target.checked)} />
-                      <span className="w-12 h-7 shrink-0 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
-                    </label>
-                  )}
-                  {maiSettings.voiceLock && window.MaiBridge && (!lockPerm.battery || !lockPerm.full) && (
-                    <div className="rounded-2xl border-2 border-[var(--expense)]/50 bg-theme-background p-3 space-y-2">
-                      <p className="text-xs font-bold text-theme-textPrimary">Để gọi “Mai ơi” lúc khoá máy ổn định, anh bật giúp Mai:</p>
-                      {!lockPerm.battery && <button onClick={() => { try { window.MaiBridge.requestBatteryUnrestricted(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai chạy nền không giới hạn pin</button>}
-                      {!lockPerm.full && <button onClick={() => { try { window.MaiBridge.openFullScreenSettings(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai hiện trên màn hình khoá</button>}
+                    <div className="pt-2 border-t">
+                      <label className="flex items-center gap-3 cursor-pointer rounded-2xl border-2 border-dashed border-retro-ink/30 bg-theme-background p-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-bold text-theme-textPrimary">Gọi “Mai ơi” rảnh tay khi khoá máy</p>
+                            {lockVoice && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-retro-avocado text-white">đang nghe</span>}
+                          </div>
+                          <p className="text-xs text-theme-textSecondary mt-0.5">Chạy nền micro liên tục để bắt tiếng gọi không cần chạm máy. <b>Tốn pin hơn</b>; chỉ nên bật khi lái xe hoặc bận tay.</p>
+                        </div>
+                        <input type="checkbox" className="sr-only peer" checked={!!maiSettings.voiceLock} onChange={e => setVoiceLock(e.target.checked)} />
+                        <span className="w-12 h-7 shrink-0 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
+                      </label>
+                      {maiSettings.voiceLock && (!lockPerm.battery || !lockPerm.full) && (
+                        <div className="mt-2 rounded-2xl border-2 border-[var(--expense)]/50 bg-theme-background p-3 space-y-2">
+                          <p className="text-xs font-bold text-theme-textPrimary">Để gọi rảnh tay lúc khoá máy không bị tắt:</p>
+                          {!lockPerm.battery && <button onClick={() => { try { window.MaiBridge.requestBatteryUnrestricted(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai chạy nền không giới hạn pin</button>}
+                          {!lockPerm.full && <button onClick={() => { try { window.MaiBridge.openFullScreenSettings(); } catch (e) {} }} className="w-full py-2.5 rounded-xl border-2 border-retro-ink bg-theme-surface text-sm font-bold text-theme-textPrimary">Cho Mai hiện trên màn hình khoá</button>}
+                        </div>
+                      )}
                     </div>
                   )}
-                  {[
-                    ...(maiSettings.voiceLock ? [] : [{ k: "voiceWake", t: "Gọi “Mai ơi” khi đang mở app", d: "Mai nghe liên tục lúc app đang mở trên màn hình (máy có thể kêu “bíp” mỗi lần bắt đầu nghe, tốn pin hơn)." }]),
-                    { k: "voiceOnOpen", t: "Mở app là Mai nghe luôn", d: "Nói “Hey Google, mở Mai” rồi kể khoản chi, không cần chạm máy." },
-                    { k: "voiceReply", t: "Mai đọc to khi ghi xong", d: "Ví dụ: “Dạ, Mai ghi rồi: chi 45 nghìn, Tiền mặt, mục Cơm trưa”." }
-                  ].map(o => (
-                    <label key={o.k} className="flex items-center gap-3 cursor-pointer">
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-theme-textPrimary">{o.t}</p>
-                        <p className="text-xs text-theme-textSecondary">{o.d}</p>
-                      </div>
-                      <input type="checkbox" className="sr-only peer" checked={o.k === "voiceReply" ? maiSettings.voiceReply !== false : !!maiSettings[o.k]} onChange={e => setMaiSettings(prev => ({ ...prev, [o.k]: e.target.checked }))} />
-                      <span className="w-12 h-7 rounded-full border-2 border-retro-ink bg-theme-variant relative transition-colors peer-checked:bg-retro-avocado after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:border-2 after:border-retro-ink after:transition-transform peer-checked:after:translate-x-5" />
-                    </label>
-                  ))}
                 </section>
 
                 {/* Ảnh chụp màn hình */}
