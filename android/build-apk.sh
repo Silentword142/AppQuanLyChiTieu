@@ -5,9 +5,24 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+if [ -d "$HOME/android-sdk/android-14" ]; then
+  export PATH="$HOME/android-sdk/android-14:$PATH"
+fi
+
 # Cần android.jar API 34 trở lên (thuộc tính foregroundServiceType cho dịch vụ nghe "Mai ơi").
-# Ví dụ: ANDROID_JAR=/đường/dẫn/android-34/android.jar ./build-apk.sh
-SDK_JAR="${ANDROID_JAR:-/usr/lib/android-sdk/platforms/android-34/android.jar}"
+if [ -z "${ANDROID_JAR:-}" ]; then
+  if [ -f "$HOME/android-sdk/android-34-ext12/android.jar" ]; then
+    SDK_JAR="$HOME/android-sdk/android-34-ext12/android.jar"
+  elif [ -f /usr/lib/android-sdk/platforms/android-34/android.jar ]; then
+    SDK_JAR="/usr/lib/android-sdk/platforms/android-34/android.jar"
+  elif [ -f /usr/local/lib/android/sdk/platforms/android-34/android.jar ]; then
+    SDK_JAR="/usr/local/lib/android/sdk/platforms/android-34/android.jar"
+  else
+    SDK_JAR="/usr/lib/android-sdk/platforms/android-34/android.jar"
+  fi
+else
+  SDK_JAR="$ANDROID_JAR"
+fi
 OUT=build
 APK_NAME="${APK_NAME:-VinaSpends-Mai.apk}"
 KEYSTORE="${KEYSTORE:-vinaspends.keystore}"
@@ -41,8 +56,16 @@ javac -nowarn -source 8 -target 8 -encoding UTF-8 -bootclasspath "$SDK_JAR" -cp 
   -d "$OUT/classes" $(find src "$OUT/gen" -name '*.java') 2>&1 | grep -v "bootstrap classpath\|^1 warning\|options were not\|To suppress\|source value 8\|target value 8\|warning: \[options\]" || true
 [ -f "$OUT/classes/com/vinaspends/mai/MainActivity.class" ] || { echo "javac lỗi"; exit 1; }
 
-echo "→ dx: dex"
-dalvik-exchange --dex --min-sdk-version=23 --output="$OUT/dex/classes.dex" "$OUT/classes"
+echo "→ biên dịch dex"
+if command -v d8 >/dev/null 2>&1; then
+  d8 --min-api 23 --lib "$SDK_JAR" --output "$OUT/dex" $(find "$OUT/classes" -name '*.class')
+elif command -v dalvik-exchange >/dev/null 2>&1; then
+  dalvik-exchange --dex --min-sdk-version=23 --output="$OUT/dex/classes.dex" "$OUT/classes"
+elif command -v dx >/dev/null 2>&1; then
+  dx --dex --min-sdk-version=23 --output="$OUT/dex/classes.dex" "$OUT/classes"
+else
+  echo "Lỗi: Không tìm thấy d8, dalvik-exchange hoặc dx để biên dịch dex"; exit 1
+fi
 
 echo "→ đóng gói"
 aapt package -f -M "$OUT/AndroidManifest.xml" -S res -A "$OUT/assets" -I "$SDK_JAR" \
