@@ -2357,16 +2357,37 @@
         return () => clearTimeout(timer);
       }, [transactions, accounts, categories, debts, categoryParentMap, categoryBudgets, monthlyBudget, reportType, reportPeriod, reportHierarchyView, theme]);
 
+      const [importPreview, setImportPreview] = useState(null);
+      const [assistInput, setAssistInput] = useState("");
+
       const handleExportJson = () => {
-        const payload = buildFullBackupPayload();
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `vinaspends_sao_luu_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("Đã tải tệp sao lưu JSON đầy đủ về máy!");
+        try {
+          const payload = buildFullBackupPayload();
+          const txCount = (payload.data && Array.isArray(payload.data.transactions)) ? payload.data.transactions.length : 0;
+          const fileName = `vinaspends_sao_luu_${new Date().toISOString().slice(0, 10)}.json`;
+          const jsonStr = JSON.stringify(payload, null, 2);
+
+          if (window.MaiBridge && window.MaiBridge.saveFile) {
+            window.onMaiFileSaved = (ok) => {
+              window.onMaiFileSaved = null;
+              if (ok) showToast(`Đã xuất toàn bộ ${txCount} giao dịch ra tệp sao lưu!`, "success");
+              else showToast("Đã huỷ lưu tệp sao lưu.", "info");
+            };
+            window.MaiBridge.saveFile(fileName, "application/json", jsonStr);
+            return;
+          }
+
+          const blob = new Blob([jsonStr], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          showToast(`Đã tải tệp sao lưu (${txCount} giao dịch) về máy!`);
+        } catch (err) {
+          showToast("Lỗi xuất tệp sao lưu: " + err.message, "error");
+        }
       };
 
       const handleImportJson = (e) => {
@@ -2377,30 +2398,113 @@
           try {
             const parsed = JSON.parse(event.target.result);
             const d = parsed.data || parsed;
-            if (d.accounts || d.transactions) {
-              if (!confirm(`Nhập tệp sao lưu (${d.transactions?.length || 0} giao dịch) sẽ THAY THẾ dữ liệu hiện có trên máy. Tiếp tục?`)) return;
-              updateData(
-                d.accounts, 
-                d.transactions, 
-                d.categories, 
-                d.debts, 
-                d.categoryParentMap || DEFAULT_CATEGORY_PARENT_MAP,
-                false,
-                d.categoryBudgets,
-                d.monthlyBudget,
-                d.reportSettings
-              );
-              if (d.theme && THEMES[d.theme]) setTheme(d.theme);
-              showToast(`Đã nhập ${d.transactions?.length || 0} giao dịch & hạng mục từ tệp JSON!`);
-              if (googleUser?.uid) setTimeout(() => handleBackupToGoogle(true), 500);
-            } else {
+            if (!d || (!Array.isArray(d.accounts) && !Array.isArray(d.transactions))) {
               showToast("Tệp không đúng định dạng dữ liệu VinaSpends!", "error");
+              return;
             }
-          } catch(err) {
+            const rawTx = Array.isArray(d.transactions) ? d.transactions : [];
+            const normalizedTx = rawTx.map((t, idx) => ({
+              ...t,
+              id: t.id || `imp_${Date.now()}_${idx}`,
+              amount: Number(t.amount) || 0,
+              type: t.type === "INCOME" ? "INCOME" : "EXPENSE",
+              date: t.date || new Date().toISOString()
+            }));
+            setImportPreview({
+              fileName: file.name,
+              timestamp: parsed.timestamp || "",
+              data: { ...d, transactions: normalizedTx }
+            });
+          } catch (err) {
             showToast("Lỗi đọc tệp JSON: " + err.message, "error");
           }
         };
+        reader.onerror = () => showToast("Không thể đọc tệp đã chọn.", "error");
         reader.readAsText(file);
+      };
+
+      const applyImportJson = (mode) => {
+        if (!importPreview) return;
+        const d = importPreview.data;
+        const impTx = d.transactions || [];
+        const impIds = new Set(impTx.map(t => t.id));
+
+        if (mode === "replace") {
+          // Bỏ tombstone cho các giao dịch có trong file để Firebase không xoá nhầm
+          const baseDeleted = Array.isArray(d.deletedTxIds) ? d.deletedTxIds : [];
+          deletedTxIdsRef.current = baseDeleted.filter(id => !impIds.has(id));
+          try { localStorage.setItem("vina_deleted_tx_ids", JSON.stringify(deletedTxIdsRef.current)); } catch (e) {}
+
+          updateData(
+            Array.isArray(d.accounts) ? d.accounts : accounts,
+            impTx,
+            Array.isArray(d.categories) ? d.categories : null,
+            Array.isArray(d.debts) ? d.debts : null,
+            d.categoryParentMap || DEFAULT_CATEGORY_PARENT_MAP,
+            false,
+            d.categoryBudgets,
+            d.monthlyBudget,
+            d.reportSettings
+          );
+          if (d.theme && THEMES[d.theme]) setTheme(d.theme);
+          setImportPreview(null);
+          showToast(`Đã khôi phục toàn bộ ${impTx.length} giao dịch từ tệp sao lưu!`, "success");
+          return;
+        }
+
+        // mode === "merge": giữ dữ liệu hiện có, gộp thêm giao dịch/ví/danh mục từ file
+        deletedTxIdsRef.current = deletedTxIdsRef.current.filter(id => !impIds.has(id));
+        try { localStorage.setItem("vina_deleted_tx_ids", JSON.stringify(deletedTxIdsRef.current)); } catch (e) {}
+
+        const curById = new Map(transactions.map(t => [t.id, t]));
+        let addedCount = 0;
+        const mergedTx = [...transactions];
+        impTx.forEach(t => {
+          const ex = curById.get(t.id);
+          if (!ex) {
+            mergedTx.push(t);
+            addedCount++;
+          } else if ((t.updatedAt || 0) > (ex.updatedAt || 0)) {
+            const idx = mergedTx.findIndex(x => x.id === t.id);
+            if (idx >= 0) mergedTx[idx] = t;
+          }
+        });
+        mergedTx.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let mergedAcc = accounts;
+        if (Array.isArray(d.accounts) && d.accounts.length) {
+          const accNames = new Set(accounts.map(a => a.name));
+          const extraAcc = d.accounts.filter(a => a && a.name && !accNames.has(a.name));
+          if (extraAcc.length) mergedAcc = [...accounts, ...extraAcc];
+        }
+
+        let mergedCat = null;
+        if (Array.isArray(d.categories) && d.categories.length) {
+          const catNames = new Set(categories.map(c => c.name));
+          const extraCat = d.categories.filter(c => c && c.name && !catNames.has(c.name));
+          if (extraCat.length) mergedCat = [...categories, ...extraCat];
+        }
+
+        let mergedDebts = null;
+        if (Array.isArray(d.debts) && d.debts.length) {
+          const debtIds = new Set(debts.map(x => x.id));
+          const extraDebts = d.debts.filter(x => x && !debtIds.has(x.id));
+          if (extraDebts.length) mergedDebts = [...debts, ...extraDebts];
+        }
+
+        updateData(
+          mergedAcc,
+          mergedTx,
+          mergedCat,
+          mergedDebts,
+          d.categoryParentMap ? { ...d.categoryParentMap, ...categoryParentMap } : null,
+          false,
+          d.categoryBudgets ? { ...d.categoryBudgets, ...categoryBudgets } : null,
+          null,
+          null
+        );
+        setImportPreview(null);
+        showToast(`Đã gộp thêm ${addedCount} giao dịch mới (tổng ${mergedTx.length} GD)!`, "success");
       };
 
       // Calculate totals
@@ -4410,18 +4514,25 @@
             </div>
           </nav>
 
-          {/* "MAI ƠI" – giao diện toàn màn hình (hiện cả trên màn hình khoá, che kín sổ chi tiêu) */}
+          {/* "MAI ƠI" – giao diện Trợ lý ảo toàn màn hình (hiện cả trên màn hình khoá, che kín sổ chi tiêu) */}
           {voice.lock && (
-            <div className="fixed inset-0 z-[80] bg-[#F2E6CC] flex flex-col items-center justify-center px-6 text-center" style={{ backgroundImage: "radial-gradient(circle at 50% 38%, #F6E3B0 0, #F2E6CC 60%)" }}>
+            <div className="fixed inset-0 z-[80] bg-[#F2E6CC] flex flex-col items-center justify-center px-6 text-center overflow-y-auto py-8" style={{ backgroundImage: "radial-gradient(circle at 50% 38%, #F6E3B0 0, #F2E6CC 60%)" }}>
               <div className="absolute top-0 inset-x-0 h-3 retro-stripes-h" />
-              <span className={`w-36 h-36 rounded-full border-[3px] border-[#3A2618] flex items-center justify-center shadow-[5px_5px_0_#3A2618] ${voice.state === "listening" ? "bg-[#C8552B] text-white mai-pulse" : voice.state === "done" ? "bg-[#7A8B3C] text-white" : "bg-[#E0A526] text-[#3A2618]"}`}>
-                {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="check" className="w-16 h-16" /> : <MicIcon className="w-16 h-16" />}
-              </span>
-              <h2 className="font-display font-black text-[34px] text-[#3A2618] mt-7 leading-tight">
-                {voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang ghi…" : voice.state === "done" ? "Mai ghi rồi ạ" : voice.error ? "Mai chưa ghi được" : "Dạ, Mai bỏ rồi ạ"}
+              <button onClick={() => {
+                  if (voice.state === "thinking") return;
+                  if (voice.state === "listening") { voiceStop(); return; }
+                  setAssistInput("");
+                  if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command");
+                }}
+                aria-label="Nói với Mai"
+                className={`w-32 h-32 rounded-full border-[3px] border-[#3A2618] flex items-center justify-center shadow-[5px_5px_0_#3A2618] transition-transform active:scale-95 ${voice.state === "listening" ? "bg-[#C8552B] text-white mai-pulse" : voice.state === "done" ? "bg-[#7A8B3C] text-white" : "bg-[#E0A526] text-[#3A2618]"}`}>
+                {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="check" className="w-14 h-14" /> : <MicIcon className="w-14 h-14" />}
+              </button>
+              <h2 className="font-display font-black text-[30px] text-[#3A2618] mt-6 leading-tight">
+                {voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang ghi…" : voice.state === "done" ? "Mai ghi rồi ạ" : voice.error ? "Mai chưa ghi được" : "Mai sẵn sàng"}
               </h2>
-              {voice.state === "listening" && !voice.text && <p className="text-base text-[#6B4F3A] mt-3">Anh nói đi ạ, ví dụ:<br /><b>“nãy anh chi hết 45k tiền mặt ăn trưa”</b></p>}
-              {voice.text && voice.state !== "done" && <p className="text-xl font-semibold text-[#3A2618] mt-4 italic max-w-sm">“{voice.text}”</p>}
+              {voice.state === "listening" && !voice.text && <p className="text-sm text-[#6B4F3A] mt-2">Anh nói hoặc gõ bên dưới, ví dụ:<br /><b>“nãy anh chi hết 45k tiền mặt ăn trưa”</b></p>}
+              {voice.text && voice.state !== "done" && <p className="text-lg font-semibold text-[#3A2618] mt-3 italic max-w-sm">“{voice.text}”</p>}
               {voice.state === "done" && (voice.result || []).map(t => (
                 <div key={t.id} className="mt-4 w-full max-w-sm rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] px-4 py-3 text-left shadow-[3px_3px_0_#3A2618]">
                   <p className={`font-display font-black text-3xl tabular ${t.type === "INCOME" ? "text-[#4F6B2A]" : "text-[#3A2618]"}`}>{t.type === "INCOME" ? "+" : "−"}{formatVND(t.amount)}</p>
@@ -4429,10 +4540,51 @@
                   <p className="text-xs text-[#6B4F3A]">{t.bankName} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
                 </div>
               ))}
-              {voice.error && voice.state === "idle" && <p className="text-base font-semibold text-[#A23B1E] mt-3 max-w-sm">{voice.error}</p>}
-              <div className="flex gap-3 mt-8 w-full max-w-sm">
+              {voice.error && voice.state === "idle" && <p className="text-sm font-semibold text-[#A23B1E] mt-2 max-w-sm">{voice.error}</p>}
+
+              {/* Nhập text trực tiếp trong giao diện Trợ lý ảo */}
+              {voice.state !== "done" && voice.state !== "thinking" && (
+                <form onSubmit={e => {
+                    e.preventDefault();
+                    const txt = assistInput.trim();
+                    if (!txt) return;
+                    clearTimeout(voiceRef.current.lockT);
+                    if (voice.state === "listening") voiceStop();
+                    voiceRef.current.isAssist = true;
+                    setAssistInput("");
+                    voiceProcess(txt, { lock: true });
+                  }}
+                  className="mt-5 w-full max-w-sm flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={assistInput}
+                    onFocus={() => {
+                      clearTimeout(voiceRef.current.lockT);
+                      if (voice.state === "listening") voiceStop();
+                    }}
+                    onChange={e => {
+                      clearTimeout(voiceRef.current.lockT);
+                      if (voice.state === "listening") voiceStop();
+                      setAssistInput(e.target.value);
+                    }}
+                    placeholder="Hoặc gõ: 45k ăn trưa tiền mặt…"
+                    className="flex-1 min-w-0 px-4 py-3 rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] text-[#3A2618] placeholder-[#6B4F3A]/70 text-sm font-medium shadow-[2px_2px_0_#3A2618] focus:outline-none"
+                  />
+                  <button type="submit" disabled={!assistInput.trim()}
+                    className="px-4 py-3 rounded-2xl border-2 border-[#3A2618] bg-[#E0A526] text-[#3A2618] font-bold text-sm shadow-[2px_2px_0_#3A2618] disabled:opacity-50 shrink-0">
+                    Gửi
+                  </button>
+                </form>
+              )}
+
+              <div className="flex gap-3 mt-5 w-full max-w-sm">
                 {voice.state === "done" && <button onClick={() => { voiceUndo(); lockFinish(1200); }} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] text-[#3A2618] font-bold">Hoàn tác</button>}
-                <button onClick={() => lockFinish(0)} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#C8552B] text-white font-bold">{voice.state === "done" ? "Xong" : "Đóng"}</button>
+                {voice.state !== "done" && voice.state !== "listening" && voice.state !== "thinking" && (
+                  <button onClick={() => { setAssistInput(""); if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command"); }} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] text-[#3A2618] font-bold flex items-center justify-center gap-1.5">
+                    <MicIcon className="w-4 h-4 text-[#C8552B]" /> Nói lại
+                  </button>
+                )}
+                <button onClick={() => { setAssistInput(""); lockFinish(0); }} className="flex-1 py-3.5 rounded-2xl border-2 border-[#3A2618] bg-[#C8552B] text-white font-bold">{voice.state === "done" ? "Xong" : "Đóng"}</button>
               </div>
             </div>
           )}
@@ -4960,8 +5112,11 @@
 
                   {/* Sao lưu thủ công */}
                   <section className="space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu bằng file</p>
-                    <p className="text-sm text-theme-textSecondary">Xuất toàn bộ dữ liệu ra một file .json để cất giữ, hoặc nhập lại từ file đó.</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu bằng file</p>
+                      <span className="text-[11px] font-bold text-theme-primary bg-theme-background px-2 py-0.5 rounded-full border border-theme-border">{transactions.length} giao dịch · {accounts.length} ví</span>
+                    </div>
+                    <p className="text-sm text-theme-textSecondary">Xuất toàn bộ dữ liệu ra một file .json để cất giữ, hoặc nhập lại từ file đó (chọn Gộp hoặc Thay thế).</p>
                     <div className="grid grid-cols-2 gap-2">
                       <button onClick={handleExportJson} className="py-3 rounded-2xl border-2 border-retro-ink bg-theme-background text-theme-textPrimary font-bold text-sm flex items-center justify-center gap-2"><Icon name="download" className="w-4 h-4" /> Xuất file</button>
                       <label className="py-3 rounded-2xl border-2 border-retro-ink bg-theme-background text-theme-textPrimary font-bold text-sm flex items-center justify-center gap-2 cursor-pointer">
@@ -4981,7 +5136,40 @@
                     </React.Fragment>
                   )}
 
-                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">Mai 4.5 · Ghi tự động bằng Gemini Flash-Lite (miễn phí)</p>
+                  <p className="text-center text-[11px] text-theme-textSecondary pt-2">Mai 4.6 · Trợ lý ảo Android & Gemini Flash-Lite</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL XEM TRƯỚC NHẬP FILE SAO LƯU */}
+          {importPreview && (
+            <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-theme-surface border-2 border-retro-ink rounded-3xl w-full max-w-md shadow-[5px_5px_0_#3A2618] p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-black text-lg text-theme-textPrimary">Nhập tệp sao lưu</h3>
+                  <button onClick={() => setImportPreview(null)} className="w-8 h-8 rounded-full bg-theme-variant flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                </div>
+                <div className="rounded-2xl border-2 border-theme-border bg-theme-background p-3.5 space-y-1.5 text-sm">
+                  <p className="font-bold text-theme-textPrimary truncate">📄 {importPreview.fileName}</p>
+                  {importPreview.timestamp && <p className="text-xs text-theme-textSecondary">Thời gian sao lưu: {new Date(importPreview.timestamp).toLocaleString("vi-VN")}</p>}
+                  <div className="grid grid-cols-2 gap-2 pt-2 text-xs font-bold text-theme-textPrimary">
+                    <div className="bg-theme-surface p-2 rounded-xl border border-theme-border">🧾 {importPreview.data.transactions.length} giao dịch</div>
+                    <div className="bg-theme-surface p-2 rounded-xl border border-theme-border">💳 {Array.isArray(importPreview.data.accounts) ? importPreview.data.accounts.length : 0} ví</div>
+                    <div className="bg-theme-surface p-2 rounded-xl border border-theme-border">🏷️ {Array.isArray(importPreview.data.categories) ? importPreview.data.categories.length : 0} hạng mục</div>
+                    <div className="bg-theme-surface p-2 rounded-xl border border-theme-border">🤝 {Array.isArray(importPreview.data.debts) ? importPreview.data.debts.length : 0} vay/nợ</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <button onClick={() => applyImportJson("merge")} className="w-full py-3 rounded-2xl border-2 border-retro-ink bg-[#E0A526] text-[#3A2618] font-bold text-sm shadow-[2px_2px_0_#3A2618]">
+                    Gộp thêm vào dữ liệu hiện tại (Khuyên dùng)
+                  </button>
+                  <button onClick={() => applyImportJson("replace")} className="w-full py-3 rounded-2xl border-2 border-retro-ink bg-[#C8552B] text-white font-bold text-sm shadow-[2px_2px_0_#3A2618]">
+                    Thay thế toàn bộ dữ liệu trên máy
+                  </button>
+                  <button onClick={() => setImportPreview(null)} className="w-full py-2.5 rounded-2xl border border-theme-border text-theme-textSecondary font-bold text-sm">
+                    Huỷ
+                  </button>
                 </div>
               </div>
             </div>

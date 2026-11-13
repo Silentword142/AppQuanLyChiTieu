@@ -449,12 +449,18 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQ_SAVE) {
             boolean ok = false;
             if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingSave != null) {
+                OutputStream os = null;
                 try {
-                    OutputStream os = getContentResolver().openOutputStream(data.getData());
-                    os.write(pendingSave.getBytes("UTF-8"));
-                    os.close();
-                    ok = true;
+                    try { os = getContentResolver().openOutputStream(data.getData(), "wt"); }
+                    catch (Exception ignored) { os = getContentResolver().openOutputStream(data.getData()); }
+                    if (os != null) {
+                        os.write(pendingSave.getBytes("UTF-8"));
+                        os.flush();
+                        ok = true;
+                    }
                 } catch (Exception ignored) {
+                } finally {
+                    if (os != null) { try { os.close(); } catch (Exception ignored) {} }
                 }
             }
             pendingSave = null;
