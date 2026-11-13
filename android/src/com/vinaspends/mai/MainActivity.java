@@ -704,6 +704,12 @@ public class MainActivity extends Activity {
                         triggerAssistVoice(keyguardLocked());
                     }
                 }, 400);
+            } else {
+                ui.postDelayed(new Runnable() {
+                    @Override public void run() {
+                        callJs("window.onMaiAppOpen && window.onMaiAppOpen()");
+                    }
+                }, 400);
             }
         }
     }
