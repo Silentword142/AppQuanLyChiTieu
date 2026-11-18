@@ -331,11 +331,11 @@
     return "tag";
   }
 
-  // ---------- Bảng màu Pastel Pixel tương phản cao ----------
+  // ---------- Bảng màu Sprout Lands Cozy Pastel tương phản cao ----------
   var P = {
-    mu: "#FFD166", ye: "#FFE680", or: "#FF9F68", tm: "#FF6B6B", ro: "#FF9EBB", pk: "#FFC2D4",
-    av: "#A7E27B", gr: "#59C98E", te: "#48C9B0", mt: "#9EF0DF", sk: "#8ED6FF", dn: "#5B9EFF",
-    cr: "#FFF3D6", wh: "#FFFFFF", br: "#D49B6A", cf: "#6B4235", pl: "#B993FF", gy: "#D3CEDE",
+    mu: "#F8D56B", ye: "#FFE88A", or: "#F4A46A", tm: "#EE7A74", ro: "#F4A0B5", pk: "#FAD0DA",
+    av: "#9CE07E", gr: "#6CC570", te: "#67C5AE", mt: "#A9EEDB", sk: "#8ED6F5", dn: "#6AA4EB",
+    cr: "#FBF2DE", wh: "#FFFDF7", br: "#C8945C", cf: "#6B4226", pl: "#C2A6F2", gy: "#D8CEBE",
     ink: "currentColor"
   };
   function shade(hex) {

@@ -47,7 +47,7 @@
               sky: '#8FD6FF',
               sakura: '#FFA7C4',
               cream: '#FFF8EE',
-              ink: '#1A1423'
+              ink: '#54321D'
             },
             expense: 'var(--expense)',
             expenseLight: 'var(--expense-light)',
@@ -83,18 +83,20 @@
 
   <style>
     :root {
-      --primary: #FF8674; --primary-rgb: 255 134 116;
-      --on-primary: #1A1423;
-      --background: #FCECD8; --background-rgb: 252 236 216;
-      --surface: #FFF8EE; --surface-rgb: 255 248 238;
-      --text-primary: #1A1423; --text-primary-rgb: 26 20 35;
-      --text-secondary: #564768; --text-secondary-rgb: 86 71 104;
-      --variant: #F5DFC6; --variant-rgb: 245 223 198;
-      --border: #C7B096; --border-rgb: 199 176 150;
-      --ink: #1A1423; --ink-rgb: 26 20 35;
-      --accent: #FFD875; --accent-rgb: 255 216 117;
-      --expense: #D9385A; --expense-light: #FFE2E8; --on-expense: #FFFFFF;
-      --income: #16805B; --income-light: #DAF6EA; --on-income: #FFFFFF;
+      --primary: #8CD778; --primary-rgb: 140 215 120;
+      --on-primary: #243D1A;
+      --background: #DCECC8; --background-rgb: 220 236 200;
+      --surface: #FBF2DE; --surface-rgb: 251 242 222;
+      --text-primary: #4A2B18; --text-primary-rgb: 74 43 24;
+      --text-secondary: #7D563A; --text-secondary-rgb: 125 86 58;
+      --variant: #EFE0BF; --variant-rgb: 239 224 191;
+      --border: #C8945C; --border-rgb: 200 148 92;
+      --ink: #54321D; --ink-rgb: 84 50 29;
+      --wood: #C8945C; --wood-light: #E8BE8B; --wood-dark: #9A6638;
+      --accent: #F8D56B; --accent-rgb: 248 213 107;
+      --on-accent: #4A2B18;
+      --expense: #C94A4A; --expense-light: #FDE3DF; --on-expense: #FFFFFF;
+      --income: #3A8740; --income-light: #DEF5D6; --on-income: #FFFFFF;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -155,55 +157,64 @@
       .mai-bloom, .mai-pulse { animation: none !important; }
     }
 
-    /* ======= Retro Pixel Pastel Game Console Theme ======= */
+    /* ======= Sprout Lands Cozy Pixel Pastel GUI Theme ======= */
     html[data-retro="1"] body {
       background-color: var(--background);
       background-image:
-        radial-gradient(rgb(var(--text-primary-rgb) / 0.085) 1px, transparent 1px),
-        linear-gradient(180deg, rgb(var(--accent-rgb, 255 216 117) / 0.16), transparent 320px);
-      background-size: 8px 8px, 100% 100%;
+        radial-gradient(rgb(var(--text-primary-rgb) / 0.08) 1.5px, transparent 1.5px),
+        radial-gradient(rgb(var(--primary-rgb) / 0.22) 1.5px, transparent 1.5px),
+        linear-gradient(180deg, rgb(var(--accent-rgb, 248 213 107) / 0.14), transparent 320px);
+      background-size: 16px 16px, 24px 24px, 100% 100%;
+      background-position: 0 0, 8px 8px, 0 0;
     }
     html[data-retro="1"] main.bg-theme-background { background: transparent; }
 
-    /* Card & Khung máy chơi game: viền pixel rõ nét, bóng đổ cứng bước */
+    /* Thẻ giấy da & khung gỗ Sprout Lands: viền nâu ấm 9-slice, highlight trên, bóng đế 3D */
     html[data-retro="1"] .bg-theme-surface.border.rounded-2xl,
     html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
     html[data-retro="1"] .retro-card {
       border-color: var(--ink) !important;
       border-width: 2.5px;
       border-radius: 10px !important;
-      box-shadow: 4px 4px 0 var(--ink);
+      box-shadow: 0 4px 0 var(--ink), inset 0 2px 0 rgba(255, 255, 255, 0.55);
     }
     html[data-retro="1"] .retro-card-soft {
       border: 2px solid var(--ink);
       border-radius: 8px;
-      box-shadow: 3px 3px 0 var(--ink);
+      box-shadow: 0 3px 0 var(--ink), inset 0 1.5px 0 rgba(255, 255, 255, 0.5);
     }
 
-    /* Bezel máy chơi game cầm tay & màn hình LCD */
+    /* Khung bảng gỗ chính (Sprout Lands Wooden Panel & Signboard Header) */
     .console-bezel {
       border: 3px solid var(--ink);
       border-radius: 12px;
       background: var(--surface);
-      box-shadow: 5px 5px 0 var(--ink);
+      box-shadow: 0 5px 0 var(--ink), inset 0 0 0 2px var(--wood-light, #E8BE8B);
       overflow: hidden;
     }
     .console-top-strip {
-      background: #1A1423;
-      color: #FFF8EE;
-      border-bottom: 2.5px solid var(--ink);
+      background: linear-gradient(180deg, var(--wood-light, #E8BE8B) 0 4px, var(--wood, #C8945C) 4px 100%);
+      color: #FFF9EC;
+      text-shadow: 1px 1px 0 var(--ink);
+      border-bottom: 3px solid var(--ink);
+      box-shadow: inset 0 -2px 0 var(--wood-dark, #9A6638);
+    }
+    .console-top-strip .console-key {
+      text-shadow: none;
     }
     html.dark .console-top-strip {
-      background: #0D0916;
+      background: linear-gradient(180deg, #4B3863 0 4px, #322447 4px 100%);
       color: #FFF6EA;
+      text-shadow: 1px 1px 0 #0B0812;
       border-bottom-color: rgb(var(--border-rgb));
+      box-shadow: inset 0 -2px 0 #1F152E;
     }
     .console-lcd {
       position: relative;
       border: 2.5px solid var(--ink);
       border-radius: 8px;
-      box-shadow: inset 0 3px 0 rgba(26, 20, 35, 0.14);
-      background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(26, 20, 35, 0.04) 3px 4px);
+      box-shadow: inset 0 3px 0 rgba(84, 50, 29, 0.14), inset 0 -2px 0 rgba(255, 255, 255, 0.35);
+      background-image: repeating-linear-gradient(0deg, transparent 0 4px, rgba(84, 50, 29, 0.03) 4px 5px);
     }
     .console-key {
       display: inline-flex;
@@ -216,49 +227,49 @@
       font-size: 11px;
       line-height: 1;
       background: var(--surface);
-      color: #1A1423;
-      border: 2px solid #1A1423;
+      color: var(--ink);
+      border: 2px solid var(--ink);
       border-radius: 4px;
-      box-shadow: 1px 1px 0 #1A1423;
+      box-shadow: 0 1.5px 0 var(--ink);
     }
-    html.dark .console-key { background: #231C38; color: #FFF8EE; border-color: rgb(var(--border-rgb)); box-shadow: 1px 1px 0 #07050D; }
-    .bg-theme-primary .console-key, .game-btn-accent .console-key { background: #FFF8EE; color: #1A1423; border-color: #1A1423; box-shadow: 1px 1px 0 #1A1423; }
+    html.dark .console-key { background: #2A2140; color: #FFF8EE; border-color: rgb(var(--border-rgb)); box-shadow: 0 1.5px 0 #07050D; }
+    .bg-theme-primary .console-key, .game-btn-accent .console-key { background: var(--surface); color: var(--ink); border-color: var(--ink); box-shadow: 0 1.5px 0 var(--ink); }
 
-    /* Nút bấm máy chơi game (Tactile A/B Console Button) */
+    /* Nút bấm Sprout Lands (2 tông sáng đỉnh / tối đáy + lún khi chạm) */
     html[data-retro="1"] button.bg-theme-primary,
     html[data-retro="1"] .retro-btn,
     .game-btn {
       border: 2.5px solid var(--ink);
       border-radius: 8px;
-      box-shadow: 0 3px 0 var(--ink), 3px 3px 0 var(--ink);
+      box-shadow: 0 4px 0 var(--ink), inset 0 2px 0 rgba(255, 255, 255, 0.48);
       transition: transform .07s steps(2, end), box-shadow .07s steps(2, end), filter .12s ease;
     }
     .game-btn-sm {
       border: 2px solid var(--ink);
       border-radius: 8px;
-      box-shadow: 2px 2px 0 var(--ink);
+      box-shadow: 0 2.5px 0 var(--ink), inset 0 1.5px 0 rgba(255, 255, 255, 0.42);
       transition: transform .07s steps(2, end), box-shadow .07s steps(2, end);
     }
-    .game-btn-sm:active { transform: translate(2px, 2px); box-shadow: none; }
+    .game-btn-sm:active { transform: translateY(2px); box-shadow: 0 0.5px 0 var(--ink); }
     html[data-retro="1"] .bg-theme-primary,
     html[data-retro="1"] button.bg-theme-primary,
     html[data-retro="1"] .retro-hero {
-      color: var(--on-primary, #1A1423) !important;
+      color: var(--on-primary, #243D1A) !important;
     }
     html[data-retro="1"] .retro-hero .text-white,
     html[data-retro="1"] .retro-hero .text-white\/85,
     html[data-retro="1"] .retro-hero .text-white\/90 {
-      color: var(--on-primary, #1A1423) !important;
+      color: var(--on-primary, #243D1A) !important;
       opacity: 0.94;
     }
     html[data-retro="1"] button.bg-theme-primary:active,
     html[data-retro="1"] .retro-btn:active,
     .game-btn:active {
-      transform: translate(2px, 3px);
-      box-shadow: 0 0 0 var(--ink);
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
     }
     html[data-retro="1"] input, html[data-retro="1"] select, html[data-retro="1"] textarea {
-      border-color: rgb(var(--text-primary-rgb) / 0.42);
+      border-color: rgb(var(--border-rgb) / 0.85);
       border-width: 2px;
       border-radius: 8px;
     }
@@ -272,29 +283,29 @@
       letter-spacing: 0.015em;
     }
 
-    /* Thanh HP Pixel phân đoạn */
-    .hp-seg { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; padding: 2px; background: var(--variant); border: 2px solid var(--ink); border-radius: 6px; }
-    .hp-cell { height: 9px; border-radius: 1px; background: rgb(var(--text-primary-rgb) / 0.12); transition: background-color .2s ease; }
+    /* Thanh HP / Năng lượng Sprout Lands (vệt sáng 2px trên đỉnh mỗi ô) */
+    .hp-seg { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; padding: 2.5px; background: var(--variant); border: 2px solid var(--ink); border-radius: 6px; box-shadow: inset 0 2px 0 rgba(84, 50, 29, 0.12); }
+    .hp-cell { height: 9px; border-radius: 1.5px; background: rgb(var(--text-primary-rgb) / 0.12); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45); transition: background-color .2s ease; }
 
-    /* Dải màu pastel pixel 4 tầng */
-    .retro-stripes { background: linear-gradient(180deg, #FF8674 0 25%, #FFD875 25% 50%, #7FD8B4 50% 75%, #C6B7FA 75% 100%); }
-    .retro-stripes-h { background: linear-gradient(90deg, #FF8674 0 25%, #FFD875 25% 50%, #7FD8B4 50% 75%, #C6B7FA 75% 100%); }
+    /* Dải màu thiên nhiên Sprout Lands 4 tầng (Mầm xanh · Mật ong · Hoa đào · Trời xanh) */
+    .retro-stripes { background: linear-gradient(180deg, #8CD778 0 25%, #F8D56B 25% 50%, #F4A29E 50% 75%, #8ED6F5 75% 100%); }
+    .retro-stripes-h { background: linear-gradient(90deg, #8CD778 0 25%, #F8D56B 25% 50%, #F4A29E 50% 75%, #8ED6F5 75% 100%); }
     .retro-sunburst {
       background-image:
-        linear-gradient(45deg, rgb(255 255 255 / 0.16) 25%, transparent 25%),
-        linear-gradient(-45deg, rgb(255 255 255 / 0.16) 25%, transparent 25%);
+        linear-gradient(45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%),
+        linear-gradient(-45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%);
       background-size: 12px 12px;
     }
     .retro-arc { position: absolute; border-radius: 4px; border-style: solid; border-color: transparent; }
-    .retro-dash { background-image: linear-gradient(90deg, rgb(var(--text-primary-rgb) / .38) 50%, transparent 50%); background-size: 8px 2px; background-repeat: repeat-x; height: 2px; }
+    .retro-dash { background-image: linear-gradient(90deg, rgb(var(--text-primary-rgb) / .35) 50%, transparent 50%); background-size: 8px 2px; background-repeat: repeat-x; height: 2px; }
     @keyframes mai-bloom { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.05); } }
     .mai-bloom { animation: mai-bloom 2.2s steps(4, end) infinite; }
-    @keyframes mai-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,134,116,.65); } 100% { box-shadow: 0 0 0 14px rgba(255,134,116,0); } }
+    @keyframes mai-pulse { 0% { box-shadow: 0 0 0 0 rgba(140,215,120,.65); } 100% { box-shadow: 0 0 0 14px rgba(140,215,120,0); } }
     .mai-pulse { animation: mai-pulse 1.1s steps(4, end) infinite; }
     @keyframes toast-in { from { transform: translate(-50%, -14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
     .toast-in { animation: toast-in .2s steps(4, end) both; }
 
-    /* Dark Mode (Đêm Arcade) – đảm bảo viền, nút bấm & chữ luôn tương phản cao */
+    /* Dark Mode (Đêm Nông Trại) – đảm bảo viền, nút bấm & chữ luôn tương phản cao */
     html.dark .bg-theme-surface.border.rounded-2xl,
     html.dark .bg-theme-surface.border.rounded-3xl,
     html.dark .retro-card,
@@ -309,7 +320,7 @@
     html.dark .bg-theme-surface.border.rounded-3xl,
     html.dark .retro-card,
     html.dark .console-bezel {
-      box-shadow: 4px 4px 0 #07050D;
+      box-shadow: 0 4px 0 #07050D, inset 0 0 0 1.5px rgb(var(--border-rgb) / 0.35);
     }
     html.dark button.bg-theme-primary,
     html.dark .bg-theme-primary,
@@ -317,11 +328,11 @@
     html.dark .game-btn,
     html.dark .game-btn-accent {
       border-color: #07050D !important;
-      box-shadow: 0 3px 0 #07050D, 3px 3px 0 #07050D;
+      box-shadow: 0 3px 0 #07050D, inset 0 2px 0 rgba(255, 255, 255, 0.28);
     }
     html.dark .game-btn-neutral {
       border-color: rgb(var(--border-rgb)) !important;
-      box-shadow: 0 3px 0 #07050D, 3px 3px 0 #07050D;
+      box-shadow: 0 3px 0 #07050D, inset 0 1.5px 0 rgba(255, 255, 255, 0.14);
     }
     html.dark input:focus, html.dark select:focus, html.dark textarea:focus {
       border-color: rgb(var(--primary-rgb));
@@ -349,43 +360,44 @@
       try { window.firebase.initializeApp(FIREBASE_CONFIG); } catch (e) { console.warn("Firebase init error:", e); }
     }
 
-    // Bộ màu Retro Pixel Pastel (tương phản cao, đậm nét chữ mực trên nền phấn dịu mắt)
+    // Bộ màu Sprout Lands Cozy Pixel Pastel (khung gỗ ấm, giấy da kem, thiên nhiên dịu mắt, tương phản cao)
     const THEMES = {
-      pixel_peach: {
-        name: "Đào Kem Pixel", desc: "Hồng đào · kem sữa · mực đậm", retro: true,
-        colors: { primary: "#FF8674", onPrimary: "#1A1423", background: "#FCECD8", surface: "#FFF8EE", textPrimary: "#1A1423", textSecondary: "#564768", variant: "#F5DFC6", border: "#C7B096", ink: "#1A1423", accent: "#FFD875", expense: "#D9385A", expenseLight: "#FFE2E8", income: "#16805B", incomeLight: "#DAF6EA" }
+      sprout_meadow: {
+        name: "Nông Trại Sprout", desc: "Cỏ non · gỗ ấm · giấy kem", retro: true,
+        colors: { primary: "#8CD778", onPrimary: "#243D1A", background: "#DCECC8", surface: "#FBF2DE", textPrimary: "#4A2B18", textSecondary: "#7D563A", variant: "#EFE0BF", border: "#C8945C", ink: "#54321D", wood: "#C8945C", woodLight: "#E8BE8B", woodDark: "#9A6638", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C94A4A", expenseLight: "#FDE3DF", income: "#3A8740", incomeLight: "#DEF5D6" }
       },
-      pixel_mint: {
-        name: "Bạc Hà Game", desc: "Xanh bạc hà · kem · mực tím", retro: true,
-        colors: { primary: "#6ED9B2", onPrimary: "#12211D", background: "#E4F6EE", surface: "#F6FFF9", textPrimary: "#152328", textSecondary: "#455E63", variant: "#D2ECDF", border: "#93BEB0", ink: "#152328", accent: "#FFE082", expense: "#D9385A", expenseLight: "#FFE3EA", income: "#127D57", incomeLight: "#D2F4E3" }
+      pixel_peach: {
+        name: "Đào Kem Gỗ Ấm", desc: "Hồng đào · gỗ sồi · kem sữa", retro: true,
+        colors: { primary: "#F4978E", onPrimary: "#421B17", background: "#FCECD8", surface: "#FFF7EA", textPrimary: "#4A2B18", textSecondary: "#7E563B", variant: "#F4DFC4", border: "#C8945C", ink: "#54321D", wood: "#C68B59", woodLight: "#E6B88A", woodDark: "#945E34", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C93B4E", expenseLight: "#FFE2E5", income: "#2E8555", incomeLight: "#DAF5E3" }
       },
       pixel_lavender: {
-        name: "Tím Lavender", desc: "Tím oải hương · hồng đào · kem", retro: true,
-        colors: { primary: "#BFA9FC", onPrimary: "#1A1230", background: "#EEE9FD", surface: "#FAF8FF", textPrimary: "#1D1533", textSecondary: "#584C78", variant: "#E0D7FA", border: "#AC9DD8", ink: "#1D1533", accent: "#FFB3C6", expense: "#D6345C", expenseLight: "#FFE2EB", income: "#158262", incomeLight: "#DAF6EC" }
+        name: "Vườn Oải Hương", desc: "Tím pastel · gỗ sáng · kem", retro: true,
+        colors: { primary: "#BFA9FC", onPrimary: "#241942", background: "#EEE9FD", surface: "#FAF7FF", textPrimary: "#2F2248", textSecondary: "#635482", variant: "#E0D7FA", border: "#A794D4", ink: "#352652", wood: "#8D7AC2", woodLight: "#B6A6E2", woodDark: "#655499", accent: "#F9B8C9", onAccent: "#381B25", expense: "#C9385A", expenseLight: "#FFE2EB", income: "#26825F", incomeLight: "#DAF6EC" }
       },
       pixel_sky: {
-        name: "Xanh Trời 8-bit", desc: "Xanh trời · vàng chanh · sữa", retro: true,
-        colors: { primary: "#7ACEFB", onPrimary: "#102033", background: "#E5F3FD", surface: "#F7FBFF", textPrimary: "#122033", textSecondary: "#455B75", variant: "#D3E8FA", border: "#91B4D8", ink: "#122033", accent: "#FFD875", expense: "#D9385A", expenseLight: "#FFE2E8", income: "#16805B", incomeLight: "#DAF6EA" }
+        name: "Bầu Trời 8-bit", desc: "Xanh trời · gỗ vàng · sữa", retro: true,
+        colors: { primary: "#7ACEFB", onPrimary: "#13293E", background: "#E5F3FD", surface: "#F7FBFF", textPrimary: "#1D3248", textSecondary: "#4D647D", variant: "#D3E8FA", border: "#8AB0D6", ink: "#243B54", wood: "#6E98C2", woodLight: "#9CC2E8", woodDark: "#4B7199", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C93B4E", expenseLight: "#FFE2E8", income: "#26805B", incomeLight: "#DAF6EA" }
       },
       pixel_sakura: {
-        name: "Anh Đào Pastel", desc: "Hồng sakura · bạc hà · kem", retro: true,
-        colors: { primary: "#FF9EC1", onPrimary: "#241122", background: "#FCE8F0", surface: "#FFF7FA", textPrimary: "#241323", textSecondary: "#6B4A65", variant: "#F5D6E3", border: "#CFA5BA", ink: "#241323", accent: "#98E2C6", expense: "#C92B4E", expenseLight: "#FFE0E7", income: "#16805B", incomeLight: "#DAF6EA" }
+        name: "Hoa Anh Đào", desc: "Hồng sakura · bạc hà · kem", retro: true,
+        colors: { primary: "#FF9EC1", onPrimary: "#3B1729", background: "#FCE8F0", surface: "#FFF7FA", textPrimary: "#3D1E2E", textSecondary: "#764F65", variant: "#F5D6E3", border: "#CA9AB0", ink: "#472235", wood: "#B87A96", woodLight: "#DBA6BE", woodDark: "#8A536C", accent: "#98E2C6", onAccent: "#183B2E", expense: "#C92B4E", expenseLight: "#FFE0E7", income: "#26805B", incomeLight: "#DAF6EA" }
       },
       pixel_night: {
-        name: "Đêm Arcade", desc: "Tím đêm · san hô pastel (tối)", retro: true,
-        colors: { primary: "#FF9F87", onPrimary: "#120D1E", background: "#171226", surface: "#231C38", textPrimary: "#FFF6EA", textSecondary: "#CCC0EB", variant: "#30274B", border: "#7666A3", ink: "#0B0812", accent: "#FFE082", expense: "#FF7B95", expenseLight: "#4A1C2D", onExpense: "#120D1E", income: "#72E6BA", incomeLight: "#163F34", onIncome: "#120D1E" }
+        name: "Đêm Nông Trại", desc: "Tím đêm · san hô pastel (tối)", retro: true,
+        colors: { primary: "#FF9F87", onPrimary: "#120D1E", background: "#171226", surface: "#231C38", textPrimary: "#FFF6EA", textSecondary: "#CCC0EB", variant: "#30274B", border: "#7666A3", ink: "#0B0812", wood: "#3B2D54", woodLight: "#59467A", woodDark: "#241938", accent: "#FFE082", onAccent: "#120D1E", expense: "#FF7B95", expenseLight: "#4A1C2D", onExpense: "#120D1E", income: "#72E6BA", incomeLight: "#163F34", onIncome: "#120D1E" }
       }
     };
     const LEGACY_THEME_MAP = {
-      light: "pixel_peach",
-      retro70: "pixel_peach",
-      retro70_avocado: "pixel_mint",
+      light: "sprout_meadow",
+      pixel_mint: "sprout_meadow",
+      retro70: "sprout_meadow",
+      retro70_avocado: "sprout_meadow",
       retro70_rose: "pixel_sakura",
       retro70_teal: "pixel_sky",
       retro70_night: "pixel_night",
       retro70_plum: "pixel_night"
     };
-    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "pixel_peach";
+    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "sprout_meadow";
 
     // Ngân hàng & ví: tem chữ tự vẽ (không tải logo từ internet). code = chữ trên tem, color = màu tem.
     // Logo gốc của ngân hàng / ví (đóng gói sẵn trong web/logos, dùng được offline)
@@ -532,7 +544,7 @@
       const [broken, setBroken] = React.useState(false);
       if (b && b.logo && !broken) {
         return (
-          <span className="inline-flex items-center justify-center shrink-0 rounded-lg bg-[#FFF8EE] border-2 border-[#1A1423] overflow-hidden"
+          <span className="inline-flex items-center justify-center shrink-0 rounded-lg bg-[#FBF2DE] border-2 border-[var(--ink)] overflow-hidden"
             style={{ width: Math.round(size * 1.5), height: size, padding: Math.max(2, Math.round(size * 0.1)), boxShadow: "2px 2px 0 var(--ink)" }}>
             <img src={`logos/${b.logo}.webp`} alt={b.name} draggable="false" onError={() => setBroken(true)} className="max-w-full max-h-full object-contain" />
           </span>
@@ -543,7 +555,7 @@
       const label = b ? b.code : ((name || "?").replace(/^(ví|vi)\s+/i, "").trim().slice(0, 2).toUpperCase());
       const fs = !label ? 0 : label.length >= 4 ? size * 0.28 : label.length === 3 ? size * 0.31 : size * 0.39;
       return (
-        <span className="relative inline-flex items-center justify-center rounded-lg shrink-0 border-2 border-[#1A1423]" style={{ width: size, height: size, background: color, color: badgeInk, boxShadow: "2px 2px 0 var(--ink)" }}>
+        <span className="relative inline-flex items-center justify-center rounded-lg shrink-0 border-2 border-[var(--ink)]" style={{ width: size, height: size, background: color, color: badgeInk, boxShadow: "2px 2px 0 var(--ink)" }}>
           <span className="absolute inset-[2px] rounded-[4px] border border-dashed" style={{ borderColor: badgeInk === "#1A1423" ? "rgba(26,20,35,.38)" : "rgba(255,255,255,.55)" }} />
           {label ? <span className="font-display font-bold leading-none relative" style={{ fontSize: fs }}>{label}</span>
                  : <Icon name={b && b.icon || "wallet"} className="w-1/2 h-1/2 relative" style={{ color: "currentColor" }} />}
@@ -577,7 +589,7 @@
       const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
       return (
         <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick && onClick(); }}
-          className={`${vertical ? "wallet-row w-full min-h-[164px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-xl border-[2.5px] border-[#1A1423] relative overflow-hidden active:translate-x-0.5 active:translate-y-0.5 transition-transform`}
+          className={`${vertical ? "wallet-row w-full min-h-[164px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-xl border-[2.5px] border-[var(--ink)] relative overflow-hidden active:translate-x-0.5 active:translate-y-0.5 transition-transform`}
           style={{ animationDelay: `${index * 65}ms`, background: `linear-gradient(135deg, ${color} 0%, ${color} 48%, ${darkenHex(color, 0.72)} 100%)`, boxShadow: "4px 4px 0 var(--ink)" }}>
           <span className="absolute right-3 top-2 w-12 h-2 rounded-sm bg-white/20" />
           <span className="absolute -right-8 -bottom-10 w-36 h-36 rounded-lg rotate-12 border-[10px] border-white/10" />
@@ -586,9 +598,9 @@
             <div className="flex items-center justify-between gap-2">
               <BankBadge name={acc.name} size={30} />
               <div className="flex items-center gap-1.5">
-                <span className={`font-pixel text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${isDarkInk ? "bg-[#FFF8EE]/75 border-[#1A1423]/40 text-[#1A1423]" : "bg-black/35 border-white/25 text-white"}`}>{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
-                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#FFF8EE] text-[#1A1423] border-2 border-[#1A1423] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
-                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#FFF8EE] text-[#D9385A] border-2 border-[#1A1423] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
+                <span className={`font-pixel text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${isDarkInk ? "bg-[#FBF2DE]/85 border-[#54321D]/40 text-[#4A2B18]" : "bg-black/35 border-white/25 text-white"}`}>{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
+                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#FBF2DE] text-[#4A2B18] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
+                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#FFF8EE] text-[#D9385A] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
               </div>
             </div>
             <p className="mt-2.5 font-display text-[20px] leading-tight truncate">{acc.name}</p>
@@ -746,22 +758,26 @@
         </svg>
       </span>
     );
-    // Sprite ngôi sao Mai (Retro Pixel Pastel badge + 2 ngôi sao pixel 8-bit)
+    // Sprite Mai phong cách Sprout Lands (Mèo kem tai nâu má hồng + mầm non xanh 2 lá)
     const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
-      <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" className={`shrink-0 ${className} ${animated ? "px-anim-sparkle" : ""}`} aria-label="Tự động">
-        <rect x="3" y="1" width="10" height="14" fill="#FFF8EE" />
-        <rect x="1" y="3" width="14" height="10" fill="#FFF8EE" />
-        <rect x="2" y="2" width="12" height="12" fill="#FFF8EE" />
-        <path fill="#1A1423" d="M4 0h8v1H4zm0 15h8v1H4zM0 4h1v8H0zm15 0h1v8h-1zM2 1h2v1H2zm10 0h2v1h-2zM1 2h1v2H1zm13 0h1v2h-1zM1 12h1v2H1zm13 0h1v2h-1zM2 14h2v1H2zm10 0h2v1h-2z" />
-        <rect x="7" y="2" width="2" height="10" fill="#FFD875" />
-        <rect x="3" y="6" width="10" height="2" fill="#FFD875" />
-        <rect x="5" y="4" width="6" height="6" fill="#FFD875" />
-        <rect x="6" y="3" width="4" height="8" fill="#FFD875" />
-        <rect x="7" y="5" width="2" height="2" fill="#FFF8EE" />
-        <path fill="#1A1423" d="M7 2h2v1H7zm-1 1h1v2H6zm3 0h1v2H9zM3 5h3v1H3zm7 0h3v1h-3zM2 6h1v2H2zm11 0h1v2h-1zM3 8h3v1H3zm7 0h3v1h-3zm-4 1h1v2H6zm3 0h1v2H9zm-2 2h2v1H7z" opacity="0.22" />
-        <rect x="11" y="10" width="2" height="2" fill="#FF8674" />
-        <rect x="12" y="9" width="1" height="4" fill="#FF8674" />
-        <rect x="10" y="11" width="4" height="1" fill="#FF8674" />
+      <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" className={`shrink-0 ${className} ${animated ? "px-anim-float" : ""}`} aria-label="Tự động">
+        <rect x="6" y="0" width="2" height="2" fill="#8CD778" />
+        <rect x="9" y="1" width="2" height="2" fill="#6CC570" />
+        <rect x="7" y="2" width="2" height="2" fill="#4E944F" />
+        <rect x="3" y="3" width="2" height="2" fill="#FBF2DE" />
+        <rect x="11" y="3" width="2" height="2" fill="#FBF2DE" />
+        <rect x="2" y="5" width="12" height="8" fill="#FBF2DE" />
+        <rect x="3" y="4" width="10" height="10" fill="#FBF2DE" />
+        <rect x="4" y="13" width="8" height="2" fill="#EFE0BF" />
+        <path fill="#54321D" d="M3 2h2v1H3zm8 0h2v1h-2zM2 3h1v2H2zm3 0h1v1H5zm5 0h1v1h-1zm3 0h1v2h-1zM1 5h1v7H1zm13 0h1v7h-1zM2 12h1v2H2zm11 0h1v2h-1zM3 14h2v1H3zm8 0h2v1h-2zM5 15h6v1H5zM6 4h4v1H6z" />
+        <rect x="3" y="4" width="1" height="1" fill="#F4A29E" />
+        <rect x="12" y="4" width="1" height="1" fill="#F4A29E" />
+        <rect x="5" y="7" width="1" height="2" fill="#54321D" />
+        <rect x="10" y="7" width="1" height="2" fill="#54321D" />
+        <rect x="3" y="9" width="2" height="1" fill="#F4A29E" />
+        <rect x="11" y="9" width="2" height="1" fill="#F4A29E" />
+        <rect x="7" y="9" width="2" height="1" fill="#F4A29E" />
+        <path fill="#54321D" d="M6 10h1v1H6zm3 0h1v1H9zm-2 1h2v1H7z" />
       </svg>
     );
 
@@ -1012,11 +1028,11 @@
       };
 
       return (
-        <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
           <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md overflow-hidden flex flex-col max-h-[92vh]">
             <div className="console-top-strip px-3.5 py-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#FF8674] px-led" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#8CD778] px-led" />
                 <span className="font-pixel text-[11px] uppercase tracking-wider">{editingCategory ? "SỬA HẠNG MỤC" : "THÊM HẠNG MỤC"}</span>
               </div>
               <button type="button" onClick={onClose} aria-label="Đóng" className="console-key hover:opacity-85">✕</button>
@@ -1191,10 +1207,10 @@
       const [expandedDebtPerson, setExpandedDebtPerson] = useState(null);
       const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem("vina_theme");
-        // Lần đầu lên bản Retro Pixel Pastel: chuyển theme cũ sang bảng màu pixel mới
-        if (!localStorage.getItem("vina_theme_v3")) {
-          localStorage.setItem("vina_theme_v3", "1");
-          return normalizeThemeKey(saved);
+        // Lần đầu lên bản Sprout Lands UI: áp dụng bảng màu đồng cỏ & gỗ ấm mặc định
+        if (!localStorage.getItem("vina_theme_v4")) {
+          localStorage.setItem("vina_theme_v4", "1");
+          return saved === "pixel_night" ? "pixel_night" : "sprout_meadow";
         }
         return normalizeThemeKey(saved);
       });
@@ -2143,8 +2159,8 @@
       useEffect(() => {
         const rootStyle = document.documentElement.style;
         const safeKey = normalizeThemeKey(theme);
-        const currentTheme = THEMES[safeKey] || THEMES.pixel_peach;
-        const c = { ink: currentTheme.colors.textPrimary, onPrimary: "#1A1423", accent: "#FFD875", expense: "#D9385A", expenseLight: "#FFE2E8", onExpense: "#FFFFFF", income: "#16805B", incomeLight: "#DAF6EA", onIncome: "#FFFFFF", ...currentTheme.colors };
+        const currentTheme = THEMES[safeKey] || THEMES.sprout_meadow;
+        const c = { ink: currentTheme.colors.textPrimary, onPrimary: "#243D1A", accent: "#F8D56B", onAccent: "#4A2B18", wood: "#C8945C", woodLight: "#E8BE8B", woodDark: "#9A6638", expense: "#C94A4A", expenseLight: "#FCE0DD", onExpense: "#FFFFFF", income: "#3A8740", incomeLight: "#DCF2D0", onIncome: "#FFFFFF", ...currentTheme.colors };
         const toRgb = (hex) => { const h = String(hex).replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16); return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`; };
         Object.keys(c).forEach(k => {
           const cssName = `--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
@@ -3879,7 +3895,7 @@
           {/* TOAST NOTIFICATION */}
           {syncMessage && (
             <div className="fixed left-1/2 z-[60] toast-in w-[calc(100%-32px)] max-w-md" style={{ top: "calc(var(--safe-top) + 12px)" }}>
-              <div className={`px-4 py-3 rounded-xl flex items-center gap-3 border-2 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] ${syncMessage.type === 'error' ? 'bg-[var(--expense-light)] text-[var(--expense)]' : syncMessage.type === 'info' ? 'bg-[var(--accent)] text-[#1A1423]' : 'bg-[var(--income-light)] text-[var(--income)]'}`}>
+              <div className={`px-4 py-3 rounded-xl flex items-center gap-3 border-2 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] ${syncMessage.type === 'error' ? 'bg-[var(--expense-light)] text-[var(--expense)]' : syncMessage.type === 'info' ? 'bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]' : 'bg-[var(--income-light)] text-[var(--income)]'}`}>
                 <Icon name={syncMessage.type === 'error' ? 'alert-circle' : syncMessage.type === 'info' ? 'info' : 'check-circle-2'} anim={syncMessage.type === 'error' ? 'wiggle' : 'hop'} className="w-5 h-5" />
                 <span className="text-sm font-bold leading-snug">{syncMessage.text}</span>
               </div>
@@ -3896,12 +3912,12 @@
                     type="button"
                     onClick={handleBack}
                     aria-label="Quay lại màn hình trước"
-                    className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 shrink-0">
+                    className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 shrink-0">
                     <span className="font-pixel text-[10px]">◄</span>
                     <span className="font-pixel text-[10px]">LÙI</span>
                   </button>
                 ) : (
-                  <div className="w-9 h-9 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] shrink-0 text-[#1A1423]">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] shrink-0 text-[var(--on-accent,#4A2B18)]">
                     <Icon name="sun" anim="sparkle" className="w-5 h-5" />
                   </div>
                 )}
@@ -3931,8 +3947,8 @@
              <div className="absolute left-0 top-0 bottom-0 w-1.5 retro-stripes" />
              <div className="flex items-center justify-between mb-4 px-1.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] text-[#1A1423]">
-                    <Icon name="sun" anim="sparkle" className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] text-[var(--on-accent,#4A2B18)]">
+                    <Icon name="sprout" anim="wiggle" className="w-5 h-5" />
                   </div>
                   <div>
                     <h1 className="font-display font-bold text-2xl text-theme-textPrimary leading-none">VinaSpends</h1>
@@ -3948,7 +3964,7 @@
               <button
                 type="button"
                 onClick={handleBack}
-                className="game-btn-sm bg-[var(--accent)] text-[#1A1423] w-full py-2 px-3 mb-3 text-xs font-bold flex items-center justify-center gap-1.5">
+                className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] w-full py-2 px-3 mb-3 text-xs font-bold flex items-center justify-center gap-1.5">
                 <span className="console-key">◄</span> Quay lại màn trước
               </button>
             )}
@@ -3970,7 +3986,7 @@
                   <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold border-2 transition-all ${active ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[3px_3px_0_var(--ink)]' : 'border-transparent text-theme-textSecondary hover:bg-theme-variant hover:text-theme-textPrimary'}`}>
                     {t.id === "mai" ? <MaiAvatar size={22} animated={active || maiBadge > 0} /> : <Icon name={t.icon} anim={active ? "hop" : ""} className="w-5 h-5" />}
                     <span className="flex-1 text-left">{t.label}</span>
-                    {t.id === "mai" && maiBadge > 0 && <span className="font-pixel min-w-[20px] h-5 px-1.5 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] text-[10px] font-bold flex items-center justify-center">{maiBadge}</span>}
+                    {t.id === "mai" && maiBadge > 0 && <span className="font-pixel min-w-[20px] h-5 px-1.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[10px] font-bold flex items-center justify-center">{maiBadge}</span>}
                   </button>
                 );
               })}
@@ -3988,7 +4004,7 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">P1 · PORTFOLIO LV.{rpgLevel}</span>
+                      <span className="font-pixel text-[10px] tracking-wider uppercase">SỔ NÔNG TRẠI · CẤP {rpgLevel}</span>
                     </div>
                     <span className="font-pixel text-[10px] text-[#FFD875]">{transactions.length} TX</span>
                   </div>
@@ -4002,7 +4018,7 @@
                           <p className="font-pixel text-[10px] uppercase tracking-[0.16em] opacity-85">TÀI SẢN RÒNG</p>
                           <h2 className="font-display font-bold text-[40px] md:text-5xl leading-none mt-1 tabular">{formatVND(netWorth)}</h2>
                         </div>
-                        <span className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[#1A1423]">
+                        <span className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
                           <Icon name="wallet" anim="float" className="w-6 h-6" />
                         </span>
                       </div>
@@ -4019,7 +4035,7 @@
                       <div className="flex items-center justify-between mb-2.5">
                         <p className="font-pixel text-[10px] font-bold uppercase tracking-wider text-theme-textSecondary">{monthStats.label}</p>
                         {monthStats.maiCount > 0 && (
-                          <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] flex items-center gap-1">
+                          <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] flex items-center gap-1">
                             <MaiAvatar size={12} /> TỰ GHI {monthStats.maiCount}/{monthStats.count}
                           </span>
                         )}
@@ -4064,7 +4080,7 @@
                   <div className="border-t-2 border-dashed border-theme-border pt-3 pb-4 px-4 sm:px-5">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2 text-sm font-bold text-theme-textPrimary"><Icon name="landmark" anim="float" className="w-5 h-5" /> Các ví & tài khoản <span className="text-theme-textSecondary font-semibold">({accounts.length})</span></span>
-                      <button type="button" onClick={() => { setActiveTab("wallet_ai"); setSubTab("wallet"); }} className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-2.5 py-1 text-xs font-bold flex items-center gap-0.5">Xem thẻ <Icon name="chevron-right" className="w-3.5 h-3.5" /></button>
+                      <button type="button" onClick={() => { setActiveTab("wallet_ai"); setSubTab("wallet"); }} className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1 text-xs font-bold flex items-center gap-0.5">Xem thẻ <Icon name="chevron-right" className="w-3.5 h-3.5" /></button>
                     </div>
                     {(() => {
                       const pos = accounts.reduce((s, a) => s + Math.max(0, isCreditAcc(a) ? 0 : (Number(a.balance) || 0)), 0);
@@ -4122,7 +4138,7 @@
                     <Icon name="plus" anim="hop" className="w-5 h-5" />
                     <span>Ghi giao dịch</span>
                   </button>
-                  <button onClick={()=>setActiveTab("mai")} className="game-btn game-btn-accent py-3.5 bg-[var(--accent)] text-[#1A1423] font-bold flex items-center justify-center gap-2 relative">
+                  <button onClick={()=>setActiveTab("mai")} className="game-btn game-btn-accent py-3.5 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold flex items-center justify-center gap-2 relative">
                     <span className="console-key">START</span>
                     <MaiAvatar size={22} animated={maiBadge > 0} />
                     <span>Ghi tự động</span>
@@ -4132,7 +4148,7 @@
 
                 {/* Nhắc quyền đọc thông báo trên Android */}
                 {canListen && !maiAccess && (
-                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 bg-[var(--accent)] flex items-center gap-3 text-[#1A1423]">
+                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 bg-[var(--accent)] flex items-center gap-3 text-[var(--on-accent,#4A2B18)]">
                     <MaiAvatar size={40} animated />
                     <div className="flex-1">
                       <p className="font-bold text-sm">Cho phép đọc thông báo ngân hàng</p>
@@ -4201,14 +4217,14 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">REPORT HUB · STATS & HP</span>
+                      <span className="font-pixel text-[10px] tracking-wider uppercase">BÁO CÁO MÙA VỤ · HP</span>
                     </div>
                     <span className="font-pixel text-[10px] text-[#FFD875]">{reportPeriod.toUpperCase()}</span>
                   </div>
                   <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[#1A1423]">
+                      <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
                         <Icon name="bar-chart-2" anim="pulse" className="w-6 h-6" />
                       </span>
                       <div>
@@ -4221,7 +4237,7 @@
                     {drillDownParent ? (
                       <button
                         onClick={()=>setDrillDownParent(null)}
-                        className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-3 py-2 text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                        className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-2 text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto">
                         <span className="console-key">◄</span>
                         <Icon name="arrow-left" className="w-3.5 h-3.5" /> Quay lại Báo cáo
                       </button>
@@ -4265,7 +4281,7 @@
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="font-pixel text-[10px] font-bold text-theme-textSecondary uppercase tracking-wider">CHI TIẾT NHÓM LỚN</span>
-                              <span className="font-pixel text-[10px] bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] px-2 py-0.5 rounded font-bold">{drillDownData.percentageOfPeriod}% TỔNG KỲ</span>
+                              <span className="font-pixel text-[10px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] px-2 py-0.5 rounded font-bold">{drillDownData.percentageOfPeriod}% TỔNG KỲ</span>
                             </div>
                             <h3 className="font-display text-3xl text-theme-textPrimary mt-0.5 leading-none">{drillDownData.parentName}</h3>
                           </div>
@@ -4492,7 +4508,7 @@
                         </div>
                         <button
                           onClick={() => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); }}
-                          className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0">
+                          className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0">
                           <span className="console-key">B</span>
                           <Icon name="sliders" className="w-3.5 h-3.5" /> Thiết lập
                         </button>
@@ -4613,7 +4629,7 @@
                                          <div className="min-w-0">
                                              <div className="flex items-center gap-2">
                                                <p className="font-bold text-theme-textPrimary text-base truncate">{item.category}</p>
-                                               <span className="font-pixel text-[9px] bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] font-bold px-1.5 py-0.5 rounded shrink-0">LỚN</span>
+                                               <span className="font-pixel text-[9px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] font-bold px-1.5 py-0.5 rounded shrink-0">LỚN</span>
                                              </div>
                                              <p className="text-xs text-theme-textSecondary font-semibold mt-0.5">{item.txCount} giao dịch • {percent}% tổng kỳ</p>
                                          </div>
@@ -4665,14 +4681,14 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[var(--accent)] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">CATEGORY TREE · SKILL DEX</span>
+                      <span className="font-pixel text-[10px] tracking-wider uppercase">KHO HẠNG MỤC · SPROUT</span>
                     </div>
                     <span className="font-pixel text-[10px] text-[#FFD875]">{parentCategories.length} NHÓM · {subCategories.length} CON</span>
                   </div>
                   <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[#1A1423]">
+                      <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
                         <Icon name="tags" anim="float" className="w-6 h-6" />
                       </span>
                       <div>
@@ -4748,7 +4764,7 @@
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <h3 className="font-display text-2xl text-theme-textPrimary leading-none truncate">{parent.name}</h3>
-                                  <span className="font-pixel text-[9px] bg-[var(--accent)] text-[#1A1423] font-bold px-2 py-0.5 rounded border border-[var(--ink)] shrink-0">
+                                  <span className="font-pixel text-[9px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold px-2 py-0.5 rounded border border-[var(--ink)] shrink-0">
                                     NHÓM LỚN
                                   </span>
                                 </div>
@@ -4763,7 +4779,7 @@
                                   setNewCategoryParent(parent.name);
                                   setIsCategoryModalOpen(true);
                                 }}
-                                className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+                                className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                                 title="Thêm danh mục con">
                                 <Icon name="plus" className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Thêm con</span>
                               </button>
@@ -4858,7 +4874,7 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">MAI-BOT · AUTO LEDGER</span>
+                      <span className="font-pixel text-[10px] tracking-wider uppercase">TRỢ LÝ MAI · TỰ ĐỘNG</span>
                     </div>
                     <span className="font-pixel text-[10px] text-[#FFD875]">GEMINI FLASH-LITE</span>
                   </div>
@@ -4899,7 +4915,7 @@
                 {/* Trạng thái tự động */}
                 <section className="retro-card bg-theme-surface rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 ${canListen && maiAccess ? 'bg-[var(--income-light)] text-[var(--income)]' : 'bg-[var(--accent)] text-[#1A1423]'}`}>
+                    <div className={`w-10 h-10 rounded-lg border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 ${canListen && maiAccess ? 'bg-[var(--income-light)] text-[var(--income)]' : 'bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]'}`}>
                       <Icon name={canListen && maiAccess ? "bell-ring" : "bell-off"} anim={canListen && maiAccess ? "wiggle" : ""} className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -4911,7 +4927,7 @@
                     )}
                   </div>
                   {canListen && !maiAccess && (
-                    <div className="rounded-lg border-2 border-dashed border-[#1A1423]/60 bg-[#FFF0B5] p-3 text-xs text-[#1A1423] space-y-2">
+                    <div className="rounded-lg border-2 border-dashed border-[var(--ink)]/50 bg-[#FFF0B5] p-3 text-xs text-[var(--on-accent,#4A2B18)] space-y-2">
                       <p className="font-bold text-sm">Không bật được quyền?</p>
                       <p>Android 13 trở lên chặn quyền này với app cài từ file APK. Mở khoá một lần là xong:</p>
                       <ol className="list-decimal pl-5 space-y-1">
@@ -4921,7 +4937,7 @@
                         <li>Quay lại đây, bấm <b>"Cấp quyền"</b> và bật VinaSpends.</li>
                       </ol>
                       <div className="flex gap-2 pt-1">
-                        <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-[#FFF8EE] text-[#1A1423]">Thông tin app</button>
+                        <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-[#FBF2DE] text-[#4A2B18]">Thông tin app</button>
                         <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-theme-primary text-[var(--on-primary)]">Cấp quyền</button>
                       </div>
                     </div>
@@ -4947,14 +4963,14 @@
                 <section className="console-bezel p-4 space-y-3.5">
                   <div className="console-lcd p-3.5 bg-theme-background space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-11 h-11 rounded-xl border-2 border-[var(--ink)] bg-[var(--accent)] text-[#1A1423] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0">
+                      <span className="w-11 h-11 rounded-xl border-2 border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0">
                         <Icon name="sparkles" anim="sparkle" className="w-6 h-6" />
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <p className="font-display text-2xl text-theme-textPrimary leading-none">Trợ lý ảo Mai</p>
                           <span className="font-pixel px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)] text-[10px]">0% PIN CHỜ</span>
-                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] text-[10px]">NHƯ GEMINI</span>
+                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[10px]">NHƯ GEMINI</span>
                         </div>
                         <p className="text-xs text-theme-textSecondary mt-1">Gọi Mai bất cứ lúc nào bằng nút nguồn hoặc cử chỉ như Gemini trên Android. Không chạy ngầm, không mở mic khi chờ.</p>
                       </div>
@@ -5041,7 +5057,7 @@
                   <p className="text-xs text-theme-textSecondary">Chụp biên lai chuyển khoản, lịch sử ngân hàng, hoá đơn… Gemini đọc ảnh và lấy từng giao dịch.</p>
                   <input ref={gemImgInputRef} type="file" accept="image/*" multiple className="hidden" onChange={async e => { const fs = e.target.files; try { await gemAnalyzeImages(fs); } catch (err) { showToast(window.VinaGemini ? window.VinaGemini.explain(err) : String(err.message || err), "error"); } finally { e.target.value = ""; } }} />
                   <button disabled={gemImgBusy} onClick={() => gemImgInputRef.current && gemImgInputRef.current.click()}
-                    className="game-btn game-btn-accent w-full py-3 bg-[var(--accent)] text-[#1A1423] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
+                    className="game-btn game-btn-accent w-full py-3 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
                     <span className="console-key">X</span>
                     {gemImgBusy ? <><Icon name="loader-2" anim="spin" className="w-5 h-5" /> Gemini đang đọc ảnh…</> : <><Icon name="image" anim="scan" className="w-5 h-5" /> Chọn ảnh chụp màn hình</>}
                   </button>
@@ -5109,7 +5125,7 @@
                               <p className={`font-display text-3xl leading-none tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
                               <p className="text-xs text-theme-textSecondary font-semibold mt-1 truncate">{accLabel} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                             </div>
-                            <span className="font-pixel text-[10px] px-2 py-1 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] shrink-0">{badgeText}</span>
+                            <span className="font-pixel text-[10px] px-2 py-1 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] shrink-0">{badgeText}</span>
                           </div>
                           <p className="text-sm font-bold text-theme-textPrimary mt-2 truncate">{item.note}</p>
                           <p className="text-xs text-theme-textSecondary mt-1 line-clamp-2 italic">“{item.raw}”</p>
@@ -5123,7 +5139,7 @@
                             <div className="flex flex-wrap gap-1.5">
                               {picks.map(c => (
                                 <button key={c} type="button" onClick={() => maiPickInbox(item, c)}
-                                  className={`px-2.5 py-1 rounded-lg border-2 text-xs font-bold ${sure && c === cur ? "border-[var(--ink)] bg-[var(--accent)] text-[#1A1423] shadow-[1px_1px_0_var(--ink)]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>{c}</button>
+                                  className={`px-2.5 py-1 rounded-lg border-2 text-xs font-bold ${sure && c === cur ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[1px_1px_0_var(--ink)]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>{c}</button>
                               ))}
                               <button type="button" onClick={openDraft}
                                 className="px-2.5 py-1 rounded-lg border-2 border-dashed border-theme-border text-xs font-bold text-theme-textSecondary">Mục khác…</button>
@@ -5167,7 +5183,7 @@
                   <div className="flex items-center gap-2">
                     <Icon name="sparkles" anim="sparkle" className="w-5 h-5" />
                     <h3 className="font-display text-2xl text-theme-textPrimary flex-1">Cài đặt Gemini</h3>
-                    <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)]">FREE TIER</span>
+                    <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">FREE TIER</span>
                   </div>
                   {window.VinaGemini && (
                     <div className="rounded-lg border-2 border-dashed border-theme-border p-3 space-y-1.5 bg-theme-background">
@@ -5236,7 +5252,7 @@
                   <div className="space-y-4">
                     <div className="flex justify-between items-center mt-1">
                       <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" anim="float" className="w-5 h-5" /> Thẻ & tài khoản ({accounts.length})</h3>
-                      <button onClick={()=>{ setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="game-btn-sm bg-[var(--accent)] text-[#1A1423] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"><span className="console-key">+</span> Liên kết ví</button>
+                      <button onClick={()=>{ setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"><span className="console-key">+</span> Liên kết ví</button>
                     </div>
                     <div className="wallet-stack flex flex-col gap-4">
                       {accounts.map((acc, i) => (
@@ -5322,7 +5338,7 @@
                             <div key={p.name} className="retro-card bg-theme-surface rounded-xl overflow-hidden">
                               <button type="button" onClick={()=>setExpandedDebtPerson(isExpanded ? null : p.name)} className="w-full p-3.5 flex items-center justify-between text-left">
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)] text-[#1A1423] border-2 border-[var(--ink)] flex items-center justify-center font-display text-xl uppercase shrink-0">{p.name.charAt(0)}</div>
+                                  <div className="w-10 h-10 rounded-lg bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border-2 border-[var(--ink)] flex items-center justify-center font-display text-xl uppercase shrink-0">{p.name.charAt(0)}</div>
                                   <div className="min-w-0">
                                     <p className="font-bold text-theme-textPrimary text-sm truncate">{p.name}</p>
                                     <p className="text-xs text-theme-textSecondary">{p.entries.length} khoản ghi sổ</p>
@@ -5418,7 +5434,7 @@
           {voice.lock && (
             <div className="fixed inset-0 z-[80] bg-theme-background flex flex-col items-center justify-center px-5 text-center overflow-y-auto py-8">
               <div className="console-top-strip fixed top-0 inset-x-0 px-4 py-1.5 flex items-center justify-between pt-safe">
-                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[11px] uppercase">MAI ASSISTANT · 8-BIT</span></div>
+                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[11px] uppercase">MAI · TRỢ LÝ NÔNG TRẠI</span></div>
                 <button onClick={() => { setAssistInput(""); lockFinish(0); }} className="console-key">ESC</button>
               </div>
               <div className="fixed top-8 inset-x-0 h-1.5 retro-stripes-h" />
@@ -5429,7 +5445,7 @@
                   if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command");
                 }}
                 aria-label="Nói với Mai"
-                className={`w-28 h-28 rounded-2xl border-[3px] border-[var(--ink)] flex items-center justify-center shadow-[5px_5px_0_var(--ink)] transition-transform active:translate-x-[2px] active:translate-y-[2px] ${voice.state === "listening" ? "bg-[var(--expense)] text-[var(--on-expense)] mai-pulse" : voice.state === "done" ? "bg-[var(--income)] text-[var(--on-income)]" : "bg-[var(--accent)] text-[#1A1423]"}`}>
+                className={`w-28 h-28 rounded-2xl border-[3px] border-[var(--ink)] flex items-center justify-center shadow-[5px_5px_0_var(--ink)] transition-transform active:translate-x-[2px] active:translate-y-[2px] ${voice.state === "listening" ? "bg-[var(--expense)] text-[var(--on-expense)] mai-pulse" : voice.state === "done" ? "bg-[var(--income)] text-[var(--on-income)]" : "bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]"}`}>
                 {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="check" anim="hop" className="w-14 h-14" /> : <MicIcon anim={voice.state === "listening" ? "pulse" : "float"} className="w-14 h-14" />}
               </button>
               <h2 className="font-display text-4xl text-theme-textPrimary mt-5 leading-tight">
@@ -5474,7 +5490,7 @@
                     className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg border-2 border-[var(--ink)] bg-theme-surface text-theme-textPrimary text-sm font-semibold shadow-[2px_2px_0_var(--ink)] focus:outline-none"
                   />
                   <button type="submit" disabled={!assistInput.trim()}
-                    className="game-btn game-btn-accent px-4 py-2.5 bg-[var(--accent)] text-[#1A1423] font-bold text-sm disabled:opacity-50 shrink-0">
+                    className="game-btn game-btn-accent px-4 py-2.5 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold text-sm disabled:opacity-50 shrink-0">
                     Gửi
                   </button>
                 </form>
@@ -5497,7 +5513,7 @@
             <div className="fixed inset-x-0 bottom-0 z-[60] p-3 pb-6 md:p-6 flex justify-center pointer-events-none">
               <div className="console-bezel modal-pop pointer-events-auto w-full max-w-md p-4">
                 <div className="flex items-center gap-3">
-                  <span className={`w-12 h-12 shrink-0 rounded-xl border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center ${voice.state === "listening" ? "bg-theme-primary text-[var(--on-primary)] mai-pulse" : "bg-[var(--accent)] text-[#1A1423]"}`}>
+                  <span className={`w-12 h-12 shrink-0 rounded-xl border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center ${voice.state === "listening" ? "bg-theme-primary text-[var(--on-primary)] mai-pulse" : "bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]"}`}>
                     {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-1"><i /><i /><i /></span> : <MicIcon anim={voice.state === "listening" ? "pulse" : ""} className="w-6 h-6" />}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -5531,7 +5547,7 @@
 
           {/* MAI – XÁC NHẬN / SỬA TRƯỚC KHI GHI */}
           {maiDraft && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end md:items-center justify-center p-2 sm:p-4" onClick={() => setMaiDraft(null)}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end md:items-center justify-center p-2 sm:p-4" onClick={() => setMaiDraft(null)}>
               <form key={`${maiDraft.inboxId || maiDraft.raw || "draft"}_${maiDraft.bankId || ""}`} onClick={e => e.stopPropagation()} onSubmit={e => {
                   e.preventDefault();
                   const f = e.target;
@@ -5627,7 +5643,7 @@
 
           {/* ADD TRANSACTION MODAL (Thu gọn vừa 1 màn hình) */}
           {isAddTxModalOpen && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setIsAddTxModalOpen(false)}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setIsAddTxModalOpen(false)}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
@@ -5659,7 +5675,7 @@
                         type="button"
                         onClick={() => ocrFileInputRef.current && ocrFileInputRef.current.click()}
                         disabled={isOcrScanning}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--accent)] text-[#1A1423] border-[1.5px] border-[var(--ink)] shadow-[1px_1px_0_var(--ink)] text-[11px] font-bold active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-60">
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border-[1.5px] border-[var(--ink)] shadow-[1px_1px_0_var(--ink)] text-[11px] font-bold active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-60">
                         {isOcrScanning ? (
                           <><Icon name="loader-2" anim="spin" className="w-3.5 h-3.5" /> {gemImgBusy ? "Đọc ảnh…" : "Đang quét…"}</>
                         ) : (
@@ -5686,7 +5702,7 @@
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} required className="peer sr-only" />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[#1A1423] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all">
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all">
                               <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
                               <span className="text-[11px] font-bold truncate">{c.name}</span>
                             </div>
@@ -5714,7 +5730,7 @@
                     </div>
                     {addTxHint && (
                       <div className="flex justify-end">
-                        <button type="button" onClick={applyAddTxHint} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] text-[#1A1423] shadow-[1px_1px_0_var(--ink)] text-xs font-bold">
+                        <button type="button" onClick={applyAddTxHint} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[1px_1px_0_var(--ink)] text-xs font-bold">
                           <Icon name={getIconForCategoryName(addTxHint) || "tag"} className="w-4 h-4" /> Gợi ý: {addTxHint}
                         </button>
                       </div>
@@ -5731,7 +5747,7 @@
 
           {/* EDIT TRANSACTION MODAL (Thu gọn vừa 1 màn hình) */}
           {editingTx && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setEditingTx(null)}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setEditingTx(null)}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
@@ -5757,7 +5773,7 @@
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <label className="font-pixel text-[10px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[#1A1423] border border-[var(--ink)] truncate max-w-[160px]">{editingTx.category}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] truncate max-w-[160px]">{editingTx.category}</span>
                     </div>
                     <CurrencyInput name="amount" defaultValue={editingTx.amount} placeholder="0" required={true} className="w-full bg-transparent border-0 p-0 text-theme-textPrimary font-display text-2xl tabular focus:outline-none focus:ring-0 focus:shadow-none" />
                   </div>
@@ -5777,7 +5793,7 @@
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} className="peer sr-only" defaultChecked={editingTx.category === c.name} />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[#1A1423] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all">
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all">
                               <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
                               <span className="text-[11px] font-bold truncate">{c.name}</span>
                             </div>
@@ -5851,7 +5867,7 @@
 
           {/* ADD BANK MODAL */}
           {isAddBankModalOpen && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsAddBankModalOpen(false); setEditingBank(null); }}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsAddBankModalOpen(false); setEditingBank(null); }}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-sm max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
@@ -5866,7 +5882,7 @@
                   <div className="grid grid-cols-2 gap-2">
                     {[{ k: "account", t: "Tài khoản / Ví", i: "wallet" }, { k: "credit", t: "Thẻ tín dụng", i: "credit-card" }].map(o => (
                       <button key={o.k} type="button" onClick={() => setBankKind(o.k)}
-                        className={`py-2.5 rounded-lg border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${bankKind === o.k ? 'border-[var(--ink)] bg-[var(--accent)] text-[#1A1423] shadow-[2px_2px_0_var(--ink)]' : 'border-theme-border bg-theme-background text-theme-textSecondary'}`}>
+                        className={`py-2.5 rounded-lg border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${bankKind === o.k ? 'border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[2px_2px_0_var(--ink)]' : 'border-theme-border bg-theme-background text-theme-textSecondary'}`}>
                         <Icon name={o.i} className="w-4 h-4" /> {o.t}
                       </button>
                     ))}
@@ -5885,7 +5901,7 @@
                         {BANK_LOGOS.map(b => (
                           <label key={b.name} className="cursor-pointer relative group">
                             <input type="radio" name="bankName" value={b.name} required={bankNameType==="preset"} className="peer sr-only" defaultChecked={editingBank ? editingBank.name === b.name : b.name === "Vietcombank"} />
-                            <div className="p-1.5 border-2 border-theme-border rounded-lg bg-theme-surface peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[#1A1423] peer-checked:shadow-[2px_2px_0_var(--ink)] flex items-center justify-center h-[58px] transition-all">
+                            <div className="p-1.5 border-2 border-theme-border rounded-lg bg-theme-surface peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[2px_2px_0_var(--ink)] flex items-center justify-center h-[58px] transition-all">
                               <span className="flex flex-col items-center gap-1"><BankBadge name={b.name} size={26} /><span className="text-[9px] font-bold leading-none truncate max-w-[58px]">{b.name.replace("Ví ", "")}</span></span>
                             </div>
                           </label>
@@ -5937,7 +5953,7 @@
 
           {/* CÀI ĐẶT: giao diện · đồng bộ Firebase · sao lưu file */}
           {showSettingsDialog && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowSettingsDialog(false)}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowSettingsDialog(false)}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full md:max-w-lg rounded-b-none md:rounded-[12px] max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-4 py-2 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
@@ -6003,7 +6019,7 @@
                           <form className="space-y-2.5 pt-3 mt-2.5 border-t border-dashed border-theme-border" onSubmit={e => { e.preventDefault(); handleEmailAuth(authMode, authEmail, authPass); }}>
                             <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-theme-surface border-2 border-[var(--ink)]">
                               {[["login", "Đăng nhập"], ["signup", "Tạo tài khoản"]].map(([m, l]) => (
-                                <button type="button" key={m} onClick={() => setAuthMode(m)} className={`py-1.5 rounded text-xs font-bold border-2 ${authMode === m ? 'bg-[var(--accent)] text-[#1A1423] border-[var(--ink)]' : 'text-theme-textSecondary border-transparent'}`}>{l}</button>
+                                <button type="button" key={m} onClick={() => setAuthMode(m)} className={`py-1.5 rounded text-xs font-bold border-2 ${authMode === m ? 'bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border-[var(--ink)]' : 'text-theme-textSecondary border-transparent'}`}>{l}</button>
                               ))}
                             </div>
                             <input type="email" autoComplete="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="ten@gmail.com" className="w-full bg-theme-surface border-2 border-theme-border rounded-lg p-2.5 text-sm text-theme-textPrimary" />
@@ -6027,7 +6043,7 @@
                           {googleUser.picture ? (
                             <img src={googleUser.picture} alt="" className="w-11 h-11 rounded-lg border-2 border-[var(--ink)] object-cover shrink-0" />
                           ) : (
-                            <div className="w-11 h-11 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center font-display text-2xl text-[#1A1423] uppercase shrink-0">{(googleUser.email || "?").charAt(0)}</div>
+                            <div className="w-11 h-11 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center font-display text-2xl text-[var(--on-accent,#4A2B18)] uppercase shrink-0">{(googleUser.email || "?").charAt(0)}</div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm text-theme-textPrimary truncate">{googleUser.name || googleUser.email}</p>
@@ -6061,11 +6077,11 @@
                         </button>
 
                         {googleUser.hasGoogle && !googleUser.hasPassword && (
-                          <div className="p-3 rounded-xl bg-[#FFF0B5] border-2 border-[#1A1423] text-[#1A1423] space-y-2">
+                          <div className="p-3 rounded-xl bg-[#FFF0B5] border-2 border-[var(--ink)] text-[var(--on-accent,#4A2B18)] space-y-2">
                             <p className="text-xs font-bold">Đặt mật khẩu dự phòng (tùy chọn để đăng nhập nhanh bằng Email):</p>
                             <div className="flex gap-2">
-                              <input type="password" value={linkPass} onChange={e => setLinkPass(e.target.value)} placeholder="Mật khẩu mới (≥6 ký tự)" className="flex-1 min-w-0 bg-white border-2 border-[#1A1423]/40 rounded-lg p-2 text-xs text-[#1A1423]" />
-                              <button onClick={() => { handleLinkPassword(linkPass); setLinkPass(""); }} className="game-btn-sm px-3 bg-[var(--accent)] text-[#1A1423] text-xs font-bold">Lưu</button>
+                              <input type="password" value={linkPass} onChange={e => setLinkPass(e.target.value)} placeholder="Mật khẩu mới (≥6 ký tự)" className="flex-1 min-w-0 bg-white border-2 border-[var(--ink)]/40 rounded-lg p-2 text-xs text-[var(--on-accent,#4A2B18)]" />
+                              <button onClick={() => { handleLinkPassword(linkPass); setLinkPass(""); }} className="game-btn-sm px-3 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] text-xs font-bold">Lưu</button>
                             </div>
                           </div>
                         )}
@@ -6080,7 +6096,7 @@
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
                       <p className="font-pixel text-[11px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu tệp .JSON</p>
-                      <span className="font-pixel text-[10px] text-[#1A1423] bg-[var(--accent)] px-2 py-0.5 rounded border border-[var(--ink)]">{transactions.length} GD · {accounts.length} VÍ</span>
+                      <span className="font-pixel text-[10px] text-[var(--on-accent,#4A2B18)] bg-[var(--accent)] px-2 py-0.5 rounded border border-[var(--ink)]">{transactions.length} GD · {accounts.length} VÍ</span>
                     </div>
                     <p className="text-xs text-theme-textSecondary">Xuất toàn bộ dữ liệu ra file .json để cất giữ hoặc nhập lại (Gộp / Thay thế).</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -6110,7 +6126,7 @@
 
           {/* MODAL XEM TRƯỚC NHẬP FILE SAO LƯU */}
           {importPreview && (
-            <div className="fixed inset-0 z-[90] bg-[#1A1423]/70 flex items-center justify-center p-4" onClick={() => setImportPreview(null)}>
+            <div className="fixed inset-0 z-[90] bg-[#24160D]/65 flex items-center justify-center p-4" onClick={() => setImportPreview(null)}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md overflow-hidden">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -6132,7 +6148,7 @@
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <button onClick={() => applyImportJson("merge")} className="game-btn game-btn-accent w-full py-2.5 bg-[var(--accent)] text-[#1A1423] font-bold text-sm flex items-center justify-center gap-2">
+                    <button onClick={() => applyImportJson("merge")} className="game-btn game-btn-accent w-full py-2.5 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold text-sm flex items-center justify-center gap-2">
                       <span className="console-key">A</span> Gộp thêm vào dữ liệu hiện tại
                     </button>
                     <button onClick={() => applyImportJson("replace")} className="game-btn w-full py-2.5 bg-[var(--expense)] text-[var(--on-expense)] font-bold text-sm flex items-center justify-center gap-2">
@@ -6149,7 +6165,7 @@
 
           {/* BUDGET SETUP MODAL */}
           {isBudgetModalOpen && (
-            <div className="fixed inset-0 bg-[#1A1423]/65 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsBudgetModalOpen(false); setEditingBudgetCat(null); }}>
+            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsBudgetModalOpen(false); setEditingBudgetCat(null); }}>
               <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
@@ -6311,21 +6327,21 @@
       render() {
         if (this.state.hasError) {
           return (
-            <div className="min-h-screen bg-[#FCECD8] text-[#1A1423] flex items-center justify-center p-5 font-sans">
-              <div className="max-w-md w-full bg-[#FFF8EE] rounded-xl border-[3px] border-[#1A1423] shadow-[5px_5px_0_#1A1423] overflow-hidden text-center">
-                <div className="bg-[#1A1423] text-[#FFF8EE] px-3.5 py-1.5 flex items-center justify-between border-b-2 border-[#1A1423]">
+            <div className="min-h-screen bg-[#DCECC8] text-[#4A2B18] flex items-center justify-center p-5 font-sans">
+              <div className="max-w-md w-full bg-[#FBF2DE] rounded-xl border-[3px] border-[#54321D] shadow-[0_5px_0_#54321D] overflow-hidden text-center">
+                <div className="bg-[#C8945C] text-[#FFF9EC] px-3.5 py-1.5 flex items-center justify-between border-b-2 border-[#54321D]">
                   <span className="font-pixel text-[10px] tracking-wider uppercase">SYSTEM · RECOVERY MODE</span>
                   <span className="w-2.5 h-2.5 rounded-sm bg-[#FF7B95]" />
                 </div>
                 <div className="h-1.5 retro-stripes-h" />
                 <div className="p-5 space-y-4">
-                  <div className="w-14 h-14 bg-[#FFD875] text-[#1A1423] border-2 border-[#1A1423] shadow-[2px_2px_0_#1A1423] rounded-xl flex items-center justify-center mx-auto">
+                  <div className="w-14 h-14 bg-[#F8D56B] text-[#4A2B18] border-2 border-[#54321D] shadow-[0_2px_0_#54321D] rounded-xl flex items-center justify-center mx-auto">
                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="font-display text-3xl text-[#1A1423] leading-none">Khôi phục VinaSpends</h2>
+                    <h2 className="font-display text-3xl text-[var(--on-accent,#4A2B18)] leading-none">Khôi phục VinaSpends</h2>
                     <p className="text-xs font-semibold text-[#564768] mt-1.5">
                       Đã xảy ra sự cố khi tải giao diện. Nhấn nút bên dưới để đặt lại giao diện chuẩn và tiếp tục sử dụng:
                     </p>
@@ -6338,12 +6354,12 @@
                   <div className="space-y-2 pt-1">
                     <button
                       onClick={() => this.handleReset()}
-                      className="game-btn w-full py-2.5 bg-[#FF8674] text-[#1A1423] font-bold text-sm">
+                      className="game-btn w-full py-2.5 bg-[#8CD778] text-[var(--on-accent,#4A2B18)] font-bold text-sm">
                       [A] Đặt lại Giao diện & Tải lại
                     </button>
                     <button
                       onClick={() => window.location.reload()}
-                      className="game-btn-sm w-full py-2 bg-[#F5DFC6] text-[#1A1423] font-bold text-xs">
+                      className="game-btn-sm w-full py-2 bg-[#EFE0BF] text-[var(--on-accent,#4A2B18)] font-bold text-xs">
                       Thử tải lại ngay
                     </button>
                     <button
