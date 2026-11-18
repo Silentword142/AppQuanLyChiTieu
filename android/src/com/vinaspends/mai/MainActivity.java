@@ -36,8 +36,14 @@ import android.webkit.WebViewClient;
 
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -46,6 +52,7 @@ public class MainActivity extends Activity {
     // Gốc ảo để WebView có origin https cố định (localStorage bền, không phụ thuộc file://)
     static final String HOST = "appassets.androidplatform.net";
     static final String START_URL = "https://" + HOST + "/index.html";
+    private static final String GOOGLE_AUTH_URL = "https://tclstudio.io.vn/google-auth.html";
     private static final int REQ_FILE = 41;
     private static final int REQ_SAVE = 42;
     private static final int REQ_MIC = 43;
@@ -64,12 +71,16 @@ public class MainActivity extends Activity {
     private TextToSpeech tts;
     private boolean ttsReady;
     private final Handler ui = new Handler(Looper.getMainLooper());
+    private volatile String pendingGoogleAuthJson;
+    private volatile String lastDeliveredAuthKey;
+    private volatile ServerSocket googleAuthServer;
+    private Object api33BackHandle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         web = new WebView(this);
-        web.setBackgroundColor(Color.parseColor("#F2E6CC"));
+        web.setBackgroundColor(Color.parseColor("#FCECD8"));
         setContentView(web);
 
         WebSettings s = web.getSettings();
@@ -116,6 +127,12 @@ public class MainActivity extends Activity {
             }
         });
 
+        if (Build.VERSION.SDK_INT >= 33) {
+            api33BackHandle = Api33Back.register(this, new Runnable() {
+                @Override public void run() { handleSystemBack(); }
+            });
+        }
+
         current = this;
         Intent startIntent = getIntent();
         if (MaiVoiceService.lockWakeActive) applyLockShow(true);
@@ -123,6 +140,7 @@ public class MainActivity extends Activity {
             pendingAssistLaunch = true;
             applyLockShow(true);
         }
+        handleDeepLinkAuth(startIntent);
         handleShare(startIntent);
         web.loadUrl(START_URL);
     }
@@ -132,6 +150,7 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         if (intent != null && intent.getBooleanExtra("voice_wake", false) && MaiVoiceService.lockWakeActive) applyLockShow(true);
+        handleDeepLinkAuth(intent);
         handleShare(intent);
         handleAssist(intent);
         callJs("window.onMaiResume && window.onMaiResume()");
@@ -281,26 +300,132 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (current == this) current = null;
+        closeGoogleAuthServer();
+        if (Build.VERSION.SDK_INT >= 33 && api33BackHandle != null) {
+            Api33Back.unregister(this, api33BackHandle);
+            api33BackHandle = null;
+        }
         if (tts != null) tts.shutdown();
         if (recognizer != null) { try { recognizer.destroy(); } catch (Exception ignored) { } }
         super.onDestroy();
     }
 
-    // Vuốt cạnh màn hình / nút Back: để app web tự xử lý (đóng cửa sổ, về mục trước).
-    // App không thoát bằng vuốt; chỉ thoát nếu trang web chưa tải được.
-    @Override
-    public void onBackPressed() {
-        if (web == null) { super.onBackPressed(); return; }
+    // Vuốt cạnh màn hình / nút Back: luôn để app web xử lý (đóng popup, quay lại tab/màn hình trước).
+    // Không bao giờ thoát app bằng thao tác vuốt; chỉ đóng khi WebView chưa tải được trang.
+    private void handleSystemBack() {
+        if (web == null) { finish(); return; }
         web.evaluateJavascript("(function(){try{return window.onAndroidBack?(window.onAndroidBack()?'1':'0'):'x'}catch(e){return 'x'}})()",
                 new ValueCallback<String>() {
                     @Override
                     public void onReceiveValue(String v) {
                         if (v != null && v.contains("x")) {
                             if (web.canGoBack()) web.goBack();
-                            else MainActivity.super.onBackPressed();
+                            else finish();
                         }
                     }
                 });
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        handleSystemBack();
+    }
+
+    private void closeGoogleAuthServer() {
+        ServerSocket ss = googleAuthServer;
+        googleAuthServer = null;
+        if (ss != null) {
+            try { ss.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    private int startLoopbackAuthServer() {
+        closeGoogleAuthServer();
+        try {
+            final ServerSocket ss = new ServerSocket(0, 5, InetAddress.getByName("127.0.0.1"));
+            ss.setSoTimeout(300000);
+            googleAuthServer = ss;
+            final int port = ss.getLocalPort();
+            Thread t = new Thread(new Runnable() {
+                @Override public void run() {
+                    long deadline = System.currentTimeMillis() + 300000L;
+                    while (System.currentTimeMillis() < deadline && googleAuthServer == ss && !ss.isClosed()) {
+                        Socket sock = null;
+                        try {
+                            sock = ss.accept();
+                            BufferedReader br = new BufferedReader(new InputStreamReader(sock.getInputStream(), "UTF-8"));
+                            String first = br.readLine();
+                            String line;
+                            while ((line = br.readLine()) != null && !line.isEmpty()) {}
+                            boolean gotToken = false;
+                            if (first != null && first.startsWith("GET ")) {
+                                int sp = first.indexOf(' ', 4);
+                                String reqTarget = sp > 4 ? first.substring(4, sp) : "/";
+                                if (reqTarget.startsWith("/cb")) {
+                                    Uri u = Uri.parse("http://127.0.0.1" + reqTarget);
+                                    String idToken = u.getQueryParameter("idToken");
+                                    String accessToken = u.getQueryParameter("accessToken");
+                                    String st = u.getQueryParameter("state");
+                                    String err = u.getQueryParameter("error");
+                                    if ((idToken != null && !idToken.isEmpty()) || (accessToken != null && !accessToken.isEmpty()) || (err != null && !err.isEmpty())) {
+                                        deliverGoogleAuth(idToken, accessToken, st, err);
+                                        gotToken = true;
+                                    }
+                                }
+                            }
+                            OutputStream os = sock.getOutputStream();
+                            byte[] body = "<html><body>OK</body></html>".getBytes("UTF-8");
+                            String resp = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + body.length + "\r\nConnection: close\r\n\r\n";
+                            os.write(resp.getBytes("UTF-8"));
+                            os.write(body);
+                            os.flush();
+                            if (gotToken) closeGoogleAuthServer();
+                        } catch (Exception ignored) {
+                        } finally {
+                            if (sock != null) { try { sock.close(); } catch (Exception ignored2) {} }
+                        }
+                    }
+                }
+            });
+            t.setDaemon(true);
+            t.start();
+            return port;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void handleDeepLinkAuth(Intent intent) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction())) return;
+        Uri u = intent.getData();
+        if (u == null || !"vinaspends".equals(u.getScheme()) || !"auth".equals(u.getHost())) return;
+        if ("1".equals(u.getQueryParameter("done"))) return;
+        String idToken = u.getQueryParameter("idToken");
+        String accessToken = u.getQueryParameter("accessToken");
+        String state = u.getQueryParameter("state");
+        String error = u.getQueryParameter("error");
+        if ((idToken != null && !idToken.isEmpty()) || (accessToken != null && !accessToken.isEmpty()) || (error != null && !error.isEmpty())) {
+            closeGoogleAuthServer();
+            deliverGoogleAuth(idToken, accessToken, state, error);
+        }
+    }
+
+    private synchronized void deliverGoogleAuth(String idToken, String accessToken, String state, String error) {
+        String key = (state != null ? state : "") + "|" + (error != null ? error : (idToken != null ? idToken : accessToken));
+        if (key.equals(lastDeliveredAuthKey)) return;
+        lastDeliveredAuthKey = key;
+        try {
+            JSONObject o = new JSONObject();
+            if (idToken != null && !idToken.isEmpty()) o.put("idToken", idToken);
+            if (accessToken != null && !accessToken.isEmpty()) o.put("accessToken", accessToken);
+            if (state != null && !state.isEmpty()) o.put("state", state);
+            if (error != null && !error.isEmpty()) o.put("error", error);
+            String json = o.toString();
+            pendingGoogleAuthJson = json;
+            callJs("window.onMaiGoogleToken && window.onMaiGoogleToken(" + json + ")");
+        } catch (Exception ignored) {
+        }
     }
 
     // ---------- Lượt "Mai ơi": bật sáng màn hình, hiện giao diện đang nghe trên màn hình khoá ----------
@@ -640,6 +765,56 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        @JavascriptInterface public String consumePendingGoogleAuth() {
+            String json = pendingGoogleAuthJson;
+            pendingGoogleAuthJson = null;
+            return json != null ? json : "";
+        }
+
+        @JavascriptInterface public void startGoogleSignIn(final String state) {
+            new Thread(new Runnable() {
+                @Override public void run() {
+                    final int port = startLoopbackAuthServer();
+                    ui.post(new Runnable() {
+                        @Override public void run() {
+                            try {
+                                StringBuilder sb = new StringBuilder(GOOGLE_AUTH_URL).append("?app=1");
+                                if (port > 0) sb.append("&port=").append(port);
+                                if (state != null && !state.isEmpty()) sb.append("&state=").append(URLEncoder.encode(state, "UTF-8"));
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(sb.toString())));
+                            } catch (Exception e) {
+                                closeGoogleAuthServer();
+                                deliverGoogleAuth(null, null, state, "Không mở được trình duyệt để đăng nhập Google.");
+                            }
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
+    /** Bảo vệ VerifyError trên Android < 13: chỉ nạp OnBackInvokedCallback khi SDK >= 33. */
+    private static class Api33Back {
+        static Object register(Activity act, final Runnable handler) {
+            android.window.OnBackInvokedCallback cb = new android.window.OnBackInvokedCallback() {
+                @Override public void onBackInvoked() {
+                    handler.run();
+                }
+            };
+            act.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, cb);
+            return cb;
+        }
+
+        static void unregister(Activity act, Object cbObj) {
+            try {
+                if (cbObj instanceof android.window.OnBackInvokedCallback) {
+                    act.getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(
+                            (android.window.OnBackInvokedCallback) cbObj);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     /** Phục vụ dist/www (đóng gói trong assets/www) dưới origin https ảo, chạy offline 100%. */
@@ -697,6 +872,14 @@ public class MainActivity extends Activity {
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
+            if (pendingGoogleAuthJson != null) {
+                final String authJson = pendingGoogleAuthJson;
+                ui.postDelayed(new Runnable() {
+                    @Override public void run() {
+                        callJs("window.onMaiGoogleToken && window.onMaiGoogleToken(" + authJson + ")");
+                    }
+                }, 450);
+            }
             if (pendingAssistLaunch) {
                 pendingAssistLaunch = false;
                 ui.postDelayed(new Runnable() {

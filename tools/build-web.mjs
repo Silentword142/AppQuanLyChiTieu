@@ -1,7 +1,7 @@
 // Đóng gói web/index.html thành bản chạy offline hoàn toàn (dùng cho APK Android).
 //  - Thay các thư viện CDN bằng bản copy trong dist/www/lib
 //  - Biên dịch JSX trước (không cần Babel chạy trên điện thoại -> mở app nhanh hơn)
-//  - Sinh CSS Tailwind tĩnh, nhúng font Fraunces + Be Vietnam Pro, dữ liệu OCR tiếng Việt
+//  - Sinh CSS Tailwind tĩnh, nhúng font pixel (Handjet + VT323 + Tiny5), dữ liệu OCR tiếng Việt
 // Chạy: npm run build:web
 import fs from "node:fs";
 import path from "node:path";

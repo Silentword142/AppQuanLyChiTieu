@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FF8674" />
+  <title>Mai · Đăng nhập Google</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@500;700;800&family=Tiny5&family=VT323&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <style>
+    :root {
+      --bg: #FCECD8;
+      --surface: #FFF8EE;
+      --ink: #1A1423;
+      --muted: #564768;
+      --primary: #FF8674;
+      --accent: #FFD875;
+      --mint: #7FD8B4;
+      --lavender: #C6B7FA;
+      --danger: #E84A5F;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      font-family: 'Handjet', system-ui, sans-serif;
+      color: var(--ink);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(rgba(26, 20, 35, 0.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 216, 117, 0.12));
+      background-size: 8px 8px, 100% 100%;
+    }
+    .console {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 3px solid var(--ink);
+      border-radius: 10px;
+      box-shadow: 6px 6px 0 var(--ink);
+      overflow: hidden;
+    }
+    .topbar {
+      background: var(--ink);
+      color: var(--surface);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Tiny5', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+    .led-row { display: flex; align-items: center; gap: 6px; }
+    .led {
+      width: 9px;
+      height: 9px;
+      background: var(--mint);
+      border: 1.5px solid #FFF8EE;
+      display: inline-block;
+      animation: blink 1.6s steps(2, start) infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .stripes {
+      height: 6px;
+      background: linear-gradient(90deg, #FF8674 0 25%, #FFD875 25% 50%, #7FD8B4 50% 75%, #C6B7FA 75% 100%);
+      border-bottom: 3px solid var(--ink);
+    }
+    .body { padding: 20px 18px 22px; text-align: center; }
+    .sprite-box {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 12px;
+      background: var(--accent);
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 3px 3px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      margin: 0;
+      font-family: 'VT323', monospace;
+      font-size: 30px;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+    }
+    .sub {
+      margin: 8px 0 18px;
+      font-size: 17px;
+      line-height: 1.35;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .lcd {
+      background: #E9F6EC;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      text-align: left;
+      box-shadow: inset 2px 2px 0 rgba(26, 20, 35, 0.12);
+    }
+    .lcd-label {
+      font-family: 'Tiny5', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #2B5E48;
+      margin: 0 0 4px;
+    }
+    .lcd-val {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      word-break: break-all;
+    }
+    .btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 16px;
+      font-family: 'Handjet', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      text-decoration: none;
+      color: var(--ink);
+      background: var(--primary);
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      box-shadow: 4px 4px 0 var(--ink);
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+    .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+    .btn:disabled { opacity: 0.6; cursor: wait; }
+    .btn-mint { background: var(--mint); }
+    .btn-ghost {
+      margin-top: 10px;
+      background: var(--surface);
+      font-size: 16px;
+      padding: 10px 14px;
+    }
+    .key-badge {
+      font-family: 'Tiny5', monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      background: var(--surface);
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+    }
+    .err {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 2px solid var(--danger);
+      background: #FFE2E6;
+      color: #7D1727;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      display: none;
+    }
+    .hide { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="console">
+    <div class="topbar">
+      <div class="led-row"><span class="led"></span><span>MAI SYNC LINK</span></div>
+      <span>FIREBASE OAUTH</span>
+    </div>
+    <div class="stripes"></div>
+    <div class="body">
+      <div class="sprite-box">
+        <svg viewBox="0 0 24 24" width="44" height="44" shape-rendering="crispEdges">
+          <rect x="7" y="2" width="10" height="3" fill="#EA4335"/>
+          <rect x="4" y="5" width="4" height="3" fill="#EA4335"/>
+          <rect x="2" y="8" width="4" height="8" fill="#FBBC05"/>
+          <rect x="4" y="16" width="4" height="3" fill="#34A853"/>
+          <rect x="7" y="19" width="10" height="3" fill="#34A853"/>
+          <rect x="17" y="15" width="4" height="4" fill="#4285F4"/>
+          <rect x="13" y="11" width="9" height="4" fill="#4285F4"/>
+          <rect x="7" y="2" width="10" height="1" fill="#1A1423" opacity="0.25"/>
+        </svg>
+      </div>
+      <h1>ĐĂNG NHẬP GOOGLE</h1>
+      <p id="statusSub" class="sub">Kết nối tài khoản Google để sao lưu và đồng bộ sổ chi tiêu VinaSpends giữa điện thoại & máy tính.</p>
+
+      <div id="doneBox" class="hide">
+        <div class="lcd">
+          <p class="lcd-label">Tài khoản đã xác thực</p>
+          <p id="doneEmail" class="lcd-val">...</p>
+        </div>
+        <a id="returnIntentBtn" href="#" class="btn btn-mint">
+          <span class="key-badge">A</span>
+          <span>QUAY LẠI APP MAI</span>
+        </a>
+        <a id="returnDirectBtn" href="#" class="btn btn-ghost">
+          Mở bằng liên kết trực tiếp
+        </a>
+      </div>
+
+      <div id="loginBox">
+        <button id="loginBtn" type="button" class="btn">
+          <span class="key-badge">A</span>
+          <span>CHỌN TÀI KHOẢN GOOGLE</span>
+        </button>
+      </div>
+
+      <div id="errBox" class="err"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var FIREBASE_CONFIG = {
+        apiKey: "AIzaSyAU13uf9At6vCAaoaAJcn5vt93E3g1QJBc",
+        authDomain: "gen-lang-client-0391542892.firebaseapp.com",
+        projectId: "gen-lang-client-0391542892",
+        storageBucket: "gen-lang-client-0391542892.firebasestorage.app",
+        messagingSenderId: "495772766237",
+        appId: "1:495772766237:web:96f3fc28071f286747f6f4"
+      };
+
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      } catch (e) {}
+
+      var qs = new URLSearchParams(location.search);
+      var ctx = {};
+      try { ctx = JSON.parse(sessionStorage.getItem("vina_gauth_ctx") || "{}"); } catch (e) {}
+      var port = qs.get("port") || ctx.port || "";
+      var state = qs.get("state") || ctx.state || "";
+      if (port || state) {
+        try { sessionStorage.setItem("vina_gauth_ctx", JSON.stringify({ port: port, state: state })); } catch (e) {}
+      }
+
+      var loginBtn = document.getElementById("loginBtn");
+      var loginBox = document.getElementById("loginBox");
+      var doneBox = document.getElementById("doneBox");
+      var doneEmail = document.getElementById("doneEmail");
+      var statusSub = document.getElementById("statusSub");
+      var errBox = document.getElementById("errBox");
+      var returnIntentBtn = document.getElementById("returnIntentBtn");
+      var returnDirectBtn = document.getElementById("returnDirectBtn");
+
+      function showErr(msg) {
+        errBox.textContent = msg;
+        errBox.style.display = "block";
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<span class="key-badge">A</span><span>THỬ ĐĂNG NHẬP LẠI</span>';
+      }
+
+      function pingLoopback(queryStr) {
+        if (!port || !/^\d+$/.test(String(port))) return;
+        var url = "http://127.0.0.1:" + port + "/cb?" + queryStr;
+        try { var img = new Image(); img.src = url; } catch (e) {}
+        try {
+          var fr = document.createElement("iframe");
+          fr.style.display = "none";
+          fr.src = url;
+          document.body.appendChild(fr);
+        } catch (e) {}
+      }
+
+      function deliverResult(res) {
+        var cred = null;
+        try {
+          cred = firebase.auth.GoogleAuthProvider.credentialFromResult(res) || res.credential;
+        } catch (e) {}
+        var idToken = (cred && cred.idToken) || "";
+        var accessToken = (cred && cred.accessToken) || "";
+        var email = (res && res.user && res.user.email) || "";
+        if (!idToken && !accessToken) {
+          showErr("Không nhận được mã xác thực Google. Anh vui lòng thử lại.");
+          return;
+        }
+        var payload = "idToken=" + encodeURIComponent(idToken)
+          + "&accessToken=" + encodeURIComponent(accessToken)
+          + "&state=" + encodeURIComponent(state)
+          + "&email=" + encodeURIComponent(email);
+
+        try { sessionStorage.removeItem("vina_gauth_ctx"); } catch (e) {}
+        try { firebase.auth().signOut(); } catch (e) {}
+
+        var directUrl = "vinaspends://auth?" + payload;
+        var intentUrl = "intent://auth?" + payload + "#Intent;scheme=vinaspends;package=com.vinaspends.mai;end";
+        returnDirectBtn.href = directUrl;
+        returnIntentBtn.href = intentUrl;
+
+        doneEmail.textContent = email || "Tài khoản Google";
+        statusSub.textContent = "Xác thực xong! Bấm nút bên dưới nếu app Mai chưa tự mở lại.";
+        loginBox.classList.add("hide");
+        doneBox.classList.remove("hide");
+        errBox.style.display = "none";
+
+        pingLoopback(payload);
+        setTimeout(function () {
+          try { window.location.href = directUrl; } catch (e) {}
+        }, 160);
+      }
+
+      // Kiểm tra kết quả redirect nếu vừa quay lại từ trang Google OAuth
+      firebase.auth().getRedirectResult().then(function (res) {
+        if (res && res.user) deliverResult(res);
+      }).catch(function (err) {
+        if (err && err.code && err.code !== "auth/null-user") {
+          showErr("Lỗi đăng nhập Google: " + (err.message || err.code));
+        }
+      });
+
+      loginBtn.addEventListener("click", function () {
+        errBox.style.display = "none";
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="key-badge">...</span><span>ĐANG MỞ GOOGLE...</span>';
+        var provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        firebase.auth().signInWithPopup(provider).then(function (res) {
+          if (res && res.user) deliverResult(res);
+          else showErr("Chưa nhận được thông tin tài khoản Google.");
+        }).catch(function (err) {
+          if (err && err.code === "auth/popup-blocked") {
+            statusSub.textContent = "Đang chuyển hướng sang trang đăng nhập Google…";
+            firebase.auth().signInWithRedirect(provider);
+            return;
+          }
+          if (err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<span class="key-badge">A</span><span>CHỌN TÀI KHOẢN GOOGLE</span>';
+            return;
+          }
+          showErr("Đăng nhập thất bại: " + (err && err.message ? err.message : "Vui lòng thử lại."));
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

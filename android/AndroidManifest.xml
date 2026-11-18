@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vinaspends.mai"
     android:versionCode="1"
-    android:versionName="4.5.0">
+    android:versionName="4.7.0">
 
     <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="34" />
     <!-- Firebase, Gemini (phân tích giao dịch) -->
@@ -31,6 +31,7 @@
         android:icon="@drawable/ic_launcher"
         android:theme="@style/AppTheme"
         android:allowBackup="true"
+        android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:supportsRtl="false">
 
@@ -48,6 +49,13 @@
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Nhận token đăng nhập Google từ trình duyệt ngoài quay lại app -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vinaspends" android:host="auth" />
             </intent-filter>
             <!-- Trợ lý ảo mặc định Android (giữ nút nguồn, giữ phím Home, vuốt góc màn hình như Gemini) -->
             <intent-filter>
