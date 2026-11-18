@@ -291,5 +291,74 @@ if (!Mai.parse(n("com.mservice.momowallet", "MoMo", "Thanh toán thành công 55
   if (!g.certain) { fail++; console.log("✗ Grab phải chắc chắn"); } else pass++;
 }
 
+// ---- Bước 1 & Bước 2 nâng cao: lọc app tài chính, chặn chat/SMS cá nhân, nhận ví mới & thẻ tín dụng
+{
+  // Chặn app chat/MXH/email giả mạo đúng format tin ngân hàng
+  const spoofMsg = "SD TK VCB 0071000123456 -50,000 VND luc 06-11-2026 10:15. So du: 1,000,000 VND.";
+  for (const [pkg, ti] of [
+    ["com.zing.zalo", "Vietcombank"],
+    ["org.telegram.messenger", "MB Bank"],
+    ["com.facebook.orca", "Techcombank"],
+    ["com.whatsapp", "BIDV"],
+    ["com.google.android.gm", "VCB"],
+    ["com.shopee.vn", "Shopee"],
+    ["com.grabtaxi.passenger", "Grab"]
+  ]) {
+    if (Mai.isFinancialSource(n(pkg, ti, spoofMsg))) { fail++; console.log("✗ isFinancialSource không chặn", pkg); } else pass++;
+    const r = Mai.parse(n(pkg, ti, spoofMsg));
+    if (r.ok || r.reason !== "not_bank_source") { fail++; console.log("✗ parse phải chặn nguồn không phải app tài chính:", pkg, r.ok, r.reason); } else pass++;
+  }
+
+  // Chặn SMS từ số điện thoại cá nhân dù có chữ TK/số tiền/số dư
+  for (const ph of ["0912345678", "+84987654321", "028 3812 3456"]) {
+    const sms = n("com.google.android.apps.messaging", ph, "Chuyen khoan TK 500,000 VND so du 2,000,000 VND nhe");
+    if (Mai.isFinancialSource(sms)) { fail++; console.log("✗ SMS số cá nhân không bị chặn:", ph); } else pass++;
+    const r = Mai.parse(sms);
+    if (r.ok || r.reason !== "not_bank_source") { fail++; console.log("✗ parse phải chặn SMS số cá nhân:", ph, r.ok, r.reason); } else pass++;
+  }
+
+  // Cho phép SMS từ brandname ngân hàng
+  if (!Mai.isFinancialSource(n("com.samsung.android.messaging", "MB", "TK 0123xxx456|GD: -50,000VND|SD: 950,000VND"))) {
+    fail++; console.log("✗ SMS brandname MB bị chặn nhầm");
+  } else pass++;
+
+  // Các ngân hàng số & ví/tài chính mới
+  check("Liobank chi", Mai.parse(n("com.liobank.app", "Liobank", "Liobank: Tài khoản *8899 -125,000 VND lúc 06/11/2026 09:00. Số dư 2,500,000 VND. ND: PHUC LONG")), {
+    ok: true, bank: "Liobank", amount: 125000, type: "EXPENSE", accountTail: "8899", balance: 2500000, balanceKind: "balance", category: "Cà phê & Trà"
+  });
+  check("Ubank thu", Mai.parse(n("vn.vpbank.ubank", "Ubank", "Ubank: TK *4321 +1,200,000 VND luc 06/11/2026 09:30. So du: 3,400,000 VND. ND: Hoan tien mua sam")), {
+    ok: true, bank: "Ubank", amount: 1200000, type: "INCOME", accountTail: "4321", balance: 3400000
+  });
+  check("VNPT Money", Mai.parse(n("com.vnptpay.android", "VNPT Money", "Quý khách đã thanh toán thành công 150.000đ hóa đơn điện EVN qua VNPT Money")), {
+    ok: true, bank: "VNPT Money", amount: 150000, type: "EXPENSE", category: "Tiền điện & Nước"
+  });
+  check("Home Credit thẻ ghi nợ/tín dụng", Mai.parse(n("vn.homecredit.app", "Home Credit", "Thẻ tín dụng Home Credit *9988 giao dịch thành công 320,000 VND tại WINMART lúc 06/11 10:00. Dư nợ hiện tại: 2,100,000 VND")), {
+    ok: true, bank: "Home Credit", amount: 320000, type: "EXPENSE", accountTail: "9988", isCredit: true, balanceKind: "debt", balance: 2100000, category: "Đi chợ & Siêu thị"
+  });
+
+  // Phân biệt sao kê nhắc nợ vs giao dịch thẻ đã thành công có "Dư nợ hiện tại"
+  const stmt = Mai.parse(n("com.vpbank.neo", "VPBank NEO", "Kỳ sao kê thẻ tín dụng *5566: Dư nợ 8,400,000 VND. Vui lòng thanh toán tối thiểu 420,000 VND trước 20/11"));
+  if (stmt.ok || stmt.reason !== "reminder") { fail++; console.log("✗ Sao kê thẻ không bị chặn:", stmt.ok, stmt.reason); } else pass++;
+
+  check("Thẻ tín dụng + dư nợ", Mai.parse(n("com.vib.myvib2", "MyVIB", "Thẻ tín dụng *2345 thanh toán thành công 450,000 VND tại HIGHLANDS COFFEE. Dư nợ hiện tại: 3,450,000 VND")), {
+    ok: true, bank: "VIB", amount: 450000, type: "EXPENSE", accountTail: "2345", isCredit: true, balanceKind: "debt", balance: 3450000, category: "Cà phê & Trà", certain: true
+  });
+  check("Thẻ tín dụng + hạn mức khả dụng", Mai.parse(n("vn.com.techcombank.bb.app", "Techcombank", "The tin dung *1234 chi tieu 450,000 VND tai SHOPEE luc 06/11 12:00. Han muc kha dung 20,000,000 VND")), {
+    ok: true, isCredit: true, balanceKind: "available", balance: 20000000, amount: 450000, accountTail: "1234"
+  });
+
+  // Số tiền không dấu phân cách có VND + giao dịch P2P rõ chiều tiền
+  check("VND không dấu phân cách", Mai.parse(n("com.VCB", "VCB", "SD TK 0071000123456 -50000 VND luc 06-11-2026 10:15. SD 1200000 VND. Ref NGUYEN VAN A chuyen tien")), {
+    ok: true, amount: 50000, balance: 1200000, type: "EXPENSE", bank: "Vietcombank", directionSource: "sign", minConf: 0.75
+  });
+
+  // Nhận diện ngoại tệ để đẩy sang Gemini (khi không có số VND quy đổi)
+  const fx1 = Mai.parse(n("vn.com.techcombank.bb.app", "Techcombank", "The *1234 giao dich USD 19.99 tai OPENAI luc 06/11 10:00"));
+  if (fx1.ok || fx1.reason !== "no_amount" || !fx1.hasForeignMoney) { fail++; console.log("✗ FX USD", fx1); } else pass++;
+  const fx2 = Mai.parse(n("com.vib.myvib2", "MyVIB", "The *2345 thanh toan $25.00 tai STEAM luc 06/11 10:00"));
+  if (fx2.ok || fx2.reason !== "no_amount" || !fx2.hasForeignMoney) { fail++; console.log("✗ FX $", fx2); } else pass++;
+}
+
 console.log(`\n${pass} đạt, ${fail} lỗi`);
 process.exit(fail ? 1 : 0);
+

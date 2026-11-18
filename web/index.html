@@ -244,12 +244,30 @@
       { name: "Cake", code: "CK", logo: "cake", color: "#D9467A", keys: ["cake", "cakebyvpbank"] },
       { name: "Ubank", code: "UB", logo: "ubank", color: "#E0A526", keys: ["ubank"] },
       { name: "Timo", code: "TIMO", logo: "timo", color: "#7D4E7A", keys: ["timo"] },
+      { name: "Liobank", code: "LIO", color: "#2F855A", keys: ["liobank"] },
+      { name: "TNEX", code: "TNEX", color: "#1F6FB2", keys: ["tnex"] },
+      { name: "KBank", code: "KBK", color: "#138F2D", keys: ["kbank", "kplus"] },
+      { name: "CIMB", code: "CIMB", color: "#A31C24", keys: ["cimb", "octo"] },
+      { name: "Public Bank", code: "PBV", color: "#B83227", keys: ["publicbank", "pbvn"] },
       { name: "Ví MoMo", code: "MoMo", logo: "momo", color: "#A33A72", keys: ["momo", "vimomo"] },
       { name: "ZaloPay", code: "ZLP", logo: "zalopay", color: "#1E78C8", keys: ["zalopay", "zalo"] },
       { name: "Ví ShopeePay", code: "SPP", logo: "shopeepay", color: "#E0602A", keys: ["shopeepay", "spp", "vishopeepay"] },
       { name: "Viettel Money", code: "VTM", logo: "vtm", color: "#C2272D", keys: ["viettelmoney", "vtm", "viettelpay"] },
       { name: "VNPT Money", code: "VNPT", logo: "vnptmoney", color: "#1F6FB2", keys: ["vnptmoney", "vnptpay"] },
       { name: "Ví VNPAY", code: "VNP", logo: "vnpay", color: "#1F6FB2", keys: ["vnpay", "vivnpay"] },
+      { name: "Payoo", code: "PAY", color: "#2C7A7B", keys: ["payoo"] },
+      { name: "Foxpay", code: "FOX", color: "#D97706", keys: ["foxpay"] },
+      { name: "9Pay", code: "9PAY", color: "#0F766E", keys: ["9pay"] },
+      { name: "VTC Pay", code: "VTC", color: "#1D4ED8", keys: ["vtcpay"] },
+      { name: "FE Credit", code: "FE", color: "#15803D", keys: ["fecredit"] },
+      { name: "Home Credit", code: "HC", color: "#C81E1E", keys: ["homecredit"] },
+      { name: "Shinhan Finance", code: "SVFC", color: "#1E40AF", keys: ["shinhanfinance", "ishinhan"] },
+      { name: "HD SAISON", code: "HDS", color: "#B45309", keys: ["hdsaison"] },
+      { name: "Mirae Asset", code: "MAFC", color: "#1D4ED8", keys: ["miraeasset", "mirae"] },
+      { name: "Kredivo", code: "KRD", color: "#0284C7", keys: ["kredivo"] },
+      { name: "Fundiin", code: "FND", color: "#059669", keys: ["fundiin"] },
+      { name: "Google Wallet", code: "GPAY", color: "#334155", keys: ["googlewallet", "googlepay"] },
+      { name: "Samsung Pay", code: "SPAY", color: "#1E3A8A", keys: ["samsungpay"] },
       { name: "Tiền mặt", code: null, color: "#5E7A2B", icon: "banknote", keys: ["tienmat", "cash"] }
     ];
 
@@ -265,15 +283,63 @@
     const getBankLogo = (bankName) => { const b = bankStyleOf(bankName); return b ? (b.code || b.name) : null; };
 
     // Tem ngân hàng: vòng tròn màu, viền mực, chữ mã ngân hàng kiểu tem thư
-    // Thẻ tín dụng: balance lưu số âm = dư nợ; limit = hạn mức
-    const isCreditAcc = (a) => !!(a && a.kind === "credit");
-    // Số tài khoản / số thẻ: hiển thị như số thẻ (nhóm 4 số), thẻ tín dụng chỉ hiện 4 số cuối
+    // Thẻ tín dụng / ghi nợ: balance lưu số âm = dư nợ; limit = hạn mức
+    const isCreditAcc = (a) => !!(a && (a.kind === "credit" || Number(a.limit) > 0));
+    const isCashAcc = (a) => !!(a && (a.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(a.name) : String(a.name || "")))));
+    // Số tài khoản / số thẻ: hiển thị như số thẻ (nhóm 4 số), thẻ tín dụng ở mặt thẻ chỉ hiện 4 số cuối
     const formatAccNo = (no, credit) => {
       const d = String(no || "").replace(/[\s.,-]/g, "");
       if (!d || d === "N/A" || d === "CASH") return "";
       if (/^x+\d+$/i.test(d)) return "•••• " + d.replace(/^x+/i, "");
       if (credit && /^\d{8,19}$/.test(d)) return "•••• •••• " + d.slice(-4);
       return d.replace(/(\w{4})(?=\w)/g, "$1 ");
+    };
+    const formatAccNoFull = (no) => {
+      const d = String(no || "").replace(/[\s.,-]/g, "");
+      if (!d || d === "N/A" || d === "CASH") return "";
+      if (/^x+\d+$/i.test(d)) return "•••• " + d.replace(/^x+/i, "");
+      return d.replace(/(\w{4})(?=\w)/g, "$1 ");
+    };
+    // Hiển thị tên + số tài khoản; nếu là tài khoản/thẻ ghi nợ (credit) thì ghi rõ (credit)
+    const formatAccountLabel = (a) => {
+      if (!a) return "";
+      const accNo = formatAccNoFull(a.accountNo);
+      const cash = isCashAcc(a);
+      let label = a.name || "";
+      if (accNo) label += ` · ${accNo}`;
+      else if (!cash && a.accountNo && a.accountNo !== "N/A") label += ` · ${a.accountNo}`;
+      if (isCreditAcc(a)) label += " (credit)";
+      return label;
+    };
+    const resolveAccount = (accs, ref) => {
+      if (!accs || !accs.length || !ref) return null;
+      if (ref.bankId != null) {
+        const byId = accs.find(a => String(a.id) === String(ref.bankId));
+        if (byId) return byId;
+      }
+      const tail = ref.accountTail || ref.bankAccountTail;
+      if (tail && ref.bankName) {
+        const cleanTail = String(tail).replace(/\D/g, "");
+        if (cleanTail) {
+          const byNameTail = accs.find(a => a.name === ref.bankName && a.accountNo && String(a.accountNo).replace(/\D/g, "").endsWith(cleanTail));
+          if (byNameTail) return byNameTail;
+        }
+      }
+      if (ref.bankName) {
+        const sameName = accs.filter(a => a.name === ref.bankName);
+        if (sameName.length) {
+          if (typeof ref.isCredit === "boolean") {
+            const byKind = sameName.find(a => isCreditAcc(a) === ref.isCredit);
+            if (byKind) return byKind;
+          }
+          return sameName[0];
+        }
+      }
+      return null;
+    };
+    const txBankLabel = (accs, tx) => {
+      const acc = resolveAccount(accs, tx);
+      return acc ? formatAccountLabel(acc) : (tx && tx.bankName) || "";
     };
 
     // Thẻ ngân hàng: giữ nguyên logo gốc trên nền trắng, viền mực kiểu vintage.
@@ -328,7 +394,7 @@
             <div className="flex items-center justify-between gap-2">
               <BankBadge name={acc.name} size={30} />
 <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/20">{credit ? "Tín dụng" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "Tiền mặt" : "Tài khoản"}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/20">{credit ? "Credit · Tín dụng" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "Tiền mặt" : "Tài khoản"}</span>
                 {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-full bg-white border-2 border-retro-ink/70 active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
                 {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-full bg-white border-2 border-retro-ink/70 active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
               </div>
@@ -1048,16 +1114,49 @@
       };
 
       const foldName = (s) => (window.MaiAgent ? window.MaiAgent.fold(String(s || "")) : String(s || "").toLowerCase()).replace(/[^a-z0-9]/g, "");
-      // Tìm ví khớp với ngân hàng / 4 số cuối tài khoản trong thông báo
+      const parseBankSelection = (val) => {
+        const s = String(val || "");
+        if (s.startsWith("legacy:")) return { bankId: null, bankName: s.slice(7), account: null };
+        const accs = stateRef.current.accounts || [];
+        const acc = accs.find(a => String(a.id) === s) || accs.find(a => a.name === s) || null;
+        return { bankId: acc ? acc.id : null, bankName: acc ? acc.name : s, account: acc };
+      };
+      // Tìm ví khớp với ngân hàng / 4 số cuối tài khoản / loại thẻ tín dụng trong thông báo
       const maiMatchAccount = (r, accs) => {
-        if (r.accountTail) {
-          const byNo = accs.find(a => a.accountNo && String(a.accountNo).replace(/\D/g, "").endsWith(r.accountTail));
-          if (byNo) return byNo;
+        if (!accs || !accs.length || !r) return null;
+        const bankKey = r.bank ? foldName(r.bank).replace(/^vi/, "") : "";
+        const cleanTail = r.accountTail ? String(r.accountTail).replace(/\D/g, "") : "";
+        const nameMatches = (a) => {
+          if (!bankKey) return false;
+          const n = foldName(a.name);
+          if (n && (n.includes(bankKey) || bankKey.includes(n.replace(/^vi/, "")))) return true;
+          const lg = getBankLogo(a.name);
+          return !!(lg && lg === getBankLogo(r.bank));
+        };
+        if (cleanTail) {
+          const tailMatches = accs.filter(a => a.accountNo && String(a.accountNo).replace(/\D/g, "").endsWith(cleanTail));
+          if (tailMatches.length === 1) return tailMatches[0];
+          if (tailMatches.length > 1) {
+            return tailMatches.find(nameMatches)
+              || tailMatches.find(a => typeof r.isCredit === "boolean" && isCreditAcc(a) === r.isCredit)
+              || tailMatches[0];
+          }
         }
-        if (!r.bank) return null;
-        const key = foldName(r.bank).replace(/^vi/, "");
-        return accs.find(a => { const n = foldName(a.name); return n && (n.includes(key) || key.includes(n.replace(/^vi/, ""))); })
-          || accs.find(a => getBankLogo(a.name) && getBankLogo(a.name) === getBankLogo(r.bank)) || null;
+        if (r.bank) {
+          const nm = accs.filter(nameMatches);
+          if (nm.length) {
+            if (typeof r.isCredit === "boolean") {
+              const byKind = nm.find(a => isCreditAcc(a) === r.isCredit);
+              if (byKind) return byKind;
+            }
+            return nm[0];
+          }
+          if (/tienmat|cash/i.test(foldName(r.bank))) {
+            const c = accs.find(isCashAcc);
+            if (c) return c;
+          }
+        }
+        return null;
       };
       // Hạng mục gợi ý phải tồn tại trong cây hạng mục hiện tại của người dùng
       const maiResolveCategory = (name, type, cats) => {
@@ -1076,20 +1175,42 @@
         if (!(amount > 0)) { showToast("Số tiền chưa hợp lệ", "error"); return null; }
         const type = draft.type === "INCOME" ? "INCOME" : "EXPENSE";
         const category = maiResolveCategory(draft.category, type, cats);
-        let bankName = draft.bankName;
+        let targetAcc = resolveAccount(accs, draft) || (!draft.bankName ? maiMatchAccount(draft, accs) : null);
+        let bankName = targetAcc ? targetAcc.name : draft.bankName;
+        let bankId = targetAcc ? targetAcc.id : null;
         let createdAccount = null;
-        if (!bankName || !accs.some(a => a.name === bankName)) {
-          const m = maiMatchAccount(draft, accs);
-          if (m) bankName = m.name;
-          else if (draft.bank) {
+        if (!targetAcc) {
+          if (draft.bank && !draft.bankName) {
             const eff = type === "INCOME" ? amount : -amount;
-            createdAccount = { id: Date.now() + Math.floor(Math.random() * 1000), name: draft.bank, accountNo: draft.accountTail ? `xxxx${draft.accountTail}` : "N/A", balance: draft.balance != null ? draft.balance - eff : 0 };
-            bankName = draft.bank;
-          } else bankName = accs[0]?.name || "Tiền mặt";
+            const creditCard = !!draft.isCredit;
+            let initBal = 0;
+            if (draft.balance != null) {
+              initBal = draft.balanceKind === "debt"
+                ? -Math.abs(draft.balance) - eff
+                : draft.balanceKind === "available"
+                  ? 0
+                  : draft.balance - eff;
+            }
+            createdAccount = {
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              name: draft.bank,
+              accountNo: draft.accountTail ? `xxxx${draft.accountTail}` : "N/A",
+              kind: creditCard ? "credit" : "account",
+              balance: initBal
+            };
+            bankId = createdAccount.id;
+            bankName = createdAccount.name;
+            targetAcc = createdAccount;
+          } else if (!bankName) {
+            targetAcc = accs[0] || null;
+            bankId = targetAcc ? targetAcc.id : null;
+            bankName = (targetAcc && targetAcc.name) || "Tiền mặt";
+          }
         }
         const tx = {
           id: Date.now() * 1000 + Math.floor(Math.random() * 1000),
           type, amount, category, bankName,
+          ...(bankId != null ? { bankId } : {}),
           note: (draft.note || "").slice(0, 140),
           date: draft.date || new Date().toISOString(),
           updatedAt: Date.now(),
@@ -1101,13 +1222,22 @@
         const eff = type === "INCOME" ? amount : -amount;
         lastLocalEditTime.current = Date.now();
         setAccounts(prev => {
-          let list = createdAccount && !prev.some(a => a.name === createdAccount.name) ? [...prev, createdAccount] : prev;
+          const exists = targetAcc && prev.some(a => a.id === targetAcc.id);
+          const list = createdAccount && !exists ? [...prev, createdAccount] : prev;
+          const matchAcc = (a) => targetAcc ? a.id === targetAcc.id : a.name === bankName;
+          let matchedOnce = false;
           return list.map(a => {
-            if (a.name !== bankName) return a;
+            if (matchedOnce || !matchAcc(a)) return a;
+            matchedOnce = true;
             // Số dư trong thông báo là số liệu thật của ngân hàng -> khớp theo, nếu được bật
             if (stateRef.current.maiSettings.syncBalance && draft.balance != null && !draft.edited) {
-              // Thẻ tín dụng: số trong thông báo là "hạn mức khả dụng" -> dư nợ = khả dụng - hạn mức
-              if (a.kind === "credit") return Number(a.limit) > 0 ? { ...a, balance: Math.min(0, draft.balance - Number(a.limit)) } : { ...a, balance: (Number(a.balance) || 0) + eff };
+              if (isCreditAcc(a)) {
+                if (draft.balanceKind === "debt") return { ...a, balance: -Math.abs(draft.balance) };
+                return Number(a.limit) > 0 ? { ...a, balance: Math.min(0, draft.balance - Number(a.limit)) } : { ...a, balance: (Number(a.balance) || 0) + eff };
+              }
+              if (draft.balanceKind === "debt" || draft.balanceKind === "available") {
+                return { ...a, balance: (Number(a.balance) || 0) + eff };
+              }
               return { ...a, balance: draft.balance };
             }
             return { ...a, balance: (Number(a.balance) || 0) + eff };
@@ -1117,7 +1247,7 @@
         // Học: anh sửa (chấn chỉnh) -> nhớ mạnh; anh duyệt nguyên -> củng cố nhẹ. Mai tự ghi thì không tự học (tránh tự tin sai).
         if (!opts.auto) maiTeach([{ text: draft.learnText != null && !draft.noteEdited ? draft.learnText : [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: maiKeyLabel(draft), category, type,
           weight: (draft.categoryEdited || draft.typeEdited) ? 3 : 1, typeFix: draft.typeEdited ? type : null }]);
-        setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
+        setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, bankId, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
         if (!opts.silent) showToast(`Đã tự ghi ${type === "INCOME" ? "+" : "-"}${formatVND(amount)} · ${category}`);
         maiSpeak(`${type === "INCOME" ? "Nhận" : "Chi"} ${new Intl.NumberFormat('vi-VN').format(amount)} đồng, ${category}`);
         return tx;
@@ -1138,17 +1268,20 @@
         maiTeach([{ text: tx.maiText != null ? tx.maiText : tx.note, key, label: maiKeyLabel(tx), category: category || null,
           type: typeFix || tx.type, weight: 3, typeFix: typeFix || null }]);
       };
-      // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> lọc nhanh tin chắc chắn không phải tiền -> xếp hàng cho Gemini
-      // Gói miễn phí chỉ 20 lần gọi/ngày -> tin chắc chắn không phải giao dịch thì lọc ngay trên máy, không tốn lượt
+      // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> Bước 1 lọc nguồn app tài chính + Bước 2 lọc nội dung không phải tiền -> xếp hàng phân tích
       const GEM_SKIP = { empty: 1, no_amount: 1, otp: 1, not_bank_source: 1, promo: 1, account_notice: 1, failed_or_pending: 1, reminder: 1, not_transfer: 1 };
       const maiIngest = (raw, source = "notification") => {
         if (!window.MaiAgent) return { status: "error" };
-        const { maiSettings: st } = stateRef.current;
+        const { maiSettings: st, maiMemory: mem, maiBrain: br, maiCommunity: com, accounts: accs } = stateRef.current;
         const n = typeof raw === "string" ? { packageName: null, title: "", text: raw, postTime: Date.now() } : { packageName: raw.packageName || null, title: raw.title || "", text: raw.text || raw.body || "", postTime: raw.postTime || Date.now() };
-        // bộ đọc nhanh trên máy chỉ để lọc rác (OTP, tin không có số tiền) và chống trùng – việc hiểu giao dịch do Gemini làm
-        const r = window.MaiAgent.parse(n, { loose: source !== "notification" });
-        if (!r.ok && (GEM_SKIP[r.reason] && (source === "notification" || r.reason === "empty" || r.reason === "no_amount" || r.reason === "otp"))) return { status: "ignored", reason: r.reason };
+        // Phân tích 2 bước trên máy: vừa lọc chuẩn app tài chính/nội dung vừa chuẩn bị kết quả dự phòng khi mất mạng hoặc hết lượt Gemini
+        const r = window.MaiAgent.parse(n, { loose: source !== "notification", memory: mem, brain: br, community: st.community ? com : null });
+        const fxPass = r.reason === "no_amount" && r.hasForeignMoney && (source !== "notification" || window.MaiAgent.isFinancialSource(n)) && window.VinaGemini && window.VinaGemini.hasKey();
+        if (!r.ok && !fxPass && GEM_SKIP[r.reason]) {
+          return { status: "ignored", reason: r.reason };
+        }
         if (window.MaiAgent.isBlocked(r.raw, n.packageName, st.blockWords)) return { status: "ignored", reason: "user_block" };
+        if (r.ok && br && window.MaiAgent.shouldIgnore(br, r.signature)) return { status: "ignored", reason: "user_ignored_pattern" };
         const now = Date.now();
         if (r.ok) {
           const recent = maiSeenRef.current;
@@ -1156,12 +1289,25 @@
           maiSeenRef.current = [{ amount: r.amount, type: r.type, bank: r.bank, balance: r.balance, date: r.date, seenAt: now }, ...recent].slice(0, 200);
           try { localStorage.setItem("vina_mai_seen", JSON.stringify(maiSeenRef.current)); } catch(e) {}
         }
-        const job = { id: `g${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`, ...n, source, local: r.ok ? { amount: r.amount, type: r.type, bank: r.bank, balance: r.balance, accountTail: r.accountTail, date: r.date, note: r.note } : null, tries: 0, nextAt: 0, at: now };
+        const matchedAcc = r.ok ? maiMatchAccount(r, accs) : null;
+        const local = r.ok ? {
+          amount: r.amount, type: r.type, bank: r.bank,
+          bankName: matchedAcc ? matchedAcc.name : null,
+          bankId: matchedAcc ? matchedAcc.id : null,
+          balance: r.balance, balanceKind: r.balanceKind, isCredit: r.isCredit,
+          accountTail: r.accountTail, date: r.date, note: r.note,
+          rawNote: r.rawNote, counterparty: r.counterparty,
+          category: r.category, categorySource: r.categorySource,
+          certain: r.certain, confidence: r.confidence,
+          directionSource: r.directionSource, genericNote: r.genericNote,
+          memoryKey: r.memoryKey, learnText: r.learnText
+        } : null;
+        const job = { id: `g${now.toString(36)}${Math.random().toString(36).slice(2, 6)}`, ...n, source, local, tries: 0, nextAt: 0, at: now };
         setGemQueue(prev => [...prev, job]);
         return { status: "queued" };
       };
 
-      // Gemini xử lý hàng chờ: mỗi lần tối đa 10 thông báo; lỗi thì thử lại sau 20 giây, 1, 3, 10, 30, 60 phút
+      // Gemini xử lý hàng chờ: gom nhanh 2.5 giây; mất mạng / chưa có key / hết lượt thì chuyển sang bộ phân tích trên máy
       const gemBusyRef = React.useRef(false);
       useEffect(() => { if (!gemStatus.busy) return; const id = setInterval(() => setGemStatus(s => ({ ...s })), 1000); return () => clearInterval(id); }, [gemStatus.busy]);
       const [gemTick, setGemTick] = useState(0);
@@ -1173,7 +1319,7 @@
           today: new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }),
           expenseCats: leaf.filter(c => maiCatType(c) === "EXPENSE"),
           incomeCats: leaf.filter(c => maiCatType(c) === "INCOME"),
-          accounts: accs.map(a => `${a.name}${a.accountNo && /\d{3}/.test(a.accountNo) ? ` (số TK đuôi ${String(a.accountNo).replace(/\D/g, "").slice(-4)})` : ""}${a.kind === "credit" ? " [thẻ tín dụng]" : ""}`),
+          accounts: accs.map(a => formatAccountLabel(a)),
           rules: st.gemRules || "",
           examples: stateRef.current.gemExamples.slice(0, 40),
         };
@@ -1184,17 +1330,31 @@
         const type = g.type === "INCOME" ? "INCOME" : "EXPENSE";
         const named = cats.find(c => c && c.name === g.category);
         const category = maiResolveCategory(named ? g.category : (window.MaiAgent.matchCategory(String(g.category || ""), cats.map(c => c.name)) || null), type, cats);
-        const acc = accs.find(a => a.name === g.account) || maiMatchAccount({ bank: (job.local && job.local.bank) || g.account, accountTail: job.local && job.local.accountTail }, accs);
+        const gAccStr = String(g.account || "").trim();
+        const gTailMatch = gAccStr.match(/(\d{4})\s*(?:\(credit\))?$/i);
+        const tail = g.account_tail || (gTailMatch && gTailMatch[1]) || (job.local && job.local.accountTail) || null;
+        const isCredit = typeof g.is_credit === "boolean" ? g.is_credit : (/\(credit\)|tín dụng|ghi nợ/i.test(gAccStr) || !!(job.local && job.local.isCredit));
+        const cleanGAcc = gAccStr.replace(/\s*\(credit\)\s*$/i, "").split("·")[0].trim();
+        const acc = accs.find(a => formatAccountLabel(a) === gAccStr)
+          || maiMatchAccount({ bank: (cleanGAcc && !/^khong ro$/i.test(cleanGAcc) ? cleanGAcc : null) || (job.local && job.local.bank), accountTail: tail, isCredit }, accs)
+          || accs.find(a => a.name === cleanGAcc)
+          || null;
         let date = job.local && job.local.date;
         const dm = String(g.date || "").match(/^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/);
         if (dm && (dm[2] || !date)) { const d = new Date(`${dm[1]}T${dm[2] || "12:00"}:00+07:00`); if (!isNaN(d) && d.getTime() < Date.now() + 86400000) date = d.toISOString(); }
         const conf = Math.max(0, Math.min(1, Number(g.confidence) || 0));
+        const balanceKind = g.balance_kind || (job.local && job.local.balanceKind) || (isCredit ? "available" : "balance");
         const draft = {
           ok: true, amount: Math.round(Number(g.amount)), type, category, note: String(g.note || "").slice(0, 80),
-          bank: (job.local && job.local.bank) || g.account || null, bankName: acc ? acc.name : null,
-          accountTail: job.local && job.local.accountTail, balance: g.balance != null ? Number(g.balance) : (job.local ? job.local.balance : null),
+          bank: (job.local && job.local.bank) || (cleanGAcc || null),
+          bankName: acc ? acc.name : null,
+          bankId: acc ? acc.id : null,
+          accountTail: tail,
+          isCredit: acc ? isCreditAcc(acc) : isCredit,
+          balance: g.balance != null ? Number(g.balance) : (job.local ? job.local.balance : null),
+          balanceKind,
           date: date || new Date(job.postTime || Date.now()).toISOString(), confidence: conf, raw: [job.title, job.text].filter(Boolean).join("\n"),
-          learnText: [job.title, job.text].filter(Boolean).join(" "), categorySource: "gemini", certain: conf >= 0.8 && category !== "Khác",
+          learnText: [job.title, job.text].filter(Boolean).join(" "), categorySource: "gemini", certain: conf >= 0.8,
           source: job.source, receivedAt: job.at, inboxId: `mi_${job.id}`,
         };
         return draft;
@@ -1203,7 +1363,7 @@
         const st = stateRef.current.maiSettings;
         const draft = gemDraft(job, g);
         if (!draft) return "skip";
-        if (st.autoSave && job.source === "notification" && draft.certain) { maiCommit(draft, { auto: true }); return "saved"; }
+        if (st.autoSave && (job.source === "notification" || job.source === "share") && draft.certain) { maiCommit(draft, { auto: true }); return "saved"; }
         setMaiInbox(prev => [draft, ...prev.filter(x => x.inboxId !== draft.inboxId)].slice(0, 100));
         return "inbox";
       };
@@ -1291,8 +1451,10 @@
             return;
           }
           if (q && q.ok) {
-            const acc = q.bank ? stateRef.current.accounts.find(a => a.name === q.bank) : (/tien mat|tiền mặt/i.test(text) ? stateRef.current.accounts.find(a => /tien mat|tiền mặt|cash/i.test(a.name + " " + a.accountNo)) : null);
-            setMaiDraft({ ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), bankName: acc ? acc.name : stateRef.current.accounts[0]?.name, inboxId: null, raw: `Giọng nói: “${spoken}”`, source: "voice" });
+            const acc = (q.bank ? resolveAccount(stateRef.current.accounts, { bankName: q.bank, isCredit: /\b(credit|tin dung|tín dụng|ghi no|ghi nợ)\b/i.test(text) }) : null)
+              || (/tien mat|tiền mặt/i.test(text) ? stateRef.current.accounts.find(isCashAcc) : null);
+            const fallbackAcc = acc || stateRef.current.accounts[0] || null;
+            setMaiDraft({ ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), bankId: fallbackAcc ? fallbackAcc.id : null, bankName: fallbackAcc ? fallbackAcc.name : null, isCredit: fallbackAcc ? isCreditAcc(fallbackAcc) : false, inboxId: null, raw: `Giọng nói: “${spoken}”`, source: "voice" });
             setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: (window.VinaGemini ? window.VinaGemini.explain(err) : "") + " Mai mở phiếu để anh xác nhận." }));
             sayNow("Mai chưa kết nối được, anh xem phiếu rồi bấm lưu giúp Mai nhé");
             return;
@@ -1431,8 +1593,18 @@
         if (gone.length) {
           addDeletedTxIds(gone.map(t => t.id));
           const delta = {};
-          gone.forEach(t => { delta[t.bankName] = (delta[t.bankName] || 0) + (t.type === "INCOME" ? -t.amount : t.amount); });
-          updateData(accs.map(a => delta[a.name] ? { ...a, balance: (Number(a.balance) || 0) + delta[a.name] } : a), txs.filter(t => !ids.has(t.id)), null, null);
+          gone.forEach(t => {
+            const target = resolveAccount(accs, t);
+            const key = target ? `id:${target.id}` : `name:${t.bankName}`;
+            delta[key] = (delta[key] || 0) + (t.type === "INCOME" ? -t.amount : t.amount);
+          });
+          const touchedNames = new Set();
+          updateData(accs.map(a => {
+            const byId = delta[`id:${a.id}`] || 0;
+            const byName = !touchedNames.has(a.name) && delta[`name:${a.name}`] ? (touchedNames.add(a.name), delta[`name:${a.name}`]) : 0;
+            const d = byId + byName;
+            return d ? { ...a, balance: (Number(a.balance) || 0) + d } : a;
+          }), txs.filter(t => !ids.has(t.id)), null, null);
           setMaiLog(prev => prev.filter(x => !ids.has(x.id)));
         }
         setVoice(v => ({ ...v, state: "idle", result: null }));
@@ -1481,16 +1653,90 @@
         } finally { setGemImgBusy(false); }
       };
 
+      // Chuyển sang xử lý cục bộ trên máy khi chưa có Gemini key, mất mạng lâu, hết lượt hoặc lỗi
+      const localApply = (jobs, reasonTag) => {
+        const { maiSettings: st, categories: cats, accounts: accs } = stateRef.current;
+        let saved = 0, inbox = 0, skip = 0;
+        const doneIds = new Set(jobs.map(j => j.id));
+        jobs.forEach(job => {
+          const l = job.local;
+          if (!l || !(l.amount > 0)) { skip++; return; }
+          const acc = resolveAccount(accs, l) || maiMatchAccount(l, accs);
+          const draft = {
+            ok: true,
+            amount: l.amount,
+            type: l.type,
+            bank: l.bank,
+            bankName: acc ? acc.name : (l.bankName || null),
+            bankId: acc ? acc.id : (l.bankId || null),
+            accountTail: l.accountTail,
+            isCredit: acc ? isCreditAcc(acc) : !!l.isCredit,
+            balance: l.balance,
+            balanceKind: l.balanceKind,
+            date: l.date || new Date(job.postTime || Date.now()).toISOString(),
+            note: l.note,
+            rawNote: l.rawNote,
+            counterparty: l.counterparty,
+            category: maiResolveCategory(l.category, l.type, cats),
+            categorySource: reasonTag,
+            memoryKey: l.memoryKey,
+            learnText: l.learnText,
+            confidence: l.confidence || 0.7,
+            certain: !!l.certain,
+            raw: [job.title, job.text].filter(Boolean).join("\n"),
+            source: job.source,
+            receivedAt: job.at,
+            inboxId: `mi_${job.id}`,
+          };
+          const thresh = (window.MaiAgent && window.MaiAgent.AUTO_SAVE_THRESHOLD) || 0.75;
+          const canAuto = st.autoSave && (job.source === "notification" || job.source === "share") &&
+            (draft.certain || (draft.confidence >= thresh && l.directionSource !== "default" && (!l.genericNote || l.balance != null)));
+          if (canAuto) {
+            maiCommit(draft, { auto: true, silent: true });
+            saved++;
+          } else {
+            setMaiInbox(prev => [draft, ...prev.filter(x => x.inboxId !== draft.inboxId)].slice(0, 100));
+            inbox++;
+          }
+        });
+        setGemQueue(prev => prev.filter(j => !doneIds.has(j.id)));
+        if (saved > 0) showToast(`Đã tự ghi ${saved} giao dịch trên máy${inbox ? ` · ${inbox} chờ duyệt` : ""}`);
+        else if (inbox > 0) showToast(`Có ${inbox} giao dịch chờ anh duyệt`, "info");
+        return { saved, inbox, skip };
+      };
+
       useEffect(() => {
         if (gemBusyRef.current || !window.VinaGemini) return;
         const now = Date.now();
         const ready = gemQueue.filter(j => (j.nextAt || 0) <= now);
         if (!ready.length) return;
-        // Gom tin: chờ 15 giây sau tin đầu tiên để nhiều giao dịch đi chung 1 lần gọi (trừ tin anh dán tay)
+        // Gom tin nhanh 2.5 giây sau tin đầu tiên (trừ tin anh dán tay/chia sẻ)
         const oldest = Math.min(...ready.map(j => j.at || 0));
-        if (!ready.some(j => j.source !== "notification") && now - oldest < 15000 && ready.length < 8) { const t = setTimeout(() => setGemTick(x => x + 1), 15000 - (now - oldest) + 200); return () => clearTimeout(t); }
-        if (!window.VinaGemini.hasKey()) { setGemStatus(s => ({ ...s, error: "Chưa có Gemini API key. Nhập key ở mục Cài đặt Gemini bên dưới." })); return; }
-        if (typeof navigator !== "undefined" && navigator.onLine === false) { setGemStatus(s => ({ ...s, error: "Đang mất mạng – thông báo được giữ lại, có mạng em gửi Gemini ngay." })); return; }
+        if (!ready.some(j => j.source !== "notification") && now - oldest < 2500 && ready.length < 8) {
+          const t = setTimeout(() => setGemTick(x => x + 1), 2500 - (now - oldest) + 150);
+          return () => clearTimeout(t);
+        }
+        if (!window.VinaGemini.hasKey()) {
+          const hasLoc = ready.filter(j => j.local);
+          if (hasLoc.length) localApply(hasLoc, "local");
+          const noLoc = new Set(ready.filter(j => !j.local).map(j => j.id));
+          if (noLoc.size) setGemQueue(prev => prev.filter(j => !noLoc.has(j.id)));
+          setGemStatus(s => ({ ...s, error: hasLoc.length ? null : "Chưa có Gemini API key — app đang dùng bộ phân tích trên máy." }));
+          return;
+        }
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          if (ready.some(j => j.source === "notification") && now - oldest < 8000) {
+            setGemStatus(s => ({ ...s, error: "Đang mất mạng – chờ chút rồi chuyển sang phân tích trên máy." }));
+            const t = setTimeout(() => setGemTick(x => x + 1), 8000 - (now - oldest) + 200);
+            return () => clearTimeout(t);
+          }
+          const hasLoc = ready.filter(j => j.local);
+          if (hasLoc.length) localApply(hasLoc, "offline");
+          const noLoc = new Set(ready.filter(j => !j.local).map(j => j.id));
+          if (noLoc.size) setGemQueue(prev => prev.map(j => noLoc.has(j.id) ? { ...j, nextAt: now + 30000 } : j));
+          setGemStatus(s => ({ ...s, error: "Đang mất mạng — đã phân tích thông báo trên máy." }));
+          return;
+        }
         const batch = ready.slice(0, 10);
         gemBusyRef.current = true;
         setGemStatus(s => ({ ...s, busy: true, at: Date.now(), count: batch.length, error: null }));
@@ -1508,19 +1754,26 @@
           else if (inbox) showToast("Có 1 giao dịch chờ anh duyệt", "info");
         }).catch(err => {
           const msg = window.VinaGemini.explain(err);
-          const waits = [20000, 60000, 3 * 60000, 10 * 60000, 30 * 60000, 60 * 60000]; // lỗi quá tải thường qua nhanh
-          const ids = new Set(batch.map(j => j.id));
+          const waits = [10000, 25000];
+          const immediateFallback = (err.code === "no_key" || err.code === "bad_key" || ((err.code === "quota" || err.allModels) && (err.retryMs || 0) > 120000));
+          const dropSet = new Set();
+          const retryMap = new Map();
           const failed = [];
-          setGemQueue(prev => prev.map(j => {
-            if (!ids.has(j.id)) return j;
+          batch.forEach(j => {
             const tries = (j.tries || 0) + 1;
-            if (err.code !== "no_key" && err.code !== "bad_key" && tries > waits.length) { failed.push(j); return null; }
-            // hết lượt trong ngày: chờ đúng thời gian Google báo, không tính là 1 lần thử hỏng
-            if ((err.code === "quota" || err.allModels) && err.retryMs && err.code !== "network" && err.code !== "server") return { ...j, nextAt: Date.now() + err.retryMs + 5000 };
-            return { ...j, tries, nextAt: Date.now() + waits[Math.min(tries - 1, waits.length - 1)] };
-          }).filter(Boolean));
-          // Gemini lỗi mãi -> đưa vào hộp chờ duyệt để anh tự ghi (dùng số tiền bộ đọc nhanh đã thấy)
-          failed.forEach(j => { if (j.local) setMaiInbox(prev => [{ ok: true, ...j.local, category: maiResolveCategory(null, j.local.type, stateRef.current.categories), raw: [j.title, j.text].filter(Boolean).join("\n"), confidence: 0, certain: false, categorySource: "failed", source: j.source, inboxId: `mi_${j.id}` }, ...prev].slice(0, 100)); });
+            if ((immediateFallback && j.local) || tries > waits.length) {
+              dropSet.add(j.id);
+              if (j.local) failed.push(j);
+            } else if ((err.code === "quota" || err.allModels) && err.retryMs && err.code !== "network" && err.code !== "server") {
+              retryMap.set(j.id, { tries, nextAt: Date.now() + err.retryMs + 5000 });
+            } else {
+              retryMap.set(j.id, { tries, nextAt: Date.now() + waits[Math.min(tries - 1, waits.length - 1)] });
+            }
+          });
+          if (dropSet.size || retryMap.size) {
+            setGemQueue(prev => prev.filter(j => !dropSet.has(j.id)).map(j => retryMap.has(j.id) ? { ...j, ...retryMap.get(j.id) } : j));
+          }
+          if (failed.length) localApply(failed, immediateFallback ? "local" : "failed");
           setGemStatus(s => ({ ...s, busy: false, error: msg }));
         }).finally(() => { gemBusyRef.current = false; setGemTick(x => x + 1); });
       }, [gemQueue, gemTick]);
@@ -1578,7 +1831,15 @@
         if (!tx) { setMaiLog(prev => prev.filter(x => x.id !== logItem.id)); return; }
         addDeletedTxIds([tx.id]);
         const eff = tx.type === "INCOME" ? -tx.amount : tx.amount;
-        updateData(accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + eff } : a), transactions.filter(t => t.id !== tx.id), null, null);
+        const target = resolveAccount(accounts, tx);
+        let matchedOnce = false;
+        updateData(accounts.map(a => {
+          if (matchedOnce) return a;
+          const hit = target ? a.id === target.id : a.name === tx.bankName;
+          if (!hit) return a;
+          matchedOnce = true;
+          return { ...a, balance: (Number(a.balance) || 0) + eff };
+        }), transactions.filter(t => t.id !== tx.id), null, null);
         setMaiLog(prev => prev.filter(x => x.id !== logItem.id));
         showToast("Đã hoàn tác giao dịch tự ghi", "info");
       };
@@ -1790,24 +2051,35 @@
         const otherTx = (other.transactions || []).filter(t => !deleted.has(t.id));
         const baseAllIds = new Set((base.transactions || []).map(t => t.id));
         const otherById = new Map((other.transactions || []).map(t => [t.id, t]));
-        const delta = {}; // tên ví -> chênh lệch số dư cần cộng vào ví của bên `base`
-        const bump = (name, v) => { delta[name] = (delta[name] || 0) + v; };
+        const baseAccs = base.accounts || [];
+        const delta = {}; // "id:<id>" hoặc "name:<tên>" -> chênh lệch số dư cần cộng vào ví của bên `base`
+        const keyOf = (tx) => {
+          const acc = resolveAccount(baseAccs, tx);
+          return acc ? `id:${acc.id}` : `name:${tx.bankName}`;
+        };
+        const bump = (tx, v) => { const k = keyOf(tx); delta[k] = (delta[k] || 0) + v; };
 
         // Giao dịch bên base đã bị xoá ở bên kia -> trừ ảnh hưởng khỏi số dư
-        (base.transactions || []).forEach(t => { if (deleted.has(t.id)) bump(t.bankName, -eff(t)); });
+        (base.transactions || []).forEach(t => { if (deleted.has(t.id)) bump(t, -eff(t)); });
         // Giao dịch chỉ có bên kia -> thêm vào + cộng ảnh hưởng. Trùng id -> bản nào sửa sau thì thắng.
         const mergedTx = baseTx.map(t => {
           const o = otherById.get(t.id);
           if (o && (o.updatedAt || 0) > (t.updatedAt || 0)) {
-            bump(t.bankName, -eff(t)); bump(o.bankName, eff(o));
+            bump(t, -eff(t)); bump(o, eff(o));
             return o;
           }
           return t;
         });
-        otherTx.forEach(t => { if (!baseAllIds.has(t.id)) { mergedTx.push(t); bump(t.bankName, eff(t)); } });
+        otherTx.forEach(t => { if (!baseAllIds.has(t.id)) { mergedTx.push(t); bump(t, eff(t)); } });
         mergedTx.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const accounts = (base.accounts || []).map(a => delta[a.name] ? { ...a, balance: (Number(a.balance) || 0) + delta[a.name] } : a);
+        const touchedNames = new Set();
+        const accounts = baseAccs.map(a => {
+          const byId = delta[`id:${a.id}`] || 0;
+          const byName = !touchedNames.has(a.name) && delta[`name:${a.name}`] ? (touchedNames.add(a.name), delta[`name:${a.name}`]) : 0;
+          const d = byId + byName;
+          return d ? { ...a, balance: (Number(a.balance) || 0) + d } : a;
+        });
         return { ...base, accounts, transactions: mergedTx, deletedTxIds: Array.from(deleted) };
       };
 
@@ -2473,8 +2745,9 @@
 
         let mergedAcc = accounts;
         if (Array.isArray(d.accounts) && d.accounts.length) {
-          const accNames = new Set(accounts.map(a => a.name));
-          const extraAcc = d.accounts.filter(a => a && a.name && !accNames.has(a.name));
+          const accIds = new Set(accounts.map(a => a.id));
+          const accKeys = new Set(accounts.map(a => `${a.name}|${a.accountNo || ""}|${isCreditAcc(a) ? 1 : 0}`));
+          const extraAcc = d.accounts.filter(a => a && a.name && !accIds.has(a.id) && !accKeys.has(`${a.name}|${a.accountNo || ""}|${isCreditAcc(a) ? 1 : 0}`));
           if (extraAcc.length) mergedAcc = [...accounts, ...extraAcc];
         }
 
@@ -2557,9 +2830,18 @@
       }, [transactions]);
 
       const baseReportTxs = React.useMemo(() => {
+        const selectedById = reportAccount !== "Tất cả" ? accounts.find(a => String(a.id) === String(reportAccount)) : null;
+        const q = reportSearch ? reportSearch.toLowerCase() : "";
         return transactions.filter(t => {
-           if (reportAccount !== "Tất cả" && t.bankName !== reportAccount) return false;
-           if (reportSearch && !t.note.toLowerCase().includes(reportSearch.toLowerCase()) && !t.category.toLowerCase().includes(reportSearch.toLowerCase())) return false;
+           if (reportAccount !== "Tất cả") {
+             const matched = resolveAccount(accounts, t);
+             if (selectedById) {
+               if (matched ? matched.id !== selectedById.id : t.bankName !== selectedById.name) return false;
+             } else if (t.bankName !== reportAccount) {
+               return false;
+             }
+           }
+           if (q && !(t.note || "").toLowerCase().includes(q) && !(t.category || "").toLowerCase().includes(q) && !txBankLabel(accounts, t).toLowerCase().includes(q)) return false;
            
            const d = new Date(t.date);
            const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
@@ -2572,7 +2854,7 @@
            
            return true;
         });
-      }, [transactions, reportPeriod, reportAccount, reportSearch, reportDay, reportMonth, reportYear, reportFrom, reportTo]);
+      }, [transactions, accounts, reportPeriod, reportAccount, reportSearch, reportDay, reportMonth, reportYear, reportFrom, reportTo]);
 
       const reportSummary = React.useMemo(() => {
         let income = 0;
@@ -2773,7 +3055,15 @@
           if (maiR && maiR.ok) {
             setIsAddTxModalOpen(false);
             const m = maiMatchAccount(maiR, accounts);
-            setMaiDraft({ ...maiR, category: maiResolveCategory(maiR.category, maiR.type, categories), bankName: m ? m.name : (maiR.bank ? null : accounts[0]?.name), inboxId: null });
+            const defAcc = m || (!maiR.bank ? accounts[0] : null);
+            setMaiDraft({
+              ...maiR,
+              category: maiResolveCategory(maiR.category, maiR.type, categories),
+              bankId: defAcc ? defAcc.id : null,
+              bankName: defAcc ? defAcc.name : null,
+              isCredit: defAcc ? isCreditAcc(defAcc) : !!maiR.isCredit,
+              inboxId: null
+            });
             showToast("Đã đọc xong ảnh, anh kiểm tra lại nhé", "info");
             return;
           }
@@ -2852,10 +3142,28 @@
         let txDate = new Date();
         const dv = e.target.date && e.target.date.value;
         if (dv && dv !== todayKey()) { const [y, m, d] = dv.split("-").map(Number); txDate = new Date(y, m - 1, d, txDate.getHours(), txDate.getMinutes()); }
-        const tx = { id: Date.now(), type: e.target.type.value, amount: Number(e.target.amount.value) || 0, category: e.target.category.value, bankName: e.target.bankName.value, note: e.target.note.value, date: txDate.toISOString(), updatedAt: Date.now() };
+        const sel = parseBankSelection(e.target.bankSelect ? e.target.bankSelect.value : (e.target.bankName && e.target.bankName.value));
+        const tx = {
+          id: Date.now(),
+          type: e.target.type.value,
+          amount: Number(e.target.amount.value) || 0,
+          category: e.target.category.value,
+          bankName: sel.bankName,
+          ...(sel.bankId != null ? { bankId: sel.bankId } : {}),
+          note: e.target.note.value,
+          date: txDate.toISOString(),
+          updatedAt: Date.now()
+        };
         if (!(tx.amount > 0)) { showToast("Vui lòng nhập số tiền", "error"); return; }
         const newTx = [tx, ...transactions];
-        const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? tx.amount : -tx.amount) } : a);
+        let touched = false;
+        const newAcc = accounts.map(a => {
+          if (touched) return a;
+          const hit = sel.account ? a.id === sel.account.id : a.name === tx.bankName;
+          if (!hit) return a;
+          touched = true;
+          return { ...a, balance: (Number(a.balance) || 0) + (tx.type === "INCOME" ? tx.amount : -tx.amount) };
+        });
         updateData(newAcc, newTx, null, null);
         if (tx.note && tx.category) maiTeach([{ text: tx.note, category: tx.category, type: tx.type, weight: 1 }]);
         setIsAddTxModalOpen(false);
@@ -2889,7 +3197,9 @@
         const newAmount = Number(form.amount.value) || 0;
         // Không bắt buộc chọn lại hạng mục: nếu hạng mục cũ không nằm trong nhóm đang lọc thì giữ nguyên
         const newCategory = (form.category && form.category.value) || editingTx.category;
-        const newBankName = form.bankName.value;
+        const sel = parseBankSelection(form.bankSelect ? form.bankSelect.value : (form.bankName && form.bankName.value));
+        const newBankName = sel.bankName;
+        const newBankId = sel.bankId;
         const newNote = form.note.value;
         const newDateVal = form.date ? form.date.value : null;
         // Giữ nguyên giờ trong ngày, chỉ đổi ngày theo lịch địa phương (tránh lệch múi giờ)
@@ -2911,20 +3221,22 @@
           date: newDate,
           updatedAt: Date.now()
         };
+        if (newBankId != null) updatedTx.bankId = newBankId;
+        else delete updatedTx.bankId;
 
-        // Reconcile bank balances: Revert old tx, then apply updated tx
-        let newAcc = accounts.map(a => {
-          let bal = a.balance;
-          if (a.name === editingTx.bankName) {
+        // Reconcile bank balances: Revert old tx, then apply updated tx on exact resolved accounts
+        const oldAcc = resolveAccount(accounts, editingTx);
+        const newTargetAcc = sel.account || resolveAccount(accounts, updatedTx);
+        let oldApplied = false, newApplied = false;
+        const newAcc = accounts.map(a => {
+          let bal = Number(a.balance) || 0;
+          if (!oldApplied && (oldAcc ? a.id === oldAcc.id : a.name === editingTx.bankName)) {
             bal += (editingTx.type === "INCOME" ? -editingTx.amount : editingTx.amount);
+            oldApplied = true;
           }
-          return { ...a, balance: bal };
-        });
-
-        newAcc = newAcc.map(a => {
-          let bal = a.balance;
-          if (a.name === updatedTx.bankName) {
+          if (!newApplied && (newTargetAcc ? a.id === newTargetAcc.id : a.name === updatedTx.bankName)) {
             bal += (updatedTx.type === "INCOME" ? updatedTx.amount : -updatedTx.amount);
+            newApplied = true;
           }
           return { ...a, balance: bal };
         });
@@ -2958,7 +3270,15 @@
         const tx = transactions.find(t => t.id === id);
         addDeletedTxIds([id]);
         const newTx = transactions.filter(t => t.id !== id);
-        const newAcc = accounts.map(a => a.name === tx.bankName ? { ...a, balance: a.balance + (tx.type==="INCOME" ? -tx.amount : tx.amount) } : a);
+        const target = resolveAccount(accounts, tx);
+        let touched = false;
+        const newAcc = accounts.map(a => {
+          if (!tx || touched) return a;
+          const hit = target ? a.id === target.id : a.name === tx.bankName;
+          if (!hit) return a;
+          touched = true;
+          return { ...a, balance: (Number(a.balance) || 0) + (tx.type === "INCOME" ? -tx.amount : tx.amount) };
+        });
         updateData(newAcc, newTx, null, null);
       };
 
@@ -3109,10 +3429,22 @@
         const credit = bankKind === "credit";
         const extra = credit
           ? { kind: "credit", limit: Number(e.target.limit.value) || 0, balance: -Math.abs(Number(e.target.debt.value) || 0) }
-          : { kind: "account", limit: undefined, balance: Number(e.target.balance.value) || 0 };
+          : { kind: "account", balance: Number(e.target.balance.value) || 0 };
         if (editingBank) {
-            const updated = accounts.map(a => a.id === editingBank.id ? { ...a, name: bName, accountNo: acctNo, ...extra } : a);
-            updateData(updated, null, null, null);
+            const updated = accounts.map(a => {
+              if (a.id !== editingBank.id) return a;
+              const next = { ...a, name: bName, accountNo: acctNo, ...extra };
+              if (!credit) delete next.limit;
+              return next;
+            });
+            const nameChanged = editingBank.name !== bName;
+            const singleOldName = accounts.filter(a => a.name === editingBank.name).length === 1;
+            const nextTxs = nameChanged ? transactions.map(t => {
+              const matchById = t.bankId != null && String(t.bankId) === String(editingBank.id);
+              const matchLegacy = t.bankId == null && t.bankName === editingBank.name && singleOldName;
+              return (matchById || matchLegacy) ? { ...t, bankName: bName, bankId: editingBank.id } : t;
+            }) : null;
+            updateData(updated, nextTxs, null, null);
         } else {
             const b = { id: Date.now(), name: bName, accountNo: acctNo, ...extra };
             updateData([...accounts, b], null, null, null);
@@ -3292,7 +3624,7 @@
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="flex items-center gap-2 min-w-0">
                                     <BankBadge name={acc.name} size={20} />
-                                    <span className="font-bold text-[14px] text-theme-textPrimary truncate">{acc.name}</span>
+                                    <span className="font-bold text-[14px] text-theme-textPrimary truncate">{formatAccountLabel(acc)}</span>
                                   </span>
                                   <span className={`font-display font-black text-[15px] tabular whitespace-nowrap ${credit || bal < 0 ? "text-[var(--expense)]" : "text-theme-textPrimary"}`}>{credit ? "−" + formatVND(debt) : formatVND(bal)}</span>
                                 </div>
@@ -3372,7 +3704,7 @@
                                       {tx.category}
                                       {tx.source === "mai" && <span title="Tự ghi" className="inline-flex"><MaiAvatar size={14} /></span>}
                                     </p>
-                                    <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{tx.bankName} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
+                                    <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                                   </div>
                                   <p className={`font-display font-extrabold text-[15px] tabular shrink-0 ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>
                                     {tx.type==="INCOME" ? '+' : '−'}{formatVND(tx.amount)}
@@ -3511,7 +3843,7 @@
                             <div>
                               <p className="font-bold text-theme-textPrimary text-sm">{tx.category}</p>
                               <p className="text-xs text-theme-textSecondary font-semibold">
-                                {tx.note ? `${tx.note} • ` : ""}{tx.bankName} • {new Date(tx.date).toLocaleDateString('vi-VN')}
+                                {tx.note ? `${tx.note} • ` : ""}{txBankLabel(accounts, tx)} • {new Date(tx.date).toLocaleDateString('vi-VN')}
                               </p>
                             </div>
                           </div>
@@ -3626,9 +3958,17 @@
                        </div>
                        <div className="flex gap-2 items-center">
                           <span className="text-xs font-bold text-theme-textSecondary whitespace-nowrap">Bộ lọc ví:</span>
-                          <select value={reportAccount} onChange={e=>setReportAccount(e.target.value)} className="flex-1 bg-theme-background border border-theme-border rounded-xl py-2 px-3 text-sm text-theme-textPrimary focus:border-theme-primary transition-colors appearance-none">
+                          <select
+                            value={(() => {
+                              if (reportAccount === "Tất cả") return "Tất cả";
+                              if (accounts.some(a => String(a.id) === String(reportAccount))) return String(reportAccount);
+                              const byName = accounts.find(a => a.name === reportAccount);
+                              return byName ? String(byName.id) : "Tất cả";
+                            })()}
+                            onChange={e=>setReportAccount(e.target.value)}
+                            className="flex-1 bg-theme-background border border-theme-border rounded-xl py-2 px-3 text-sm text-theme-textPrimary focus:border-theme-primary transition-colors appearance-none">
                               <option value="Tất cả">Tất cả ví tài khoản</option>
-                              {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                              {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
                           </select>
                        </div>
                     </div>
@@ -4198,52 +4538,91 @@
                 <section className="bg-theme-surface border rounded-3xl p-4 space-y-2">
                   <p className="text-sm font-bold text-theme-textPrimary">Dán thông báo ngân hàng</p>
                   <textarea rows={3} value={gemPaste} onChange={e => setGemPaste(e.target.value)} placeholder="Dán nguyên văn tin biến động số dư / SMS ngân hàng…" className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm text-theme-textPrimary" />
-                  <button disabled={!gemPaste.trim()} onClick={() => { const r = maiIngest(gemPaste.trim(), "paste"); if (r.status === "queued") { setGemPaste(""); showToast("Đã gửi cho Gemini, kết quả sẽ hiện ở “Chờ anh duyệt”", "info"); } else showToast(r.reason === "otp" ? "Đây là tin OTP, không ghi sổ." : r.status === "duplicate" ? "Giao dịch này đã ghi rồi." : "Không thấy số tiền trong tin này.", "error"); }}
-                    className="w-full py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold disabled:opacity-50">Gửi Gemini phân tích</button>
+                  <button disabled={!gemPaste.trim()} onClick={() => {
+                      const r = maiIngest(gemPaste.trim(), "paste");
+                      if (r.status === "queued") {
+                        setGemPaste("");
+                        const hasGem = window.VinaGemini && window.VinaGemini.hasKey();
+                        showToast(hasGem ? "Đã gửi cho Gemini, kết quả sẽ hiện ở “Chờ anh duyệt”" : "Đã phân tích trên máy, xem kết quả ở “Chờ anh duyệt”", "info");
+                      } else {
+                        const msgs = {
+                          otp: "Đây là tin OTP, không ghi sổ.",
+                          promo: "Đây là tin khuyến mãi / ưu đãi, không phải giao dịch.",
+                          account_notice: "Đây là thông báo đăng nhập / tài khoản, không phải giao dịch.",
+                          failed_or_pending: "Giao dịch thất bại hoặc đang xử lý, không ghi sổ.",
+                          reminder: "Đây là tin nhắc nợ / sao kê chưa thanh toán, không ghi sổ.",
+                          not_transfer: "Không phải tin biến động số dư / chuyển tiền.",
+                          not_bank_source: "Không phải thông báo từ ngân hàng / ví điện tử.",
+                          user_block: "Tin này trùng từ khóa anh đang chặn.",
+                          user_ignored_pattern: "Mẫu tin này anh đã bỏ qua trước đó."
+                        };
+                        showToast(r.status === "duplicate" ? "Giao dịch này đã ghi rồi." : (msgs[r.reason] || "Không thấy số tiền giao dịch hợp lệ trong tin này."), "error");
+                      }
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold disabled:opacity-50">
+                    {(window.VinaGemini && window.VinaGemini.hasKey()) ? "Gửi Gemini phân tích" : "Phân tích thông báo"}
+                  </button>
                 </section>
 
                 {/* Hộp chờ duyệt */}
                 {maiInbox.length > 0 && (
                   <section className="space-y-3">
                     <h3 className="font-display font-black text-xl text-theme-textPrimary px-1">Chờ anh duyệt</h3>
-                    {maiInbox.map(item => (
-                      <div key={item.inboxId} className="bg-theme-surface border rounded-3xl p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className={`font-display font-black text-2xl tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
-                            <p className="text-xs text-theme-textSecondary mt-0.5 truncate">{item.bank || "Không rõ nguồn"} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
-                          </div>
-                          <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">{item.categorySource === "failed" ? "Gemini lỗi" : item.certain ? `Chắc ${Math.round((item.confidence || 0) * 100)}%` : "Chưa rõ mục"}</span>
-                        </div>
-                        <p className="text-sm font-bold text-theme-textPrimary mt-2 truncate">{item.note}</p>
-                        <p className="text-xs text-theme-textSecondary mt-1 line-clamp-2 italic">“{item.raw}”</p>
-                        {(() => {
-                          const cur = maiResolveCategory(item.category, item.type, categories);
-                          const sure = !!item.certain;
-                          const picks = maiQuickCats(item.type, cur);
-                          return (
-                            <div className="mt-3">
-                              <p className="text-xs font-bold text-theme-textSecondary mb-1.5">
-                                {item.categorySource === "failed" ? "Gemini chưa phân tích được tin này (lỗi mạng/máy chủ). Anh chọn hạng mục để ghi:" : sure ? <>Gemini đoán: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : <>Gemini chưa chắc{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng, lần sau Gemini làm theo:</>}
-                              </p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {picks.map(c => (
-                                  <button key={c} type="button" onClick={() => maiPickInbox(item, c)}
-                                    className={`px-2.5 py-1.5 rounded-full border-2 text-xs font-bold ${sure && c === cur ? "border-retro-ink bg-[#F6E3B0] text-[#3A2618]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>{c}</button>
-                                ))}
-                                <button type="button" onClick={() => setMaiDraft({ ...item, category: cur, bankName: maiMatchAccount(item, accounts)?.name || null })}
-                                  className="px-2.5 py-1.5 rounded-full border-2 border-dashed border-theme-border text-xs font-bold text-theme-textSecondary">Mục khác…</button>
-                              </div>
+                    {maiInbox.map(item => {
+                      const inboxAcc = resolveAccount(accounts, item) || maiMatchAccount(item, accounts);
+                      const accLabel = inboxAcc
+                        ? formatAccountLabel(inboxAcc)
+                        : (item.bank ? `${item.bank}${item.accountTail ? ` · •••• ${item.accountTail}` : ""}${item.isCredit ? " (credit)" : ""}` : "Không rõ nguồn");
+                      const src = item.categorySource;
+                      const badgeText = src === "failed" ? "Gemini lỗi · Đọc trên máy"
+                        : src === "offline" ? "Mất mạng · Đọc trên máy"
+                        : src === "local" ? (item.certain ? `Trên máy · ${Math.round((item.confidence || 0) * 100)}%` : "Phân tích trên máy")
+                        : item.certain ? `Chắc ${Math.round((item.confidence || 0) * 100)}%` : "Chưa rõ mục";
+                      const cur = maiResolveCategory(item.category, item.type, categories);
+                      const sure = !!item.certain;
+                      const picks = maiQuickCats(item.type, cur);
+                      const openDraft = () => setMaiDraft({
+                        ...item,
+                        category: cur,
+                        bankId: inboxAcc ? inboxAcc.id : null,
+                        bankName: inboxAcc ? inboxAcc.name : null,
+                        isCredit: inboxAcc ? isCreditAcc(inboxAcc) : !!item.isCredit
+                      });
+                      return (
+                        <div key={item.inboxId} className="bg-theme-surface border rounded-3xl p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className={`font-display font-black text-2xl tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
+                              <p className="text-xs text-theme-textSecondary mt-0.5 truncate">{accLabel} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                             </div>
-                          );
-                        })()}
-                        <div className="flex gap-2 mt-3">
-                          <button onClick={() => setMaiDraft({ ...item, category: maiResolveCategory(item.category, item.type, categories), bankName: maiMatchAccount(item, accounts)?.name || null })} className="flex-1 py-2.5 rounded-xl border-2 border-retro-ink text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
-                          <button onClick={() => maiApproveInbox(item)} className="flex-1 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold">Ghi luôn</button>
-                          <button onClick={() => maiDismissInbox(item)} aria-label="Bỏ qua" className="w-11 rounded-xl border-2 border-theme-border text-theme-textSecondary flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                            <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-[#F6E3B0] text-[#3A2618] border border-retro-ink shrink-0">{badgeText}</span>
+                          </div>
+                          <p className="text-sm font-bold text-theme-textPrimary mt-2 truncate">{item.note}</p>
+                          <p className="text-xs text-theme-textSecondary mt-1 line-clamp-2 italic">“{item.raw}”</p>
+                          <div className="mt-3">
+                            <p className="text-xs font-bold text-theme-textSecondary mb-1.5">
+                              {src === "failed" ? "Gemini đang gặp sự cố, bộ phân tích trên máy đã đọc tạm tin này. Anh kiểm tra hạng mục để ghi:"
+                                : (src === "local" || src === "offline")
+                                  ? (sure ? <>Mai đoán trên máy: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : <>Mai chưa chắc mục này{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng:</>)
+                                  : sure ? <>Gemini đoán: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : <>Gemini chưa chắc{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng, lần sau Gemini làm theo:</>}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {picks.map(c => (
+                                <button key={c} type="button" onClick={() => maiPickInbox(item, c)}
+                                  className={`px-2.5 py-1.5 rounded-full border-2 text-xs font-bold ${sure && c === cur ? "border-retro-ink bg-[#F6E3B0] text-[#3A2618]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>{c}</button>
+                              ))}
+                              <button type="button" onClick={openDraft}
+                                className="px-2.5 py-1.5 rounded-full border-2 border-dashed border-theme-border text-xs font-bold text-theme-textSecondary">Mục khác…</button>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <button onClick={openDraft} className="flex-1 py-2.5 rounded-xl border-2 border-retro-ink text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
+                            <button onClick={() => maiApproveInbox(item)} className="flex-1 py-2.5 rounded-xl bg-theme-primary text-white text-sm font-bold">Ghi luôn</button>
+                            <button onClick={() => maiDismissInbox(item)} aria-label="Bỏ qua" className="w-11 rounded-xl border-2 border-theme-border text-theme-textSecondary flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </section>
                 )}
 
@@ -4259,7 +4638,7 @@
                           <Icon name={l.auto ? "bell" : "message-circle"} className="w-4 h-4 text-theme-textSecondary shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-theme-textPrimary truncate">{l.category}{l.note ? ` · ${l.note}` : ""}</p>
-                            <p className="text-[11px] text-theme-textSecondary">{l.bankName} · {new Date(l.at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
+                            <p className="text-[11px] text-theme-textSecondary truncate">{txBankLabel(accounts, l)} · {new Date(l.at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                           </div>
                           <p className={`font-display font-extrabold text-sm tabular ${l.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{l.type === "INCOME" ? "+" : "−"}{formatVND(l.amount)}</p>
                           <button onClick={() => maiUndo(l)} className="text-xs font-bold text-theme-primary px-2 py-1">Hoàn tác</button>
@@ -4537,7 +4916,7 @@
                 <div key={t.id} className="mt-4 w-full max-w-sm rounded-2xl border-2 border-[#3A2618] bg-[#FBF3E0] px-4 py-3 text-left shadow-[3px_3px_0_#3A2618]">
                   <p className={`font-display font-black text-3xl tabular ${t.type === "INCOME" ? "text-[#4F6B2A]" : "text-[#3A2618]"}`}>{t.type === "INCOME" ? "+" : "−"}{formatVND(t.amount)}</p>
                   <p className="text-sm font-bold text-[#3A2618] mt-0.5">{t.category}{t.note ? ` · ${t.note}` : ""}</p>
-                  <p className="text-xs text-[#6B4F3A]">{t.bankName} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                  <p className="text-xs text-[#6B4F3A]">{txBankLabel(accounts, t)} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
                 </div>
               ))}
               {voice.error && voice.state === "idle" && <p className="text-sm font-semibold text-[#A23B1E] mt-2 max-w-sm">{voice.error}</p>}
@@ -4608,7 +4987,7 @@
                   <div key={t.id} className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-theme-border bg-theme-background px-3 py-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-theme-textPrimary truncate">{t.category}{t.note ? ` · ${t.note}` : ""}</p>
-                      <p className="text-[11px] text-theme-textSecondary">{t.bankName} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                      <p className="text-[11px] text-theme-textSecondary">{txBankLabel(accounts, t)} · {new Date(t.date).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
                     </div>
                     <p className={`font-display font-extrabold tabular ${t.type === "INCOME" ? "text-[var(--income)]" : "text-theme-textPrimary"}`}>{t.type === "INCOME" ? "+" : "−"}{formatVND(t.amount)}</p>
                   </div>
@@ -4629,14 +5008,24 @@
           {/* MAI – XÁC NHẬN / SỬA TRƯỚC KHI GHI */}
           {maiDraft && (
             <div className="fixed inset-0 bg-[#1F140D]/60 z-50 flex items-end md:items-center justify-center" onClick={() => setMaiDraft(null)}>
-              <form key={maiDraft.inboxId || maiDraft.raw || "draft"} onClick={e => e.stopPropagation()} onSubmit={e => {
+              <form key={`${maiDraft.inboxId || maiDraft.raw || "draft"}_${maiDraft.bankId || ""}`} onClick={e => e.stopPropagation()} onSubmit={e => {
                   e.preventDefault();
                   const f = e.target;
-                  const draft = { ...maiDraft, type: f.type.value, amount: Number(f.amount.value) || 0, category: f.category.value, bankName: f.bankName.value, note: f.note.value };
+                  const sel = parseBankSelection(f.bankSelect ? f.bankSelect.value : "");
+                  const draft = {
+                    ...maiDraft,
+                    type: f.type.value,
+                    amount: Number(f.amount.value) || 0,
+                    category: f.category.value,
+                    bankId: sel.bankId,
+                    bankName: sel.bankName || null,
+                    isCredit: sel.account ? isCreditAcc(sel.account) : maiDraft.isCredit,
+                    note: f.note.value
+                  };
                   draft.categoryEdited = draft.category !== maiDraft.category;
                   draft.noteEdited = draft.note !== (maiDraft.note || "");
                   draft.typeEdited = draft.type !== maiDraft.type;
-                  draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || (maiDraft.bankName && draft.bankName !== maiDraft.bankName);
+                  draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || ((maiDraft.bankId != null || maiDraft.bankName) && (draft.bankId !== maiDraft.bankId || draft.bankName !== maiDraft.bankName));
                   if (f.date && f.date.value) { const [y, m, d] = f.date.value.split("-").map(Number); const old = new Date(maiDraft.date || Date.now()); draft.date = new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString(); }
                   const tx = maiCommit(draft);
                   if (tx) { if (maiDraft.inboxId) setMaiInbox(prev => prev.filter(x => x.inboxId !== maiDraft.inboxId)); setMaiDraft(null); }
@@ -4675,11 +5064,22 @@
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Ví</label>
-                    <select name="bankName" defaultValue={maiDraft.bankName || ""} className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm font-semibold text-theme-textPrimary">
-                      {!maiDraft.bankName && maiDraft.bank && <option value="">+ Tạo ví “{maiDraft.bank}”</option>}
-                      {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                    </select>
+                    <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Tài khoản / Ví</label>
+                    {(() => {
+                      const matched = resolveAccount(accounts, maiDraft);
+                      const defaultVal = matched ? String(matched.id) : (maiDraft.bank ? "" : (maiDraft.bankName ? `legacy:${maiDraft.bankName}` : (accounts[0] ? String(accounts[0].id) : "")));
+                      return (
+                        <select name="bankSelect" defaultValue={defaultVal} className="w-full bg-theme-background border-2 rounded-2xl p-3 text-sm font-semibold text-theme-textPrimary">
+                          {!matched && maiDraft.bank && (
+                            <option value="">+ Tạo ví “{maiDraft.bank}{maiDraft.accountTail ? ` · •••• ${maiDraft.accountTail}` : ""}{maiDraft.isCredit ? " (credit)" : ""}”</option>
+                          )}
+                          {!matched && maiDraft.bankName && !maiDraft.bank && (
+                            <option value={`legacy:${maiDraft.bankName}`}>{maiDraft.bankName} (ví cũ)</option>
+                          )}
+                          {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
+                        </select>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="grid grid-cols-[1fr_auto] gap-3">
@@ -4783,8 +5183,8 @@
 
                     <div>
                       <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Tài khoản / Ví</label>
-                      <select name="bankName" required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
-                        {accounts.map(a => <option key={a.id} value={a.name}>{a.name} ({formatVND(a.balance)})</option>)}
+                      <select name="bankSelect" required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
+                        {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
                       </select>
                     </div>
 
@@ -4823,7 +5223,7 @@
                     </div>
                     <button onClick={()=>setEditingTx(null)} className="text-theme-textSecondary hover:text-theme-textPrimary bg-theme-background p-2 rounded-full"><Icon name="x" className="w-4 h-4" /></button>
                   </div>
-                  <form onSubmit={handleUpdateTx} className="space-y-4">
+                  <form key={editingTx.id} onSubmit={handleUpdateTx} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <label className="flex justify-center p-3 rounded-xl border border-[var(--expense)] bg-[var(--expense-light)] text-[var(--expense)] font-bold cursor-pointer transition-colors shadow-inner">
                         <input type="radio" name="type" value="EXPENSE" defaultChecked={editingTx.type === "EXPENSE"} className="hidden peer" />
@@ -4877,9 +5277,18 @@
 
                     <div>
                       <label className="text-xs font-bold text-theme-textSecondary mb-1.5 block uppercase">Tài khoản / Ví</label>
-                      <select name="bankName" defaultValue={editingTx.bankName} required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
-                        {accounts.map(a => <option key={a.id} value={a.name}>{a.name} ({formatVND(a.balance)})</option>)}
-                      </select>
+                      {(() => {
+                        const matched = resolveAccount(accounts, editingTx);
+                        const defaultVal = matched ? String(matched.id) : (editingTx.bankName ? `legacy:${editingTx.bankName}` : (accounts[0] ? String(accounts[0].id) : ""));
+                        return (
+                          <select name="bankSelect" defaultValue={defaultVal} required className="w-full bg-theme-background border border-theme-border rounded-xl p-3.5 text-theme-textPrimary focus:border-theme-primary text-sm shadow-inner transition-all appearance-none">
+                            {!matched && editingTx.bankName && (
+                              <option value={`legacy:${editingTx.bankName}`}>{editingTx.bankName} (ví cũ)</option>
+                            )}
+                            {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
+                          </select>
+                        );
+                      })()}
                     </div>
 
                     <div>

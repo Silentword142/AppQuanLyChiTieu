@@ -33,42 +33,98 @@
 
   // ---------- Ngân hàng & ví ----------
   var BANKS = [
-    { name: "Vietcombank", pkgs: ["com.VCB", "com.vcb"], re: /\b(vietcombank|vcb|vcb digibank)\b/ },
+    { name: "Vietcombank", pkgs: ["com.VCB", "com.vcb", "com.vietcombank.digibank"], re: /\b(vietcombank|vcb|vcb digibank)\b/ },
     { name: "Techcombank", pkgs: ["vn.com.techcombank.bb.app", "com.fastacash.tcb"], re: /\b(techcombank|tcb)\b/ },
-    { name: "MB Bank", pkgs: ["com.mbmobile", "com.mbbank.mobile"], re: /\b(mb ?bank|mbbank|mbb)\b/ },
+    { name: "MB Bank", pkgs: ["com.mbmobile", "com.mbbank.mobile"], re: /\b(mb ?bank|mbbank|mbb)\b|(?:^|\n)mb(?:\s*:|\s*$)|\btk\s*mb\b/ },
     { name: "BIDV", pkgs: ["com.vnpay.bidv", "com.bidv.smartbanking"], re: /\bbidv\b/ },
     { name: "VietinBank", pkgs: ["com.vietinbank.ipay"], re: /\b(vietinbank|vietin bank|ipay)\b/ },
     { name: "Agribank", pkgs: ["com.vnpay.Agribank3g", "com.agribank.mobile"], re: /\bagribank\b/ },
     { name: "ACB", pkgs: ["mobile.acb.com.vn", "com.acb.one"], re: /\bacb\b/ },
-    { name: "TPBank", pkgs: ["com.tpb.mb.gprsandroid"], re: /\b(tpbank|tpb)\b/ },
+    { name: "TPBank", pkgs: ["com.tpb.mb.gprsandroid", "com.tpbank.mb"], re: /\b(tpbank|tpb)\b/ },
     { name: "VPBank", pkgs: ["com.vnpay.vpbankonline", "com.vpbank.neo", "com.vpb.neo"], re: /\b(vpbank|vpb|vpbank neo)\b/ },
     { name: "Sacombank", pkgs: ["com.sacombank.ewallet", "com.sacombank.mbanking"], re: /\b(sacombank|stb)\b/ },
     { name: "VIB", pkgs: ["com.vib.myvib2", "com.vib.myvib"], re: /\bvib\b/ },
     { name: "SHB", pkgs: ["vn.shb.mbanking", "vn.shb.saha.mbanking"], re: /\bshb\b/ },
-    { name: "Shinhan Bank", pkgs: ["com.shinhan.global.vn.bank"], re: /\bshinhan\b/ },
-    { name: "HDBank", pkgs: ["com.vnpay.hdbank", "com.hdbank.mobilebanking"], re: /\bhdbank\b/ },
+    { name: "Shinhan Bank", pkgs: ["com.shinhan.global.vn.bank"], re: /\bshinhan(?!\s*finance)\b/ },
+    { name: "HDBank", pkgs: ["com.vnpay.hdbank", "com.hdbank.mobilebanking"], re: /\b(hdbank|hdb)\b/ },
     { name: "OCB", pkgs: ["vn.com.ocb.awe"], re: /\bocb\b/ },
-    { name: "MSB", pkgs: ["vn.com.msb.smartBanking"], re: /\bmsb\b/ },
-    { name: "SeABank", pkgs: ["vn.com.seabank.mb1"], re: /\bseabank\b/ },
+    { name: "MSB", pkgs: ["vn.com.msb.smartBanking", "com.msb.smartBanking"], re: /\bmsb\b/ },
+    { name: "SeABank", pkgs: ["vn.com.seabank.mb1"], re: /\b(seabank|seab)\b/ },
     { name: "LPBank", pkgs: ["vn.com.lienvietpostbank"], re: /\b(lpbank|lienvietpostbank|lpb)\b/ },
     { name: "Eximbank", pkgs: ["com.vnpay.eximbank"], re: /\beximbank\b/ },
     { name: "Nam A Bank", pkgs: ["com.namabank.app"], re: /\bnam a ?bank\b/ },
-    { name: "Bac A Bank", pkgs: ["com.bab.retailUAT"], re: /\bbac a ?bank\b/ },
+    { name: "Bac A Bank", pkgs: ["com.bab.retailUAT", "com.bacabank.mobilebanking"], re: /\bbac a ?bank\b/ },
     { name: "PVcomBank", pkgs: ["com.pvcombank.retail"], re: /\bpvcombank\b/ },
+    { name: "ABBANK", pkgs: ["com.vnpay.abb", "com.abbank.mobile", "vn.abbank.ditto"], re: /\b(abbank|ab bank)\b/ },
+    { name: "BVBank", pkgs: ["com.bvbank.digimi", "vn.banvietbank.digimi"], re: /\b(bvbank|bv bank|ban viet|digimi)\b/ },
+    { name: "KienlongBank", pkgs: ["com.vnpay.klb", "com.kienlongbank.kienlongbank"], re: /\b(kienlongbank|kien long|klb)\b/ },
+    { name: "NCB", pkgs: ["com.ncb.izimobile", "vn.ncb.izimobile"], re: /\b(ncb|izimobile)\b/ },
+    { name: "BaoViet Bank", pkgs: ["com.vnpay.baoviet"], re: /\b(baoviet ?bank|bao viet bank)\b/ },
+    { name: "VietBank", pkgs: ["com.vnpay.vietbank"], re: /\bvietbank\b/ },
+    { name: "VietABank", pkgs: ["com.vnpay.vab"], re: /\bvietabank\b/ },
+    { name: "MBV", pkgs: ["com.vnpay.oceanbank", "com.oceanbank.mbv"], re: /\b(mbv|oceanbank)\b/ },
+    { name: "Vikki", pkgs: ["com.dongabank.ebanking", "vn.vikki.app", "vn.vikki.bank"], re: /\b(vikki|dong a ?bank|dongabank)\b/ },
+    { name: "HSBC", pkgs: ["com.hsbc.hsbcvietnam", "vn.hsbc.mobilebanking"], re: /\bhsbc\b/ },
+    { name: "Standard Chartered", pkgs: ["com.sc.mobilebanking.vn"], re: /\bstandard ?chartered\b/ },
+    { name: "UOB", pkgs: ["com.uob.mighty.vn", "com.uob.tmrw.vn"], re: /\buob\b/ },
+    { name: "Woori Bank", pkgs: ["com.woori.won.vn"], re: /\bwoori\b/ },
+    { name: "CIMB", pkgs: ["com.cimb.octo.vn"], re: /\bcimb\b/ },
+    { name: "Public Bank", pkgs: ["com.publicbank.pbvn"], re: /\bpublic ?bank\b/ },
     { name: "Cake", pkgs: ["xyz.be.cake"], re: /\bcake\b/ },
+    { name: "Ubank", pkgs: ["com.ubank.app", "vn.vpbank.ubank"], re: /\bubank\b/ },
     { name: "Timo", pkgs: ["io.lifestyle.plus"], re: /\btimo\b/ },
-    { name: "Ví MoMo", pkgs: ["com.mservice.momotransfer"], re: /\bmomo\b/ },
+    { name: "Liobank", pkgs: ["com.liobank.app", "vn.ocb.liobank"], re: /\bliobank\b/ },
+    { name: "TNEX", pkgs: ["vn.tnex.app", "com.msb.tnex"], re: /\btnex\b/ },
+    { name: "KBank", pkgs: ["vn.kasikornbank.kplus", "com.kasikornbank.kplus.vn"], re: /\b(kbank|k ?plus)\b/ },
+    { name: "Ví MoMo", pkgs: ["com.mservice.momotransfer", "com.mservice.momowallet"], re: /\bmomo\b/ },
     { name: "ZaloPay", pkgs: ["vn.com.vng.zalopay"], re: /\bzalo ?pay\b/ },
-    { name: "Ví ShopeePay", pkgs: ["com.beeasy.shopee.vn"], re: /\bshopee ?pay\b/ },
-    { name: "Viettel Money", pkgs: ["com.viettel.vtt.vn.emoneycustomer", "com.bplus.vtpay"], re: /\bviettel ?money\b/ }
+    { name: "Ví ShopeePay", pkgs: ["com.beeasy.shopee.vn", "com.shopeepay.vn", "com.airpay.vn.merchant"], re: /\bshopee ?pay\b/ },
+    { name: "Viettel Money", pkgs: ["com.viettel.vtt.vn.emoneycustomer", "com.bplus.vtpay"], re: /\b(viettel ?money|viettel ?pay)\b/ },
+    { name: "VNPT Money", pkgs: ["com.vnptpay.android", "vn.vnpt.vnptpay", "vn.vnpt.epay"], re: /\b(vnpt ?money|vnpt ?pay)\b/ },
+    { name: "Ví VNPAY", pkgs: ["com.vnpay.app", "vn.vnpay.wallet"], re: /\bvnpay\b/ },
+    { name: "Payoo", pkgs: ["vn.payoo.payoo"], re: /\bpayoo\b/ },
+    { name: "Foxpay", pkgs: ["com.fpt.foxpay"], re: /\bfoxpay\b/ },
+    { name: "9Pay", pkgs: ["vn.ninepay.wallet"], re: /\b9pay\b/ },
+    { name: "VTC Pay", pkgs: ["com.vtc.vtcpay"], re: /\bvtc ?pay\b/ },
+    { name: "FE Credit", pkgs: ["vn.fecredit.app"], re: /\bfe ?credit\b/ },
+    { name: "Home Credit", pkgs: ["vn.homecredit.app", "com.homecredit.app"], re: /\bhome ?credit\b/ },
+    { name: "Shinhan Finance", pkgs: ["com.shinhanfinance.ishinhan"], re: /\b(shinhan ?finance|ishinhan)\b/ },
+    { name: "HD SAISON", pkgs: ["vn.hdsaison.app"], re: /\bhd ?saison\b/ },
+    { name: "Mirae Asset", pkgs: ["com.miraeasset.mytouch"], re: /\bmirae ?asset\b/ },
+    { name: "Kredivo", pkgs: ["vn.kredivo.app"], re: /\bkredivo\b/ },
+    { name: "Fundiin", pkgs: ["vn.fundiin.app"], re: /\bfundiin\b/ },
+    { name: "Google Wallet", pkgs: ["com.google.android.apps.walletnfcrel"], re: /\bgoogle ?(wallet|pay)\b/ },
+    { name: "Samsung Pay", pkgs: ["com.samsung.android.spay"], re: /\bsamsung ?(pay|wallet)\b/ }
   ];
-  var SMS_PKGS = ["com.google.android.apps.messaging", "com.samsung.android.messaging", "com.android.mms", "com.android.messaging", "com.oneplus.mms", "com.miui.mms"];
+  var SMS_PKGS = [
+    "com.google.android.apps.messaging", "com.samsung.android.messaging",
+    "com.android.mms", "com.android.messaging", "com.oneplus.mms", "com.miui.mms",
+    "com.coloros.mms", "com.oplus.mms", "com.vivo.message", "com.huawei.message", "com.asus.message"
+  ];
+  var CHAT_PKGS = [
+    "com.zing.zalo", "com.facebook.orca", "com.facebook.katana", "com.facebook.lite",
+    "org.telegram.messenger", "org.telegram.messenger.web",
+    "com.whatsapp", "com.whatsapp.w4b", "com.viber.voip", "jp.naver.line.android",
+    "com.discord", "com.slack", "com.microsoft.teams",
+    "com.instagram.android", "com.ss.android.ugc.trill", "com.zhiliaoapp.musically",
+    "com.snapchat.android", "com.twitter.android",
+    "com.google.android.gm", "com.microsoft.office.outlook",
+    "com.android.chrome", "com.google.android.youtube"
+  ];
+  var COMMERCE_RIDE_PKGS = [
+    "com.shopee.vn", "com.lazada.android", "vn.tiki.app.tikiandroid", "com.sendo.buyer",
+    "com.grabtaxi.passenger", "com.gojek.app", "xyz.be.rider", "com.be.app", "com.deliverynow"
+  ];
+  var FINANCE_PKG_RE = /(vnpay|vietcombank|techcombank|vpbank|tpbank|sacombank|vietinbank|agribank|hdbank|bidv|seabank|shinhan|kienlong|bvbank|liobank|viettelmoney|vtpay|vnptpay|vnptmoney|zalopay|shopeepay|momo|fecredit|homecredit|kredivo|hdsaison|mirae|fundiin|hsbc|woori|cimb|ubank|tnex|mbanking|smartbanking|digibank|ebanking|ewallet|mobilebanking)/;
+  var PHONE_SENDER_RE = /^\+?\d[\d\s.\-()]{6,16}\d$/;
+  var STRICT_SMS_RE = /\b(sd ?tk|so du ?tk|bien dong so du|the tin dung|han muc kha dung|du no|ghi co|ghi no|so du:|sd:|sdc:)\b/;
 
   function bankFromPackage(pkg) {
     if (!pkg) return null;
+    var p = String(pkg).toLowerCase();
     for (var i = 0; i < BANKS.length; i++) {
       for (var j = 0; j < BANKS[i].pkgs.length; j++) {
-        if (BANKS[i].pkgs[j].toLowerCase() === String(pkg).toLowerCase()) return BANKS[i].name;
+        if (BANKS[i].pkgs[j].toLowerCase() === p) return BANKS[i].name;
       }
     }
     return null;
@@ -77,8 +133,42 @@
     for (var i = 0; i < BANKS.length; i++) if (BANKS[i].re.test(lower)) return BANKS[i].name;
     return null;
   }
+  function isChatPkg(pkg) {
+    if (!pkg) return false;
+    var p = String(pkg).toLowerCase();
+    return CHAT_PKGS.indexOf(p) !== -1 || p.indexOf("com.zing.zalo") === 0 || p.indexOf("com.facebook.") === 0 || p.indexOf("org.telegram.") === 0 || p.indexOf("com.whatsapp") === 0;
+  }
+  function isCommerceRidePkg(pkg) {
+    if (!pkg) return false;
+    return COMMERCE_RIDE_PKGS.indexOf(String(pkg).toLowerCase()) !== -1;
+  }
+  function isSmsPkg(pkg) {
+    if (!pkg) return false;
+    return SMS_PKGS.indexOf(String(pkg).toLowerCase()) !== -1;
+  }
+  function isFinancePkg(pkg) {
+    if (!pkg || isChatPkg(pkg) || isCommerceRidePkg(pkg)) return false;
+    return !!bankFromPackage(pkg) || FINANCE_PKG_RE.test(String(pkg).toLowerCase());
+  }
   function isKnownPackage(pkg) {
-    return !!bankFromPackage(pkg) || SMS_PKGS.indexOf(pkg) !== -1;
+    return isFinancePkg(pkg) || isSmsPkg(pkg);
+  }
+  function isFinancialSource(input) {
+    if (typeof input === "string") return true;
+    if (!input) return false;
+    var pkg = input.packageName || null;
+    if (!pkg || pkg === "share" || pkg === "paste") return true;
+    if (isChatPkg(pkg) || isCommerceRidePkg(pkg)) return false;
+    if (isFinancePkg(pkg)) return true;
+    var title = String(input.title || "").trim();
+    var body = String(input.text || input.body || "");
+    var lower = fold((title ? title + "\n" : "") + body);
+    if (isSmsPkg(pkg)) {
+      if (title && PHONE_SENDER_RE.test(title)) return false;
+      var lowerTitle = fold(title);
+      return !!(lowerTitle === "mb" || bankFromText(lower) || STRICT_SMS_RE.test(lower));
+    }
+    return !!(bankFromText(lower) && (STRICT_SMS_RE.test(lower) || /\b(tk|stk|tai khoan)\b/.test(lower)));
   }
 
   // ---------- Tiền ----------
@@ -131,9 +221,15 @@
     return lower.slice(Math.max(start, idx - 45), idx);
   }
 
-  var BAL_PREFIX = /(?:\bso du|\bsd|\bsdc|\bsdkd|\bbalance|\bbal|\bsdcuoi|\bsodu|\bhan muc(?: kha dung| con lai)?|\bdu no)\b[^0-9+\-]{0,26}$/;
+  var BAL_PREFIX = /(?:\bso du|\bsd|\bsdc|\bsdkd|\bbalance|\bbal|\bsdcuoi|\bsodu|\bhan muc(?: kha dung| con lai)?|\bdu no(?: hien tai)?)\b[^0-9+\-]{0,30}$/;
   var AMT_PREFIX = /(?:\bquy doi|\bso tien(?: gd| giao dich)?|\bgd|\bps|\bphat sinh|\bgiao dich|\bst|\bamount|\bthay doi|\bbien dong|\btang|\bgiam|\bthanh toan|\bnhan(?: duoc)?|\bchuyen(?: khoan| tien)?|\btru|\bcong|\bghi co|\bghi no|\brut|\bnap)\b[^0-9]{0,18}$/;
   var FEE_PREFIX = /\b(phi|fee|vat)\b[^0-9]{0,14}$/;
+  var FOREIGN_MONEY_RE = /(?:\b(?:usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)\s*\d|\d+(?:[.,]\d+)?\s*(?:usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)\b|\$\s*\d)/;
+
+  function hasForeignMoney(input) {
+    var s = typeof input === "string" ? input : (((input && input.title) ? input.title + " " : "") + (input && (input.text || input.body) || ""));
+    return FOREIGN_MONEY_RE.test(fold(s));
+  }
 
   function findMoneyTokens(lower) {
     var out = [], m;
@@ -158,8 +254,10 @@
         var pc = lower.charAt(signIdx - 1);
         if (/[a-z0-9]/.test(pc)) hasSign = false;
       }
-      // Số tiền ngoại tệ (USD 12.99, 12.99 EUR) -> không phải số tiền VND, bỏ qua
-      if (/\b(usd|eur|jpy|krw|sgd|thb|cny|aud|gbp|\$)\s*$/.test(lower.slice(Math.max(0, startNum - 5), startNum)) || /^\s*(usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)\b/.test(lower.slice(startNum + m[3].length, startNum + m[3].length + 5))) continue;
+      // Số tiền ngoại tệ (USD 12.99, $12.99, 12.99 EUR) -> không phải số tiền VND, bỏ qua
+      var nearLeft = lower.slice(Math.max(0, startNum - 6), startNum);
+      var nearRight = lower.slice(startNum + m[3].length, startNum + m[3].length + 6);
+      if (/(\b(?:usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)|\$)\s*$/.test(nearLeft) || /^\s*(?:usd|eur|jpy|krw|sgd|thb|cny|aud|gbp)\b/.test(nearRight)) continue;
       var value = unit ? parseSpokenMoney(m[3].replace(/[.,](?=\d{3})/g, ""), unit) : parseMoney(m[3]);
       if (!(value > 0)) continue;
       var hasSep = /[.,]\d{3}/.test(m[3]);
@@ -481,8 +579,8 @@
   }
 
   // ---------- Hướng tiền ----------
-  var INCOME_WORDS = /\b(nhan duoc|vua nhan|da nhan|nhan tien|nhan chuyen khoan|ghi co|cong tien|tien vao|tien ve|duoc cong|da cong|hoan tien|hoan tra|credit|received|bien dong tang|tang\b|nap tien vao vi|chuyen den tai khoan cua ban|nhan \d)/;
-  var EXPENSE_WORDS = /\b(thanh toan|da chuyen|chuyen tien den|chuyen tien toi|chuyen khoan den|tru tien|bi tru|ghi no|rut tien|da tra|da mua|debit|paid|chi tieu|bien dong giam|giam\b|nap tien dien thoai|nap dt|phi\b)/;
+  var INCOME_WORDS = /\b(nhan duoc|vua nhan|da nhan|nhan tien|nhan chuyen khoan|nhan ck|ghi co|cong tien|tien vao|tien ve|duoc cong|da cong|hoan tien|hoan tra|credited|received|bien dong tang|tang\b|nap tien vao vi|chuyen den tai khoan cua ban|chuyen toi tk|chuyen vao tk|tra lai|giai ngan|nhan \d)/;
+  var EXPENSE_WORDS = /\b(thanh toan|da chuyen|chuyen tien den|chuyen tien toi|chuyen khoan den|chuyen khoan toi|chuyen cho|da chuyen khoan|tru tien|bi tru|ghi no|trich no|rut tien|da tra|da mua|debit|paid|chi tieu|chi tra|quet the|bien dong giam|giam\b|nap tien dien thoai|nap dt|phi\b)/;
 
   function directionFromWords(lower) {
     var inc = 0, exp = 0, m;
@@ -550,9 +648,12 @@
     return text.slice(s, s + m[1].length).trim();
   }
 
+  var ACCT_NUM_PART = "(?:\\.{2,}\\d{3,6}|[*x]{1,12}\\d{3,6}|\\d{2,6}[x*]{1,12}\\d{2,6}|\\d{6,20})";
   function extractAccount(lower) {
-    var m = lower.match(/\b(?:tk|tai khoan|stk|account|acct|the)\b[\s:.]*(?:so\s*)?([0-9x*.]{4,24}\d)/);
+    var m = lower.match(new RegExp("\\b(?:tk|tai khoan|stk|account|acct|the(?:\\s+(?:tin dung|ghi no|quoc te|visa|mastercard|jcb|napas|noi dia))?)\\b[^0-9*\\n]{0,20}(?:so\\s*)?(" + ACCT_NUM_PART + ")"));
+    if (!m) m = lower.match(/\b(?:duoi|ending)\s+[*x.]*(\d{4})\b/);
     if (!m) m = lower.match(/\b(\d{2,6}[x*.]{2,}\d{2,6})\b/);
+    if (!m) m = lower.match(/(?:^|[\s(])[*x]{1,12}(\d{4})\b/);
     if (!m) return null;
     var digits = m[1].replace(/[^0-9]/g, "");
     return digits.length >= 3 ? digits.slice(-4) : null;
@@ -564,8 +665,10 @@
   var LOGIN_RE = /\b(dang nhap|login|thiet bi moi|doi mat khau|cap nhat ung dung|phien ban moi)\b/;
   var PENDING_RE = /\b(that bai|khong thanh cong|bi tu choi|da huy|failed|declined|dang xu ly|cho xu ly)\b/;
   // Dấu hiệu tiền thực sự đi vào / ra khỏi một tài khoản (chuyển khoản, nhận tiền, biến động số dư, quẹt thẻ...)
-  var MOVE_RE = /\b(tk|stk|tai khoan|acc|account|the \*|the so|so du|sd|bien dong|ghi co|ghi no|chuyen tien|chuyen khoan|ck|nhan tien|nhan duoc|da nhan|vua nhan|da chuyen|vua chuyen|tu tk|den tk|nap tien|da nap|rut tien|thanh toan thanh cong|giao dich thanh cong|da thanh toan|vua thanh toan|hoan tien|ps|phat sinh|credit|debit|gd|giao dich)\b/;
-  var REMIND_RE = /\b(nhac no|den han|sap den han|vui long thanh toan|du no|sao ke|han thanh toan|can thanh toan)\b/;
+  var MOVE_RE = /\b(tk|stk|tai khoan|acc|account|the \*|the so|the tin dung|so du|sd|bien dong|ghi co|ghi no|trich no|chuyen tien|chuyen khoan|ck|nhan tien|nhan duoc|da nhan|vua nhan|da chuyen|vua chuyen|tu tk|den tk|nap tien|da nap|rut tien|thanh toan thanh cong|giao dich thanh cong|da thanh toan|vua thanh toan|quet the|hoan tien|ps|phat sinh|credit|debit|gd|giao dich)\b/;
+  var HARD_REMIND_RE = /\b(nhac no|den han|sap den han|vui long thanh toan|han thanh toan|can thanh toan|thanh toan toi thieu|qua han)\b/;
+  var SOFT_STATEMENT_RE = /\b(du no|sao ke|ky sao ke|chot sao ke)\b/;
+  var DONE_TX_BYPASS_RE = /\b(da thanh toan|thanh toan thanh cong|giao dich thanh cong|chuyen tien thanh cong|chuyen khoan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen|vua chuyen|da nap|nap tien thanh cong|rut tien thanh cong|hoan tien thanh cong)\b|(?:\bthanh toan\b[^.\n]{0,60}\bthanh cong\b)|(?:\bchuyen(?: tien| khoan)?\b[^.\n]{0,60}\bthanh cong\b)|(?:\bnap(?: tien)?\b[^.\n]{0,60}\bthanh cong\b)/;
 
   function parse(input, opts) {
     opts = opts || {};
@@ -579,11 +682,18 @@
     if (!text.trim()) return Object.assign(result, { reason: "empty" });
 
     var tokens = findMoneyTokens(lower);
-    var balanceTok = null, fee = null, cands = [];
+    var balanceTok = null, balanceKind = null, fee = null, cands = [];
     tokens.forEach(function (t) {
       var pre = segmentBefore(lower, t.index - (t.sign ? 1 : 0));
       var preTrim = pre.replace(/[+\-\s]+$/, " ");
-      if (BAL_PREFIX.test(preTrim) && (t.currency || t.sep) && t.digits < 13) { if (!balanceTok) balanceTok = t; t.isBalance = true; return; }
+      if (BAL_PREFIX.test(preTrim) && (t.currency || t.sep) && t.digits < 13) {
+        if (!balanceTok) {
+          balanceTok = t;
+          balanceKind = /\bdu no\b/.test(preTrim) ? "debt" : /\bhan muc\b/.test(preTrim) ? "available" : "balance";
+        }
+        t.isBalance = true;
+        return;
+      }
       if (FEE_PREFIX.test(preTrim) && !t.sign && cands.length) { fee = t; t.isFee = true; return; }
       var score = 0;
       if (t.sign) score += 4;
@@ -603,22 +713,27 @@
     var isOtp = OTP_RE.test(lower);
     var isPromo = PROMO_RE.test(lower);
     var isLogin = LOGIN_RE.test(lower);
-    var strongTxSignal = !!balanceTok || cands.some(function (c) { return c.sign; }) || /\b(so tien|ps|phat sinh|giao dich|bien dong so du|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen|vua chuyen|da nap|vua thanh toan|da thanh toan|hoan tien|chi tieu|thay doi|rut tien)\b/.test(lower);
+    var doneBypass = DONE_TX_BYPASS_RE.test(lower);
+    var strongTxSignal = !!balanceTok || cands.some(function (c) { return c.sign; }) || /\b(so tien|ps|phat sinh|giao dich|bien dong so du|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen|vua chuyen|da nap|vua thanh toan|da thanh toan|hoan tien|chi tieu|thay doi|rut tien|quet the|ghi co|ghi no)\b/.test(lower) || doneBypass;
 
     if (isOtp && !balanceTok) return Object.assign(result, { reason: "otp" });
     if (PENDING_RE.test(lower)) return Object.assign(result, { reason: "failed_or_pending" });
-    if (REMIND_RE.test(lower) && !cands.some(function (c) { return c.sign; })) return Object.assign(result, { reason: "reminder" });
-    if ((isPromo || isLogin) && !balanceTok && !cands.some(function (c) { return c.sign; }) && !/\b(da thanh toan|thanh toan thanh cong|da nhan|vua nhan|nhan duoc|da chuyen)\b/.test(lower)) {
+    if (HARD_REMIND_RE.test(lower) && !cands.some(function (c) { return c.sign; })) return Object.assign(result, { reason: "reminder" });
+    if (SOFT_STATEMENT_RE.test(lower) && !cands.some(function (c) { return c.sign; }) && !/\b(giao dich|gd\b|quet the|chi tieu)\b/.test(lower) && !doneBypass) {
+      return Object.assign(result, { reason: "reminder" });
+    }
+    if ((isPromo || isLogin) && !balanceTok && !cands.some(function (c) { return c.sign; }) && !doneBypass) {
       return Object.assign(result, { reason: isPromo ? "promo" : "account_notice" });
     }
-    if (!cands.length) return Object.assign(result, { reason: "no_amount" });
+    var foreignMoney = FOREIGN_MONEY_RE.test(lower);
+    if (!cands.length) return Object.assign(result, { reason: "no_amount", hasForeignMoney: foreignMoney });
     // Chỉ nhận tin có tiền chuyển đi/đến một tài khoản; tin có số tiền khác (đơn hàng, quảng cáo, hóa đơn...) bỏ qua
     if (!opts.loose && !balanceTok && !cands.some(function (c) { return c.sign; }) && !extractAccount(lower) && !MOVE_RE.test(lower)) {
       return Object.assign(result, { reason: "not_transfer" });
     }
 
-    // Thông báo từ app lạ (chat, mạng xã hội...) mà không có dấu hiệu ngân hàng -> không phải biến động số dư
-    if (pkg && pkg !== "share" && !isKnownPackage(pkg) && !bankFromText(lower) && !balanceTok && !extractAccount(lower)) {
+    // Bước 1: Chỉ nhận thông báo thuộc ứng dụng tài chính / SMS ngân hàng (chặn app chat, MXH, mua sắm, SMS cá nhân)
+    if (pkg && pkg !== "share" && pkg !== "paste" && !isFinancialSource(input)) {
       return Object.assign(result, { reason: "not_bank_source" });
     }
     cands.sort(function (a, b) { return b.score - a.score || a.index - b.index; });
@@ -627,21 +742,22 @@
     // hướng tiền
     var type = null, dirSource = null;
     if (pick.sign) { type = pick.sign > 0 ? "INCOME" : "EXPENSE"; dirSource = "sign"; }
-    if (!type && /\bnap\b[^|\n]{0,40}\bvao (vi|tai khoan)\b/.test(lower)) { type = "INCOME"; dirSource = "prefix"; }
+    if (!type && /\bnap\b[^|\n]{0,40}\bvao (vi|tai khoan|momo|zalopay|shopeepay|vnpay|viettel ?money|vnpt ?money)\b/.test(lower)) { type = "INCOME"; dirSource = "prefix"; }
     if (!type) {
       var pre2 = segmentBefore(lower, pick.index);
-      if (/\b(tang|cong tien|duoc cong|ghi co|nhan(?: duoc)?|credit|hoan tien|hoan)\b[^0-9]{0,18}$/.test(pre2)) { type = "INCOME"; dirSource = "prefix"; }
-      else if (/\b(giam|tru|ghi no|thanh toan|chuyen(?: khoan| tien)?|rut|debit|nap)\b[^0-9]{0,18}$/.test(pre2)) { type = "EXPENSE"; dirSource = "prefix"; }
+      if (/\b(tang|cong tien|duoc cong|ghi co|nhan(?: duoc)?|credited|hoan tien|hoan)\b[^0-9]{0,18}$/.test(pre2)) { type = "INCOME"; dirSource = "prefix"; }
+      else if (/\b(giam|tru|ghi no|trich no|thanh toan|chuyen(?: khoan| tien)?|rut|debit|nap)\b[^0-9]{0,18}$/.test(pre2)) { type = "EXPENSE"; dirSource = "prefix"; }
     }
     if (!type) {
       var w = directionFromWords(lower);
       if (w) { type = w.type; dirSource = "words"; }
     }
     // Quẹt thẻ tại cửa hàng ("The *1234 giao dich ... tai NETFLIX") là khoản chi
-    if (!type && /\b(the|card|visa|mastercard)\b/.test(lower) && /\b(tai|at)\s+[a-z0-9]/.test(lower)) { type = "EXPENSE"; dirSource = "prefix"; }
+    if (!type && /\b(the|card|visa|mastercard|jcb)\b/.test(lower) && /\b(tai|at)\s+[a-z0-9]/.test(lower)) { type = "EXPENSE"; dirSource = "prefix"; }
     if (!type) { type = "EXPENSE"; dirSource = "default"; }
 
     var bank = bankFromPackage(pkg) || bankFromText(lower);
+    var isCreditCard = /\b(the tin dung|credit card|han muc kha dung|han muc con lai|du no)\b/.test(lower) || balanceKind === "available" || balanceKind === "debt";
     var rawNote = extractNote(text, lower);
     var counterparty = extractCounterparty(text, lower);
     var merchant = extractMerchant(text, lower);
@@ -676,9 +792,9 @@
     if (balanceTok) conf += 0.12;
     if (accountTail) conf += 0.05;
     if (pick.currency || pick.unit) conf += 0.06;
-    if (/\b(thanh toan thanh cong|da thanh toan|vua nhan|da nhan|nhan duoc|da chuyen|vua chuyen|da nap|chuyen tien thanh cong|giao dich thanh cong|hoan tien)\b|thanh cong/.test(lower)) conf += 0.1;
+    if (doneBypass || /\b(thanh toan thanh cong|da thanh toan|vua nhan|da nhan|nhan duoc|da chuyen|vua chuyen|da nap|chuyen tien thanh cong|giao dich thanh cong|hoan tien)\b|thanh cong/.test(lower)) conf += 0.1;
     if (cands.length > 1 && cands[1].score === pick.score && cands[1].value !== pick.value) conf -= 0.25; // 2 số tiền ngang nhau -> mơ hồ
-    if (isPromo) conf -= 0.15;
+    if (isPromo && !doneBypass) conf -= 0.15;
     if (!strongTxSignal) conf -= 0.1;
     if (pkg && !isKnownPackage(pkg)) conf -= 0.05;
     conf = Math.max(0.05, Math.min(0.99, conf));
@@ -689,6 +805,8 @@
       type: type,
       bank: bank,
       balance: balanceTok ? balanceTok.value : null,
+      balanceKind: balanceKind,
+      isCredit: isCreditCard,
       fee: fee ? fee.value : null,
       accountTail: accountTail,
       note: note,
@@ -884,6 +1002,11 @@
     isDuplicate: isDuplicate,
     memoryKey: memoryKeyFrom,
     bankFromPackage: bankFromPackage,
+    isFinancialSource: isFinancialSource,
+    hasForeignMoney: hasForeignMoney,
+    isFinancePkg: isFinancePkg,
+    isChatPkg: isChatPkg,
+    isSmsPkg: isSmsPkg,
     fold: fold,
     BANKS: BANKS,
     AUTO_SAVE_THRESHOLD: 0.75
