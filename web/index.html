@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#FF8674" />
+  <meta name="theme-color" content="#F0A3A2" />
   <title>VinaSpends – Sổ chi tiêu</title>
+  <link rel="icon" type="image/png" href="icon-512.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
 
   <!-- BUILD:CDN-START (bản APK thay bằng thư viện đóng gói sẵn để chạy offline) -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
@@ -82,261 +84,482 @@
   </script>
 
   <style>
+    /* =====================================================================
+       VinaSpends · "Pastel Dusk Pixel" – hệ thiết kế
+       Hồng hoàng hôn · mận chín · kem sữa · nút bấm điện tử · TV CRT
+       ===================================================================== */
     :root {
-      --primary: #8CD778; --primary-rgb: 140 215 120;
-      --on-primary: #243D1A;
-      --background: #DCECC8; --background-rgb: 220 236 200;
-      --surface: #FBF2DE; --surface-rgb: 251 242 222;
-      --text-primary: #4A2B18; --text-primary-rgb: 74 43 24;
-      --text-secondary: #7D563A; --text-secondary-rgb: 125 86 58;
-      --variant: #EFE0BF; --variant-rgb: 239 224 191;
-      --border: #C8945C; --border-rgb: 200 148 92;
-      --ink: #54321D; --ink-rgb: 84 50 29;
-      --wood: #C8945C; --wood-light: #E8BE8B; --wood-dark: #9A6638;
-      --accent: #F8D56B; --accent-rgb: 248 213 107;
-      --on-accent: #4A2B18;
-      --expense: #C94A4A; --expense-light: #FDE3DF; --on-expense: #FFFFFF;
-      --income: #3A8740; --income-light: #DEF5D6; --on-income: #FFFFFF;
+      --primary: #F49CA6; --primary-rgb: 244 156 166;
+      --on-primary: #4A2F4E;
+      --background: #F5C4BC; --background-rgb: 245 196 188;
+      --surface: #FCEEDD; --surface-rgb: 252 238 221;
+      --text-primary: #4A3350; --text-primary-rgb: 74 51 80;
+      --text-secondary: #85586A; --text-secondary-rgb: 133 88 106;
+      --variant: #F5DFCB; --variant-rgb: 245 223 203;
+      --border: #DDAE9E; --border-rgb: 221 174 158;
+      --ink: #4A3350; --ink-rgb: 74 51 80;
+      --wood: #B76E7B; --wood-light: #D9959D; --wood-dark: #8C4C5E;
+      --accent: #FFD87E; --accent-rgb: 255 216 126;
+      --on-accent: #5E3A28;
+      --expense: #D4506A; --expense-light: #FDE1E3; --on-expense: #FFFFFF;
+      --income: #378F67; --income-light: #DDF3E4; --on-income: #FFFFFF;
+      --hud: #4E3651; --on-hud: #FFF2E2;
+      --sky1: #F0A3A2; --sky2: #F8D3C6; --ground: #E9C3B6;
+      --tv-body: #EE9AA3; --tv-trim: #FCE6D2; --screen: #2A2140; --screen2: #41325C;
+      --key-home: #F59AA6; --key-report: #B9D18F; --key-mai: #C3A3E2; --key-wallet: #8DB4EA; --key-add: #FFD87E;
+      --icon-ink: #4A3350;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      /* motion */
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+      --ease-soft: cubic-bezier(.45, 0, .2, 1);
+      --dx: 0px;
     }
     html, body {
       font-family: 'Handjet', system-ui, sans-serif;
       font-size: 16px;
       letter-spacing: 0.015em;
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
     }
+    ::selection { background: rgb(var(--primary-rgb) / .55); color: var(--ink); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .font-display { font-family: 'VT323', 'Handjet', monospace; letter-spacing: 0.02em; }
     .font-pixel { font-family: 'Tiny5', 'Handjet', monospace; letter-spacing: 0.04em; }
     .tabular { font-variant-numeric: tabular-nums; }
-    .vi { width: 100%; height: 100%; display: block; overflow: visible; image-rendering: pixelated; filter: drop-shadow(0 1.5px 0 rgba(75, 54, 71, 0.22)); }
+    .vi { width: 100%; height: 100%; display: block; overflow: visible; image-rendering: pixelated; }
+    .vi .k { fill: var(--icon-ink); }
 
-    /* ======= Motion & Pixel Sprite Animations ======= */
-    @keyframes walletIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
-    @keyframes walletSheen { 0%, 62% { transform: translateX(-120%) skewX(-18deg); } 100% { transform: translateX(260%) skewX(-18deg); } }
-    @keyframes walletBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-    .wallet-in { animation: walletIn .38s steps(8, end) both; }
-    .wallet-sheen { position: absolute; top: 0; bottom: 0; left: 0; width: 36%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent); animation: walletSheen 5.2s linear infinite; pointer-events: none; }
-    .wallet-card:nth-child(2n) .wallet-sheen { animation-delay: 1.4s; }
-    .wallet-card:nth-child(3n) .wallet-sheen { animation-delay: 2.6s; }
-    .mai-typing i { width: 7px; height: 7px; border-radius: 1px; background: currentColor; opacity: .35; animation: maiDot .9s steps(3, end) infinite; }
-    .mai-typing i:nth-child(2) { animation-delay: .15s; } .mai-typing i:nth-child(3) { animation-delay: .3s; }
-    @keyframes maiDot { 0%, 100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
-    .mai-caret { display: inline-block; width: 8px; height: 14px; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: .6; animation: maiDot 1s steps(2, start) infinite; }
-    @keyframes walletRow { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-    .wallet-row { animation: walletRow .32s cubic-bezier(.2,.8,.2,1) both; }
-    .wallet-bar { transform-origin: left; animation: walletBar .75s .2s cubic-bezier(.2,.8,.2,1) both; }
-
-    @keyframes pxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-    @keyframes pxHop { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-4px) scale(1.06); } 75% { transform: translateY(0) scale(0.97); } }
-    @keyframes pxWiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
-    @keyframes pxPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    @keyframes pxSparkle { 0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; } 50% { transform: scale(1.12) rotate(6deg); opacity: 0.92; } }
-    @keyframes pxScan { 0% { transform: translateY(-2px); opacity: .75; } 50% { transform: translateY(2px); opacity: 1; } 100% { transform: translateY(-2px); opacity: .75; } }
-    @keyframes pxLed { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .45; transform: scale(.88); } }
-    @keyframes tabEnter { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: none; } }
-    @keyframes modalPop { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
-
-    .px-anim-float { animation: pxFloat 2.4s steps(4, end) infinite; }
-    .px-anim-hop { animation: pxHop .75s steps(4, end) infinite; }
-    .px-anim-wiggle { animation: pxWiggle 1.8s steps(4, end) infinite; }
-    .px-anim-pulse { animation: pxPulse 1.6s steps(4, end) infinite; }
-    .px-anim-sparkle { animation: pxSparkle 2s steps(4, end) infinite; }
-    .px-anim-scan { animation: pxScan 1.5s steps(4, end) infinite; }
-    .px-led { animation: pxLed 1.8s steps(2, start) infinite; }
-    .tab-enter { animation: tabEnter .24s cubic-bezier(.2,.85,.25,1) both; }
-    .modal-pop { animation: modalPop .2s cubic-bezier(.2,.85,.25,1) both; }
-    button:hover .vi, a:hover .vi { transform: translateY(-1px) scale(1.05); transition: transform .12s ease; }
-
-    @media (prefers-reduced-motion: reduce) {
-      .wallet-in, .wallet-sheen, .wallet-bar, .wallet-row,
-      .px-anim-float, .px-anim-hop, .px-anim-wiggle, .px-anim-pulse,
-      .px-anim-sparkle, .px-anim-scan, .px-led, .tab-enter, .modal-pop,
-      .mai-bloom, .mai-pulse { animation: none !important; }
-    }
-
-    /* ======= Sprout Lands Cozy Pixel Pastel GUI Theme ======= */
+    /* ======================= NỀN TRỜI HOÀNG HÔN ======================= */
     html[data-retro="1"] body {
       background-color: var(--background);
-      background-image:
-        radial-gradient(rgb(var(--text-primary-rgb) / 0.08) 1.5px, transparent 1.5px),
-        radial-gradient(rgb(var(--primary-rgb) / 0.22) 1.5px, transparent 1.5px),
-        linear-gradient(180deg, rgb(var(--accent-rgb, 248 213 107) / 0.14), transparent 320px);
-      background-size: 16px 16px, 24px 24px, 100% 100%;
-      background-position: 0 0, 8px 8px, 0 0;
+      background-image: linear-gradient(180deg, var(--sky1) 0px, var(--sky2) 380px, var(--background) 900px);
+      background-attachment: fixed;
     }
     html[data-retro="1"] main.bg-theme-background { background: transparent; }
+    .sky { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .sky-cloud { position: absolute; image-rendering: pixelated; opacity: .95; animation: cloudDrift linear infinite; will-change: transform; }
+    .sky-cloud svg { display: block; width: 100%; height: 100%; }
+    .sky-star { position: absolute; width: 3px; height: 3px; background: #FFF2E2; box-shadow: 0 0 6px #FFF2E2; opacity: 0; animation: starTwinkle 3.6s var(--ease-soft) infinite; }
+    html:not(.dark) .sky-star { display: none; }
+    html.dark .sky-cloud { opacity: .18; }
+    .sky-hill { position: absolute; left: -5%; right: -5%; bottom: -40px; height: 160px; border-radius: 50% 50% 0 0 / 60px 60px 0 0; background: var(--ground); opacity: .55; }
+    @keyframes cloudDrift { from { transform: translateX(-30vw); } to { transform: translateX(130vw); } }
+    @keyframes starTwinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: .9; transform: scale(1); } }
 
-    /* Thẻ giấy da & khung gỗ Sprout Lands: viền nâu ấm 9-slice, highlight trên, bóng đế 3D */
+    /* ======================= HUD (thanh tài nguyên) ======================= */
+    .hud-wrap { background: transparent; }
+    .hud {
+      display: flex; align-items: stretch; height: 40px;
+      background: var(--hud); color: var(--on-hud);
+      border: 3px solid var(--ink); border-radius: 12px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.18), 0 3px 0 rgba(74,51,80,.35);
+      overflow: hidden;
+    }
+    .hud-cell { display: flex; align-items: center; gap: 6px; padding: 0 8px; min-width: 0; transition: background-color .2s var(--ease-soft); }
+    .hud-cell:active { background: rgba(255,255,255,.08); }
+    .hud-cell + .hud-cell { box-shadow: inset 3px 0 0 rgba(0,0,0,.25); }
+    .hud-cell-light { background: var(--surface); color: var(--ink); }
+    .hud-num { font-family: 'VT323', monospace; font-size: 22px; line-height: 1; white-space: nowrap; }
+    .hud-plus {
+      width: 22px; height: 22px; flex: none; border-radius: 999px; display: grid; place-items: center;
+      background: #8A7392; color: var(--on-hud); border: 2px solid var(--ink);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.25), 0 2px 0 rgba(0,0,0,.25);
+      transition: transform .25s var(--ease-spring);
+    }
+    .hud-plus:active { transform: scale(.85); }
+    .hud-badge { position: absolute; top: -7px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 10px/14px 'Tiny5', monospace; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
+    .hud-btn {
+      width: 40px; height: 40px; display: grid; place-items: center; flex: none;
+      background: var(--surface); color: var(--ink);
+      border: 3px solid var(--ink); border-radius: 12px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.7), inset 0 -3px 0 rgba(74,51,80,.14), 0 3px 0 var(--ink);
+      transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-spring);
+    }
+    .hud-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 1px 0 var(--ink); transition-duration: .06s; }
+    .hud-sub { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px; background: var(--wood); border: 3px solid var(--ink); border-radius: 12px; box-shadow: inset 0 3px 0 rgba(255,255,255,.22), inset 0 -3px 0 rgba(0,0,0,.14), 0 3px 0 rgba(74,51,80,.35); transition: transform .3s var(--ease-spring); }
+    .hud-sub:active { transform: translateY(2px); transition-duration: .06s; }
+    .lvl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border: 2px solid #D79A3C; border-radius: 6px; background: var(--accent); color: #9A5A1E; font: 11px/1 'Tiny5', monospace; letter-spacing: .06em; box-shadow: inset 0 2px 0 rgba(255,255,255,.55); white-space: nowrap; }
+    .xp-bar { position: relative; flex: 1; height: 16px; border: 3px solid var(--ink); border-radius: 999px; background: var(--hud); overflow: hidden; box-shadow: 0 2px 0 rgba(74,51,80,.3); }
+    .xp-bar > i { position: absolute; left: 2px; top: 2px; bottom: 2px; border-radius: 999px; background: #8EDB9E; box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(0,0,0,.12); transition: width .9s var(--ease-out); }
+    .xp-bar.warn > i { background: var(--accent); }
+    .xp-bar.over > i { background: #FF8EA0; }
+
+    /* ======================= CỬA SỔ / KHUNG PANEL ======================= */
     html[data-retro="1"] .bg-theme-surface.border.rounded-2xl,
     html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
     html[data-retro="1"] .retro-card {
       border-color: var(--ink) !important;
-      border-width: 2.5px;
-      border-radius: 10px !important;
-      box-shadow: 0 4px 0 var(--ink), inset 0 2px 0 rgba(255, 255, 255, 0.55);
+      border-width: 3px;
+      border-radius: 14px !important;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.6), 0 4px 0 var(--ink), 0 8px 0 rgba(74,51,80,.18);
     }
     html[data-retro="1"] .retro-card-soft {
-      border: 2px solid var(--ink);
-      border-radius: 8px;
-      box-shadow: 0 3px 0 var(--ink), inset 0 1.5px 0 rgba(255, 255, 255, 0.5);
-    }
-
-    /* Khung bảng gỗ chính (Sprout Lands Wooden Panel & Signboard Header) */
-    .console-bezel {
-      border: 3px solid var(--ink);
+      border: 2.5px solid var(--ink);
       border-radius: 12px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 3px 0 var(--ink);
+    }
+    /* Khung cửa sổ: viền mực + vành hồng mận + viền mực (giống bảng danh sách game) */
+    .console-bezel {
+      position: relative;
+      border: 3px solid var(--ink);
+      border-radius: 14px;
       background: var(--surface);
-      box-shadow: 0 5px 0 var(--ink), inset 0 0 0 2px var(--wood-light, #E8BE8B);
+      box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px var(--ink), 0 10px 0 4px rgba(74,51,80,.22);
+      margin: 7px 2px 12px;
       overflow: hidden;
     }
+    .console-bezel.modal-sheet { margin: 0; }
     .console-top-strip {
-      background: linear-gradient(180deg, var(--wood-light, #E8BE8B) 0 4px, var(--wood, #C8945C) 4px 100%);
-      color: #FFF9EC;
-      text-shadow: 1px 1px 0 var(--ink);
+      position: relative;
+      background: var(--hud);
+      color: var(--on-hud);
       border-bottom: 3px solid var(--ink);
-      box-shadow: inset 0 -2px 0 var(--wood-dark, #9A6638);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.2);
+      text-shadow: 1px 1px 0 rgba(0,0,0,.35);
     }
-    .console-top-strip .console-key {
-      text-shadow: none;
-    }
-    html.dark .console-top-strip {
-      background: linear-gradient(180deg, #4B3863 0 4px, #322447 4px 100%);
-      color: #FFF6EA;
-      text-shadow: 1px 1px 0 #0B0812;
-      border-bottom-color: rgb(var(--border-rgb));
-      box-shadow: inset 0 -2px 0 #1F152E;
-    }
+    .console-top-strip .console-key { text-shadow: none; }
     .console-lcd {
       position: relative;
       border: 2.5px solid var(--ink);
-      border-radius: 8px;
-      box-shadow: inset 0 3px 0 rgba(84, 50, 29, 0.14), inset 0 -2px 0 rgba(255, 255, 255, 0.35);
-      background-image: repeating-linear-gradient(0deg, transparent 0 4px, rgba(84, 50, 29, 0.03) 4px 5px);
+      border-radius: 12px;
+      box-shadow: inset 0 3px 0 rgba(74,51,80,.12), inset 0 -2px 0 rgba(255,255,255,.4);
     }
     .console-key {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 20px;
-      height: 20px;
-      padding: 0 5px;
-      font-family: 'Tiny5', monospace;
-      font-size: 11px;
-      line-height: 1;
-      background: var(--surface);
-      color: var(--ink);
-      border: 2px solid var(--ink);
-      border-radius: 4px;
-      box-shadow: 0 1.5px 0 var(--ink);
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 22px; height: 22px; padding: 0 5px;
+      font-family: 'Tiny5', monospace; font-size: 11px; line-height: 1;
+      background: var(--surface); color: var(--ink);
+      border: 2px solid var(--ink); border-radius: 6px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 2px 0 var(--ink);
+      transition: transform .25s var(--ease-spring);
     }
-    html.dark .console-key { background: #2A2140; color: #FFF8EE; border-color: rgb(var(--border-rgb)); box-shadow: 0 1.5px 0 #07050D; }
-    .bg-theme-primary .console-key, .game-btn-accent .console-key { background: var(--surface); color: var(--ink); border-color: var(--ink); box-shadow: 0 1.5px 0 var(--ink); }
+    .console-key:active { transform: translateY(2px); box-shadow: 0 0 0 var(--ink); transition-duration: .05s; }
+    /* nút ✕ trên thanh tiêu đề = nút đỏ kiểu cửa sổ game */
+    .console-top-strip button.console-key { background: #E8606E; color: #fff; min-width: 28px; height: 26px; border-color: var(--ink); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -3px 0 rgba(0,0,0,.18), 0 2px 0 rgba(0,0,0,.35); font-size: 12px; }
+    .bg-theme-primary .console-key, .game-btn-accent .console-key { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; background: #DDBB9D; color: #FFF8EE; border-bottom: 2.5px solid var(--ink); font-family: 'Tiny5', monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; text-shadow: 1px 1px 0 rgba(74,51,80,.45); box-shadow: inset 0 2px 0 rgba(255,255,255,.3); }
+    .panel-head.dark { background: var(--hud); color: var(--on-hud); }
 
-    /* Nút bấm Sprout Lands (2 tông sáng đỉnh / tối đáy + lún khi chạm) */
+    /* ======================= NÚT BẤM ======================= */
     html[data-retro="1"] button.bg-theme-primary,
     html[data-retro="1"] .retro-btn,
     .game-btn {
-      border: 2.5px solid var(--ink);
-      border-radius: 8px;
-      box-shadow: 0 4px 0 var(--ink), inset 0 2px 0 rgba(255, 255, 255, 0.48);
-      transition: transform .07s steps(2, end), box-shadow .07s steps(2, end), filter .12s ease;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.5), inset 0 -4px 0 rgba(74,51,80,.16), 0 4px 0 var(--ink);
+      transition: transform .32s var(--ease-spring), box-shadow .32s var(--ease-spring), filter .2s var(--ease-soft);
     }
     .game-btn-sm {
-      border: 2px solid var(--ink);
-      border-radius: 8px;
-      box-shadow: 0 2.5px 0 var(--ink), inset 0 1.5px 0 rgba(255, 255, 255, 0.42);
-      transition: transform .07s steps(2, end), box-shadow .07s steps(2, end);
+      border: 2.5px solid var(--ink);
+      border-radius: 10px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3px 0 rgba(74,51,80,.14), 0 3px 0 var(--ink);
+      transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-spring);
     }
-    .game-btn-sm:active { transform: translateY(2px); box-shadow: 0 0.5px 0 var(--ink); }
+    .game-btn-sm:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255,255,255,.35), 0 1px 0 var(--ink); transition-duration: .06s; }
     html[data-retro="1"] .bg-theme-primary,
     html[data-retro="1"] button.bg-theme-primary,
-    html[data-retro="1"] .retro-hero {
-      color: var(--on-primary, #243D1A) !important;
-    }
+    html[data-retro="1"] .retro-hero { color: var(--on-primary) !important; }
     html[data-retro="1"] .retro-hero .text-white,
     html[data-retro="1"] .retro-hero .text-white\/85,
-    html[data-retro="1"] .retro-hero .text-white\/90 {
-      color: var(--on-primary, #243D1A) !important;
-      opacity: 0.94;
-    }
+    html[data-retro="1"] .retro-hero .text-white\/90 { color: var(--on-primary) !important; opacity: .94; }
     html[data-retro="1"] button.bg-theme-primary:active,
     html[data-retro="1"] .retro-btn:active,
-    .game-btn:active {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 var(--ink);
+    .game-btn:active { transform: translateY(3px); box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(74,51,80,.16), 0 1px 0 var(--ink); transition-duration: .06s; }
+    button:disabled { filter: saturate(.6); opacity: .65; }
+
+    /* Nút bấm điện tử (phím cơ có đèn LED) */
+    .ekey {
+      --c: var(--surface); --t: var(--ink);
+      position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      min-height: 64px; padding: 8px 4px 6px;
+      background: var(--c); color: var(--t);
+      border: 3px solid var(--ink); border-radius: 12px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.55), inset 0 -5px 0 rgba(74,51,80,.18), 0 5px 0 var(--ink), 0 8px 0 rgba(74,51,80,.2);
+      transition: transform .34s var(--ease-spring), box-shadow .34s var(--ease-spring);
+      -webkit-user-select: none; user-select: none; touch-action: manipulation;
     }
-    html[data-retro="1"] input, html[data-retro="1"] select, html[data-retro="1"] textarea {
-      border-color: rgb(var(--border-rgb) / 0.85);
+    .ekey:active, .ekey.is-down { transform: translateY(4px); box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(74,51,80,.18), 0 1px 0 var(--ink), 0 2px 0 rgba(74,51,80,.15); transition-duration: .06s; }
+    .ekey .ekey-ico { width: 26px; height: 26px; transition: transform .34s var(--ease-spring); }
+    .ekey:active .ekey-ico { transform: scale(.9); }
+    .ekey .ekey-label { font: 10px/1 'Tiny5', monospace; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+    .ekey .led { position: absolute; top: 5px; right: 6px; width: 7px; height: 7px; border-radius: 2px; background: rgba(74,51,80,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+    .ekey .led.on { background: #7DFFB0; box-shadow: 0 0 6px #7DFFB0, 0 0 2px #fff inset; animation: ledBreath 2.4s var(--ease-soft) infinite; }
+    .ekey .led.warn { background: #FFE07A; box-shadow: 0 0 6px #FFE07A; animation: ledBlink 1s steps(2, start) infinite; }
+    .ekey .ekey-badge { position: absolute; top: -9px; left: -7px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 10px/16px 'Tiny5', monospace; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
+
+    /* ======================= TV RETRO (màn hình chính) ======================= */
+    .tv { position: relative; padding-top: 30px; margin: 0 2px 18px; }
+    @media (min-width: 768px) { .tv { max-width: 600px; margin-inline: auto; } .tv-screen { height: 240px; } }
+    .tv-antenna { position: absolute; left: 50%; top: 0; width: 120px; height: 38px; transform: translateX(-50%); z-index: 1; }
+    .tv-antenna svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .tv-antenna .rod-l { transform-origin: 60px 36px; animation: antennaSway 5.5s var(--ease-soft) infinite; }
+    .tv-antenna .rod-r { transform-origin: 60px 36px; animation: antennaSway 6.2s var(--ease-soft) infinite reverse; }
+    .tv-body {
+      position: relative; z-index: 2;
+      background: var(--tv-body);
+      border: 3px solid var(--ink); border-radius: 26px;
+      padding: 12px 12px 14px;
+      box-shadow: inset 0 5px 0 rgba(255,255,255,.35), inset 0 -8px 0 rgba(74,51,80,.16), inset 6px 0 0 rgba(255,255,255,.12), 0 6px 0 var(--ink), 0 12px 0 rgba(74,51,80,.22);
+    }
+    .tv-body::before { /* đường viền nổi trang trí */
+      content: ""; position: absolute; inset: 5px; border-radius: 20px; border: 2px dashed rgba(255,255,255,.35); pointer-events: none;
+    }
+    .tv-top { display: grid; grid-template-columns: 1fr 56px; gap: 10px; }
+    .tv-bezel { background: var(--tv-trim); border: 3px solid var(--ink); border-radius: 22px; padding: 8px; box-shadow: inset 0 -4px 0 rgba(74,51,80,.12), inset 0 3px 0 rgba(255,255,255,.7); }
+    .tv-screen {
+      position: relative; overflow: hidden; height: 208px;
+      border: 3px solid var(--ink); border-radius: 26px / 22px;
+      background: radial-gradient(120% 95% at 50% 42%, var(--screen2) 0%, var(--screen) 62%, #17111F 100%);
+      color: #FFF2E2;
+      box-shadow: inset 0 0 26px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.05);
+      isolation: isolate;
+      touch-action: pan-y;
+    }
+    .tv-screen::before { /* scanlines */
+      content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      background: repeating-linear-gradient(180deg, rgba(10,6,18,.32) 0 1px, transparent 1px 3px);
+    }
+    .tv-screen::after { /* kính cong phản sáng */
+      content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: inherit;
+      background:
+        radial-gradient(90% 60% at 18% 6%, rgba(255,255,255,.16), transparent 55%),
+        radial-gradient(140% 120% at 50% 50%, transparent 60%, rgba(0,0,0,.45) 100%);
+    }
+    .crt-roll { position: absolute; left: 0; right: 0; height: 60px; top: -60px; z-index: 4; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(180,255,220,.06) 50%, transparent); animation: crtRoll 7s linear infinite; }
+    .crt-content { position: absolute; inset: 0; z-index: 2; padding: 12px 16px 14px; display: flex; flex-direction: column; animation: crtFlicker 6s steps(1, end) infinite; }
+    .crt-content.power-on { animation: crtPowerOn .9s var(--ease-out) both, crtFlicker 6s 1s steps(1, end) infinite; }
+    .crt-content.switching { animation: crtSwitch .42s var(--ease-out) both; }
+    .crt-glow { text-shadow: 0 0 8px currentColor, 0 0 1px currentColor; }
+    .crt-noise { position: absolute; inset: -20px; z-index: 3; pointer-events: none; opacity: 0; background-size: 120px 120px; image-rendering: pixelated; }
+    .crt-noise.on { animation: noiseBurst .42s steps(1, end) both, noiseJitter .12s steps(3) infinite; }
+    .osd { font: 15px/1 'VT323', monospace; letter-spacing: .06em; color: #9DF5C2; text-shadow: 0 0 6px rgba(157,245,194,.8); }
+    .osd-blink { animation: ledBlink 1.2s steps(2, start) infinite; }
+    .tv-dots { display: flex; gap: 5px; justify-content: center; }
+    .tv-dots button { width: 18px; height: 6px; border-radius: 3px; background: rgba(255,242,226,.18); transition: background-color .3s var(--ease-soft), width .4s var(--ease-spring); }
+    .tv-dots button.on { width: 26px; background: #9DF5C2; box-shadow: 0 0 6px rgba(157,245,194,.8); }
+    .tv-big { font: 44px/0.9 'VT323', monospace; letter-spacing: .01em; white-space: nowrap; }
+    .tv-mid { font: 26px/1 'VT323', monospace; white-space: nowrap; }
+    .tv-lbl { font: 10px/1.1 'Tiny5', monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+    .tv-row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; line-height: 1.25; font-weight: 600; }
+    .tv-bars { display: flex; align-items: flex-end; gap: 2px; height: 46px; }
+    .tv-bars i { flex: 1; min-width: 2px; border-radius: 1px 1px 0 0; background: #FFA5BC; box-shadow: 0 0 6px rgba(255,165,188,.6); transform-origin: bottom; animation: barGrow .7s var(--ease-spring) both; }
+    .tv-bars i.today { background: #FFE08A; box-shadow: 0 0 8px rgba(255,224,138,.8); }
+    .tv-bars i.zero { background: rgba(255,242,226,.14); box-shadow: none; }
+    .tv-hp { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; }
+    .tv-hp i { height: 14px; border-radius: 2px; background: rgba(255,242,226,.12); transform-origin: left; }
+    .tv-hp i.on { animation: hpCell .45s var(--ease-spring) both; }
+    .tv-side { display: flex; flex-direction: column; align-items: center; gap: 9px; padding-top: 2px; }
+    .tv-knob {
+      position: relative; width: 48px; height: 48px; border-radius: 999px;
+      background: radial-gradient(circle at 35% 30%, #FFF8EE 0 30%, var(--tv-trim) 60%, #E8C6B0 100%);
+      border: 3px solid var(--ink);
+      box-shadow: inset 0 -3px 0 rgba(74,51,80,.18), 0 3px 0 var(--ink);
+      transition: transform .6s var(--ease-spring);
+    }
+    .tv-knob::before { content: ""; position: absolute; left: 50%; top: 4px; width: 4px; height: 14px; margin-left: -2px; border-radius: 2px; background: var(--ink); }
+    .tv-knob::after { content: ""; position: absolute; inset: 9px; border-radius: 999px; border: 2px dashed rgba(74,51,80,.25); }
+    .tv-knob-wrap { position: relative; padding: 4px; }
+    .tv-knob-wrap .ticks { position: absolute; inset: -2px; border-radius: 999px; background: conic-gradient(from -8deg, var(--ink) 0 4deg, transparent 4deg 90deg, var(--ink) 90deg 94deg, transparent 94deg 180deg, var(--ink) 180deg 184deg, transparent 184deg 270deg, var(--ink) 270deg 274deg, transparent 274deg); -webkit-mask: radial-gradient(circle, transparent 27px, #000 28px); mask: radial-gradient(circle, transparent 27px, #000 28px); opacity: .5; }
+    .tv-mini { width: 40px; height: 22px; border-radius: 7px; border: 2.5px solid var(--ink); background: var(--tv-trim); color: var(--ink); font: 11px/1 'Tiny5', monospace; display: grid; place-items: center; box-shadow: inset 0 2px 0 rgba(255,255,255,.7), 0 3px 0 var(--ink); transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-spring); }
+    .tv-mini:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); transition-duration: .05s; }
+    .tv-grille { width: 40px; height: 40px; border-radius: 8px; border: 2.5px solid var(--ink); background: repeating-linear-gradient(180deg, var(--ink) 0 2px, rgba(255,255,255,.18) 2px 5px); opacity: .55; }
+    .tv-led { width: 10px; height: 10px; border-radius: 999px; border: 2px solid var(--ink); background: #7DFFB0; box-shadow: 0 0 8px #7DFFB0; animation: ledBreath 2.8s var(--ease-soft) infinite; }
+    .tv-keys { display: grid; gap: 8px; margin-top: 12px; }
+    .tv-feet { display: flex; justify-content: space-between; padding: 0 38px; margin-top: -3px; position: relative; z-index: 1; }
+    .tv-feet span { width: 34px; height: 12px; background: var(--hud); border: 3px solid var(--ink); border-top: 0; border-radius: 0 0 8px 8px; }
+
+    /* ======================= DOCK (thanh điều khiển dưới) ======================= */
+    .dock { background: linear-gradient(180deg, rgb(var(--background-rgb) / 0) 0, rgb(var(--background-rgb) / .96) 24px); }
+    .dock-inner { display: flex; align-items: flex-end; justify-content: center; gap: 8px; padding: 10px 10px 6px; }
+    .dock-key { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; -webkit-user-select: none; user-select: none; }
+    .dock-face {
+      --c: var(--surface);
+      position: relative; width: 56px; height: 54px; display: grid; place-items: center;
+      background: var(--c); border: 3px solid var(--ink); border-radius: 12px;
+      box-shadow: inset 0 0 0 3px rgba(255,248,238,.75), inset 0 -6px 0 rgba(74,51,80,.16), 0 5px 0 var(--ink);
+      transition: transform .36s var(--ease-spring), box-shadow .36s var(--ease-spring), filter .3s var(--ease-soft);
+    }
+    .dock-face .vi { width: 30px; height: 30px; }
+    .dock-face > span:first-child { width: 30px; height: 30px; }
+    .dock-key:active .dock-face { transform: translateY(4px) scale(.97); box-shadow: inset 0 0 0 3px rgba(255,248,238,.6), inset 0 -2px 0 rgba(74,51,80,.16), 0 1px 0 var(--ink); transition-duration: .06s; }
+    .dock-key.on .dock-face { transform: translateY(3px); box-shadow: inset 0 0 0 3px rgba(255,248,238,.9), inset 0 -3px 0 rgba(74,51,80,.2), 0 2px 0 var(--ink); }
+    .dock-key:not(.on) .dock-face { filter: saturate(.82) brightness(1.02); }
+    .dock-led { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 2px; background: rgba(74,51,80,.25); transition: background-color .3s var(--ease-soft), box-shadow .3s var(--ease-soft); }
+    .dock-key.on .dock-led { background: #7DFFB0; box-shadow: 0 0 6px #7DFFB0; }
+    .dock-label { font: 10px/1 'Tiny5', monospace; letter-spacing: .04em; color: var(--text-secondary); text-transform: uppercase; transition: color .3s var(--ease-soft); margin-top: 6px; white-space: nowrap; }
+    .dock-key.on .dock-label { color: var(--text-primary); }
+    .dock-key.on .dock-ico { animation: icoHop .55s var(--ease-spring) both; }
+    .arcade { position: relative; width: 70px; height: 74px; display: flex; flex-direction: column; align-items: center; margin: 0 2px; -webkit-user-select: none; user-select: none; }
+    .arcade-ring { position: relative; width: 68px; height: 68px; border-radius: 999px; background: var(--hud); border: 3px solid var(--ink); box-shadow: inset 0 3px 0 rgba(255,255,255,.15), 0 4px 0 var(--ink); display: grid; place-items: center; margin-top: -16px; }
+    .arcade-ring::before { content: ""; position: absolute; inset: -9px; border-radius: 999px; border: 3px solid rgb(var(--primary-rgb) / .9); opacity: 0; animation: arcadePing 3.2s var(--ease-out) infinite; }
+    .arcade-dome {
+      width: 50px; height: 50px; border-radius: 999px; display: grid; place-items: center;
+      background: radial-gradient(circle at 34% 28%, #FFF6D8 0 14%, var(--key-add) 40%, #F1B24C 100%);
+      border: 3px solid var(--ink); color: var(--ink);
+      box-shadow: inset 0 -5px 0 rgba(164,92,30,.25), 0 5px 0 #2F1F33;
+      transform: translateY(-4px);
+      transition: transform .38s var(--ease-spring), box-shadow .38s var(--ease-spring);
+    }
+    .arcade-dome .vi { width: 24px; height: 24px; }
+    .arcade:active .arcade-dome { transform: translateY(1px) scale(.96); box-shadow: inset 0 -2px 0 rgba(164,92,30,.25), 0 0 0 #2F1F33; transition-duration: .06s; }
+    .arcade .dock-label { margin-top: 4px; color: var(--text-primary); }
+
+    /* ======================= BIỂU MẪU ======================= */
+    html[data-retro="1"] input:not(.border-0), html[data-retro="1"] select, html[data-retro="1"] textarea {
+      border-color: rgb(var(--border-rgb));
       border-width: 2px;
-      border-radius: 8px;
+      border-radius: 10px;
+      transition: border-color .2s var(--ease-soft), box-shadow .25s var(--ease-soft);
     }
-    html[data-retro="1"] input:focus, html[data-retro="1"] select:focus, html[data-retro="1"] textarea:focus {
+    html[data-retro="1"] input:not(.border-0):focus, html[data-retro="1"] select:focus, html[data-retro="1"] textarea:focus {
       outline: none;
       border-color: var(--ink);
-      box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.35);
+      box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / .38);
     }
-    html[data-retro="1"] h1, html[data-retro="1"] h2, html[data-retro="1"] h3 {
-      font-family: 'VT323', 'Handjet', monospace;
-      letter-spacing: 0.015em;
-    }
+    html[data-retro="1"] h1, html[data-retro="1"] h2, html[data-retro="1"] h3 { font-family: 'VT323', 'Handjet', monospace; letter-spacing: 0.015em; }
 
-    /* Thanh HP / Năng lượng Sprout Lands (vệt sáng 2px trên đỉnh mỗi ô) */
-    .hp-seg { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; padding: 2.5px; background: var(--variant); border: 2px solid var(--ink); border-radius: 6px; box-shadow: inset 0 2px 0 rgba(84, 50, 29, 0.12); }
-    .hp-cell { height: 9px; border-radius: 1.5px; background: rgb(var(--text-primary-rgb) / 0.12); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45); transition: background-color .2s ease; }
+    /* Thanh HP ngân sách dạng ô */
+    .hp-seg { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; padding: 3px; background: var(--hud); border: 2.5px solid var(--ink); border-radius: 8px; box-shadow: inset 0 2px 0 rgba(0,0,0,.2); }
+    .hp-cell { height: 10px; border-radius: 2px; background: rgba(255,255,255,.12); box-shadow: inset 0 2px 0 rgba(255,255,255,.4); transition: background-color .4s var(--ease-soft); }
 
-    /* Dải màu thiên nhiên Sprout Lands 4 tầng (Mầm xanh · Mật ong · Hoa đào · Trời xanh) */
-    .retro-stripes { background: linear-gradient(180deg, #8CD778 0 25%, #F8D56B 25% 50%, #F4A29E 50% 75%, #8ED6F5 75% 100%); }
-    .retro-stripes-h { background: linear-gradient(90deg, #8CD778 0 25%, #F8D56B 25% 50%, #F4A29E 50% 75%, #8ED6F5 75% 100%); }
+    /* Dải kẹo pastel */
+    .retro-stripes { background: repeating-linear-gradient(180deg, var(--primary) 0 10px, var(--accent) 10px 20px, #9BE0AE 20px 30px, #A5D8F7 30px 40px); }
+    .retro-stripes-h { background: repeating-linear-gradient(90deg, var(--primary) 0 10px, var(--accent) 10px 20px, #9BE0AE 20px 30px, #A5D8F7 30px 40px); opacity: .9; }
+    .console-bezel > .retro-stripes-h { height: 4px !important; }
     .retro-sunburst {
-      background-image:
-        linear-gradient(45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%),
-        linear-gradient(-45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%);
+      background-image: linear-gradient(45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%), linear-gradient(-45deg, rgb(255 255 255 / 0.18) 25%, transparent 25%);
       background-size: 12px 12px;
     }
     .retro-arc { position: absolute; border-radius: 4px; border-style: solid; border-color: transparent; }
-    .retro-dash { background-image: linear-gradient(90deg, rgb(var(--text-primary-rgb) / .35) 50%, transparent 50%); background-size: 8px 2px; background-repeat: repeat-x; height: 2px; }
-    @keyframes mai-bloom { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.05); } }
-    .mai-bloom { animation: mai-bloom 2.2s steps(4, end) infinite; }
-    @keyframes mai-pulse { 0% { box-shadow: 0 0 0 0 rgba(140,215,120,.65); } 100% { box-shadow: 0 0 0 14px rgba(140,215,120,0); } }
-    .mai-pulse { animation: mai-pulse 1.1s steps(4, end) infinite; }
-    @keyframes toast-in { from { transform: translate(-50%, -14px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-    .toast-in { animation: toast-in .2s steps(4, end) both; }
+    .retro-dash { background-image: linear-gradient(90deg, rgb(var(--text-primary-rgb) / .3) 50%, transparent 50%); background-size: 8px 2px; background-repeat: repeat-x; height: 2px; }
 
-    /* Dark Mode (Đêm Nông Trại) – đảm bảo viền, nút bấm & chữ luôn tương phản cao */
+    /* ======================= DANH SÁCH GIAO DỊCH ======================= */
+    main.overflow-y-auto { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px); mask-image: linear-gradient(180deg, transparent 0, #000 10px); }
+    .rep-bar { transform-origin: bottom; animation: barGrow .7s var(--ease-spring) both; }
+    .tx-row { transition: background-color .2s var(--ease-soft), transform .3s var(--ease-spring); }
+    .tx-row:active { transform: scale(.985); background: rgb(var(--variant-rgb)); }
+    .tx-ico { width: 42px; height: 42px; border-radius: 10px; border: 2.5px solid var(--ink); display: grid; place-items: center; flex: none; box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 2px 0 var(--ink); }
+    .day-card { background: var(--surface); border: 2.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .day-card .panel-head { border-bottom-color: var(--border); }
+
+    /* ======================= HỘP THOẠI ======================= */
+    .modal-backdrop { background: rgba(46, 26, 48, .55); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: fadeIn .25s var(--ease-soft) both; }
+    .modal-sheet { animation: sheetUp .5s var(--ease-out) both; }
+    @media (min-width: 640px) { .modal-sheet { animation: modalPop .42s var(--ease-spring) both; } }
+    [data-state="closed"] { pointer-events: none; }
+    [data-state="closed"] .modal-backdrop { animation: fadeOut .24s var(--ease-soft) both; }
+    [data-state="closed"] .modal-sheet { animation: sheetDown .26s var(--ease-soft) both; }
+    .modal-pop { animation: modalPop .42s var(--ease-spring) both; }
+
+    /* Toast */
+    .toast-in { animation: toastIn .55s var(--ease-spring) both; }
+    .toast-bar { position: absolute; left: 10px; right: 10px; bottom: 4px; height: 3px; border-radius: 2px; background: currentColor; opacity: .35; transform-origin: left; animation: toastBar 4s linear both; }
+
+    /* ======================= MOTION ======================= */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes sheetUp { from { opacity: 0; transform: translateY(70px) scale(.98); } to { opacity: 1; transform: none; } }
+    @keyframes sheetDown { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(60px) scale(.98); } }
+    @keyframes modalPop { from { opacity: 0; transform: translateY(16px) scale(.94); } to { opacity: 1; transform: none; } }
+    @keyframes toastIn { 0% { transform: translate(-50%, -30px) scale(.9); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+    @keyframes toastBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    @keyframes tabEnter { from { opacity: 0; transform: translate3d(var(--dx), 10px, 0); } to { opacity: 1; transform: none; } }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+    @keyframes walletIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+    @keyframes walletSheen { 0%, 62% { transform: translateX(-120%) skewX(-18deg); } 100% { transform: translateX(260%) skewX(-18deg); } }
+    @keyframes walletBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes walletRow { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes pxFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes pxHop { 0%, 100% { transform: translateY(0) scale(1); } 35% { transform: translateY(-4px) scale(1.06, .96); } 65% { transform: translateY(0) scale(.96, 1.04); } }
+    @keyframes pxWiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+    @keyframes pxPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.09); } }
+    @keyframes pxSparkle { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.12) rotate(8deg); } }
+    @keyframes pxScan { 0%, 100% { transform: translateY(-2px); opacity: .8; } 50% { transform: translateY(2px); opacity: 1; } }
+    @keyframes pxLed { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+    @keyframes icoHop { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-6px) scale(1.08, .94); } 60% { transform: translateY(0) scale(.94, 1.06); } 100% { transform: none; } }
+    @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    @keyframes ledBreath { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+    @keyframes ledBlink { 0% { opacity: 1; } 50% { opacity: .25; } }
+    @keyframes arcadePing { 0%, 55% { opacity: 0; transform: scale(.85); } 65% { opacity: .9; } 100% { opacity: 0; transform: scale(1.18); } }
+    @keyframes antennaSway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2.5deg); } }
+    @keyframes crtRoll { from { transform: translateY(0); } to { transform: translateY(340px); } }
+    @keyframes crtFlicker { 0%, 100% { opacity: 1; } 31% { opacity: .96; } 32% { opacity: 1; } 77% { opacity: .97; } 78% { opacity: 1; } }
+    @keyframes crtPowerOn {
+      0% { transform: scale(0, .006); filter: brightness(4); opacity: 1; }
+      28% { transform: scale(1, .006); filter: brightness(3.5); }
+      55% { transform: scale(1, 1); filter: brightness(1.6); }
+      100% { transform: none; filter: none; }
+    }
+    @keyframes crtSwitch { 0% { opacity: 0; transform: translateY(6px) skewX(-4deg); filter: blur(1.5px) brightness(1.8); } 60% { opacity: 1; filter: none; } 100% { transform: none; } }
+    @keyframes noiseBurst { 0% { opacity: .9; } 70% { opacity: .55; } 100% { opacity: 0; } }
+    @keyframes noiseJitter { 0% { transform: translate(0, 0); } 33% { transform: translate(-13px, 7px); } 66% { transform: translate(9px, -11px); } 100% { transform: translate(-5px, 12px); } }
+    @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    @keyframes hpCell { from { transform: scaleX(0); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes mai-bloom { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-2px) scale(1.05); } }
+    @keyframes mai-pulse { 0% { box-shadow: 0 0 0 0 rgb(var(--primary-rgb) / .7); } 100% { box-shadow: 0 0 0 16px rgb(var(--primary-rgb) / 0); } }
+    @keyframes maiDot { 0%, 100% { opacity: .3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
+
+    .tab-enter { animation: tabEnter .46s var(--ease-out) both; }
+    .tab-enter > * { animation: riseIn .5s var(--ease-out) both; }
+    .tab-enter > *:nth-child(1) { animation-delay: .02s; }
+    .tab-enter > *:nth-child(2) { animation-delay: .07s; }
+    .tab-enter > *:nth-child(3) { animation-delay: .12s; }
+    .tab-enter > *:nth-child(4) { animation-delay: .17s; }
+    .tab-enter > *:nth-child(5) { animation-delay: .22s; }
+    .tab-enter > *:nth-child(n+6) { animation-delay: .26s; }
+    .stagger > * { animation: riseIn .48s var(--ease-out) both; }
+    .stagger > *:nth-child(1) { animation-delay: .04s; } .stagger > *:nth-child(2) { animation-delay: .08s; }
+    .stagger > *:nth-child(3) { animation-delay: .12s; } .stagger > *:nth-child(4) { animation-delay: .16s; }
+    .stagger > *:nth-child(5) { animation-delay: .2s; } .stagger > *:nth-child(6) { animation-delay: .24s; }
+    .stagger > *:nth-child(n+7) { animation-delay: .28s; }
+    .wallet-in { animation: walletIn .5s var(--ease-out) both; }
+    .wallet-sheen { position: absolute; top: 0; bottom: 0; left: 0; width: 36%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); animation: walletSheen 5.2s var(--ease-soft) infinite; pointer-events: none; }
+    .wallet-card:nth-child(2n) .wallet-sheen { animation-delay: 1.4s; }
+    .wallet-card:nth-child(3n) .wallet-sheen { animation-delay: 2.6s; }
+    .wallet-row { animation: walletRow .45s var(--ease-out) both; }
+    .wallet-bar { transform-origin: left; animation: walletBar .9s .15s var(--ease-out) both; }
+    .mai-typing i { width: 7px; height: 7px; border-radius: 2px; background: currentColor; opacity: .35; animation: maiDot .9s var(--ease-soft) infinite; }
+    .mai-typing i:nth-child(2) { animation-delay: .15s; } .mai-typing i:nth-child(3) { animation-delay: .3s; }
+    .mai-caret { display: inline-block; width: 8px; height: 14px; margin-left: 2px; vertical-align: -2px; background: currentColor; opacity: .6; animation: ledBlink 1s steps(2, start) infinite; }
+    .px-anim-float { animation: pxFloat 2.6s var(--ease-soft) infinite; }
+    .px-anim-hop { animation: pxHop .9s var(--ease-spring) infinite; }
+    .px-anim-wiggle { animation: pxWiggle 2s var(--ease-soft) infinite; }
+    .px-anim-pulse { animation: pxPulse 1.6s var(--ease-soft) infinite; }
+    .px-anim-sparkle { animation: pxSparkle 2.2s var(--ease-soft) infinite; }
+    .px-anim-scan { animation: pxScan 1.5s var(--ease-soft) infinite; }
+    .px-led { animation: pxLed 1.8s var(--ease-soft) infinite; }
+    .mai-bloom { animation: mai-bloom 2.4s var(--ease-soft) infinite; }
+    .mai-pulse { animation: mai-pulse 1.2s var(--ease-out) infinite; }
+    button .vi, a .vi { transition: transform .3s var(--ease-spring); }
+    @media (hover: hover) { button:hover .vi, a:hover .vi { transform: translateY(-1px) scale(1.06); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .sky-cloud, .crt-roll, .crt-noise { display: none !important; }
+    }
+
+    /* ======================= THEME TỐI (Đêm Mận) ======================= */
+    html.dark { --icon-ink: #1B1224; }
     html.dark .bg-theme-surface.border.rounded-2xl,
     html.dark .bg-theme-surface.border.rounded-3xl,
-    html.dark .retro-card,
-    html.dark .retro-card-soft,
-    html.dark .console-bezel,
-    html.dark .console-lcd,
-    html.dark .hp-seg,
-    html.dark .border-retro-ink {
-      border-color: rgb(var(--border-rgb)) !important;
-    }
-    html.dark .bg-theme-surface.border.rounded-2xl,
-    html.dark .bg-theme-surface.border.rounded-3xl,
-    html.dark .retro-card,
-    html.dark .console-bezel {
-      box-shadow: 0 4px 0 #07050D, inset 0 0 0 1.5px rgb(var(--border-rgb) / 0.35);
-    }
-    html.dark button.bg-theme-primary,
-    html.dark .bg-theme-primary,
-    html.dark .retro-btn,
-    html.dark .game-btn,
-    html.dark .game-btn-accent {
-      border-color: #07050D !important;
-      box-shadow: 0 3px 0 #07050D, inset 0 2px 0 rgba(255, 255, 255, 0.28);
-    }
-    html.dark .game-btn-neutral {
-      border-color: rgb(var(--border-rgb)) !important;
-      box-shadow: 0 3px 0 #07050D, inset 0 1.5px 0 rgba(255, 255, 255, 0.14);
-    }
-    html.dark input:focus, html.dark select:focus, html.dark textarea:focus {
-      border-color: rgb(var(--primary-rgb));
-    }
+    html.dark .retro-card, html.dark .retro-card-soft, html.dark .console-bezel, html.dark .console-lcd,
+    html.dark .hp-seg, html.dark .border-retro-ink { border-color: #0E0914 !important; }
+    html.dark .retro-card, html.dark .bg-theme-surface.border.rounded-2xl, html.dark .bg-theme-surface.border.rounded-3xl { box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 4px 0 #0E0914, 0 8px 0 rgba(0,0,0,.25); }
+    html.dark .console-bezel { box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px #0E0914, 0 10px 0 4px rgba(0,0,0,.35); }
+    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .dock-face, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
+    html.dark .game-btn-neutral { border-color: rgb(var(--border-rgb)) !important; }
+    html.dark .dock-label { color: var(--text-secondary); }
+    html.dark .hud-cell-light { background: var(--variant); color: var(--text-primary); }
+    html.dark .tv-mini { color: var(--text-primary); box-shadow: inset 0 2px 0 rgba(255,255,255,.12), 0 3px 0 #0E0914; }
+    html.dark .console-key { background: var(--variant); color: var(--text-primary); border-color: #0E0914; box-shadow: inset 0 2px 0 rgba(255,255,255,.12), 0 2px 0 #0E0914; }
+    html.dark .hud-btn { background: var(--variant); color: var(--text-primary); box-shadow: inset 0 3px 0 rgba(255,255,255,.1), 0 3px 0 #0E0914; }
+    html.dark .dock-key.on .dock-label { color: var(--text-primary); }
+    html.dark input:focus, html.dark select:focus, html.dark textarea:focus { border-color: rgb(var(--primary-rgb)); }
+    html.dark .panel-head:not(.dark) { background: var(--variant); color: var(--text-primary); text-shadow: none; }
+    html.dark .day-card { border-color: rgb(var(--border-rgb) / .6); }
     .pt-safe { padding-top: var(--safe-top); }
     .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
   </style>
@@ -360,44 +583,41 @@
       try { window.firebase.initializeApp(FIREBASE_CONFIG); } catch (e) { console.warn("Firebase init error:", e); }
     }
 
-    // Bộ màu Sprout Lands Cozy Pixel Pastel (khung gỗ ấm, giấy da kem, thiên nhiên dịu mắt, tương phản cao)
+    // Bảng màu "Pastel Dusk Pixel": trời hoàng hôn pastel · viền mận · giấy kem · TV CRT
+    const KEY_COLORS = { keyHome: "#F59AA6", keyReport: "#B9D18F", keyMai: "#C3A3E2", keyWallet: "#8DB4EA", keyAdd: "#FFD87E" };
     const THEMES = {
-      sprout_meadow: {
-        name: "Nông Trại Sprout", desc: "Cỏ non · gỗ ấm · giấy kem", retro: true,
-        colors: { primary: "#8CD778", onPrimary: "#243D1A", background: "#DCECC8", surface: "#FBF2DE", textPrimary: "#4A2B18", textSecondary: "#7D563A", variant: "#EFE0BF", border: "#C8945C", ink: "#54321D", wood: "#C8945C", woodLight: "#E8BE8B", woodDark: "#9A6638", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C94A4A", expenseLight: "#FDE3DF", income: "#3A8740", incomeLight: "#DEF5D6" }
+      dusk_rose: {
+        name: "Hoàng Hôn Hồng", desc: "Hồng phấn · mận chín · kem sữa", retro: true,
+        colors: { primary: "#F49CA6", onPrimary: "#4A2F4E", background: "#F5C4BC", surface: "#FCEEDD", textPrimary: "#4A3350", textSecondary: "#85586A", variant: "#F5DFCB", border: "#DDAE9E", ink: "#4A3350", wood: "#B76E7B", woodLight: "#D9959D", woodDark: "#8C4C5E", accent: "#FFD87E", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#378F67", incomeLight: "#DDF3E4", hud: "#4E3651", onHud: "#FFF2E2", sky1: "#F0A3A2", sky2: "#F8D3C6", ground: "#E9C3B6", tvBody: "#EE9AA3", tvTrim: "#FCE6D2", screen: "#2A2140", screen2: "#41325C", ...KEY_COLORS }
       },
-      pixel_peach: {
-        name: "Đào Kem Gỗ Ấm", desc: "Hồng đào · gỗ sồi · kem sữa", retro: true,
-        colors: { primary: "#F4978E", onPrimary: "#421B17", background: "#FCECD8", surface: "#FFF7EA", textPrimary: "#4A2B18", textSecondary: "#7E563B", variant: "#F4DFC4", border: "#C8945C", ink: "#54321D", wood: "#C68B59", woodLight: "#E6B88A", woodDark: "#945E34", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C93B4E", expenseLight: "#FFE2E5", income: "#2E8555", incomeLight: "#DAF5E3" }
+      mint_soda: {
+        name: "Soda Bạc Hà", desc: "Bạc hà · xanh ngọc · kem", retro: true,
+        colors: { primary: "#8FD9B6", onPrimary: "#1F3B33", background: "#CDEEDF", surface: "#F6FBF2", textPrimary: "#34404F", textSecondary: "#56686A", variant: "#E3F2E6", border: "#A9D3BF", ink: "#34404F", wood: "#6FB59A", woodLight: "#9AD6BC", woodDark: "#4C8C74", accent: "#FFD87E", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#2F8A62", incomeLight: "#DDF3E4", hud: "#34404F", onHud: "#F2FFF6", sky1: "#A9E3CF", sky2: "#DDF5EA", ground: "#BFE3CF", tvBody: "#8FD9B6", tvTrim: "#F6FBF2", screen: "#1E2B33", screen2: "#2F4450", ...KEY_COLORS }
       },
-      pixel_lavender: {
-        name: "Vườn Oải Hương", desc: "Tím pastel · gỗ sáng · kem", retro: true,
-        colors: { primary: "#BFA9FC", onPrimary: "#241942", background: "#EEE9FD", surface: "#FAF7FF", textPrimary: "#2F2248", textSecondary: "#635482", variant: "#E0D7FA", border: "#A794D4", ink: "#352652", wood: "#8D7AC2", woodLight: "#B6A6E2", woodDark: "#655499", accent: "#F9B8C9", onAccent: "#381B25", expense: "#C9385A", expenseLight: "#FFE2EB", income: "#26825F", incomeLight: "#DAF6EC" }
+      lavender_dream: {
+        name: "Mộng Oải Hương", desc: "Tím lavender · hồng · kem", retro: true,
+        colors: { primary: "#C3A3E2", onPrimary: "#2E2145", background: "#E3D6F5", surface: "#FBF6FF", textPrimary: "#3A2D52", textSecondary: "#665684", variant: "#EDE3FA", border: "#C2B0E0", ink: "#3A2D52", wood: "#9C80CC", woodLight: "#BCA5E6", woodDark: "#6F57A0", accent: "#FFD87E", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#2F8A62", incomeLight: "#DDF3E4", hud: "#3A2D52", onHud: "#FBF2FF", sky1: "#C9B4EE", sky2: "#EADFFA", ground: "#D5C6EE", tvBody: "#C3A3E2", tvTrim: "#FBF6FF", screen: "#221B36", screen2: "#372C55", ...KEY_COLORS }
       },
-      pixel_sky: {
-        name: "Bầu Trời 8-bit", desc: "Xanh trời · gỗ vàng · sữa", retro: true,
-        colors: { primary: "#7ACEFB", onPrimary: "#13293E", background: "#E5F3FD", surface: "#F7FBFF", textPrimary: "#1D3248", textSecondary: "#4D647D", variant: "#D3E8FA", border: "#8AB0D6", ink: "#243B54", wood: "#6E98C2", woodLight: "#9CC2E8", woodDark: "#4B7199", accent: "#F8D56B", onAccent: "#4A2B18", expense: "#C93B4E", expenseLight: "#FFE2E8", income: "#26805B", incomeLight: "#DAF6EA" }
+      sky_candy: {
+        name: "Kẹo Bầu Trời", desc: "Xanh trời · bơ · sữa", retro: true,
+        colors: { primary: "#8DC4F0", onPrimary: "#1B2E45", background: "#CFE6FA", surface: "#F6FAFF", textPrimary: "#2A3A55", textSecondary: "#56698A", variant: "#E2EEFB", border: "#A9C6E6", ink: "#2A3A55", wood: "#6E9CD6", woodLight: "#9DC0EB", woodDark: "#4C76AD", accent: "#FFD87E", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#2F8A62", incomeLight: "#DDF3E4", hud: "#2A3A55", onHud: "#F1F8FF", sky1: "#A7D2F6", sky2: "#DCEEFC", ground: "#BFDAF0", tvBody: "#8DC4F0", tvTrim: "#F6FAFF", screen: "#1A2338", screen2: "#2B3A5A", ...KEY_COLORS }
       },
-      pixel_sakura: {
-        name: "Hoa Anh Đào", desc: "Hồng sakura · bạc hà · kem", retro: true,
-        colors: { primary: "#FF9EC1", onPrimary: "#3B1729", background: "#FCE8F0", surface: "#FFF7FA", textPrimary: "#3D1E2E", textSecondary: "#764F65", variant: "#F5D6E3", border: "#CA9AB0", ink: "#472235", wood: "#B87A96", woodLight: "#DBA6BE", woodDark: "#8A536C", accent: "#98E2C6", onAccent: "#183B2E", expense: "#C92B4E", expenseLight: "#FFE0E7", income: "#26805B", incomeLight: "#DAF6EA" }
+      peach_butter: {
+        name: "Đào Bơ Sữa", desc: "Cam đào · bơ vàng · kem", retro: true,
+        colors: { primary: "#FFB38A", onPrimary: "#4A2A1C", background: "#FCE1C4", surface: "#FFF8EC", textPrimary: "#4E3328", textSecondary: "#80604F", variant: "#FBEAD3", border: "#E6BE98", ink: "#4E3328", wood: "#D9925F", woodLight: "#EDB78B", woodDark: "#A8673D", accent: "#FFE08A", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#2F8A62", incomeLight: "#DDF3E4", hud: "#553A35", onHud: "#FFF4E6", sky1: "#FFC9A3", sky2: "#FDE6CF", ground: "#F1CFAE", tvBody: "#FFB38A", tvTrim: "#FFF8EC", screen: "#2B2030", screen2: "#43314A", ...KEY_COLORS }
       },
-      pixel_night: {
-        name: "Đêm Nông Trại", desc: "Tím đêm · san hô pastel (tối)", retro: true,
-        colors: { primary: "#FF9F87", onPrimary: "#120D1E", background: "#171226", surface: "#231C38", textPrimary: "#FFF6EA", textSecondary: "#CCC0EB", variant: "#30274B", border: "#7666A3", ink: "#0B0812", wood: "#3B2D54", woodLight: "#59467A", woodDark: "#241938", accent: "#FFE082", onAccent: "#120D1E", expense: "#FF7B95", expenseLight: "#4A1C2D", onExpense: "#120D1E", income: "#72E6BA", incomeLight: "#163F34", onIncome: "#120D1E" }
+      plum_night: {
+        name: "Đêm Mận", desc: "Tím đêm · sao · hồng (tối)", retro: true,
+        colors: { primary: "#F49CA6", onPrimary: "#251626", background: "#1E1626", surface: "#2C2236", textPrimary: "#FFF0E4", textSecondary: "#CDB6D4", variant: "#3A2E47", border: "#6E5A80", ink: "#0E0914", wood: "#5A4470", woodLight: "#7A6094", woodDark: "#3E2D50", accent: "#FFD87E", onAccent: "#3A2418", expense: "#FF8DA3", expenseLight: "#4A2133", onExpense: "#1E1626", income: "#7FE0B0", incomeLight: "#1D3D33", onIncome: "#1E1626", hud: "#120C18", onHud: "#FFF0E4", sky1: "#2B1E3A", sky2: "#1E1626", ground: "#2A2036", tvBody: "#8C5E8F", tvTrim: "#3A2E47", screen: "#120C1A", screen2: "#2A2140", keyHome: "#E38894", keyReport: "#9DB874", keyMai: "#A887CC", keyWallet: "#6F96CF", keyAdd: "#FFD87E" }
       }
     };
     const LEGACY_THEME_MAP = {
-      light: "sprout_meadow",
-      pixel_mint: "sprout_meadow",
-      retro70: "sprout_meadow",
-      retro70_avocado: "sprout_meadow",
-      retro70_rose: "pixel_sakura",
-      retro70_teal: "pixel_sky",
-      retro70_night: "pixel_night",
-      retro70_plum: "pixel_night"
+      light: "dusk_rose", pixel_mint: "mint_soda", sprout_meadow: "mint_soda", pixel_peach: "peach_butter",
+      pixel_lavender: "lavender_dream", pixel_sky: "sky_candy", pixel_sakura: "dusk_rose", pixel_night: "plum_night",
+      retro70: "peach_butter", retro70_avocado: "mint_soda", retro70_rose: "dusk_rose", retro70_teal: "sky_candy",
+      retro70_night: "plum_night", retro70_plum: "plum_night"
     };
-    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "sprout_meadow";
+    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "dusk_rose";
 
     // Ngân hàng & ví: tem chữ tự vẽ (không tải logo từ internet). code = chữ trên tem, color = màu tem.
     // Logo gốc của ngân hàng / ví (đóng gói sẵn trong web/logos, dùng được offline)
@@ -544,7 +764,7 @@
       const [broken, setBroken] = React.useState(false);
       if (b && b.logo && !broken) {
         return (
-          <span className="inline-flex items-center justify-center shrink-0 rounded-lg bg-[#FBF2DE] border-2 border-[var(--ink)] overflow-hidden"
+          <span className="inline-flex items-center justify-center shrink-0 rounded-lg bg-[#FFF8EE] border-2 border-[var(--ink)] overflow-hidden"
             style={{ width: Math.round(size * 1.5), height: size, padding: Math.max(2, Math.round(size * 0.1)), boxShadow: "2px 2px 0 var(--ink)" }}>
             <img src={`logos/${b.logo}.webp`} alt={b.name} draggable="false" onError={() => setBroken(true)} className="max-w-full max-h-full object-contain" />
           </span>
@@ -576,9 +796,16 @@
       return (0.299 * r + 0.587 * g + 0.114 * b) > 145 ? "#1A1423" : "#FFFFFF";
     };
     // Thẻ ví băng game (Cartridge Card): viền mực pixel, bóng đổ cứng, thanh HP hạn mức thẻ tín dụng
+    // Trộn màu thương hiệu ngân hàng với kem sữa -> phiên bản pastel
+    const mixHex = (a, b, t) => {
+      const pa = parseInt(String(a).replace("#", "").slice(0, 6), 16), pb = parseInt(String(b).replace("#", "").slice(0, 6), 16);
+      if (isNaN(pa) || isNaN(pb)) return a;
+      const ch = (sh) => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t).toString(16).padStart(2, "0");
+      return "#" + ch(16) + ch(8) + ch(0);
+    };
     const WalletCard = ({ acc, index = 0, onClick, onEdit, onDelete, vertical = false }) => {
       const b = bankStyleOf(acc.name);
-      const color = (b && b.color) || "#5B5A8C";
+      const color = mixHex((b && b.color) || "#8E7BC9", "#FFF6E9", 0.52);
       const cardInk = contrastInk(color);
       const isDarkInk = cardInk === "#1A1423";
       const credit = isCreditAcc(acc);
@@ -589,8 +816,8 @@
       const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
       return (
         <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick && onClick(); }}
-          className={`${vertical ? "wallet-row w-full min-h-[164px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-xl border-[2.5px] border-[var(--ink)] relative overflow-hidden active:translate-x-0.5 active:translate-y-0.5 transition-transform`}
-          style={{ animationDelay: `${index * 65}ms`, background: `linear-gradient(135deg, ${color} 0%, ${color} 48%, ${darkenHex(color, 0.72)} 100%)`, boxShadow: "4px 4px 0 var(--ink)" }}>
+          className={`${vertical ? "wallet-row w-full min-h-[164px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-2xl border-[3px] border-[var(--ink)] relative overflow-hidden active:translate-y-1 transition-transform duration-300`}
+          style={{ animationDelay: `${index * 65}ms`, background: `radial-gradient(rgba(255,255,255,.28) 1.2px, transparent 1.3px) 0 0 / 10px 10px, linear-gradient(150deg, ${mixHex(color, "#FFFFFF", .25)} 0%, ${color} 45%, ${darkenHex(color, 0.88)} 100%)`, boxShadow: "inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 var(--ink), 0 9px 0 rgba(74,51,80,.18)" }}>
           <span className="absolute right-3 top-2 w-12 h-2 rounded-sm bg-white/20" />
           <span className="absolute -right-8 -bottom-10 w-36 h-36 rounded-lg rotate-12 border-[10px] border-white/10" />
           <span className="wallet-sheen" />
@@ -611,8 +838,8 @@
                   <span className="font-pixel text-[10px] uppercase opacity-80">Dư nợ</span>
                   <span className="font-display text-2xl tabular leading-none">{fmt(debt)} ₫</span>
                 </div>
-                <div className="mt-1.5 h-2.5 rounded bg-black/35 border border-black/30 overflow-hidden p-[1px]">
-                  <div className="wallet-bar h-full rounded-[2px] bg-[#FFD875]" style={{ width: `${usedPct}%` }} />
+                <div className="mt-1.5 h-3 rounded-full bg-[var(--hud)] border-2 border-[var(--ink)] overflow-hidden p-[1px]">
+                  <div className="wallet-bar h-full rounded-full bg-[#FFD87E]" style={{ width: `${usedPct}%` }} />
                 </div>
                 <p className="mt-1 text-[11px] font-semibold opacity-90">{limit > 0 ? `Khả dụng ${fmt(limit - debt)} / ${fmt(limit)} ₫` : "Chưa nhập hạn mức"}</p>
               </div>
@@ -750,35 +977,13 @@
     );
 
     const MicIcon = ({ className = "", anim = "" }) => (
-      <span className={`inline-flex items-center justify-center shrink-0 ${anim && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}>
-        <svg viewBox="0 0 24 24" shapeRendering="crispEdges" className="vi" fill="none" aria-hidden="true">
-          <rect x="9" y="3" width="6" height="10" fill="currentColor" fillOpacity="0.22" />
-          <path fill="currentColor" d="M9 2h6v2H9zm-2 2h2v8H7zm8 0h2v8h-2zm-6 8h6v2H9zm-5-2h2v4H4zm14 0h2v4h-2zm-12 4h12v2H6zm5 2h2v4h-2zm-4 3h10v2H7z" />
-          <path fill="currentColor" d="M10 6h4v1h-4zm0 3h4v1h-4z" opacity="0.65" />
-        </svg>
-      </span>
+      <span className={`inline-flex items-center justify-center shrink-0 ${anim && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}
+        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("mic") : "" }} />
     );
-    // Sprite Mai phong cách Sprout Lands (Mèo kem tai nâu má hồng + mầm non xanh 2 lá)
+    // Linh vật Mai: chiếc TV nhỏ mặt cười (icon "mai" trong web/icons.js)
     const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
-      <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" className={`shrink-0 ${className} ${animated ? "px-anim-float" : ""}`} aria-label="Tự động">
-        <rect x="6" y="0" width="2" height="2" fill="#8CD778" />
-        <rect x="9" y="1" width="2" height="2" fill="#6CC570" />
-        <rect x="7" y="2" width="2" height="2" fill="#4E944F" />
-        <rect x="3" y="3" width="2" height="2" fill="#FBF2DE" />
-        <rect x="11" y="3" width="2" height="2" fill="#FBF2DE" />
-        <rect x="2" y="5" width="12" height="8" fill="#FBF2DE" />
-        <rect x="3" y="4" width="10" height="10" fill="#FBF2DE" />
-        <rect x="4" y="13" width="8" height="2" fill="#EFE0BF" />
-        <path fill="#54321D" d="M3 2h2v1H3zm8 0h2v1h-2zM2 3h1v2H2zm3 0h1v1H5zm5 0h1v1h-1zm3 0h1v2h-1zM1 5h1v7H1zm13 0h1v7h-1zM2 12h1v2H2zm11 0h1v2h-1zM3 14h2v1H3zm8 0h2v1h-2zM5 15h6v1H5zM6 4h4v1H6z" />
-        <rect x="3" y="4" width="1" height="1" fill="#F4A29E" />
-        <rect x="12" y="4" width="1" height="1" fill="#F4A29E" />
-        <rect x="5" y="7" width="1" height="2" fill="#54321D" />
-        <rect x="10" y="7" width="1" height="2" fill="#54321D" />
-        <rect x="3" y="9" width="2" height="1" fill="#F4A29E" />
-        <rect x="11" y="9" width="2" height="1" fill="#F4A29E" />
-        <rect x="7" y="9" width="2" height="1" fill="#F4A29E" />
-        <path fill="#54321D" d="M6 10h1v1H6zm3 0h1v1H9zm-2 1h2v1H7z" />
-      </svg>
+      <span role="img" aria-label="Tự động" className={`inline-block shrink-0 ${className} ${animated ? "px-anim-float" : ""}`} style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("mai") : "" }} />
     );
 
     // Bảng màu hạng mục: tông Pastel Retro tương phản cao
@@ -1028,8 +1233,8 @@
       };
 
       return (
-        <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
-          <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
+          <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md overflow-hidden flex flex-col max-h-[92vh]">
             <div className="console-top-strip px-3.5 py-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#8CD778] px-led" />
@@ -1168,6 +1373,223 @@
       );
     };
 
+    // ================= MOTION HELPERS =================
+    const prefersReducedMotion = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
+    // Rung nhẹ khi bấm nút điện tử (Android có quyền VIBRATE)
+    const buzz = (ms = 8) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} };
+
+    // Giữ nội dung lại thêm một nhịp khi đóng để chạy hiệu ứng thoát (backdrop mờ dần, sheet trượt xuống)
+    const Presence = ({ show, children, ms = 260 }) => {
+      const [mounted, setMounted] = useState(!!show);
+      const lastRef = useRef(null);
+      if (show) lastRef.current = children;
+      useEffect(() => {
+        if (show) { setMounted(true); return; }
+        const t = setTimeout(() => setMounted(false), prefersReducedMotion() ? 0 : ms);
+        return () => clearTimeout(t);
+      }, [show]);
+      if (!show && !mounted) return null;
+      return <div style={{ display: "contents" }} data-state={show ? "open" : "closed"}>{show ? children : lastRef.current}</div>;
+    };
+
+    // Số chạy (ease-out) khi giá trị thay đổi; from0 = lần đầu đếm từ 0 lên
+    const CountUp = ({ value, format = (n) => String(n), duration = 900, from0 = false }) => {
+      const target = Number(value) || 0;
+      const [disp, setDisp] = useState(from0 && !prefersReducedMotion() ? 0 : target);
+      const curRef = useRef(from0 ? 0 : target);
+      useEffect(() => {
+        const from = curRef.current;
+        if (from === target || prefersReducedMotion()) { curRef.current = target; setDisp(target); return; }
+        let raf = 0, start = 0;
+        const step = (t) => {
+          if (!start) start = t;
+          const p = Math.min(1, (t - start) / duration);
+          const e = 1 - Math.pow(1 - p, 4);
+          const v = from + (target - from) * e;
+          curRef.current = v;
+          setDisp(v);
+          if (p < 1) raf = requestAnimationFrame(step);
+        };
+        raf = requestAnimationFrame(step);
+        return () => cancelAnimationFrame(raf);
+      }, [target]);
+      return <>{format(Math.round(disp))}</>;
+    };
+
+    // Ảnh nhiễu sóng TV (tạo 1 lần bằng canvas)
+    let TV_NOISE_URL = null;
+    const tvNoise = () => {
+      if (TV_NOISE_URL !== null) return TV_NOISE_URL;
+      try {
+        const c = document.createElement("canvas"); c.width = c.height = 64;
+        const x = c.getContext("2d"); const img = x.createImageData(64, 64);
+        for (let i = 0; i < img.data.length; i += 4) {
+          const v = (Math.random() * 255) | 0, tint = Math.random() < 0.08;
+          img.data[i] = tint ? 255 : v; img.data[i + 1] = tint ? 170 : v; img.data[i + 2] = tint ? 200 : v; img.data[i + 3] = 255;
+        }
+        x.putImageData(img, 0, 0);
+        TV_NOISE_URL = c.toDataURL();
+      } catch (e) { TV_NOISE_URL = ""; }
+      return TV_NOISE_URL;
+    };
+
+    // Lưới ký tự -> SVG pixel (dùng cho mây, ăng-ten)
+    const pixelSvg = (rows, pal) => {
+      let out = "";
+      rows.forEach((line, y) => {
+        let x = 0;
+        while (x < line.length) {
+          const ch = line[x];
+          if (!pal[ch]) { x++; continue; }
+          const s0 = x; while (x < line.length && line[x] === ch) x++;
+          out += `<rect x="${s0}" y="${y}" width="${x - s0}" height="1" fill="${pal[ch]}"/>`;
+        }
+      });
+      return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" preserveAspectRatio="none">${out}</svg>`;
+    };
+    const CLOUD_SVG = pixelSvg([
+      "..........wwwwww............",
+      "........wwhhhhhhww..........",
+      ".......whhhhhhhhhhw...www...",
+      "....wwwhhhhhhhhhhhhwwhhhww..",
+      "..wwhhhhhhhhhhhhhhhhhhhhhhw.",
+      ".whhhhhhhhhhhhhhhhhhhhhhhhhw",
+      "whhhhhhhhhhhhhhhhhhhhhhhhhhw",
+      "wwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      ".sssswwwwwwwwwwwwwwwwwsssss.",
+      "...ssssssssssssssssssss....."
+    ], { w: "#FFF1E8", h: "#FFFAF4", s: "#F6D8D2" });
+
+    // Bầu trời: mây pixel trôi chậm + sao lấp lánh (theme tối)
+    const SkyLayer = React.memo(() => {
+      const clouds = [
+        { top: "5%", w: 150, d: 95, delay: -20 },
+        { top: "13%", w: 96, d: 120, delay: -75 },
+        { top: "24%", w: 120, d: 140, delay: -40 },
+        { top: "42%", w: 84, d: 160, delay: -120 },
+        { top: "63%", w: 110, d: 180, delay: -10 }
+      ];
+      const stars = Array.from({ length: 16 }, (_, i) => ({ left: `${(i * 37 + 11) % 100}%`, top: `${(i * 23 + 7) % 70}%`, delay: `${(i % 7) * 0.5}s` }));
+      return (
+        <div className="sky" aria-hidden="true" style={{ zIndex: -1 }}>
+          {clouds.map((c, i) => (
+            <div key={i} className="sky-cloud" style={{ top: c.top, left: 0, width: c.w, height: c.w * 10 / 28, animationDuration: `${c.d}s`, animationDelay: `${c.delay}s` }}
+              dangerouslySetInnerHTML={{ __html: CLOUD_SVG }} />
+          ))}
+          {stars.map((s, i) => <span key={i} className="sky-star" style={{ left: s.left, top: s.top, animationDelay: s.delay }} />)}
+          <div className="sky-hill" />
+        </div>
+      );
+    });
+
+    const TV_ANTENNA_SVG = pixelSvg([
+      "..yy................................yy..",
+      ".yhyy..............................yyhy.",
+      ".yyyy..............................yyyy.",
+      "..yo................................oy..",
+      "...oo..............................oo...",
+      ".....oo..........................oo.....",
+      ".......oo......................oo.......",
+      ".........oo..................oo.........",
+      "...........oo..............oo...........",
+      ".............oo..........oo.............",
+      "...............oo......oo...............",
+      ".................oooooo.................",
+      "...............oocccccco................",
+      "..............occcccccccco..............",
+      "..............oooooooooooo.............."
+    ], { o: "var(--ink)", y: "#FFD87E", h: "#FFF6D8", c: "var(--hud)" });
+
+    // TV CRT retro: màn hình nhiều kênh + núm xoay + hàng phím bấm chức năng
+    const RetroTV = ({ channels, ch, onChange, keys }) => {
+      const n = channels.length;
+      const idx = ((ch % n) + n) % n;
+      const cur = channels[idx];
+      const [phase, setPhase] = useState("power-on");
+      const [noise, setNoise] = useState(false);
+      const [now, setNow] = useState(() => new Date());
+      const firstRef = useRef(true);
+      const rotRef = useRef(idx * 90);
+      const prevIdxRef = useRef(idx);
+      const touchRef = useRef(null);
+      if (prevIdxRef.current !== idx) {
+        let d = (idx - prevIdxRef.current + n) % n;
+        if (d > n / 2) d -= n;
+        rotRef.current += d * 90;
+        prevIdxRef.current = idx;
+      }
+      useEffect(() => {
+        if (firstRef.current) {
+          firstRef.current = false;
+          const t = setTimeout(() => setPhase(""), 1000);
+          return () => clearTimeout(t);
+        }
+        setPhase("switching"); setNoise(true);
+        const t1 = setTimeout(() => setNoise(false), 420), t2 = setTimeout(() => setPhase(""), 460);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+      }, [idx]);
+      useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
+      const go = (d) => { buzz(10); onChange((idx + d + n) % n); };
+      const pad = (v) => String(v).padStart(2, "0");
+      return (
+        <section className="tv" aria-label="Màn hình TV tổng quan">
+          <div className="tv-antenna" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TV_ANTENNA_SVG }} />
+          <div className="tv-body">
+            <div className="tv-top">
+              <div className="tv-bezel">
+                <div className="tv-screen"
+                  onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; }}
+                  onTouchEnd={(e) => {
+                    const s = touchRef.current; touchRef.current = null; if (!s) return;
+                    const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
+                    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
+                  }}>
+                  <div className="crt-roll" />
+                  <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
+                  <div key={cur.id} className={`crt-content ${phase}`}>
+                    <div className="flex items-center justify-between osd shrink-0">
+                      <span>CH{pad(idx + 1)} <span className="opacity-80">{cur.title}</span></span>
+                      <span>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
+                    </div>
+                    <div className="flex-1 min-h-0 mt-1.5 flex flex-col" onClick={cur.onOpen ? () => { buzz(); cur.onOpen(); } : undefined} role={cur.onOpen ? "button" : undefined}>
+                      {cur.render()}
+                    </div>
+                    <div className="tv-dots shrink-0 mt-1.5">
+                      {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); if (i !== idx) { buzz(); onChange(i); } }} />)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="tv-side">
+                <div className="tv-knob-wrap">
+                  <span className="ticks" />
+                  <button type="button" className="tv-knob block" aria-label="Xoay núm đổi kênh" style={{ transform: `rotate(${rotRef.current}deg)` }} onClick={() => go(1)} />
+                </div>
+                <button type="button" className="tv-mini" aria-label="Kênh trước" onClick={() => go(-1)}>CH▲</button>
+                <button type="button" className="tv-mini" aria-label="Kênh sau" onClick={() => go(1)}>CH▼</button>
+                <div className="tv-grille" />
+                <span className="tv-led" title="Đang bật" />
+              </div>
+            </div>
+            {keys && keys.length > 0 && (
+              <div className="tv-keys" style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0, 1fr))` }}>
+                {keys.map(k => (
+                  <button key={k.id} type="button" className="ekey" style={{ "--c": k.color }} aria-label={k.aria || k.label}
+                    onClick={() => { buzz(12); k.onClick(); }}>
+                    <span className={`led ${k.led || ""}`} />
+                    {k.badge ? <span className="ekey-badge">{k.badge}</span> : null}
+                    <span className="ekey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
+                    <span className="ekey-label">{k.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="tv-feet" aria-hidden="true"><span /><span /></div>
+        </section>
+      );
+    };
+
     function App() {
       // Data States
       const [accounts, setAccounts] = useState(() => safeJsonParse("vina_accounts", [{ id: 1, name: "Tiền mặt", accountNo: "CASH", balance: 0 }]));
@@ -1207,10 +1629,10 @@
       const [expandedDebtPerson, setExpandedDebtPerson] = useState(null);
       const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem("vina_theme");
-        // Lần đầu lên bản Sprout Lands UI: áp dụng bảng màu đồng cỏ & gỗ ấm mặc định
-        if (!localStorage.getItem("vina_theme_v4")) {
-          localStorage.setItem("vina_theme_v4", "1");
-          return saved === "pixel_night" ? "pixel_night" : "sprout_meadow";
+        // Lần đầu lên bản Pastel Dusk (TV retro): áp dụng bảng màu Hoàng Hôn Hồng, giữ theme tối nếu anh đang dùng
+        if (!localStorage.getItem("vina_theme_v5")) {
+          localStorage.setItem("vina_theme_v5", "1");
+          return /night|plum/.test(saved || "") ? "plum_night" : "dusk_rose";
         }
         return normalizeThemeKey(saved);
       });
@@ -1219,6 +1641,9 @@
       const [activeTab, setActiveTab] = useState("overview"); 
       const [subTab, setSubTab] = useState("wallet"); // wallet, debts
       const [isAddTxModalOpen, setIsAddTxModalOpen] = useState(false);
+      const [addTxType, setAddTxType] = useState("EXPENSE");
+      const [tvChannel, setTvChannelRaw] = useState(() => { try { return Number(localStorage.getItem("vina_tv_ch")) || 0; } catch (e) { return 0; } });
+      const setTvChannel = (v) => { setTvChannelRaw(v); try { localStorage.setItem("vina_tv_ch", String(v)); } catch (e) {} };
       const [editingTx, setEditingTx] = useState(null);
       const [isOcrScanning, setIsOcrScanning] = useState(false);
       const ocrFileInputRef = React.useRef(null);
@@ -2159,8 +2584,8 @@
       useEffect(() => {
         const rootStyle = document.documentElement.style;
         const safeKey = normalizeThemeKey(theme);
-        const currentTheme = THEMES[safeKey] || THEMES.sprout_meadow;
-        const c = { ink: currentTheme.colors.textPrimary, onPrimary: "#243D1A", accent: "#F8D56B", onAccent: "#4A2B18", wood: "#C8945C", woodLight: "#E8BE8B", woodDark: "#9A6638", expense: "#C94A4A", expenseLight: "#FCE0DD", onExpense: "#FFFFFF", income: "#3A8740", incomeLight: "#DCF2D0", onIncome: "#FFFFFF", ...currentTheme.colors };
+        const currentTheme = THEMES[safeKey] || THEMES.dusk_rose;
+        const c = { ...THEMES.dusk_rose.colors, onExpense: "#FFFFFF", onIncome: "#FFFFFF", ink: currentTheme.colors.textPrimary, ...currentTheme.colors };
         const toRgb = (hex) => { const h = String(hex).replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16); return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`; };
         Object.keys(c).forEach(k => {
           const cssName = `--${k.replace(/([A-Z])/g, "-$1").toLowerCase()}`;
@@ -2170,8 +2595,8 @@
         document.documentElement.setAttribute("data-retro", currentTheme.retro ? "1" : "0");
         { const bgc = toRgb(c.background).split(' ').map(Number); document.documentElement.classList.toggle("dark", (0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2]) < 110); }
         const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute("content", currentTheme.retro ? c.primary : c.surface);
-        if (window.MaiBridge && window.MaiBridge.setStatusBarColor) { try { const bg = toRgb(c.background).split(' ').map(Number); window.MaiBridge.setStatusBarColor(c.background, (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) > 140); } catch(e) {} }
+        if (meta) meta.setAttribute("content", c.sky1 || c.background);
+        if (window.MaiBridge && window.MaiBridge.setStatusBarColor) { try { const bg = toRgb(c.sky1 || c.background).split(' ').map(Number); window.MaiBridge.setStatusBarColor(c.sky1 || c.background, (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) > 140); } catch(e) {} }
         localStorage.setItem("vina_theme", safeKey);
       }, [theme]);
 
@@ -3225,6 +3650,18 @@
         return { inc, exp, count, maiCount, net: inc - exp, dayOfMonth: now.getDate(), daysInMonth, label: `Tháng ${m + 1}/${y}` };
       }, [transactions]);
 
+      // Chi tiêu từng ngày trong tháng (biểu đồ cột trên TV)
+      const monthDaily = React.useMemo(() => {
+        const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+        const arr = new Array(new Date(y, m + 1, 0).getDate()).fill(0);
+        transactions.forEach(t => {
+          if (t.type !== "EXPENSE") return;
+          const d = new Date(t.date);
+          if (d.getFullYear() === y && d.getMonth() === m) arr[d.getDate() - 1] += Number(t.amount) || 0;
+        });
+        return arr;
+      }, [transactions]);
+
       // Giao dịch gần đây, nhóm theo ngày
       const recentGroups = React.useMemo(() => {
         const sorted = transactions.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
@@ -3870,20 +4307,161 @@
         setEditingBank(null);
       };
 
-      // Tab Definitions
+      // Tab Definitions (sidebar desktop) – dock mobile dùng DOCK bên dưới
       const TABS = [
-        { id: "overview", icon: "home", label: "Tổng quan" },
-        { id: "report", icon: "bar-chart-3", label: "Báo cáo" },
-        { id: "mai", icon: "sparkles", label: "Tự động" },
-        { id: "category", icon: "tags", label: "Hạng mục" },
-        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ" }
+        { id: "overview", icon: "tv", label: "Màn hình chính" },
+        { id: "report", icon: "chart", label: "Báo cáo" },
+        { id: "mai", icon: "mai", label: "Tự động" },
+        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ" },
+        { id: "category", icon: "tags", label: "Hạng mục" }
+      ];
+      const DOCK = [
+        { id: "overview", icon: "home", label: "Nhà", c: "var(--key-home)" },
+        { id: "report", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
+        { id: "__add" },
+        { id: "mai", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
+        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ", c: "var(--key-wallet)" }
       ];
       const maiBadge = maiInbox.length;
       const canGoBackUI = activeTab !== "overview" || (activeTab === "wallet_ai" && subTab !== "wallet") || (activeTab === "report" && !!drillDownParent) || (activeTab === "wallet_ai" && subTab === "debts" && !!expandedDebtPerson);
       const rpgLevel = Math.max(1, Math.min(99, Math.floor(transactions.length / 5) + 1));
 
+      // Hướng chuyển màn (trượt trái/phải theo thứ tự tab)
+      const TAB_ORDER = ["overview", "report", "mai", "wallet_ai", "category"];
+      const tabDirRef = React.useRef({ tab: activeTab, dx: 0 });
+      if (tabDirRef.current.tab !== activeTab) {
+        const ia = TAB_ORDER.indexOf(tabDirRef.current.tab), ib = TAB_ORDER.indexOf(activeTab);
+        tabDirRef.current = { tab: activeTab, dx: ib >= ia ? 28 : -28 };
+      }
+
+      // Mở form ghi giao dịch: chọn sẵn Chi/Thu, hoặc mở luôn trình quét hoá đơn
+      const openAddTx = (type = "EXPENSE", scan = false) => {
+        setAddTxType(type === "INCOME" ? "INCOME" : "EXPENSE");
+        setIsAddTxModalOpen(true);
+        if (scan) setTimeout(() => { try { ocrFileInputRef.current && ocrFileInputRef.current.click(); } catch (e) {} }, 180);
+      };
+
+      // ===== Số liệu cho TV =====
+      const monthNo = new Date().getMonth() + 1;
+      const budgetPct = monthlyBudget > 0 ? Math.round(monthStats.exp / monthlyBudget * 100) : 0;
+      const timePct = Math.round(monthStats.dayOfMonth / monthStats.daysInMonth * 100);
+      const budgetPace = monthlyBudget > 0 ? (monthStats.exp > monthlyBudget ? "over" : budgetPct > timePct + 10 ? "warn" : "") : "";
+      const nwStr = formatVND(netWorth);
+      const goWallets = () => { setActiveTab("wallet_ai"); setSubTab("wallet"); };
+      const openBudget = () => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); };
+      const PH = { mint: "#9DF5C2", pink: "#FFA5BC", butter: "#FFE08A", cream: "rgba(255,242,226,.9)" };
+      const tvChannels = [
+        { id: "assets", title: "TÀI SẢN", onOpen: goWallets, render: () => (
+          <div className="flex-1 flex flex-col justify-center min-w-0">
+            <p className="tv-lbl" style={{ color: PH.butter }}>Tài sản ròng</p>
+            <p className="tv-big crt-glow tabular mt-1" style={{ color: "#FFE7A8", fontSize: Math.min(44, Math.floor(420 / Math.max(8, nwStr.length))) }}><CountUp value={netWorth} format={formatVND} from0 /></p>
+            <div className="mt-2.5 space-y-0.5" style={{ color: PH.cream }}>
+              <div className="tv-row"><span>+ Trong {accounts.filter(a => !isCreditAcc(a)).length} ví</span><span className="tabular">{formatVND(totalCash)}</span></div>
+              {totalDebtLent > 0 && <div className="tv-row"><span>+ Cho vay</span><span className="tabular">{formatVND(totalDebtLent)}</span></div>}
+              {totalCardDebt > 0 && <div className="tv-row" style={{ color: PH.pink }}><span>− Nợ thẻ tín dụng</span><span className="tabular">{formatVND(totalCardDebt)}</span></div>}
+              {totalDebtBorrowed > 0 && <div className="tv-row" style={{ color: PH.pink }}><span>− Đi vay</span><span className="tabular">{formatVND(totalDebtBorrowed)}</span></div>}
+            </div>
+          </div>
+        ) },
+        { id: "month", title: `THÁNG ${monthNo}`, onOpen: () => setActiveTab("report"), render: () => {
+          const max = Math.max(1, ...monthDaily);
+          return (
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="grid grid-cols-3 gap-1.5">
+                {[["Thu", monthStats.inc, PH.mint], ["Chi", monthStats.exp, PH.pink], ["Còn", monthStats.net, PH.butter]].map(([l, v, c]) => (
+                  <div key={l} className="min-w-0">
+                    <p className="tv-lbl" style={{ color: c }}>{l}</p>
+                    <p className="crt-glow tabular whitespace-nowrap font-display text-[21px] leading-none mt-0.5" style={{ color: c }}><CountUp value={v} format={formatShortVND} /></p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto">
+                <div className="tv-bars" aria-label="Chi tiêu từng ngày trong tháng">
+                  {monthDaily.map((v, i) => {
+                    const future = i + 1 > monthStats.dayOfMonth;
+                    return <i key={i} className={`${i + 1 === monthStats.dayOfMonth ? "today" : ""} ${v === 0 ? "zero" : ""}`} style={{ height: v > 0 ? `${Math.max(8, v / max * 100)}%` : "6%", opacity: future ? 0.35 : 1, animationDelay: `${i * 14}ms` }} />;
+                  })}
+                </div>
+                <div className="flex justify-between tv-lbl mt-1" style={{ color: "rgba(255,242,226,.7)" }}><span>01</span><span>chi tiêu từng ngày</span><span>{monthStats.daysInMonth}</span></div>
+              </div>
+            </div>
+          );
+        } },
+        { id: "budget", title: "NGÂN SÁCH", onOpen: openBudget, render: () => {
+          if (!(monthlyBudget > 0)) return (
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-1">
+              <span className="w-11 h-11 px-anim-float" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("piggy") : "" }} />
+              <p className="tv-mid crt-glow" style={{ color: PH.butter }}>CHƯA ĐẶT NGÂN SÁCH</p>
+              <p className="text-[13px] font-semibold leading-tight" style={{ color: "rgba(255,242,226,.8)" }}>Chạm màn hình để đặt hạn mức chi tiêu tháng này</p>
+            </div>
+          );
+          const rem = monthlyBudget - monthStats.exp, daysLeft = Math.max(1, monthStats.daysInMonth - monthStats.dayOfMonth + 1);
+          const col = budgetPace === "over" ? PH.pink : budgetPace === "warn" ? PH.butter : PH.mint;
+          const cells = Math.min(14, Math.round(Math.min(100, budgetPct) / 100 * 14));
+          return (
+            <div className="flex-1 flex flex-col justify-center min-w-0">
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  <p className="tv-lbl" style={{ color: col }}>Đã dùng</p>
+                  <p className="tv-big crt-glow tabular" style={{ color: col }}><CountUp value={budgetPct} format={(v) => `${v}%`} from0 /></p>
+                </div>
+                <div className="text-right">
+                  <p className="tv-lbl">Hạn mức</p>
+                  <p className="tv-mid tabular" style={{ color: "#FFF2E2" }}>{formatShortVND(monthlyBudget)}</p>
+                </div>
+              </div>
+              <div className="tv-hp mt-2">{Array.from({ length: 14 }, (_, i) => <i key={i} className={i < cells ? "on" : ""} style={i < cells ? { background: col, boxShadow: `0 0 6px ${col}`, animationDelay: `${i * 40}ms` } : undefined} />)}</div>
+              <div className="mt-2 space-y-0.5" style={{ color: PH.cream }}>
+                <div className="tv-row"><span>{rem >= 0 ? "Còn lại" : "Đã vượt"}</span><span className="tabular" style={rem < 0 ? { color: PH.pink } : undefined}>{formatVND(Math.abs(rem))}</span></div>
+                {rem > 0 && <div className="tv-row"><span>Mỗi ngày tiêu được ~</span><span className="tabular">{formatShortVND(Math.floor(rem / daysLeft))}</span></div>}
+              </div>
+            </div>
+          );
+        } },
+        { id: "wallets", title: "VÍ & THẺ", onOpen: goWallets, render: () => {
+          const rows = [...accounts].sort((x, y) => (isCreditAcc(y) ? -1e15 : (Number(y.balance) || 0)) - (isCreditAcc(x) ? -1e15 : (Number(x.balance) || 0))).slice(0, 4);
+          if (!rows.length) return <p className="m-auto tv-mid crt-glow" style={{ color: PH.butter }}>CHƯA CÓ VÍ</p>;
+          return (
+            <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0">
+              {rows.map(a => {
+                const credit = isCreditAcc(a), bal = Number(a.balance) || 0;
+                return (
+                  <div key={a.id} className="flex items-center gap-2 min-w-0">
+                    <BankBadge name={a.name} size={18} />
+                    <span className="flex-1 min-w-0 truncate text-[14px] font-semibold" style={{ color: PH.cream }}>{a.name}</span>
+                    <span className="font-display text-[21px] leading-none tabular crt-glow" style={{ color: credit || bal < 0 ? PH.pink : PH.mint }}>{credit ? "−" + formatShortVND(Math.max(0, -bal)) : formatShortVND(bal)}</span>
+                  </div>
+                );
+              })}
+              {accounts.length > 4 && <p className="tv-lbl text-right" style={{ color: "rgba(255,242,226,.6)" }}>+{accounts.length - 4} ví khác</p>}
+            </div>
+          );
+        } }
+      ];
+      const tvKeys = [
+        { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "arrow-up-right", color: "#FFB3BE", onClick: () => openAddTx("EXPENSE") },
+        { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "arrow-down-left", color: "#A8E6BF", onClick: () => openAddTx("INCOME") },
+        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Mai", icon: "mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
+        { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "camera", color: "#A9D5F5", onClick: () => openAddTx("EXPENSE", true) },
+        { id: "budget", label: "Hạn mức", aria: "Ngân sách tháng", icon: "piggy", color: "#FFE08A", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
+      ].filter(Boolean);
+
+      // Móc kiểm thử giao diện (chỉ bật khi mở với ?shot=1)
+      useEffect(() => {
+        if (!/[?&]shot=1/.test(window.location.search)) return;
+        window.__vinaNav = (t) => setActiveTab(t);
+        window.__vinaTv = (c) => setTvChannel(c);
+        window.__vinaOpen = (w) => {
+          if (w === "addTx") openAddTx("EXPENSE");
+          else if (w === "settings") setShowSettingsDialog(true);
+          else if (w === "budget") setIsBudgetModalOpen(true);
+          else { setIsAddTxModalOpen(false); setShowSettingsDialog(false); setIsBudgetModalOpen(false); }
+        };
+      });
+
       return (
-        <div className="flex flex-col h-screen md:flex-row font-sans">
+        <div className="flex flex-col h-screen md:flex-row font-sans relative isolate">
+          <SkyLayer />
 
           {/* FLOATING EDGE-SWIPE BACK PILL */}
           <div
@@ -3894,50 +4472,43 @@
 
           {/* TOAST NOTIFICATION */}
           {syncMessage && (
-            <div className="fixed left-1/2 z-[60] toast-in w-[calc(100%-32px)] max-w-md" style={{ top: "calc(var(--safe-top) + 12px)" }}>
-              <div className={`px-4 py-3 rounded-xl flex items-center gap-3 border-2 border-[var(--ink)] shadow-[4px_4px_0_var(--ink)] ${syncMessage.type === 'error' ? 'bg-[var(--expense-light)] text-[var(--expense)]' : syncMessage.type === 'info' ? 'bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]' : 'bg-[var(--income-light)] text-[var(--income)]'}`}>
-                <Icon name={syncMessage.type === 'error' ? 'alert-circle' : syncMessage.type === 'info' ? 'info' : 'check-circle-2'} anim={syncMessage.type === 'error' ? 'wiggle' : 'hop'} className="w-5 h-5" />
-                <span className="text-sm font-bold leading-snug">{syncMessage.text}</span>
+            <div key={syncMessage.text} className="fixed left-1/2 z-[60] toast-in w-[calc(100%-32px)] max-w-md" style={{ top: "calc(var(--safe-top) + 12px)" }} role="status">
+              <div className={`relative overflow-hidden px-4 py-3 rounded-xl flex items-center gap-3 border-[3px] border-[var(--ink)] shadow-[0_4px_0_var(--ink),0_10px_24px_rgba(46,26,48,.25)] ${syncMessage.type === 'error' ? 'bg-[var(--expense-light)] text-[var(--expense)]' : syncMessage.type === 'info' ? 'bg-[var(--accent)] text-[var(--on-accent)]' : 'bg-[var(--income-light)] text-[var(--income)]'}`}>
+                <Icon name={syncMessage.type === 'error' ? 'alert-circle' : syncMessage.type === 'info' ? 'info' : 'check-circle-2'} anim={syncMessage.type === 'error' ? 'wiggle' : 'hop'} className="w-6 h-6" />
+                <span className="text-[15px] font-bold leading-snug">{syncMessage.text}</span>
+                <span className="toast-bar" />
               </div>
             </div>
           )}
 
-          {/* HEADER MOBILE (Game Console Top Bezel) */}
-          <header className="md:hidden bg-theme-surface/95 backdrop-blur border-b-[2.5px] border-[var(--ink)] pt-safe sticky top-0 z-20">
-            <div className="h-1.5 retro-stripes-h" />
-            <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {canGoBackUI ? (
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    aria-label="Quay lại màn hình trước"
-                    className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1 shrink-0">
-                    <span className="font-pixel text-[10px]">◄</span>
-                    <span className="font-pixel text-[10px]">LÙI</span>
+          {/* HUD MOBILE – thanh tài nguyên kiểu game */}
+          <header className="md:hidden hud-wrap pt-safe relative z-20 shrink-0">
+            <div className="px-3 pt-2.5 pb-1.5 flex gap-2 items-start">
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="hud">
+                  <button type="button" className="hud-cell flex-1 min-w-0" onClick={() => { buzz(); goWallets(); }} aria-label={`Tài sản ròng ${formatVND(netWorth)} – xem ví`}>
+                    <Icon name="coins" className="w-6 h-6 shrink-0" />
+                    <span className="hud-num truncate tabular"><CountUp value={netWorth} format={formatShortVND} /></span>
+                    <span role="button" tabIndex={0} aria-label="Ghi giao dịch" className="hud-plus ml-auto" onClick={(e) => { e.stopPropagation(); buzz(); openAddTx("EXPENSE"); }}><Icon name="plus" className="w-3 h-3" /></span>
                   </button>
-                ) : (
-                  <div className="w-9 h-9 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] shrink-0 text-[var(--on-accent,#4A2B18)]">
-                    <Icon name="sun" anim="sparkle" className="w-5 h-5" />
-                  </div>
-                )}
-                <div className="leading-tight min-w-0">
-                  <h1 className="font-display font-bold text-2xl text-theme-textPrimary leading-none truncate">VinaSpends</h1>
-                  <p className="text-[11px] font-bold text-theme-textSecondary truncate">{new Date().toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })} · LV.{rpgLevel}</p>
+                  <button type="button" className="hud-cell relative shrink-0" onClick={() => { buzz(); setActiveTab("mai"); }} aria-label={`Tự động – ${maiBadge} khoản chờ duyệt`}>
+                    <MaiAvatar size={24} animated={maiBadge > 0} />
+                    <span className="hud-num tabular">{maiBadge}</span>
+                  </button>
+                  <button type="button" className="hud-cell hud-cell-light shrink-0" onClick={() => setShowSettingsDialog(true)} aria-label="Đồng bộ dữ liệu">
+                    <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} anim={isSyncing ? "spin" : ""} className="w-5 h-5" />
+                    <span className="font-pixel text-[10px]">{googleUser ? (isRealtimeLive ? "LIVE" : "CLOUD") : "LOCAL"}</span>
+                  </button>
                 </div>
+                <button type="button" className="hud-sub w-full" onClick={() => { buzz(); openBudget(); }} aria-label={monthlyBudget > 0 ? `Ngân sách tháng đã dùng ${budgetPct}%` : "Đặt ngân sách tháng"}>
+                  <span className="lvl-tag">T{monthNo} · LV{rpgLevel}</span>
+                  <span className={`xp-bar ${budgetPace}`}><i style={{ width: monthlyBudget > 0 ? `calc(${Math.min(100, Math.max(4, budgetPct))}% - 4px)` : "0%" }} /></span>
+                  <span className={`text-[var(--on-hud)] w-[50px] text-right shrink-0 [text-shadow:1px_1px_0_rgba(0,0,0,.3)] ${monthlyBudget > 0 ? "font-display text-[20px] leading-none" : "font-pixel text-[10px]"}`}>{monthlyBudget > 0 ? `${budgetPct}%` : "ĐẶT N.S"}</span>
+                </button>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={()=>setShowSettingsDialog(true)}
-                  aria-label="Đồng bộ dữ liệu"
-                  className={`game-btn-sm flex items-center gap-1.5 h-8 px-2.5 text-xs font-bold ${googleUser ? 'bg-[var(--income-light)] text-[var(--income)]' : 'game-btn-neutral bg-theme-background text-theme-textSecondary'}`}>
-                  <span className={`w-2 h-2 rounded-sm border border-[var(--ink)] ${googleUser ? 'bg-[var(--income)] px-led' : 'bg-theme-textSecondary/40'}`} />
-                  <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} anim={isSyncing ? "spin" : ""} className="w-3.5 h-3.5" />
-                  <span className="font-pixel text-[10px]">{googleUser ? (isRealtimeLive ? 'LIVE' : 'CLOUD') : 'LOCAL'}</span>
-                </button>
-                <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="game-btn-sm game-btn-neutral w-8 h-8 bg-theme-background flex items-center justify-center text-theme-textPrimary">
-                  <Icon name="settings" className="w-4 h-4" />
-                </button>
+              <div className="flex flex-col gap-2 shrink-0">
+                <button type="button" onClick={() => { buzz(); setShowSettingsDialog(true); }} aria-label="Cài đặt" className="hud-btn"><Icon name="settings" className="w-6 h-6" /></button>
+                <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Hạng mục" className={`hud-btn ${activeTab === "category" ? "!bg-[var(--accent)]" : ""}`}><Icon name="tags" className="w-6 h-6" /></button>
               </div>
             </div>
           </header>
@@ -3948,7 +4519,7 @@
              <div className="flex items-center justify-between mb-4 px-1.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[2px_2px_0_var(--ink)] text-[var(--on-accent,#4A2B18)]">
-                    <Icon name="sprout" anim="wiggle" className="w-5 h-5" />
+                    <Icon name="tv" anim="float" className="w-6 h-6" />
                   </div>
                   <div>
                     <h1 className="font-display font-bold text-2xl text-theme-textPrimary leading-none">VinaSpends</h1>
@@ -3991,211 +4562,71 @@
                 );
               })}
             </nav>
+            <button type="button" onClick={() => { buzz(); openAddTx("EXPENSE"); }} className="game-btn w-full py-3 mt-4 bg-[var(--accent)] text-[var(--on-accent)] font-bold flex items-center justify-center gap-2">
+              <Icon name="plus" className="w-5 h-5" /> Ghi giao dịch
+            </button>
           </aside>
 
           {/* MAIN CONTENT AREA */}
-          <main ref={mainScrollRef} className="flex-1 overflow-y-auto no-scrollbar px-4 pt-3 pb-32 md:p-8 bg-theme-background relative">
+          <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-36 md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
 
-            {/* TAB: TỔNG QUAN */}
+            {/* TAB: MÀN HÌNH CHÍNH – TV retro + nhật ký */}
             {activeTab === "overview" && (
               <div className="max-w-3xl mx-auto space-y-5 tab-enter">
-                {/* CONSOLE CARTRIDGE HERO – Tài sản & HP Ngân sách */}
-                <section className="console-bezel relative">
-                  <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">SỔ NÔNG TRẠI · CẤP {rpgLevel}</span>
-                    </div>
-                    <span className="font-pixel text-[10px] text-[#FFD875]">{transactions.length} TX</span>
-                  </div>
-                  <div className="h-1.5 retro-stripes-h" />
-
-                  <div className="p-3.5 sm:p-4 space-y-3.5">
-                    {/* Màn hình LCD Tài sản ròng */}
-                    <div className="console-lcd bg-theme-primary text-[var(--on-primary)] px-4 py-4 relative overflow-hidden">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-pixel text-[10px] uppercase tracking-[0.16em] opacity-85">TÀI SẢN RÒNG</p>
-                          <h2 className="font-display font-bold text-[40px] md:text-5xl leading-none mt-1 tabular">{formatVND(netWorth)}</h2>
-                        </div>
-                        <span className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
-                          <Icon name="wallet" anim="float" className="w-6 h-6" />
-                        </span>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t-2 border-dashed border-[var(--ink)]/30 grid grid-cols-2 gap-x-4 gap-y-1 text-xs font-bold max-w-[360px]">
-                        <span>+ Tiền trong {accounts.filter(a => !isCreditAcc(a)).length} ví</span><span className="text-right tabular">{formatVND(totalCash)}</span>
-                        {totalDebtLent > 0 && <><span>+ Cho vay</span><span className="text-right tabular">{formatVND(totalDebtLent)}</span></>}
-                        {totalCardDebt > 0 && <><span>− Dư nợ thẻ tín dụng</span><span className="text-right tabular">{formatVND(totalCardDebt)}</span></>}
-                        {totalDebtBorrowed > 0 && <><span>− Đi vay</span><span className="text-right tabular">{formatVND(totalDebtBorrowed)}</span></>}
-                      </div>
-                    </div>
-
-                    {/* Thống kê tháng + Thanh HP Ngân sách */}
-                    <div className="bg-theme-background rounded-xl border-2 border-[var(--ink)] p-3.5 shadow-[2px_2px_0_var(--ink)]">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <p className="font-pixel text-[10px] font-bold uppercase tracking-wider text-theme-textSecondary">{monthStats.label}</p>
-                        {monthStats.maiCount > 0 && (
-                          <span className="font-pixel text-[10px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] flex items-center gap-1">
-                            <MaiAvatar size={12} /> TỰ GHI {monthStats.maiCount}/{monthStats.count}
-                          </span>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="rounded-lg border-2 border-[var(--ink)]/35 bg-[var(--income-light)] px-2.5 py-1.5">
-                          <p className="font-pixel text-[9px] text-[var(--income)] uppercase">THU</p>
-                          <p className="font-display font-bold text-xl text-[var(--income)] tabular leading-tight truncate" title={formatVND(monthStats.inc)}>{formatShortVND(monthStats.inc)}</p>
-                        </div>
-                        <div className="rounded-lg border-2 border-[var(--ink)]/35 bg-[var(--expense-light)] px-2.5 py-1.5">
-                          <p className="font-pixel text-[9px] text-[var(--expense)] uppercase">CHI</p>
-                          <p className="font-display font-bold text-xl text-[var(--expense)] tabular leading-tight truncate" title={formatVND(monthStats.exp)}>{formatShortVND(monthStats.exp)}</p>
-                        </div>
-                        <div className="rounded-lg border-2 border-[var(--ink)]/35 bg-theme-surface px-2.5 py-1.5">
-                          <p className="font-pixel text-[9px] text-theme-textSecondary uppercase">RÒNG</p>
-                          <p className={`font-display font-bold text-xl tabular leading-tight truncate ${monthStats.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{formatShortVND(monthStats.net)}</p>
-                        </div>
-                      </div>
-                      {monthlyBudget > 0 && (() => {
-                        const pct = Math.min(100, Math.round(monthStats.exp / monthlyBudget * 100));
-                        const timePct = Math.round(monthStats.dayOfMonth / monthStats.daysInMonth * 100);
-                        const filled = monthStats.exp > 0 ? Math.min(12, Math.max(1, Math.round((pct / 100) * 12))) : 0;
-                        const hpCol = monthStats.exp > monthlyBudget || pct > timePct + 10 ? "var(--expense)" : (pct > 80 ? "var(--accent)" : "var(--income)");
-                        return (
-                          <div className="mt-3 space-y-1.5">
-                            <div className="hp-seg" aria-label={`Đã dùng ${pct}% ngân sách`}>
-                              {Array.from({ length: 12 }, (_, idx) => (
-                                <span key={idx} className="hp-cell" style={idx < filled ? { backgroundColor: hpCol } : undefined} />
-                              ))}
-                            </div>
-                            <div className="flex justify-between items-center text-[11px] font-bold text-theme-textSecondary">
-                              <span>HP Ngân sách {pct}% ({formatVND(monthlyBudget)})</span>
-                              <span>Qua {timePct}% tháng</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Danh sách ví gọn: tên ngân hàng + thanh tỉ trọng số dư trên tổng */}
-                  <div className="border-t-2 border-dashed border-theme-border pt-3 pb-4 px-4 sm:px-5">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-sm font-bold text-theme-textPrimary"><Icon name="landmark" anim="float" className="w-5 h-5" /> Các ví & tài khoản <span className="text-theme-textSecondary font-semibold">({accounts.length})</span></span>
-                      <button type="button" onClick={() => { setActiveTab("wallet_ai"); setSubTab("wallet"); }} className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1 text-xs font-bold flex items-center gap-0.5">Xem thẻ <Icon name="chevron-right" className="w-3.5 h-3.5" /></button>
-                    </div>
-                    {(() => {
-                      const pos = accounts.reduce((s, a) => s + Math.max(0, isCreditAcc(a) ? 0 : (Number(a.balance) || 0)), 0);
-                      const rows = [...accounts].sort((x, y) => {
-                        const vx = isCreditAcc(x) ? -1e15 : (Number(x.balance) || 0), vy = isCreditAcc(y) ? -1e15 : (Number(y.balance) || 0);
-                        return vy - vx;
-                      });
-                      if (!rows.length) return <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="mt-3 w-full py-3 rounded-xl border-2 border-dashed border-theme-primary/60 text-theme-primary font-bold text-sm">+ Thêm ví đầu tiên</button>;
-                      return (
-                        <div className="mt-3 space-y-2.5">
-                          {rows.map((acc, i) => {
-                            const credit = isCreditAcc(acc);
-                            const bal = Number(acc.balance) || 0;
-                            const debt = Math.max(0, -bal), limit = Number(acc.limit) || 0;
-                            const color = (bankStyleOf(acc.name) || {}).color || "#6B4F3A";
-                            const pct = credit ? (limit > 0 ? Math.min(100, debt / limit * 100) : 0) : (pos > 0 && bal > 0 ? bal / pos * 100 : 0);
-                            const label = credit ? (limit > 0 ? `nợ ${Math.round(debt / limit * 100)}% hạn mức` : "thẻ tín dụng") : (bal < 0 ? "đang âm" : `${pos > 0 ? (bal / pos * 100).toFixed(pct >= 10 ? 0 : 1).replace(".", ",") : 0}% tổng`);
-                            return (
-                              <button key={acc.id} type="button" className="wallet-row w-full text-left block p-2 rounded-lg hover:bg-theme-background transition-colors" style={{ animationDelay: `${i * 60}ms` }}
-                                onClick={() => { setEditingBank(acc); setBankNameType(BANK_LOGOS.find(b=>b.name===acc.name) ? "preset" : "custom"); setIsAddBankModalOpen(true); }}>
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="flex items-center gap-2 min-w-0">
-                                    <BankBadge name={acc.name} size={20} />
-                                    <span className="font-bold text-[14px] text-theme-textPrimary truncate">{formatAccountLabel(acc)}</span>
-                                  </span>
-                                  <span className={`font-display font-bold text-[17px] tabular whitespace-nowrap ${credit || bal < 0 ? "text-[var(--expense)]" : "text-theme-textPrimary"}`}>{credit ? "−" + formatVND(debt) : formatVND(bal)}</span>
-                                </div>
-                                <div className="mt-1 flex items-center gap-2">
-                                  <div className="flex-1 h-2.5 rounded bg-theme-variant border border-[var(--ink)]/50 overflow-hidden">
-                                    <div className="wallet-bar h-full" style={{ width: `${Math.max(pct > 0 ? 2 : 0, pct)}%`, background: credit || bal < 0 ? "var(--expense)" : color, animationDelay: `${0.25 + i * 0.06}s` }} />
-                                  </div>
-                                  <span className="text-[11px] font-bold text-theme-textSecondary w-[104px] text-right whitespace-nowrap">{label}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </section>
-
-                {/* HÀNH ĐỘNG NHANH (Game Console Buttons) */}
-                {voiceAvailable && (
-                  <button onClick={() => voice.state === "listening" ? voiceStop() : voiceListen("command")} className="game-btn game-btn-neutral w-full py-3 bg-theme-surface text-theme-textPrimary font-bold flex items-center justify-center gap-2 px-3">
-                    <span className="console-key">MIC</span>
-                    <MicIcon anim={voice.state === "listening" ? "pulse" : "wiggle"} className="w-5 h-5 text-theme-primary" />
-                    <span>Nói với Mai</span>
-                    <span className="text-xs font-semibold text-theme-textSecondary truncate">“nãy anh chi 45k ăn trưa”</span>
-                  </button>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                  <button onClick={()=>setIsAddTxModalOpen(true)} className="game-btn py-3.5 bg-theme-primary text-[var(--on-primary)] font-bold flex items-center justify-center gap-2">
-                    <span className="console-key">A</span>
-                    <Icon name="plus" anim="hop" className="w-5 h-5" />
-                    <span>Ghi giao dịch</span>
-                  </button>
-                  <button onClick={()=>setActiveTab("mai")} className="game-btn game-btn-accent py-3.5 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold flex items-center justify-center gap-2 relative">
-                    <span className="console-key">START</span>
-                    <MaiAvatar size={22} animated={maiBadge > 0} />
-                    <span>Ghi tự động</span>
-                    {maiBadge > 0 && <span className="font-pixel absolute -top-2.5 -right-2 min-w-[22px] h-[22px] px-1 rounded-md bg-theme-primary text-[var(--on-primary)] border-2 border-[var(--ink)] text-[10px] font-bold flex items-center justify-center">{maiBadge}</span>}
-                  </button>
-                </div>
+                <RetroTV ch={tvChannel} onChange={setTvChannel} channels={tvChannels} keys={tvKeys} />
 
                 {/* Nhắc quyền đọc thông báo trên Android */}
                 {canListen && !maiAccess && (
-                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 bg-[var(--accent)] flex items-center gap-3 text-[var(--on-accent,#4A2B18)]">
-                    <MaiAvatar size={40} animated />
+                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 bg-[var(--accent)] flex items-center gap-3 text-[var(--on-accent)]">
+                    <MaiAvatar size={42} animated />
                     <div className="flex-1">
-                      <p className="font-bold text-sm">Cho phép đọc thông báo ngân hàng</p>
+                      <p className="font-bold text-[15px]">Cho phép đọc thông báo ngân hàng</p>
                       <p className="text-xs font-semibold mt-0.5">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
                     </div>
                     <Icon name="chevron-right" anim="wiggle" className="w-5 h-5 shrink-0" />
                   </button>
                 )}
 
-                {/* GIAO DỊCH GẦN ĐÂY – nhóm theo ngày */}
-                <section>
-                  <div className="flex justify-between items-end mb-2.5 px-1">
-                    <h3 className="font-display font-bold text-2xl text-theme-textPrimary flex items-center gap-2 leading-none">
-                      <Icon name="list" className="w-5 h-5 text-theme-primary" /> Gần đây
-                    </h3>
-                    <span className="font-pixel text-[10px] text-theme-textSecondary">CHẠM ĐỂ SỬA · {transactions.length} TX</span>
+                {/* NHẬT KÝ GẦN ĐÂY – cửa sổ danh sách, nhóm theo ngày */}
+                <section className="console-bezel">
+                  <div className="console-top-strip px-3.5 py-2 flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led shrink-0" />
+                      <span className="font-pixel text-[11px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
+                    </span>
+                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[10px] text-[#FFE08A] flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3 h-3" /></button>
                   </div>
                   {recentGroups.length === 0 ? (
-                    <div className="text-center p-8 bg-theme-surface border-2 border-dashed border-[var(--ink)]/50 rounded-xl">
-                      <MaiAvatar size={56} animated className="mx-auto mb-3" />
-                      <p className="font-bold text-theme-textPrimary">Sổ còn trống</p>
-                      <p className="text-sm text-theme-textSecondary mt-1">Ghi giao dịch đầu tiên, hoặc để app tự ghi từ thông báo ngân hàng.</p>
+                    <div className="text-center px-6 py-9">
+                      <MaiAvatar size={64} animated className="mx-auto mb-3" />
+                      <p className="font-display text-[28px] leading-none text-theme-textPrimary">Sổ còn trống</p>
+                      <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
                     </div>
                   ) : (
-                    <div className="space-y-3.5">
+                    <div className="p-2.5 space-y-2.5 stagger">
                       {recentGroups.map(g => (
-                        <div key={g.key} className="retro-card bg-theme-surface overflow-hidden">
-                          <div className="flex justify-between items-center px-3.5 py-2 bg-theme-variant border-b-2 border-dashed border-theme-border">
-                            <p className="font-pixel text-[10px] font-bold uppercase tracking-wider text-theme-textSecondary">{g.label}</p>
-                            <p className={`font-display text-lg font-bold tabular ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</p>
+                        <div key={g.key} className="day-card">
+                          <div className="panel-head">
+                            <span className="truncate">{g.label}</span>
+                            <span className={`font-display text-[17px] leading-none normal-case tracking-normal px-1.5 py-0.5 rounded-md bg-theme-surface border-2 border-[var(--ink)]/25 [text-shadow:none] ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</span>
                           </div>
-                          <div className="divide-y-2 divide-dashed divide-theme-border/60">
+                          <div className="divide-y-2 divide-dashed divide-theme-border/50">
                             {g.items.map(tx => {
                               const col = getColorForCategoryName(tx.category);
+                              const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? `${col}40` : "rgb(var(--variant-rgb))";
                               return (
-                                <div key={tx.id} onClick={() => handleStartEditTx(tx)} className="px-3.5 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-theme-background active:bg-theme-variant/70 transition-colors">
-                                  <div className="w-10 h-10 rounded-lg border-2 border-[var(--ink)] bg-theme-background flex items-center justify-center shrink-0">
-                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7" style={{ color: col }} />
+                                <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="tx-row px-3 py-2.5 flex items-center gap-3 cursor-pointer">
+                                  <div className="tx-ico" style={{ background: tint }}>
+                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-bold text-theme-textPrimary text-[15px] truncate flex items-center gap-1.5">
-                                      {tx.category}
-                                      {tx.source === "mai" && <span title="Tự ghi" className="inline-flex"><MaiAvatar size={14} /></span>}
+                                      <span className="truncate">{tx.category}</span>
+                                      {tx.source === "mai" && <span title="Mai tự ghi" className="inline-flex shrink-0"><MaiAvatar size={16} /></span>}
                                     </p>
                                     <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                                   </div>
-                                  <p className={`font-display font-bold text-lg tabular shrink-0 ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>
+                                  <p className={`font-display text-[20px] leading-none tabular shrink-0 ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>
                                     {tx.type==="INCOME" ? '+' : '−'}{formatVND(tx.amount)}
                                   </p>
                                 </div>
@@ -4213,60 +4644,51 @@
             {/* TAB: BÁO CÁO */}
             {activeTab === "report" && (
               <div className="max-w-3xl mx-auto space-y-5 pb-10 tab-enter">
-                <section className="console-bezel overflow-hidden">
-                  <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
+                <section className="console-bezel">
+                  <div className="console-top-strip px-3.5 py-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">BÁO CÁO MÙA VỤ · HP</span>
+                      <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led" />
+                      <span className="font-pixel text-[11px] tracking-wider uppercase">Báo cáo · Thống kê</span>
                     </div>
-                    <span className="font-pixel text-[10px] text-[#FFD875]">{reportPeriod.toUpperCase()}</span>
+                    <span className="font-pixel text-[10px] text-[#FFE08A]">{reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}</span>
                   </div>
-                  <div className="h-1.5 retro-stripes-h" />
-                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
-                        <Icon name="bar-chart-2" anim="pulse" className="w-6 h-6" />
-                      </span>
-                      <div>
-                        <h2 className="font-display text-3xl text-theme-textPrimary leading-none">Báo cáo & Phân tích</h2>
-                        <p className="text-xs text-theme-textSecondary mt-1">
-                          Phân tích thu chi, cơ cấu danh mục và thanh HP ngân sách tháng.
-                        </p>
-                      </div>
+                  <div className="p-3 space-y-3">
+                    {/* Chi tiêu / Thu nhập */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[["Chi tiêu", "arrow-up-right", "var(--expense)", "var(--on-expense)"], ["Thu nhập", "arrow-down-left", "var(--income)", "var(--on-income)"]].map(([t, ic, bg, fg]) => {
+                        const on = reportType === t;
+                        return (
+                          <button key={t} type="button" onClick={() => { buzz(); setReportType(t); setDrillDownParent(null); }}
+                            className={`ekey !min-h-0 !flex-row !gap-2 py-2.5 ${on ? "is-down" : ""}`} style={{ "--c": on ? bg : "rgb(var(--variant-rgb))", "--t": on ? fg : "var(--text-secondary)" }}>
+                            <span className={`led ${on ? "on" : ""}`} />
+                            <Icon name={ic} className="w-4 h-4" />
+                            <span className="font-pixel text-[11px] uppercase tracking-wider">{t}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                     {drillDownParent ? (
                       <button
                         onClick={()=>setDrillDownParent(null)}
-                        className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-2 text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto">
-                        <span className="console-key">◄</span>
-                        <Icon name="arrow-left" className="w-3.5 h-3.5" /> Quay lại Báo cáo
+                        className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent)] w-full px-3 py-2 text-sm font-bold flex items-center justify-center gap-1.5">
+                        <Icon name="arrow-left" className="w-4 h-4" /> Quay lại tổng quan báo cáo
                       </button>
                     ) : (
-                      <div className="flex bg-theme-background border-2 border-[var(--ink)] p-1 rounded-xl shadow-[2px_2px_0_var(--ink)] self-start sm:self-auto gap-1">
-                        <button
-                          onClick={()=>setReportHierarchyView("parent")}
-                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border-2 transition-all ${reportHierarchyView === "parent" ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                          Nhóm Lớn
-                        </button>
-                        <button
-                          onClick={()=>setReportHierarchyView("child")}
-                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border-2 transition-all ${reportHierarchyView === "child" ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                          Mục Nhỏ
-                        </button>
+                      <div className="flex items-center gap-2">
+                        <span className="font-pixel text-[10px] uppercase tracking-wider text-theme-textSecondary shrink-0">Xem theo</span>
+                        <div className="flex-1 grid grid-cols-2 bg-theme-background border-2 border-[var(--ink)] p-1 rounded-xl gap-1">
+                          {[["parent", "Nhóm lớn"], ["child", "Mục nhỏ"]].map(([v, l]) => (
+                            <button key={v} type="button" onClick={()=>setReportHierarchyView(v)}
+                              className={`py-1.5 text-xs font-bold rounded-lg border-2 transition-all duration-300 ${reportHierarchyView === v ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[0_2px_0_var(--ink)]' : 'border-transparent text-theme-textSecondary'}`}>
+                              {l}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Quản lý hạng mục" className="game-btn-sm w-9 h-9 shrink-0 bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center"><Icon name="tags" className="w-5 h-5" /></button>
                       </div>
                     )}
                   </div>
                 </section>
-
-                {/* 1. KHOẢN CHI TIÊU / THU NHẬP Segment */}
-                <div className="flex bg-theme-surface border-2 border-[var(--ink)] p-1 rounded-xl shadow-[3px_3px_0_var(--ink)] gap-1">
-                  <button onClick={()=>{ setReportType("Chi tiêu"); setDrillDownParent(null); }} className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${reportType==="Chi tiêu" ? 'bg-[var(--expense)] text-[var(--on-expense)] border-[var(--ink)] shadow-[2px_2px_0_var(--ink)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                    <span className={`w-2.5 h-2.5 rounded-sm border border-[var(--ink)] ${reportType==="Chi tiêu" ? 'bg-[var(--accent)] px-led' : 'bg-[var(--expense-light)]'}`} /> KHOẢN CHI TIÊU
-                  </button>
-                  <button onClick={()=>{ setReportType("Thu nhập"); setDrillDownParent(null); }} className={`flex-1 py-2.5 text-xs md:text-sm font-bold rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${reportType==="Thu nhập" ? 'bg-[var(--income)] text-[var(--on-income)] border-[var(--ink)] shadow-[2px_2px_0_var(--ink)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                    <span className={`w-2.5 h-2.5 rounded-sm border border-[var(--ink)] ${reportType==="Thu nhập" ? 'bg-[var(--accent)] px-led' : 'bg-[var(--income-light)]'}`} /> KHOẢN THU NHẬP
-                  </button>
-                </div>
 
                 {/* DRILL-DOWN VIEW (When parent category is clicked) */}
                 {drillDownParent && drillDownData && (
@@ -4418,10 +4840,10 @@
                         </div>
                       ) : (
                         <div className="console-lcd bg-theme-background p-3 overflow-x-auto no-scrollbar">
-                          <div className="flex items-end gap-1.5 h-44 pt-2 border-b-2 border-[var(--ink)]" style={{ minWidth: `${Math.max(100, reportBarData.columns.length * 22)}px` }}>
+                          <div className={`flex items-end h-44 pt-2 border-b-[3px] border-[var(--ink)] ${reportBarData.columns.length > 16 ? "gap-[3px]" : "gap-1.5"}`} style={{ minWidth: `${Math.max(100, reportBarData.columns.length * (reportBarData.columns.length > 16 ? 9 : 22))}px` }}>
                             {reportBarData.columns.map((col, i) => (
-                              <div key={i} className="flex-1 min-w-[14px] h-full flex flex-col justify-end" title={`${col.label}: ${formatVND(col.total)}`}>
-                                <div className="w-full flex flex-col-reverse rounded-t-sm overflow-hidden border border-[var(--ink)]/40" style={{ height: `${(col.total / reportBarData.max) * 100}%` }}>
+                              <div key={i} className="flex-1 min-w-0 h-full flex flex-col justify-end" title={`${col.label}: ${formatVND(col.total)}`}>
+                                <div className="rep-bar w-full flex flex-col-reverse rounded-t-[3px] overflow-hidden border-2 border-[var(--ink)]/50" style={{ height: `${(col.total / reportBarData.max) * 100}%`, animationDelay: `${i * 18}ms`, borderBottom: 0 }}>
                                   {col.segments.map(seg => (
                                     <div key={seg.name} title={`${seg.name}: ${formatVND(seg.amount)}`} style={{ height: `${(seg.amount / col.total) * 100}%`, backgroundColor: seg.color }} />
                                   ))}
@@ -4429,9 +4851,9 @@
                               </div>
                             ))}
                           </div>
-                          <div className="flex gap-1.5" style={{ minWidth: `${Math.max(100, reportBarData.columns.length * 22)}px` }}>
+                          <div className={`flex ${reportBarData.columns.length > 16 ? "gap-[3px]" : "gap-1.5"}`} style={{ minWidth: `${Math.max(100, reportBarData.columns.length * (reportBarData.columns.length > 16 ? 9 : 22))}px` }}>
                             {reportBarData.columns.map((col, i) => (
-                              <div key={i} className="flex-1 min-w-[14px] text-center font-pixel text-[9px] text-theme-textSecondary pt-1 truncate" title={col.label}>{col.label}</div>
+                              <div key={i} className="flex-1 min-w-0 text-center font-pixel text-[9px] text-theme-textSecondary pt-1 overflow-visible whitespace-nowrap" title={col.label}>{(reportBarData.columns.length <= 16 || i % 5 === 0 || i === reportBarData.columns.length - 1) ? col.label : ""}</div>
                             ))}
                           </div>
                         </div>
@@ -4681,7 +5103,7 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[var(--accent)] px-led" />
-                      <span className="font-pixel text-[10px] tracking-wider uppercase">KHO HẠNG MỤC · SPROUT</span>
+                      <span className="font-pixel text-[10px] tracking-wider uppercase">KHO HẠNG MỤC</span>
                     </div>
                     <span className="font-pixel text-[10px] text-[#FFD875]">{parentCategories.length} NHÓM · {subCategories.length} CON</span>
                   </div>
@@ -5282,7 +5704,7 @@
                   <div className="space-y-4">
                     <form onSubmit={handleAddDebt} className="console-bezel overflow-hidden">
                       <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
-                        <span className="font-pixel text-[10px] uppercase tracking-wider">SỔ VAY MƯỢN · RPG QUEST</span>
+                        <span className="font-pixel text-[10px] uppercase tracking-wider">SỔ VAY MƯỢN</span>
                         <button type="button" onClick={() => setSubTab("wallet")} className="font-pixel text-[10px] text-[#FFD875] hover:underline">◄ QUAY LẠI VÍ</button>
                       </div>
                       <div className="p-4 space-y-3">
@@ -5408,23 +5830,23 @@
             )}
           </main>
 
-          {/* BOTTOM CONSOLE GAMEPAD NAV (MOBILE) */}
-          <nav className="fixed bottom-0 inset-x-0 md:hidden z-30 bg-theme-surface border-t-[3px] border-[var(--ink)] pb-safe">
-            <div className="flex justify-around items-end px-1 pt-1">
-              {TABS.map(item => item.id === "mai" ? (
-                <button key={item.id} onClick={() => setActiveTab("mai")} aria-label="Tự động" className="relative -mt-6 flex flex-col items-center w-[72px]">
-                  <span className={`w-14 h-14 rounded-xl flex items-center justify-center border-[2.5px] border-[var(--ink)] shadow-[3px_3px_0_var(--ink)] transition-transform active:translate-x-[1px] active:translate-y-[1px] ${activeTab === "mai" ? "bg-theme-primary" : "bg-[var(--accent)]"}`}>
-                    <MaiAvatar size={38} animated={activeTab === "mai" || maiBadge > 0} />
-                  </span>
-                  {maiBadge > 0 && <span className="absolute -top-1 right-1 min-w-[20px] h-5 px-1 rounded bg-[var(--expense)] text-[var(--on-expense)] border-2 border-[var(--ink)] font-pixel text-[10px] flex items-center justify-center">{maiBadge}</span>}
-                  <span className={`text-xs font-bold mt-0.5 ${activeTab === "mai" ? "text-theme-primary" : "text-theme-textSecondary"}`}>Tự động</span>
+          {/* DOCK – hàng phím bấm điện tử (MOBILE) */}
+          <nav className="dock fixed bottom-0 inset-x-0 md:hidden z-30 pb-safe" aria-label="Điều hướng chính">
+            <div className="dock-inner">
+              {DOCK.map(item => item.id === "__add" ? (
+                <button key="add" type="button" className="arcade" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
+                  <span className="arcade-ring"><span className="arcade-dome"><Icon name="plus" className="w-6 h-6" /></span></span>
+                  <span className="dock-label">Ghi</span>
                 </button>
               ) : (
-                <button key={item.id} onClick={() => setActiveTab(item.id)} className={`flex flex-col items-center py-1 w-[66px] transition-all ${activeTab === item.id ? "text-theme-textPrimary" : "text-theme-textSecondary"}`}>
-                  <span className={`w-11 h-8 rounded-lg flex items-center justify-center transition-all border-2 ${activeTab === item.id ? "bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[2px_2px_0_var(--ink)]" : "border-transparent"}`}>
-                    <Icon name={item.icon} anim={activeTab === item.id ? "hop" : ""} className="w-6 h-6" />
+                <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
+                  onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
+                  <span className="dock-face" style={{ "--c": item.c }}>
+                    <span className="dock-ico block" style={{ width: 30, height: 30 }} dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(item.icon) : "" }} />
+                    <span className="dock-led" />
+                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: -9, top: -10 }}>{maiBadge}</span>}
                   </span>
-                  <span className={`text-[11px] font-bold mt-0.5 ${activeTab === item.id ? "text-theme-textPrimary" : "text-theme-textSecondary"}`}>{item.label}</span>
+                  <span className="dock-label">{item.label}</span>
                 </button>
               ))}
             </div>
@@ -5434,7 +5856,7 @@
           {voice.lock && (
             <div className="fixed inset-0 z-[80] bg-theme-background flex flex-col items-center justify-center px-5 text-center overflow-y-auto py-8">
               <div className="console-top-strip fixed top-0 inset-x-0 px-4 py-1.5 flex items-center justify-between pt-safe">
-                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[11px] uppercase">MAI · TRỢ LÝ NÔNG TRẠI</span></div>
+                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[11px] uppercase">MAI · TRỢ LÝ TỰ ĐỘNG</span></div>
                 <button onClick={() => { setAssistInput(""); lockFinish(0); }} className="console-key">ESC</button>
               </div>
               <div className="fixed top-8 inset-x-0 h-1.5 retro-stripes-h" />
@@ -5511,7 +5933,7 @@
           {/* MAI ĐANG NGHE (giọng nói) */}
           {voice.lock ? null : (voice.state !== "idle" && !(voice.state === "listening" && voice.mode === "wake")) || voice.error ? (
             <div className="fixed inset-x-0 bottom-0 z-[60] p-3 pb-6 md:p-6 flex justify-center pointer-events-none">
-              <div className="console-bezel modal-pop pointer-events-auto w-full max-w-md p-4">
+              <div className="console-bezel modal-sheet pointer-events-auto w-full max-w-md p-4">
                 <div className="flex items-center gap-3">
                   <span className={`w-12 h-12 shrink-0 rounded-xl border-2 border-[var(--ink)] shadow-[2px_2px_0_var(--ink)] flex items-center justify-center ${voice.state === "listening" ? "bg-theme-primary text-[var(--on-primary)] mai-pulse" : "bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]"}`}>
                     {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-1"><i /><i /><i /></span> : <MicIcon anim={voice.state === "listening" ? "pulse" : ""} className="w-6 h-6" />}
@@ -5546,8 +5968,8 @@
           ) : null}
 
           {/* MAI – XÁC NHẬN / SỬA TRƯỚC KHI GHI */}
-          {maiDraft && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end md:items-center justify-center p-2 sm:p-4" onClick={() => setMaiDraft(null)}>
+          <Presence show={!!maiDraft}>{maiDraft && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end md:items-center justify-center p-2 sm:p-4" onClick={() => setMaiDraft(null)}>
               <form key={`${maiDraft.inboxId || maiDraft.raw || "draft"}_${maiDraft.bankId || ""}`} onClick={e => e.stopPropagation()} onSubmit={e => {
                   e.preventDefault();
                   const f = e.target;
@@ -5570,7 +5992,7 @@
                   const tx = maiCommit(draft);
                   if (tx) { if (maiDraft.inboxId) setMaiInbox(prev => prev.filter(x => x.inboxId !== maiDraft.inboxId)); setMaiDraft(null); }
                 }}
-                className="console-bezel modal-pop w-full md:max-w-md max-h-[92vh] overflow-hidden flex flex-col">
+                className="console-bezel modal-sheet w-full md:max-w-md max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led shrink-0" />
@@ -5639,12 +6061,12 @@
                 </div>
               </form>
             </div>
-          )}
+          )}</Presence>
 
           {/* ADD TRANSACTION MODAL (Thu gọn vừa 1 màn hình) */}
-          {isAddTxModalOpen && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setIsAddTxModalOpen(false)}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
+          <Presence show={isAddTxModalOpen}>{isAddTxModalOpen && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setIsAddTxModalOpen(false)}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
@@ -5658,11 +6080,11 @@
 
                   <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-center">
                     <label className="cursor-pointer">
-                      <input type="radio" name="type" value="EXPENSE" defaultChecked className="sr-only peer" />
+                      <input type="radio" name="type" value="EXPENSE" defaultChecked={addTxType !== "INCOME"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all whitespace-nowrap"><Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Chi tiền</span>
                     </label>
                     <label className="cursor-pointer">
-                      <input type="radio" name="type" value="INCOME" className="sr-only peer" />
+                      <input type="radio" name="type" value="INCOME" defaultChecked={addTxType === "INCOME"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[2px_2px_0_var(--ink)] transition-all whitespace-nowrap"><Icon name="arrow-down-left" className="w-3.5 h-3.5" /> Thu tiền</span>
                     </label>
                     <input name="date" type="date" defaultValue={todayKey()} className="bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-theme-textPrimary text-xs font-bold w-[124px]" />
@@ -5743,12 +6165,12 @@
                 </form>
               </div>
             </div>
-          )}
+          )}</Presence>
 
           {/* EDIT TRANSACTION MODAL (Thu gọn vừa 1 màn hình) */}
-          {editingTx && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setEditingTx(null)}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
+          <Presence show={!!editingTx}>{editingTx && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setEditingTx(null)}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md max-h-[93vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#FFD875] px-led" />
@@ -5848,10 +6270,10 @@
                 </form>
               </div>
             </div>
-          )}
+          )}</Presence>
 
           {/* ADD / EDIT CATEGORY MODAL */}
-          <CategoryModal
+          <Presence show={isCategoryModalOpen}><CategoryModal
             isOpen={isCategoryModalOpen}
             onClose={() => {
               setIsCategoryModalOpen(false);
@@ -5863,12 +6285,12 @@
             parentCategories={parentCategories}
             categoryParentMap={categoryParentMap}
             onSave={handleAddCategory}
-          />
+          /></Presence>
 
           {/* ADD BANK MODAL */}
-          {isAddBankModalOpen && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsAddBankModalOpen(false); setEditingBank(null); }}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-sm max-h-[92vh] overflow-hidden flex flex-col">
+          <Presence show={isAddBankModalOpen}>{isAddBankModalOpen && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsAddBankModalOpen(false); setEditingBank(null); }}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-sm max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
@@ -5949,12 +6371,12 @@
                 </form>
               </div>
             </div>
-          )}
+          )}</Presence>
 
           {/* CÀI ĐẶT: giao diện · đồng bộ Firebase · sao lưu file */}
-          {showSettingsDialog && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowSettingsDialog(false)}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full md:max-w-lg rounded-b-none md:rounded-[12px] max-h-[92vh] overflow-hidden flex flex-col">
+          <Presence show={showSettingsDialog}>{showSettingsDialog && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={() => setShowSettingsDialog(false)}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full md:max-w-lg rounded-b-none md:rounded-[12px] max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-4 py-2 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" />
@@ -5965,9 +6387,9 @@
                 <div className="h-1.5 retro-stripes-h shrink-0" />
                 <div className="p-4 sm:p-5 pb-8 space-y-5 overflow-y-auto no-scrollbar">
 
-                  {/* Giao diện Retro Pixel Pastel */}
+                  {/* Giao diện TV Pastel */}
                   <section className="space-y-2.5">
-                    <p className="font-pixel text-[11px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" anim="wiggle" className="w-4 h-4" /> Giao diện Retro Pixel Pastel</p>
+                    <p className="font-pixel text-[11px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" anim="wiggle" className="w-4 h-4" /> Giao diện TV Pastel</p>
                     <div className="grid grid-cols-2 gap-2.5">
                       {Object.entries(THEMES).map(([key, t]) => {
                         const active = theme === key;
@@ -6122,12 +6544,12 @@
                 </div>
               </div>
             </div>
-          )}
+          )}</Presence>
 
           {/* MODAL XEM TRƯỚC NHẬP FILE SAO LƯU */}
-          {importPreview && (
-            <div className="fixed inset-0 z-[90] bg-[#24160D]/65 flex items-center justify-center p-4" onClick={() => setImportPreview(null)}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md overflow-hidden">
+          <Presence show={!!importPreview}>{importPreview && (
+            <div className="fixed inset-0 z-[90] modal-backdrop flex items-center justify-center p-4" onClick={() => setImportPreview(null)}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md overflow-hidden">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#FFD875] px-led" />
@@ -6161,12 +6583,12 @@
                 </div>
               </div>
             </div>
-          )}
+          )}</Presence>
 
           {/* BUDGET SETUP MODAL */}
-          {isBudgetModalOpen && (
-            <div className="fixed inset-0 bg-[#24160D]/60 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsBudgetModalOpen(false); setEditingBudgetCat(null); }}>
-              <div onClick={e => e.stopPropagation()} className="console-bezel modal-pop w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col">
+          <Presence show={isBudgetModalOpen}>{isBudgetModalOpen && (
+            <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => { setIsBudgetModalOpen(false); setEditingBudgetCat(null); }}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md max-h-[92vh] overflow-hidden flex flex-col">
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     {editingBudgetCat ? (
@@ -6297,7 +6719,7 @@
                 </div>
               </div>
             </div>
-          )}
+          )}</Presence>
 
         </div>
       );

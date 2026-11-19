@@ -1,3 +1,38 @@
+# VinaSpends – Phân tích UX/UI & các lần thiết kế lại
+
+## 0. Bản 5.0 – "Pastel Dusk Pixel": màn hình chính TV retro + nút bấm điện tử
+
+Lấy cảm hứng từ phong cách đồ hoạ game pixel pastel (trời hồng hoàng hôn, khung cửa sổ viền mận, giấy kem, nút vuông nổi khối), nhưng toàn bộ hình vẽ, icon và bố cục đều là thiết kế riêng của VinaSpends.
+
+### Bố cục mới (mobile)
+
+| Vùng | Trước | Sau |
+|---|---|---|
+| Đầu trang | Logo + ngày + pill đồng bộ + bánh răng | **HUD** kiểu game: ô *tài sản ròng* (số chạy, nút ⊕ ghi nhanh) · ô *Mai chờ duyệt* · ô *LOCAL/CLOUD/LIVE*; hàng dưới là **thanh ngân sách tháng** (bấm để đặt hạn mức); bên phải 2 nút vuông *Cài đặt* và *Hạng mục* |
+| Màn hình chính | Thẻ tài sản + thống kê + danh sách ví + 2 nút | **TV CRT retro**: màn hình 4 kênh (Tài sản · Tháng này + biểu đồ chi từng ngày · Ngân sách · Ví & thẻ), đổi kênh bằng núm xoay / CH▲▼ / vuốt ngang / chấm kênh; **hàng phím bấm điện tử có đèn LED**: CHI · THU · NÓI (nếu có giọng nói) · QUÉT hoá đơn · HẠN MỨC. Bên dưới là cửa sổ **Nhật ký gần đây** nhóm theo ngày |
+| Thanh điều hướng | 5 tab chữ + icon, "Tự động" ở giữa | **Dock 4 phím vuông màu** (Nhà · Báo cáo · Tự động · Ví & Nợ) + **nút arcade tròn "GHI"** ở giữa – hành động dùng nhiều nhất luôn trong tầm ngón cái |
+| Hạng mục | Một tab chính | Chuyển lên nút HUD + nút trong màn Báo cáo (ít dùng hằng ngày) |
+| Báo cáo | Khối tiêu đề lớn + thanh Chi/Thu tách rời; biểu đồ 30 ngày phải cuộn ngang | Một cửa sổ gọn: phím Chi tiêu/Thu nhập + "Xem theo nhóm lớn/mục nhỏ"; biểu đồ tháng vừa khung, nhãn ngày thưa |
+| Thẻ ví | Màu đậm theo thương hiệu ngân hàng | Bản pastel của màu thương hiệu (trộn kem sữa), viền mực, chấm bi pixel |
+
+### Hệ thiết kế
+
+- **6 bảng màu**: Hoàng Hôn Hồng (mặc định), Soda Bạc Hà, Mộng Oải Hương, Kẹo Bầu Trời, Đào Bơ Sữa, Đêm Mận (tối). Theme cũ tự chuyển sang theme mới tương ứng.
+- **Khung cửa sổ**: viền mực + vành hồng mận + viền mực (đổ bóng khối), thanh tiêu đề màu mận, nút ✕ đỏ.
+- **Nút bấm điện tử** (`.ekey`, `.dock-face`, `.arcade`): mặt phím sáng, cạnh dưới tối, lún xuống khi bấm rồi bật lại kiểu lò xo; đèn LED báo trạng thái; rung nhẹ 8–14ms trên Android.
+- **TV CRT** (`RetroTV`): ăng-ten pixel lắc nhẹ, kính cong + vệt phản sáng, scanline, dải quét chạy dọc, nhấp nháy rất nhẹ, hiệu ứng *bật nguồn* (vạch sáng nở ra), *đổi kênh* (nhiễu sóng + lệch hình), chữ phát sáng kiểu phosphor, OSD "CH01 · giờ".
+- **Bộ icon mới hoàn toàn** (`web/icons.js`): 203 icon pixel 16×16 vẽ tay dạng lưới ký tự, tông pastel + viền mận đổi theo theme (`--icon-ink`); icon nét đơn (mũi tên, dấu +, ✕…) dùng `currentColor`. Linh vật **Mai** giờ là chiếc TV nhỏ mặt cười. Icon ứng dụng mới sinh bằng `tools/gen-app-icon.py`.
+
+### Chuyển động
+
+- Chuyển màn trượt theo hướng tab + các khối con nổi lên lần lượt (stagger).
+- Hộp thoại: nền mờ dần + blur, sheet trượt lên kiểu lò xo; **đóng cũng có hiệu ứng** (component `Presence` giữ lại 260ms).
+- Số tiền chạy (`CountUp`), cột biểu đồ mọc lên, ô ngân sách lần lượt sáng, toast nảy xuống kèm vạch đếm ngược.
+- Mây pixel trôi chậm trên nền trời, sao lấp lánh ở theme tối.
+- Tôn trọng `prefers-reduced-motion`: tắt mọi chuyển động trang trí.
+
+---
+
 # VinaSpends 2.0 – Phân tích UX/UI & thiết kế lại "Vintage 70s" cùng Mai
 
 ## 1. Vấn đề của bản cũ
