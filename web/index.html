@@ -1760,6 +1760,12 @@
       });
       return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" preserveAspectRatio="none">${out}</svg>`;
     };
+    // Cho phép thay thế mọi UI Element (nút 2.5D, nút + Ghi, mây...) bằng ảnh vẽ tay từ Procreate / Studio
+    const uiArt = (key, fallbackHtml, cls = "") => {
+      const V = window.VinaIcons;
+      const p = V && V.png32 ? V.png32(key) : null;
+      return p ? `<img class="w-full h-full object-contain ${cls}" src="data:image/png;base64,${p}" alt="" draggable="false">` : fallbackHtml;
+    };
     const CLOUD_SVG = pixelSvg([
       "..........wwwwww............",
       "........wwhhhhhhww..........",
@@ -1787,7 +1793,7 @@
         <div className="sky" aria-hidden="true" style={{ zIndex: -1 }}>
           {clouds.map((c, i) => (
             <div key={i} className="sky-cloud" style={{ top: c.top, left: 0, width: c.w, height: c.w * 10 / 28, animationDuration: `${c.d}s`, animationDelay: `${c.delay}s` }}
-              dangerouslySetInnerHTML={{ __html: CLOUD_SVG }} />
+              dangerouslySetInnerHTML={{ __html: uiArt("ui-sky-cloud", CLOUD_SVG) }} />
           ))}
           {stars.map((s, i) => <span key={i} className="sky-star" style={{ left: s.left, top: s.top, animationDelay: s.delay }} />)}
           <div className="sky-hill" />
@@ -2061,6 +2067,10 @@
     };
     const renderDockMonoIcon = (name) => {
       const V = window.VinaIcons;
+      const uiPng = V && V.png32 ? V.png32(`ui-dock-ico-${name}`) : null;
+      if (uiPng) {
+        return `<img class="vi vi32 dock-custom-mono" src="data:image/png;base64,${uiPng}" alt="" draggable="false">`;
+      }
       if (V && V.CUSTOM32) {
         const key = V.resolve ? V.resolve(name) : name;
         if (V.CUSTOM32[key]) {
@@ -6439,7 +6449,7 @@
             <div className="dock-inner">
               {DOCK.map(item => item.id === "__add" ? (
                 <button key="add" type="button" className="arcade" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
-                  <span className="arcade-ring"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: ARCADE_RING_SVG }} /><span className="arcade-dome"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: ARCADE_DOME_SVG }} /><Icon name="plus" className="w-6 h-6" /></span></span>
+                  <span className="arcade-ring"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-ring", ARCADE_RING_SVG) }} /><span className="arcade-dome"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-dome", ARCADE_DOME_SVG) }} /><Icon name="plus" className="w-6 h-6" /></span></span>
                   <span className="dock-label">Ghi</span>
                 </button>
               ) : (
@@ -6447,9 +6457,9 @@
                   onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
                   <span className="dock-face">
                     <span className="dock-shape">
-                      <span className="dock-well" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "" }} />
+                      <span className="dock-well" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-well`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "") }} />
                       <span className={`dock-cap shape-${item.shape}`}>
-                        <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "" }} />
+                        <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-cap`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "") }} />
                         <span className="dock-ico" dangerouslySetInnerHTML={{ __html: renderDockMonoIcon(item.icon) }} />
                       </span>
                     </span>
