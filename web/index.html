@@ -426,34 +426,47 @@
     }
     .dock-shape {
       position: relative;
-      width: 48px; height: 50px;
+      width: 52px; height: 52px;
       display: block;
       image-rendering: pixelated;
+    }
+    .dock-well, .dock-cap, .dock-cap-art {
+      position: absolute; inset: 0;
+      display: block; pointer-events: none;
     }
     .dock-shape svg {
       width: 100%; height: 100%;
       display: block; overflow: visible;
       shape-rendering: crispEdges;
     }
-    .dock-shape .pbtn-cap {
+    .dock-cap {
       transform: translateY(0px);
       transition: transform .14s var(--ease-spring), filter .14s var(--ease-soft);
     }
-    .dock-shape .pbtn-shadow {
-      transition: opacity .14s var(--ease-soft);
+    .dock-ico {
+      position: absolute;
+      left: 50%; top: 43%;
+      width: 21px; height: 21px;
+      transform: translate(-50%, -50%);
+      display: block;
+      pointer-events: none;
     }
-    .dock-key.on .dock-shape .pbtn-cap {
-      transform: translateY(3.2px);
-      filter: brightness(.98) saturate(1.06);
+    .dock-cap.shape-triangle .dock-ico {
+      top: 50%;
+      width: 19px; height: 19px;
     }
-    .dock-key:active .dock-shape .pbtn-cap {
-      transform: translateY(4px) !important;
-      filter: brightness(.95);
+    .dock-cap.shape-star .dock-ico {
+      top: 45%;
+      width: 19px; height: 19px;
+    }
+    .dock-key.on .dock-cap {
+      transform: translateY(5.5px);
+      filter: brightness(1.03) saturate(1.06);
+    }
+    .dock-key:active .dock-cap {
+      transform: translateY(7.2px) !important;
+      filter: brightness(.96);
       transition-duration: .04s;
-    }
-    .dock-key:active .dock-shape .pbtn-shadow,
-    .dock-key.on .dock-shape .pbtn-shadow {
-      opacity: .25;
     }
     .dock-label {
       width: 100%;
@@ -631,7 +644,7 @@
     :where(html[data-retro="1"]) :where(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) { clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
     :where(html[data-retro="1"]) :where(input, select, textarea) { border-radius: 0 !important; clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
 
-    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
+    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .console-bezel {
       --pc: var(--ink);
       position: relative;
       border-style: solid !important; border-color: var(--pc) !important;
@@ -639,9 +652,17 @@
       border-radius: 0 !important;
       clip-path: polygon(calc(2 * var(--u)) 0, calc(100% - calc(2 * var(--u))) 0, calc(100% - calc(2 * var(--u))) var(--u), calc(100% - var(--u)) var(--u), calc(100% - var(--u)) calc(2 * var(--u)), 100% calc(2 * var(--u)), 100% calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) 100%, calc(2 * var(--u)) 100%, calc(2 * var(--u)) calc(100% - var(--u)), var(--u) calc(100% - var(--u)), var(--u) calc(100% - calc(2 * var(--u))), 0 calc(100% - calc(2 * var(--u))), 0 calc(2 * var(--u)), var(--u) calc(2 * var(--u)), var(--u) var(--u), calc(2 * var(--u)) var(--u));
     }
-    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
+    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .console-bezel::after {
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
       background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat;
+    }
+    .tx-ico {
+      position: relative;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: #382A54;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.16), inset 0 -4px 0 rgba(16,9,28,.55) !important;
+      clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 2px 4px, 2px 2px, 4px 2px);
     }
     .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
       transform: translateY(var(--u)) !important;
@@ -664,7 +685,7 @@
     /* kích thước điểm ảnh từng loại */
     .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
     .game-btn, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
-    html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
+    html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
     .day-card { --pc: rgb(var(--border-rgb)); }
     .lvl-tag { --pc: #D79A3C; }
     .ekey .ekey-badge { top: 3px; left: 3px; }
@@ -714,7 +735,7 @@
     html.dark .hp-seg, html.dark .border-retro-ink { border-color: #0E0914 !important; }
     html.dark .retro-card, html.dark .bg-theme-surface.border.rounded-2xl, html.dark .bg-theme-surface.border.rounded-3xl { box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 4px 0 #0E0914, 0 8px 0 rgba(0,0,0,.25); }
     html.dark .console-bezel { box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px #0E0914, 0 10px 0 4px rgba(0,0,0,.35); }
-    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
+    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini { border-color: #0E0914 !important; }
     html.dark .game-btn-neutral { border-color: rgb(var(--border-rgb)) !important; }
     html.dark .dock-label { color: var(--text-secondary); }
     html.dark .hud-cell-light { background: var(--variant); color: var(--text-primary); }
@@ -806,9 +827,10 @@
     .tv-screen-full .retro-stripes-h { opacity: .45; }
     .tv-screen-full .font-display { text-shadow: 0 0 8px currentColor; }
     .tv-screen-full .tx-ico {
-      --pc: #6A5594 !important;
-      background: rgba(255, 242, 226, 0.09) !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.15) !important;
+      border: 0 !important;
+      background: #3B2D5C !important;
+      padding-bottom: 3px;
+      box-shadow: inset 0 1.5px 0 rgba(255,255,255,.16), inset 0 -4px 0 #1C1330 !important;
     }
     .tv-screen-full .tv-keys { margin-top: 2px; }
     .tv-screen-full .tv-keys .ekey {
@@ -1771,8 +1793,8 @@
     const ARCADE_DOME_SVG = pixelDisc(13, { body: "var(--key-add)", hl: "#FFF6D8", sh: "rgba(190,110,30,.45)", ink: "var(--ink)" }, `<rect x="3" y="3" width="2" height="1" fill="#FFFFFF"/><rect x="3" y="4" width="1" height="1" fill="#FFFFFF"/>`);
     const TV_KNOB_SVG = pixelDisc(12, { body: "var(--tv-trim)", hl: "#FFFFFF", sh: "rgba(74,51,80,.22)", ink: "var(--ink)" }, `<rect x="5" y="2" width="2" height="4" fill="var(--ink)"/>`);
 
-    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng pixel shade 2D giả 3D không viền đen
-    const pixel3dBtnSvg = (rows, pal) => {
+    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản không viền đen, có icon bên trong
+    const pixel25dBtnSvg = (rows, pal) => {
       const H = rows.length, W = rows[0].length, DEPTH = 4;
       const at = (x, y) => x >= 0 && x < W && y >= 0 && y < H && rows[y][x] === "#";
       const runs = (grid, h) => {
@@ -1789,151 +1811,126 @@
         }
         return out;
       };
-      const VH = H + DEPTH + 2;
-      const shGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const VH = H + DEPTH + 1;
       const baseGrid = Array.from({ length: VH }, () => Array(W).fill(null));
       const capGrid = Array.from({ length: VH }, () => Array(W).fill(null));
 
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        if (at(x, y) && (!at(x, y + 1) || !at(x + 1, y) || !at(x - 1, y))) {
-          if (y + DEPTH + 1 < VH) shGrid[y + DEPTH + 1][x] = "rgba(46,24,56,0.24)";
-        }
-      }
-
+      // Đế 2.5D đơn giản: đùn thẳng xuống dưới DEPTH điểm ảnh bằng 1 tông đậm đồng nhất
       for (let d = DEPTH; d >= 1; d--) {
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
           if (!at(x, y)) continue;
-          const yy = y + d;
-          if (yy >= VH) continue;
-          const isBotEdge = !at(x, y + 1);
-          const isLeftEdge = !at(x - 1, y);
-          const isRightEdge = !at(x + 1, y);
-          let c = pal.side;
-          if (d === DEPTH && isBotEdge) c = pal.deep;
-          else if (isLeftEdge || (x < W * 0.42 && !isRightEdge)) c = pal.sideL;
-          else if (isRightEdge || x > W * 0.62) c = pal.deep;
-          baseGrid[yy][x] = c;
+          baseGrid[y + d][x] = pal.side;
         }
       }
 
+      // Mặt trên 2.5D phẳng đơn giản: 1 màu nền phẳng + 1px viền sáng nhẹ ở đỉnh
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (!at(x, y)) continue;
-        const up = at(x, y - 1), dn = at(x, y + 1), lf = at(x - 1, y), rt = at(x + 1, y);
-        const up2 = at(x, y - 2), dn2 = at(x, y + 2), lf2 = at(x - 2, y), rt2 = at(x + 2, y);
-        const up3 = at(x, y - 3), dn3 = at(x, y + 3), lf3 = at(x - 3, y), rt3 = at(x + 3, y);
-        const up4 = at(x, y - 4), dn4 = at(x, y + 4), lf4 = at(x - 4, y), rt4 = at(x + 4, y);
-        let c = pal.base;
-        if (!up || !lf || !dn || !rt) {
-          if (!up && !lf && dn && rt) c = pal.spec;
-          else if ((!up && dn && rt) || (!lf && dn && rt && y < H * 0.72)) c = pal.hi;
-          else if (!dn || !rt) c = pal.rim;
-          else c = pal.light;
-        } else if (!up2 || !lf2 || !dn2 || !rt2) {
-          if ((!up2 || !lf2) && dn2 && rt2) c = pal.light;
-          else if (!dn2 || !rt2) c = pal.mid;
-          else c = pal.base;
-        } else if (up3 && dn3 && lf3 && rt3 && (!up4 || !dn4 || !lf4 || !rt4)) {
-          if (!up4 || !lf4) c = pal.mid;
-          else if (!dn4 || !rt4) c = pal.light;
-        }
-        capGrid[y][x] = c;
+        capGrid[y][x] = !at(x, y - 1) ? pal.hi : pal.base;
       }
 
-      return `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true"><g class="pbtn-shadow">${runs(shGrid, VH)}</g><g class="pbtn-well">${runs(baseGrid, VH)}</g><g class="pbtn-cap">${runs(capGrid, VH)}</g></svg>`;
+      return {
+        well: `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true">${runs(baseGrid, VH)}</svg>`,
+        cap: `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true">${runs(capGrid, VH)}</svg>`
+      };
     };
 
     const DOCK_SHAPE_SVGS = {
-      triangle: pixel3dBtnSvg([
-        ".........................",
-        "...........###...........",
-        "..........#####..........",
-        "..........#####..........",
-        ".........#######.........",
-        "........#########........",
-        "........#########........",
-        ".......###########.......",
-        "......#############......",
-        "......#############......",
-        ".....###############.....",
-        "....#################....",
-        "....#################....",
-        "...###################...",
-        "..#####################..",
-        "..#####################..",
-        ".#######################.",
-        ".#######################.",
-        "..#####################..",
-        "........................."
-      ], { spec: "#FFF7F8", hi: "#FFD2D9", light: "#FCAEB9", base: "#F48899", mid: "#E26F83", rim: "#CE576D", sideL: "#B23F56", side: "#972E45", deep: "#761D32" }),
+      triangle: pixel25dBtnSvg([
+        "...........#####...........",
+        "..........#######..........",
+        ".........#########.........",
+        ".........#########.........",
+        "........###########........",
+        ".......#############.......",
+        ".......#############.......",
+        "......###############......",
+        ".....#################.....",
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "..#######################..",
+        "..#######################..",
+        ".#########################.",
+        ".#########################.",
+        ".#########################.",
+        ".#########################.",
+        "..#######################..",
+        "...#####################..."
+      ], { hi: "#FFC8D0", base: "#F48E9E", side: "#A83A52" }),
 
-      circle: pixel3dBtnSvg([
-        ".........#######.........",
-        ".......###########.......",
-        ".....###############.....",
-        "....#################....",
-        "...###################...",
-        "...###################...",
-        "..#####################..",
-        "..#####################..",
-        "..#####################..",
-        "..#####################..",
-        "..#####################..",
-        "..#####################..",
-        "..#####################..",
-        "...###################...",
-        "...###################...",
-        "....#################....",
-        ".....###############.....",
-        ".......###########.......",
-        ".........#######.........",
-        "........................."
-      ], { spec: "#F8FFF2", hi: "#E3F2C4", light: "#C9E29E", base: "#A9CE74", mid: "#93BA5E", rim: "#7CA349", sideL: "#628634", side: "#4E6F24", deep: "#395417" }),
+      circle: pixel25dBtnSvg([
+        ".........#########.........",
+        ".......#############.......",
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "...#####################...",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        ".......#############.......",
+        ".........#########.........",
+        "..........................."
+      ], { hi: "#E2F2C2", base: "#ACD078", side: "#5B802B" }),
 
-      square: pixel3dBtnSvg([
-        ".........................",
-        ".....###############.....",
-        "....#################....",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "...###################...",
-        "....#################....",
-        ".....###############.....",
-        "........................."
-      ], { spec: "#FCF7FF", hi: "#E8D7FC", light: "#D3BBF3", base: "#BA98E6", mid: "#A480D4", rim: "#8D68BF", sideL: "#714DA1", side: "#5B3A88", deep: "#43266C" }),
+      square: pixel25dBtnSvg([
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        "..........................."
+      ], { hi: "#E7D5FC", base: "#BE9CE8", side: "#684498" }),
 
-      star: pixel3dBtnSvg([
-        "............#............",
-        "...........###...........",
-        "...........###...........",
-        "..........#####..........",
-        "..........#####..........",
-        ".........#######.........",
-        "..#####################..",
-        ".#######################.",
-        "..#####################..",
-        "...###################...",
-        "....#################....",
-        ".....###############.....",
-        "......#############......",
-        ".....###############.....",
-        ".....###############.....",
-        "....#######...#######....",
-        "....######.....######....",
-        "...######.......######...",
-        "...#####.........#####...",
-        "....###...........###...."
-      ], { spec: "#F5FBFF", hi: "#CCE6FF", light: "#AAD2F8", base: "#82B6EA", mid: "#6AA0D9", rim: "#548AC3", sideL: "#3D6EA4", side: "#2C588A", deep: "#1D416C" })
+      star: pixel25dBtnSvg([
+        "............###............",
+        "...........#####...........",
+        "..........#######..........",
+        "..........#######..........",
+        ".........#########.........",
+        "..#######################..",
+        ".#########################.",
+        ".#########################.",
+        "..#######################..",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        ".....#################.....",
+        "....###################....",
+        "....###################....",
+        "...#####################...",
+        "...#########...#########...",
+        "..#########.....#########..",
+        "..########.......########..",
+        "...######.........######...",
+        "....####...........####...."
+      ], { hi: "#CAE5FF", base: "#86B9EC", side: "#346296" })
     };
 
     const TV_ANTENNA_SVG = pixelSvg([
@@ -6299,7 +6296,7 @@
             )}
           </main>
 
-          {/* DOCK – 4 nút hình học (Tam giác · Tròn · Vuông · Ngôi sao) pixel shade 2D giả 3D + nút GHI ở giữa (MOBILE) */}
+          {/* DOCK – 4 nút hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản có icon bên trong + nút GHI ở giữa (MOBILE) */}
           <nav className="dock fixed bottom-0 inset-x-0 md:hidden z-30 pb-safe" aria-label="Điều hướng chính">
             <div className="dock-inner">
               {DOCK.map(item => item.id === "__add" ? (
@@ -6311,7 +6308,13 @@
                 <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
                   onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
                   <span className="dock-face">
-                    <span className="dock-shape" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] || "" }} />
+                    <span className="dock-shape">
+                      <span className="dock-well" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "" }} />
+                      <span className={`dock-cap shape-${item.shape}`}>
+                        <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "" }} />
+                        <span className="dock-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(item.icon) : "" }} />
+                      </span>
+                    </span>
                     <span className="dock-label">{item.label}</span>
                     {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
                   </span>
