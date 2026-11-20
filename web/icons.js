@@ -3756,10 +3756,40 @@ o.oooooooooooo.o
     return "tag";
   }
 
+  var CUSTOM_STORE_KEY = "vina_custom_elements_v1";
+  var CUSTOM32 = {};
+  try {
+    if (typeof localStorage !== "undefined") {
+      var rawCustom = localStorage.getItem(CUSTOM_STORE_KEY);
+      if (rawCustom) CUSTOM32 = JSON.parse(rawCustom) || {};
+    }
+  } catch (e) {}
+
+  function saveCustomStore() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(CUSTOM_STORE_KEY, JSON.stringify(CUSTOM32));
+      }
+    } catch (e) {}
+  }
+
+  function setCustom(key, b64) {
+    var k = resolve(key);
+    if (b64) CUSTOM32[k] = b64.replace(/^data:image\/png;base64,/, "");
+    else delete CUSTOM32[k];
+    saveCustomStore();
+    return k;
+  }
+
   function png32(key) {
+    if (CUSTOM32[key]) return CUSTOM32[key];
     if (IMG32[key]) return IMG32[key];
     var t = T[key];
-    return t && !t[1] && IMG32[t[0]] ? IMG32[t[0]] : null;
+    if (t && !t[1]) {
+      if (CUSTOM32[t[0]]) return CUSTOM32[t[0]];
+      if (IMG32[t[0]]) return IMG32[t[0]];
+    }
+    return null;
   }
 
   function svg(name, cls) {
@@ -3786,5 +3816,5 @@ o.oooooooooooo.o
   GROUPS.unshift({ name: "Tất cả", icon: "grid", icons: all });
 
   var names = Object.keys(I).filter(function (n) { return I[n]; }).concat(Object.keys(T));
-  root.VinaIcons = { svg: svg, resolve: resolve, png32: png32, has: function (n) { return !!rows(n) || !!IMG32[n]; }, names: names, GROUPS: GROUPS, ALIASES: A, grid: rows, PAL: PAL };
+  root.VinaIcons = { svg: svg, resolve: resolve, png32: png32, IMG32: IMG32, CUSTOM32: CUSTOM32, setCustom: setCustom, has: function (n) { return !!rows(n) || !!IMG32[n]; }, names: names, GROUPS: GROUPS, ALIASES: A, grid: rows, PAL: PAL };
 })(typeof window !== "undefined" ? window : globalThis);

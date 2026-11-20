@@ -460,11 +460,11 @@
       width: 19px; height: 19px;
     }
     .dock-key.on .dock-cap {
-      transform: translateY(5.5px);
+      transform: translateY(4.2px);
       filter: brightness(1.03) saturate(1.06);
     }
     .dock-key:active .dock-cap {
-      transform: translateY(7.2px) !important;
+      transform: translateY(5.6px) !important;
       filter: brightness(.96);
       transition-duration: .04s;
     }
@@ -644,7 +644,7 @@
     :where(html[data-retro="1"]) :where(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) { clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
     :where(html[data-retro="1"]) :where(input, select, textarea) { border-radius: 0 !important; clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
 
-    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .console-bezel {
+    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
       --pc: var(--ink);
       position: relative;
       border-style: solid !important; border-color: var(--pc) !important;
@@ -652,17 +652,9 @@
       border-radius: 0 !important;
       clip-path: polygon(calc(2 * var(--u)) 0, calc(100% - calc(2 * var(--u))) 0, calc(100% - calc(2 * var(--u))) var(--u), calc(100% - var(--u)) var(--u), calc(100% - var(--u)) calc(2 * var(--u)), 100% calc(2 * var(--u)), 100% calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) 100%, calc(2 * var(--u)) 100%, calc(2 * var(--u)) calc(100% - var(--u)), var(--u) calc(100% - var(--u)), var(--u) calc(100% - calc(2 * var(--u))), 0 calc(100% - calc(2 * var(--u))), 0 calc(2 * var(--u)), var(--u) calc(2 * var(--u)), var(--u) var(--u), calc(2 * var(--u)) var(--u));
     }
-    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .console-bezel::after {
+    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
       background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat;
-    }
-    .tx-ico {
-      position: relative;
-      border: 0 !important;
-      border-radius: 0 !important;
-      background: #382A54;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.16), inset 0 -4px 0 rgba(16,9,28,.55) !important;
-      clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 2px 4px, 2px 2px, 4px 2px);
     }
     .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
       transform: translateY(var(--u)) !important;
@@ -685,7 +677,7 @@
     /* kích thước điểm ảnh từng loại */
     .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
     .game-btn, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
-    html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
+    html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
     .day-card { --pc: rgb(var(--border-rgb)); }
     .lvl-tag { --pc: #D79A3C; }
     .ekey .ekey-badge { top: 3px; left: 3px; }
@@ -735,7 +727,7 @@
     html.dark .hp-seg, html.dark .border-retro-ink { border-color: #0E0914 !important; }
     html.dark .retro-card, html.dark .bg-theme-surface.border.rounded-2xl, html.dark .bg-theme-surface.border.rounded-3xl { box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 4px 0 #0E0914, 0 8px 0 rgba(0,0,0,.25); }
     html.dark .console-bezel { box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px #0E0914, 0 10px 0 4px rgba(0,0,0,.35); }
-    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini { border-color: #0E0914 !important; }
+    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
     html.dark .game-btn-neutral { border-color: rgb(var(--border-rgb)) !important; }
     html.dark .dock-label { color: var(--text-secondary); }
     html.dark .hud-cell-light { background: var(--variant); color: var(--text-primary); }
@@ -827,10 +819,9 @@
     .tv-screen-full .retro-stripes-h { opacity: .45; }
     .tv-screen-full .font-display { text-shadow: 0 0 8px currentColor; }
     .tv-screen-full .tx-ico {
-      border: 0 !important;
+      --pc: #140D20 !important;
       background: #3B2D5C !important;
-      padding-bottom: 3px;
-      box-shadow: inset 0 1.5px 0 rgba(255,255,255,.16), inset 0 -4px 0 #1C1330 !important;
+      box-shadow: inset 0 1.5px 0 rgba(255,255,255,.18), inset 0 -3px 0 #24193C !important;
     }
     .tv-screen-full .tv-keys { margin-top: 2px; }
     .tv-screen-full .tv-keys .ekey {
@@ -1793,10 +1784,14 @@
     const ARCADE_DOME_SVG = pixelDisc(13, { body: "var(--key-add)", hl: "#FFF6D8", sh: "rgba(190,110,30,.45)", ink: "var(--ink)" }, `<rect x="3" y="3" width="2" height="1" fill="#FFFFFF"/><rect x="3" y="4" width="1" height="1" fill="#FFFFFF"/>`);
     const TV_KNOB_SVG = pixelDisc(12, { body: "var(--tv-trim)", hl: "#FFFFFF", sh: "rgba(74,51,80,.22)", ink: "var(--ink)" }, `<rect x="5" y="2" width="2" height="4" fill="var(--ink)"/>`);
 
-    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản không viền đen, có icon bên trong
+    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản có border line màu đen ôm theo khối + icon bên trong
     const pixel25dBtnSvg = (rows, pal) => {
-      const H = rows.length, W = rows[0].length, DEPTH = 4;
-      const at = (x, y) => x >= 0 && x < W && y >= 0 && y < H && rows[y][x] === "#";
+      const H0 = rows.length, W0 = rows[0].length, DEPTH = 3;
+      const INK = pal.ink || "#22172B";
+      // Pad 1px trống quanh lưới để viền 1px pixel-perfect không bao giờ bị cắt ở mép
+      const P = [".".repeat(W0 + 2), ...rows.map(r => "." + r + "."), ".".repeat(W0 + 2)];
+      const H = P.length, W = W0 + 2;
+      const at = (x, y) => x >= 0 && x < W && y >= 0 && y < H && P[y][x] === "#";
       const runs = (grid, h) => {
         let out = "";
         for (let y = 0; y < h; y++) {
@@ -1811,23 +1806,54 @@
         }
         return out;
       };
+      const addAsepriteOutline = (grid, vh, fillMask, defaultFill) => {
+        const isOut = Array.from({ length: vh }, () => Array(W).fill(false));
+        const hasF = (x, y) => x >= 0 && x < W && y >= 0 && y < vh && fillMask[y][x];
+        for (let y = 0; y < vh; y++) for (let x = 0; x < W; x++) {
+          if (hasF(x, y)) continue;
+          if (hasF(x + 1, y) || hasF(x - 1, y) || hasF(x, y + 1) || hasF(x, y - 1)) {
+            grid[y][x] = INK;
+            isOut[y][x] = true;
+          }
+        }
+        // Khử góc chữ L bậc thang ở mặt trong của viền (Aseprite IntertwineAsPixelPerfect)
+        const hasO = (x, y) => x >= 0 && x < W && y >= 0 && y < vh && isOut[y][x];
+        for (let y = 1; y < vh - 1; y++) for (let x = 1; x < W - 1; x++) {
+          if (!isOut[y][x]) continue;
+          for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            if (hasO(x - dx, y) && hasO(x, y - dy) && hasF(x + dx, y) && hasF(x, y + dy) && !hasF(x - dx, y - dy)) {
+              grid[y][x] = grid[y][x + dx] || defaultFill;
+              isOut[y][x] = false;
+              fillMask[y][x] = true;
+              break;
+            }
+          }
+        }
+      };
+
       const VH = H + DEPTH + 1;
       const baseGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const baseMask = Array.from({ length: VH }, () => Array(W).fill(false));
       const capGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const capMask = Array.from({ length: VH }, () => Array(W).fill(false));
 
-      // Đế 2.5D đơn giản: đùn thẳng xuống dưới DEPTH điểm ảnh bằng 1 tông đậm đồng nhất
+      // 1) Đế 2.5D đơn giản + viền đen 1px pixel-perfect ôm quanh chân đế
       for (let d = DEPTH; d >= 1; d--) {
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
           if (!at(x, y)) continue;
           baseGrid[y + d][x] = pal.side;
+          baseMask[y + d][x] = true;
         }
       }
+      addAsepriteOutline(baseGrid, VH, baseMask, pal.side);
 
-      // Mặt trên 2.5D phẳng đơn giản: 1 màu nền phẳng + 1px viền sáng nhẹ ở đỉnh
+      // 2) Mặt trên 2.5D phẳng đơn giản + viền đen 1px pixel-perfect ôm quanh mặt nút
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (!at(x, y)) continue;
         capGrid[y][x] = !at(x, y - 1) ? pal.hi : pal.base;
+        capMask[y][x] = true;
       }
+      addAsepriteOutline(capGrid, VH, capMask, pal.base);
 
       return {
         well: `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true">${runs(baseGrid, VH)}</svg>`,
@@ -6882,6 +6908,10 @@
                         );
                       })}
                     </div>
+                    <a href="studio.html" className="game-btn-sm w-full py-2.5 px-3 bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs flex items-center justify-center gap-2 mt-2">
+                      <Icon name="palette" className="w-4 h-4" />
+                      <span>Mở Xưởng Vẽ & Kéo Thả Icon / Element 32×32</span>
+                    </a>
                   </section>
 
                   <div className="retro-dash" />
