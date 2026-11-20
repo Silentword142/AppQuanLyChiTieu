@@ -24,7 +24,7 @@ else
   SDK_JAR="$ANDROID_JAR"
 fi
 OUT=build
-APK_NAME="${APK_NAME:-VinaSpends-Mai.apk}"
+APK_NAME="${APK_NAME:-Spendy.apk}"
 KEYSTORE="${KEYSTORE:-vinaspends.keystore}"
 KS_PASS="${KS_PASS:-vinaspends}"
 
@@ -76,7 +76,7 @@ zipalign -f -p 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
 if [ ! -f "$KEYSTORE" ]; then
   echo "→ tạo khoá ký mới ($KEYSTORE) – hãy giữ file này để các bản sau cài đè được"
   keytool -genkeypair -keystore "$KEYSTORE" -storepass "$KS_PASS" -keypass "$KS_PASS" -alias vinaspends \
-    -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=VinaSpends, O=VinaSpends, C=VN" >/dev/null 2>&1
+    -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Spendy, O=Spendy, C=VN" >/dev/null 2>&1
 fi
 echo "→ ký APK"
 apksigner sign --ks "$KEYSTORE" --ks-pass "pass:$KS_PASS" --ks-key-alias vinaspends \
