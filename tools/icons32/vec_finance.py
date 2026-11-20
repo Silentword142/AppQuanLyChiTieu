@@ -3,11 +3,11 @@
 DONG = '<path d="M14.5 12.5h4M16.8 11v7.5M18.5 15.5a2.3 2.3 0 10-.01 0M13.5 20.5h5.5" stroke="{c}" stroke-width="1.3" fill="none"/>'
 
 icon("coins", """
-<ellipse cx="11" cy="25" rx="8" ry="3" fill="Y"/><rect x="3" y="21.5" width="16" height="3.5" fill="Y"/><ellipse cx="11" cy="21.5" rx="8" ry="3" fill="y"/>
-<rect x="3" y="17.5" width="16" height="4" fill="Y"/><ellipse cx="11" cy="17.5" rx="8" ry="3" fill="y"/>
-<rect x="3" y="13.5" width="16" height="4" fill="Y"/><ellipse cx="11" cy="13.5" rx="8" ry="3" fill="y"/>
-<circle cx="21.5" cy="18" r="7.5" fill="y"/><circle cx="21.5" cy="18" r="5.2" fill="Y"/>
-<path d="M21.5 14v8M19.5 15.5h3.2a1.4 1.4 0 010 2.8h-2.4a1.4 1.4 0 000 2.8h3.2" stroke="y" stroke-width="1.2" fill="none"/>
+<path d="M3 21v4a8 3 0 0016 0v-4z" fill="Y"/><ellipse cx="11" cy="21" rx="8" ry="3" fill="y"/>
+<path d="M3 16.5v4a8 3 0 0016 0v-4z" fill="Y"/><ellipse cx="11" cy="16.5" rx="8" ry="3" fill="y"/>
+<path d="M3 12v4a8 3 0 0016 0v-4z" fill="Y"/><ellipse cx="11" cy="12" rx="8" ry="3" fill="y"/>
+<circle cx="21.5" cy="18.5" r="7.5" fill="y"/><circle cx="21.5" cy="18.5" r="5.2" fill="Y"/>
+<path d="M21.5 14.5v8M19.5 16h3.2a1.4 1.4 0 010 2.8h-2.4a1.4 1.4 0 000 2.8h3.2" stroke="y" stroke-width="1.2" fill="none"/>
 """)
 
 icon("salary", """
