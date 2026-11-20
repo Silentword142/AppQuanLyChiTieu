@@ -1,9 +1,13 @@
 # VinaSpends – Phân tích UX/UI & các lần thiết kế lại
 
-## 0c. Bộ icon 32×32 (5.2)
+## 0c. Bộ icon 32×32 (5.2) – nâng cấp từ bản vẽ 16×16
 
-- 173 icon màu vẽ lại ở lưới **32×32** (trước là 16×16) bằng bộ dựng `tools/icons32/` (`engine.py` + `defs_*.py`): mỗi icon là tập khối hình (cầu, trụ, hộp, đa giác, nét) gắn chất liệu; bộ dựng tự tạo dải 6 tông có lệch sắc (bóng ngả tím, sáng ngả vàng), tô khối theo ánh sáng trên-trái, viền trong theo màu khối, viền ngoài màu tối của vật liệu, điểm bóng loáng.
-- Sửa/thêm icon: sửa `tools/icons32/defs_*.py` rồi chạy `python3 tools/icons32/build.py --sheet /tmp/xem.png` để xem và `--inject` để nhúng PNG vào `web/icons.js`.
+- Giữ nguyên hình dáng 175 icon màu vẽ tay 16×16 trong `web/icons.js`, nâng lên **32×32** bằng `tools/icons32/from16.py`:
+  1. Scale2x (EPX) phóng 2× giữ nét chéo mượt;
+  2. làm mảnh viền 2px → 1px, nửa trong thành mép tối của mảng màu;
+  3. tô khối từng mảng (gộp cặp màu sáng/tối vẽ tay thành một khối): dải 6 tông HSV lệch sắc (tối ngả tím, sáng ngả vàng), sáng trên-trái, lọc đa số để mảng màu sạch, điểm bóng loáng;
+  4. viền ngoài = tông tối của mảng kề bên pha mực.
+- Sửa icon: sửa lưới 16×16 trong `web/icons.js` → chạy `python3 tools/icons32/from16.py --sheet /tmp/xem.png` để xem, `--inject` để nhúng PNG (IMG32) vào `web/icons.js`.
 - Icon nét đơn sắc (mũi tên, +, ✕, ‹ ›…) vẫn là SVG 16×16 theo màu chữ.
 
 ## 0b. Bản 5.1 – "Spendy"
