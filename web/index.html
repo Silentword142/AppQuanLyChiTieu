@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;500;600;700;800&family=Tiny5&family=VT323&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -36,8 +36,9 @@
           },
           fontFamily: {
             sans: ['Handjet', 'system-ui', 'sans-serif'],
-            display: ['VT323', 'Handjet', 'monospace'],
-            pixel: ['Tiny5', 'Handjet', 'monospace']
+            display: ['Handjet', 'system-ui', 'sans-serif'],
+            pixel: ['Handjet', 'system-ui', 'sans-serif'],
+            mono: ['Handjet', 'system-ui', 'sans-serif']
           },
           colors: {
             theme: {
@@ -137,8 +138,8 @@
     ::selection { background: rgb(var(--primary-rgb) / .55); color: var(--ink); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .font-display { font-family: 'VT323', 'Handjet', monospace; letter-spacing: 0.02em; }
-    .font-pixel { font-family: 'Tiny5', 'Handjet', monospace; letter-spacing: 0.04em; }
+    .font-display { font-family: 'Handjet', system-ui, sans-serif; font-weight: 700; letter-spacing: 0.01em; }
+    .font-pixel { font-family: 'Handjet', system-ui, sans-serif; font-weight: 700; letter-spacing: 0.05em; }
     .tabular { font-variant-numeric: tabular-nums; }
     .vi { width: 100%; height: 100%; display: block; overflow: visible; image-rendering: pixelated; }
     .vi .k { fill: var(--icon-ink); }
@@ -175,7 +176,7 @@
     .hud-cell:active { background: rgba(255,255,255,.08); }
     .hud-cell + .hud-cell { box-shadow: inset 3px 0 0 rgba(0,0,0,.25); }
     .hud-cell-light { background: var(--surface); color: var(--ink); }
-    .hud-num { font-family: 'VT323', monospace; font-size: 25px; line-height: 1; white-space: nowrap; }
+    .hud-num { font-family: 'Handjet', sans-serif; font-weight: 700; font-size: 24px; line-height: 1; white-space: nowrap; }
     .hud-plus {
       width: 22px; height: 22px; flex: none; border-radius: 999px; display: grid; place-items: center;
       background: #8A7392; color: var(--on-hud); border: 2px solid var(--ink);
@@ -183,7 +184,7 @@
       transition: transform .25s var(--ease-spring);
     }
     .hud-plus:active { transform: scale(.85); }
-    .hud-badge { position: absolute; top: -7px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 12px/14px 'Tiny5', monospace; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
+    .hud-badge { position: absolute; top: -7px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 700 15px/14px 'Handjet', sans-serif; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
     .hud-btn {
       width: 40px; height: 40px; display: grid; place-items: center; flex: none;
       background: var(--surface); color: var(--ink);
@@ -194,7 +195,7 @@
     .hud-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 1px 0 var(--ink); transition-duration: .06s; }
     .hud-sub { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px; background: var(--wood); border: 3px solid var(--ink); border-radius: 12px; box-shadow: inset 0 3px 0 rgba(255,255,255,.22), inset 0 -3px 0 rgba(0,0,0,.14), 0 3px 0 rgba(74,51,80,.35); transition: transform .3s var(--ease-spring); }
     .hud-sub:active { transform: translateY(2px); transition-duration: .06s; }
-    .lvl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border: 2px solid #D79A3C; border-radius: 6px; background: var(--accent); color: #9A5A1E; font: 13px/1 'Tiny5', monospace; letter-spacing: .06em; box-shadow: inset 0 2px 0 rgba(255,255,255,.55); white-space: nowrap; }
+    .lvl-tag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border: 2px solid #D79A3C; border-radius: 6px; background: var(--accent); color: #9A5A1E; font: 700 16px/1 'Handjet', sans-serif; letter-spacing: .06em; box-shadow: inset 0 2px 0 rgba(255,255,255,.55); white-space: nowrap; }
     .xp-bar { position: relative; flex: 1; height: 16px; border: 3px solid var(--ink); border-radius: 999px; background: var(--hud); overflow: hidden; box-shadow: 0 2px 0 rgba(74,51,80,.3); }
     .xp-bar > i { position: absolute; left: 2px; top: 2px; bottom: 2px; border-radius: 999px; background: #8EDB9E; box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(0,0,0,.12); transition: width .9s var(--ease-out); }
     .xp-bar.warn > i { background: var(--accent); }
@@ -243,7 +244,7 @@
     .console-key {
       display: inline-flex; align-items: center; justify-content: center;
       min-width: 22px; height: 22px; padding: 0 5px;
-      font-family: 'Tiny5', monospace; font-size: 12px; line-height: 1;
+      font-family: 'Handjet', sans-serif; font-weight: 700; font-size: 15px; line-height: 1;
       background: var(--surface); color: var(--ink);
       border: 2px solid var(--ink); border-radius: 6px;
       box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 2px 0 var(--ink);
@@ -253,7 +254,7 @@
     /* nút ✕ trên thanh tiêu đề = nút đỏ kiểu cửa sổ game */
     .console-top-strip button.console-key { background: #E8606E; color: #fff; min-width: 28px; height: 26px; border-color: var(--ink); box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -3px 0 rgba(0,0,0,.18), 0 2px 0 rgba(0,0,0,.35); font-size: 12px; }
     .bg-theme-primary .console-key, .game-btn-accent .console-key { background: var(--surface); color: var(--ink); border-color: var(--ink); }
-    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; background: #DDBB9D; color: #FFF8EE; border-bottom: 2.5px solid var(--ink); font-family: 'Tiny5', monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; text-shadow: 1px 1px 0 rgba(74,51,80,.45); box-shadow: inset 0 2px 0 rgba(255,255,255,.3); }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; background: #DDBB9D; color: #FFF8EE; border-bottom: 2.5px solid var(--ink); font-family: 'Handjet', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; text-shadow: 1px 1px 0 rgba(74,51,80,.45); box-shadow: inset 0 2px 0 rgba(255,255,255,.3); }
     .panel-head.dark { background: var(--hud); color: var(--on-hud); }
 
     /* ======================= NÚT BẤM ======================= */
@@ -297,12 +298,12 @@
     .ekey:active, .ekey.is-down { transform: translateY(4px); box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(74,51,80,.18), 0 1px 0 var(--ink), 0 2px 0 rgba(74,51,80,.15); transition-duration: .06s; }
     .ekey .ekey-ico { width: 26px; height: 26px; transition: transform .34s var(--ease-spring); }
     .ekey:active .ekey-ico { transform: scale(.9); }
-    .ekey .ekey-label { font: 12px/1 'Tiny5', monospace; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
-    .ekey .ekey-label.is-small { font-size: 11px; letter-spacing: 0; }
+    .ekey .ekey-label { font: 700 15px/1 'Handjet', sans-serif; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+    .ekey .ekey-label.is-small { font-size: 14px; letter-spacing: .02em; }
     .ekey .led { position: absolute; top: 5px; right: 6px; width: 7px; height: 7px; border-radius: 2px; background: rgba(74,51,80,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
     .ekey .led.on { background: #7DFFB0; box-shadow: 0 0 6px #7DFFB0, 0 0 2px #fff inset; animation: ledBreath 2.4s var(--ease-soft) infinite; }
     .ekey .led.warn { background: #FFE07A; box-shadow: 0 0 6px #FFE07A; animation: ledBlink 1s steps(2, start) infinite; }
-    .ekey .ekey-badge { position: absolute; top: -9px; left: -7px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 12px/16px 'Tiny5', monospace; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
+    .ekey .ekey-badge { position: absolute; top: -9px; left: -7px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 999px; background: var(--expense); color: #fff; border: 2px solid var(--ink); font: 700 15px/16px 'Handjet', sans-serif; text-align: center; animation: badgePop .5s var(--ease-spring) both; }
 
     /* ======================= TV RETRO (màn hình chính) ======================= */
     .tv { position: relative; padding-top: 30px; margin: 0 2px 18px; }
@@ -349,14 +350,14 @@
     .crt-glow { text-shadow: 0 0 8px currentColor, 0 0 1px currentColor; }
     .crt-noise { position: absolute; inset: -20px; z-index: 3; pointer-events: none; opacity: 0; background-size: 120px 120px; image-rendering: pixelated; }
     .crt-noise.on { animation: noiseBurst .42s steps(1, end) both, noiseJitter .12s steps(3) infinite; }
-    .osd { font: 18px/1 'VT323', monospace; letter-spacing: .06em; color: #9DF5C2; text-shadow: 0 0 6px rgba(157,245,194,.8); }
+    .osd { font: 700 16px/1 'Handjet', sans-serif; letter-spacing: .06em; color: #9DF5C2; text-shadow: 0 0 6px rgba(157,245,194,.8); }
     .osd-blink { animation: ledBlink 1.2s steps(2, start) infinite; }
     .tv-dots { display: flex; gap: 5px; justify-content: center; }
     .tv-dots button { width: 18px; height: 6px; border-radius: 3px; background: rgba(255,242,226,.18); transition: background-color .3s var(--ease-soft), width .4s var(--ease-spring); }
     .tv-dots button.on { width: 26px; background: #9DF5C2; box-shadow: 0 0 6px rgba(157,245,194,.8); }
-    .tv-big { font: 44px/0.9 'VT323', monospace; letter-spacing: .01em; white-space: nowrap; }
-    .tv-mid { font: 28px/1 'VT323', monospace; white-space: nowrap; }
-    .tv-lbl { font: 12px/1.1 'Tiny5', monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+    .tv-big { font: 700 40px/0.9 'Handjet', sans-serif; letter-spacing: .01em; white-space: nowrap; }
+    .tv-mid { font: 700 25px/1 'Handjet', sans-serif; white-space: nowrap; }
+    .tv-lbl { font: 700 15px/1.1 'Handjet', sans-serif; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
     .tv-row { display: flex; justify-content: space-between; gap: 8px; font-size: 16px; line-height: 1.25; font-weight: 600; }
     .tv-bars { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
     .tv-bars i { flex: 1; min-width: 2px; border-radius: 1px 1px 0 0; background: #FFA5BC; box-shadow: 0 0 6px rgba(255,165,188,.6); transform-origin: bottom; animation: barGrow .7s var(--ease-spring) both; }
@@ -365,6 +366,14 @@
     .tv-hp { display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; }
     .tv-hp i { height: 14px; border-radius: 2px; background: rgba(255,242,226,.12); transform-origin: left; }
     .tv-hp i.on { animation: hpCell .45s var(--ease-spring) both; }
+    .tv-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+    .tv-scroll::-webkit-scrollbar { display: none; }
+    .tv-scroll.fade-bottom { -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent); mask-image: linear-gradient(180deg, #000 72%, transparent); }
+    .tv-scroll.fade-top { -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%); mask-image: linear-gradient(180deg, transparent, #000 22%); }
+    .tv-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 72%, transparent); }
+    .tv-sb { position: absolute; right: 0; top: 2px; bottom: 2px; width: 4px; background: rgba(255,242,226,.14); }
+    .tv-sb i { position: absolute; left: 0; right: 0; background: #9DF5C2; box-shadow: 0 0 6px rgba(157,245,194,.8); transition: top .12s linear; }
+    .tv-more { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); font: 700 13px/1 'Handjet', sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #9DF5C2; text-shadow: 0 0 6px rgba(157,245,194,.8); pointer-events: none; white-space: nowrap; animation: pxFloat 1.6s var(--ease-soft) infinite; }
     .tv-side { display: flex; flex-direction: column; align-items: center; gap: 9px; padding-top: 2px; }
     .tv-knob {
       position: relative; width: 48px; height: 48px; border-radius: 999px;
@@ -377,7 +386,7 @@
     .tv-knob::after { content: ""; position: absolute; inset: 9px; border-radius: 999px; border: 2px dashed rgba(74,51,80,.25); }
     .tv-knob-wrap { position: relative; padding: 4px; }
     .tv-knob-wrap .ticks { position: absolute; inset: -2px; border-radius: 999px; background: conic-gradient(from -8deg, var(--ink) 0 4deg, transparent 4deg 90deg, var(--ink) 90deg 94deg, transparent 94deg 180deg, var(--ink) 180deg 184deg, transparent 184deg 270deg, var(--ink) 270deg 274deg, transparent 274deg); -webkit-mask: radial-gradient(circle, transparent 27px, #000 28px); mask: radial-gradient(circle, transparent 27px, #000 28px); opacity: .5; }
-    .tv-mini { width: 40px; height: 22px; border-radius: 7px; border: 2.5px solid var(--ink); background: var(--tv-trim); color: var(--ink); font: 13px/1 'Tiny5', monospace; display: grid; place-items: center; box-shadow: inset 0 2px 0 rgba(255,255,255,.7), 0 3px 0 var(--ink); transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-spring); }
+    .tv-mini { width: 40px; height: 22px; border-radius: 7px; border: 2.5px solid var(--ink); background: var(--tv-trim); color: var(--ink); font: 700 16px/1 'Handjet', sans-serif; display: grid; place-items: center; box-shadow: inset 0 2px 0 rgba(255,255,255,.7), 0 3px 0 var(--ink); transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-spring); }
     .tv-mini:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); transition-duration: .05s; }
     .tv-grille { width: 40px; height: 40px; border-radius: 8px; border: 2.5px solid var(--ink); background: repeating-linear-gradient(180deg, var(--ink) 0 2px, rgba(255,255,255,.18) 2px 5px); opacity: .55; }
     .tv-led { width: 10px; height: 10px; border-radius: 999px; border: 2px solid var(--ink); background: #7DFFB0; box-shadow: 0 0 8px #7DFFB0; animation: ledBreath 2.8s var(--ease-soft) infinite; }
@@ -403,7 +412,7 @@
     .dock-key:not(.on) .dock-face { filter: saturate(.82) brightness(1.02); }
     .dock-led { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 2px; background: rgba(74,51,80,.25); transition: background-color .3s var(--ease-soft), box-shadow .3s var(--ease-soft); }
     .dock-key.on .dock-led { background: #7DFFB0; box-shadow: 0 0 6px #7DFFB0; }
-    .dock-label { font: 12px/1 'Tiny5', monospace; letter-spacing: .04em; color: var(--text-secondary); text-transform: uppercase; transition: color .3s var(--ease-soft); margin-top: 6px; white-space: nowrap; }
+    .dock-label { font: 700 15px/1 'Handjet', sans-serif; letter-spacing: .04em; color: var(--text-secondary); text-transform: uppercase; transition: color .3s var(--ease-soft); margin-top: 6px; white-space: nowrap; }
     .dock-key.on .dock-label { color: var(--text-primary); }
     .dock-key.on .dock-ico { animation: icoHop .55s var(--ease-spring) both; }
     .arcade { position: relative; width: 70px; height: 74px; display: flex; flex-direction: column; align-items: center; margin: 0 2px; -webkit-user-select: none; user-select: none; }
@@ -433,7 +442,7 @@
       border-color: var(--ink);
       box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / .38);
     }
-    html[data-retro="1"] h1, html[data-retro="1"] h2, html[data-retro="1"] h3 { font-family: 'VT323', 'Handjet', monospace; letter-spacing: 0.015em; }
+    html[data-retro="1"] h1, html[data-retro="1"] h2, html[data-retro="1"] h3 { font-family: 'Handjet', system-ui, sans-serif; font-weight: 700; letter-spacing: 0.015em; }
 
     /* Thanh HP ngân sách dạng ô */
     .hp-seg { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; padding: 3px; background: var(--hud); border: 2.5px solid var(--ink); border-radius: 8px; box-shadow: inset 0 2px 0 rgba(0,0,0,.2); }
@@ -924,7 +933,7 @@
             <div className="flex items-center justify-between gap-2">
               <BankBadge name={acc.name} size={30} />
               <div className="flex items-center gap-1.5">
-                <span className={`font-pixel text-[12px] uppercase tracking-wider px-2 py-0.5 rounded border ${isDarkInk ? "bg-[#FBF2DE]/85 border-[#54321D]/40 text-[#4A2B18]" : "bg-black/35 border-white/25 text-white"}`}>{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
+                <span className={`font-pixel text-[14px] uppercase tracking-wider px-2 py-0.5 rounded border ${isDarkInk ? "bg-[#FBF2DE]/85 border-[#54321D]/40 text-[#4A2B18]" : "bg-black/35 border-white/25 text-white"}`}>{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
                 {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#FBF2DE] text-[#4A2B18] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
                 {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#FFF8EE] text-[#D9385A] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
               </div>
@@ -934,7 +943,7 @@
             {credit ? (
               <div className="mt-auto pt-2">
                 <div className="flex items-end justify-between">
-                  <span className="font-pixel text-[12px] uppercase opacity-80">Dư nợ</span>
+                  <span className="font-pixel text-[14px] uppercase opacity-80">Dư nợ</span>
                   <span className="font-display text-2xl tabular leading-none">{fmt(debt)} ₫</span>
                 </div>
                 <div className="mt-1.5 h-3 rounded-full bg-[var(--hud)] border-2 border-[var(--ink)] overflow-hidden p-[1px]">
@@ -944,7 +953,7 @@
               </div>
             ) : (
               <div className="mt-auto pt-2 flex items-end justify-between">
-                <span className="font-pixel text-[12px] uppercase opacity-80">Số dư</span>
+                <span className="font-pixel text-[14px] uppercase opacity-80">Số dư</span>
                 <span className="font-display text-2xl tabular leading-none" style={bal < 0 ? { background: "rgba(26,20,35,0.72)", color: "#FFE2E8", padding: "1px 6px", borderRadius: "4px" } : undefined}>{fmt(bal)} ₫</span>
               </div>
             )}
@@ -1337,7 +1346,7 @@
             <div className="console-top-strip px-3.5 py-2 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#8CD778] px-led" />
-                <span className="font-pixel text-[13px] uppercase tracking-wider">{editingCategory ? "SỬA HẠNG MỤC" : "THÊM HẠNG MỤC"}</span>
+                <span className="font-pixel text-[15px] uppercase tracking-wider">{editingCategory ? "SỬA HẠNG MỤC" : "THÊM HẠNG MỤC"}</span>
               </div>
               <button type="button" onClick={onClose} aria-label="Đóng" className="console-key hover:opacity-85">✕</button>
             </div>
@@ -1352,7 +1361,7 @@
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-display text-xl text-theme-textPrimary truncate">{name || "Tên hạng mục..."}</h4>
-                    <span className="font-pixel text-[12px] px-2 py-0.5 rounded border border-[var(--ink)] shrink-0" style={{ backgroundColor: selectedColor, color: badgeInk }}>
+                    <span className="font-pixel text-[14px] px-2 py-0.5 rounded border border-[var(--ink)] shrink-0" style={{ backgroundColor: selectedColor, color: badgeInk }}>
                       {isChild ? `Con: ${parentName}` : "Nhóm Lớn"}
                     </span>
                   </div>
@@ -1616,6 +1625,28 @@
       "..............occcccccccco..............",
       "..............oooooooooooo.............."
     ], { o: "var(--ink)", y: "#FFD87E", h: "#FFF6D8", c: "var(--hud)" });
+
+    // Danh sách cuộn trong màn hình TV: kéo lên/xuống, mờ dần 2 mép, thanh cuộn pixel
+    const TvScroll = ({ children, count = 0 }) => {
+      const ref = useRef(null);
+      const [st, setSt] = useState({ top: true, end: true, p: 0, r: 1 });
+      const upd = () => {
+        const el = ref.current; if (!el) return;
+        const max = el.scrollHeight - el.clientHeight;
+        setSt({ top: el.scrollTop <= 2, end: el.scrollTop >= max - 2, p: max > 0 ? el.scrollTop / max : 0, r: el.scrollHeight ? Math.min(1, el.clientHeight / el.scrollHeight) : 1 });
+      };
+      useEffect(() => { upd(); const t = setTimeout(upd, 450); return () => clearTimeout(t); }, [count]);
+      const scrollable = st.r < 0.999;
+      return (
+        <div className="relative flex-1 min-h-0 flex">
+          <div ref={ref} onScroll={upd} className={`tv-scroll ${scrollable && !st.top ? "fade-top" : ""} ${scrollable && !st.end ? "fade-bottom" : ""}`}>{children}</div>
+          {scrollable && (
+            <span className="tv-sb" aria-hidden="true"><i style={{ height: `${st.r * 100}%`, top: `${st.p * (1 - st.r) * 100}%` }} /></span>
+          )}
+          {scrollable && !st.end && <span className="tv-more" aria-hidden="true">▼ kéo xem thêm</span>}
+        </div>
+      );
+    };
 
     // TV CRT retro: màn hình nhiều kênh + núm xoay + hàng phím bấm chức năng
     const RetroTV = ({ channels, ch, onChange, keys }) => {
@@ -4535,23 +4566,24 @@
             </div>
           );
         } },
-        { id: "wallets", title: "VÍ & THẺ", onOpen: goWallets, render: () => {
-          const rows = [...accounts].sort((x, y) => (isCreditAcc(y) ? -1e15 : (Number(y.balance) || 0)) - (isCreditAcc(x) ? -1e15 : (Number(x.balance) || 0))).slice(0, 4);
+        { id: "wallets", title: `VÍ & THẺ (${accounts.length})`, onOpen: goWallets, render: () => {
+          const rows = [...accounts].sort((x, y) => (isCreditAcc(y) ? -1e15 : (Number(y.balance) || 0)) - (isCreditAcc(x) ? -1e15 : (Number(x.balance) || 0)));
           if (!rows.length) return <p className="m-auto tv-mid crt-glow" style={{ color: PH.butter }}>CHƯA CÓ VÍ</p>;
           return (
-            <div className="flex-1 flex flex-col justify-center gap-1.5 min-w-0">
-              {rows.map(a => {
-                const credit = isCreditAcc(a), bal = Number(a.balance) || 0;
-                return (
-                  <div key={a.id} className="flex items-center gap-2 min-w-0">
-                    <BankBadge name={a.name} size={18} />
-                    <span className="flex-1 min-w-0 truncate text-[16px] font-semibold" style={{ color: PH.cream }}>{a.name}</span>
-                    <span className="font-display text-[23px] leading-none tabular crt-glow" style={{ color: credit || bal < 0 ? PH.pink : PH.mint }}>{credit ? "−" + formatShortVND(Math.max(0, -bal)) : formatShortVND(bal)}</span>
-                  </div>
-                );
-              })}
-              {accounts.length > 4 && <p className="tv-lbl text-right" style={{ color: "rgba(255,242,226,.6)" }}>+{accounts.length - 4} ví khác</p>}
-            </div>
+            <TvScroll count={rows.length}>
+              <div className="flex flex-col gap-1.5 py-0.5 pr-2.5">
+                {rows.map(a => {
+                  const credit = isCreditAcc(a), bal = Number(a.balance) || 0;
+                  return (
+                    <div key={a.id} className="flex items-center gap-2 min-w-0 min-h-[26px]">
+                      <BankBadge name={a.name} size={18} />
+                      <span className="flex-1 min-w-0 truncate text-[16px] font-semibold" style={{ color: PH.cream }}>{a.name}</span>
+                      <span className="font-display text-[22px] leading-none tabular crt-glow" style={{ color: credit || bal < 0 ? PH.pink : PH.mint }}>{credit ? "−" + formatShortVND(Math.max(0, -bal)) : formatShortVND(bal)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </TvScroll>
           );
         } }
       ];
@@ -4614,13 +4646,13 @@
                   </button>
                   <button type="button" className="hud-cell hud-cell-light shrink-0" onClick={() => setShowSettingsDialog(true)} aria-label="Đồng bộ dữ liệu">
                     <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} anim={isSyncing ? "spin" : ""} className="w-5 h-5" />
-                    <span className="font-pixel text-[12px]">{googleUser ? (isRealtimeLive ? "LIVE" : "CLOUD") : "LOCAL"}</span>
+                    <span className="font-pixel text-[14px]">{googleUser ? (isRealtimeLive ? "LIVE" : "CLOUD") : "LOCAL"}</span>
                   </button>
                 </div>
                 <button type="button" className="hud-sub w-full" onClick={() => { buzz(); openBudget(); }} aria-label={monthlyBudget > 0 ? `Ngân sách tháng đã dùng ${budgetPct}%` : "Đặt ngân sách tháng"}>
                   <span className="lvl-tag">T{monthNo} · LV{rpgLevel}</span>
                   <span className={`xp-bar ${budgetPace}`}><i style={{ width: monthlyBudget > 0 ? `calc(${Math.min(100, Math.max(4, budgetPct))}% - 4px)` : "0%" }} /></span>
-                  <span className={`text-[var(--on-hud)] w-[50px] text-right shrink-0 [text-shadow:1px_1px_0_rgba(0,0,0,.3)] ${monthlyBudget > 0 ? "font-display text-[22px] leading-none" : "font-pixel text-[12px]"}`}>{monthlyBudget > 0 ? `${budgetPct}%` : "ĐẶT N.S"}</span>
+                  <span className={`text-[var(--on-hud)] w-[50px] text-right shrink-0 [text-shadow:1px_1px_0_rgba(0,0,0,.3)] ${monthlyBudget > 0 ? "font-display text-[24px] leading-none" : "font-pixel text-[14px]"}`}>{monthlyBudget > 0 ? `${budgetPct}%` : "ĐẶT N.S"}</span>
                 </button>
               </div>
               <div className="flex flex-col gap-2 shrink-0">
@@ -4640,7 +4672,7 @@
                   </div>
                   <div>
                     <h1 className="font-display font-bold text-3xl text-theme-textPrimary leading-none">Spendy</h1>
-                    <span className="font-pixel text-[11px] text-theme-textSecondary">P1 · LV.{rpgLevel} · {transactions.length} TX</span>
+                    <span className="font-pixel text-[13px] text-theme-textSecondary">P1 · LV.{rpgLevel} · {transactions.length} TX</span>
                   </div>
                 </div>
                 <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="game-btn-sm game-btn-neutral w-8 h-8 bg-theme-background flex items-center justify-center text-theme-textPrimary">
@@ -4674,7 +4706,7 @@
                   <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold border-2 transition-all ${active ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]' : 'border-transparent text-theme-textSecondary hover:bg-theme-variant hover:text-theme-textPrimary'}`}>
                     {t.id === "mai" ? <MaiAvatar size={22} animated={active || maiBadge > 0} /> : <Icon name={t.icon} anim={active ? "hop" : ""} className="w-5 h-5" />}
                     <span className="flex-1 text-left">{t.label}</span>
-                    {t.id === "mai" && maiBadge > 0 && <span className="font-pixel min-w-[20px] h-5 px-1.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[12px] font-bold flex items-center justify-center">{maiBadge}</span>}
+                    {t.id === "mai" && maiBadge > 0 && <span className="font-pixel min-w-[20px] h-5 px-1.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[14px] font-bold flex items-center justify-center">{maiBadge}</span>}
                   </button>
                 );
               })}
@@ -4709,9 +4741,9 @@
                   <div className="console-top-strip px-3.5 py-2 flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2 min-w-0">
                       <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led shrink-0" />
-                      <span className="font-pixel text-[13px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
+                      <span className="font-pixel text-[15px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
                     </span>
-                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[12px] text-[#FFE08A] flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[14px] text-[#FFE08A] flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3 h-3" /></button>
                   </div>
                   {recentGroups.length === 0 ? (
                     <div className="text-center px-6 py-9">
@@ -4765,9 +4797,9 @@
                   <div className="console-top-strip px-3.5 py-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led" />
-                      <span className="font-pixel text-[13px] tracking-wider uppercase">Báo cáo · Thống kê</span>
+                      <span className="font-pixel text-[15px] tracking-wider uppercase">Báo cáo · Thống kê</span>
                     </div>
-                    <span className="font-pixel text-[12px] text-[#FFE08A]">{reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}</span>
+                    <span className="font-pixel text-[14px] text-[#FFE08A]">{reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}</span>
                   </div>
                   <div className="p-3 space-y-3">
                     {/* Chi tiêu / Thu nhập */}
@@ -4779,7 +4811,7 @@
                             className={`ekey !min-h-0 !flex-row !gap-2 py-2.5 ${on ? "is-down" : ""}`} style={{ "--c": on ? bg : "rgb(var(--variant-rgb))", "--t": on ? fg : "var(--text-secondary)" }}>
                             <span className={`led ${on ? "on" : ""}`} />
                             <Icon name={ic} className="w-4 h-4" />
-                            <span className="font-pixel text-[13px] uppercase tracking-wider">{t}</span>
+                            <span className="font-pixel text-[15px] uppercase tracking-wider">{t}</span>
                           </button>
                         );
                       })}
@@ -4792,7 +4824,7 @@
                       </button>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <span className="font-pixel text-[12px] uppercase tracking-wider text-theme-textSecondary shrink-0">Xem theo</span>
+                        <span className="font-pixel text-[14px] uppercase tracking-wider text-theme-textSecondary shrink-0">Xem theo</span>
                         <div className="flex-1 grid grid-cols-2 bg-theme-background border-2 border-[var(--ink)] p-1 rounded-xl gap-1">
                           {[["parent", "Nhóm lớn"], ["child", "Mục nhỏ"]].map(([v, l]) => (
                             <button key={v} type="button" onClick={()=>setReportHierarchyView(v)}
@@ -4819,14 +4851,14 @@
                           </div>
                           <div>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-pixel text-[12px] font-bold text-theme-textSecondary uppercase tracking-wider">CHI TIẾT NHÓM LỚN</span>
-                              <span className="font-pixel text-[12px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] px-2 py-0.5 rounded font-bold">{drillDownData.percentageOfPeriod}% TỔNG KỲ</span>
+                              <span className="font-pixel text-[14px] font-bold text-theme-textSecondary uppercase tracking-wider">CHI TIẾT NHÓM LỚN</span>
+                              <span className="font-pixel text-[14px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] px-2 py-0.5 rounded font-bold">{drillDownData.percentageOfPeriod}% TỔNG KỲ</span>
                             </div>
                             <h3 className="font-display text-3xl text-theme-textPrimary mt-0.5 leading-none">{drillDownData.parentName}</h3>
                           </div>
                         </div>
                         <div className="console-lcd bg-theme-background px-3.5 py-2 sm:text-right">
-                          <span className="font-pixel text-[12px] text-theme-textSecondary uppercase block">Tổng trong kỳ</span>
+                          <span className="font-pixel text-[14px] text-theme-textSecondary uppercase block">Tổng trong kỳ</span>
                           <p className={`font-display text-3xl leading-none tabular ${reportType === "Chi tiêu" ? "text-[var(--expense)]" : "text-[var(--income)]"}`}>
                             {formatVND(drillDownData.total)}
                           </p>
@@ -4836,7 +4868,7 @@
 
                     {/* Subcategories Breakdown Chart & List */}
                     <div className="retro-card bg-theme-surface p-4 md:p-5">
-                      <h4 className="font-pixel text-[13px] font-bold text-theme-textSecondary uppercase tracking-wider mb-3.5 flex items-center gap-2">
+                      <h4 className="font-pixel text-[15px] font-bold text-theme-textSecondary uppercase tracking-wider mb-3.5 flex items-center gap-2">
                         <Icon name="pie-chart" anim="pulse" className="w-4 h-4 text-theme-primary" /> Cơ cấu danh mục con trong “{drillDownData.parentName}”
                       </h4>
 
@@ -4866,7 +4898,7 @@
                     {/* Detailed Transactions List in this Parent */}
                     <div className="space-y-2.5">
                       <div className="flex justify-between items-center px-1">
-                        <h4 className="font-pixel text-[13px] font-bold text-theme-textSecondary uppercase tracking-wider flex items-center gap-2">
+                        <h4 className="font-pixel text-[15px] font-bold text-theme-textSecondary uppercase tracking-wider flex items-center gap-2">
                           <Icon name="list" className="w-4 h-4 text-theme-primary" /> Lịch sử nhóm “{drillDownData.parentName}” ({drillDownData.txs.length})
                         </h4>
                         <span className="text-[13px] text-theme-textSecondary font-semibold">Chạm để sửa</span>
@@ -4970,7 +5002,7 @@
                           </div>
                           <div className={`flex ${reportBarData.columns.length > 16 ? "gap-[3px]" : "gap-1.5"}`} style={{ minWidth: `${Math.max(100, reportBarData.columns.length * (reportBarData.columns.length > 16 ? 9 : 22))}px` }}>
                             {reportBarData.columns.map((col, i) => (
-                              <div key={i} className="flex-1 min-w-0 text-center font-pixel text-[11px] text-theme-textSecondary pt-1 overflow-visible whitespace-nowrap" title={col.label}>{(reportBarData.columns.length <= 16 || i % 5 === 0 || i === reportBarData.columns.length - 1) ? col.label : ""}</div>
+                              <div key={i} className="flex-1 min-w-0 text-center font-pixel text-[13px] text-theme-textSecondary pt-1 overflow-visible whitespace-nowrap" title={col.label}>{(reportBarData.columns.length <= 16 || i % 5 === 0 || i === reportBarData.columns.length - 1) ? col.label : ""}</div>
                             ))}
                           </div>
                         </div>
@@ -4999,7 +5031,7 @@
                           <input type="text" value={reportSearch} onChange={e=>setReportSearch(e.target.value)} placeholder="Tìm ghi chú, ví, lĩnh vực..." className="w-full pl-9 pr-4 py-2 bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg text-sm font-semibold text-theme-textPrimary" />
                        </div>
                        <div className="flex gap-2 items-center">
-                          <span className="font-pixel text-[12px] text-theme-textSecondary uppercase whitespace-nowrap">Bộ lọc ví:</span>
+                          <span className="font-pixel text-[14px] text-theme-textSecondary uppercase whitespace-nowrap">Bộ lọc ví:</span>
                           <select
                             value={(() => {
                               if (reportAccount === "Tất cả") return "Tất cả";
@@ -5017,18 +5049,18 @@
 
                     {/* 4. Net balance status overview */}
                     <div className="retro-card bg-theme-surface p-4 md:p-5">
-                        <h3 className="font-pixel text-[12px] font-bold text-theme-textSecondary uppercase tracking-wider mb-3">Tổng quan kỳ này</h3>
+                        <h3 className="font-pixel text-[14px] font-bold text-theme-textSecondary uppercase tracking-wider mb-3">Tổng quan kỳ này</h3>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="console-lcd bg-[var(--income-light)] px-2.5 py-2">
-                                <span className="font-pixel text-[11px] text-[var(--income)] uppercase block">Thu (+)</span>
+                                <span className="font-pixel text-[13px] text-[var(--income)] uppercase block">Thu (+)</span>
                                 <span className="font-display font-bold text-[var(--income)] text-lg md:text-2xl tabular leading-tight block truncate" title={formatVND(reportSummary.income)}>{formatVND(reportSummary.income)}</span>
                             </div>
                             <div className="console-lcd bg-[var(--expense-light)] px-2.5 py-2 text-center">
-                                <span className="font-pixel text-[11px] text-[var(--expense)] uppercase block">Chi (−)</span>
+                                <span className="font-pixel text-[13px] text-[var(--expense)] uppercase block">Chi (−)</span>
                                 <span className="font-display font-bold text-[var(--expense)] text-lg md:text-2xl tabular leading-tight block truncate" title={formatVND(reportSummary.expense)}>{formatVND(reportSummary.expense)}</span>
                             </div>
                             <div className="console-lcd bg-theme-background px-2.5 py-2 text-right">
-                                <span className="font-pixel text-[11px] text-theme-textSecondary uppercase block">Số dư Ròng</span>
+                                <span className="font-pixel text-[13px] text-theme-textSecondary uppercase block">Số dư Ròng</span>
                                 <span className={`font-display font-bold text-lg md:text-2xl tabular leading-tight block truncate ${reportSummary.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`} title={formatVND(reportSummary.net)}>{formatVND(reportSummary.net)}</span>
                             </div>
                         </div>
@@ -5138,10 +5170,10 @@
                     {/* 6. Breakdown List by Hierarchy */}
                     <div className="space-y-2.5">
                        <div className="flex justify-between items-center mt-4 mb-1 px-1">
-                         <h3 className="font-pixel text-[13px] font-bold text-theme-textSecondary uppercase tracking-wider">
+                         <h3 className="font-pixel text-[15px] font-bold text-theme-textSecondary uppercase tracking-wider">
                            {reportHierarchyView === "parent" ? "Danh sách Nhóm Lớn (Chạm xem chi tiết)" : "Danh sách Hạng mục Nhỏ"}
                          </h3>
-                         <span className="font-pixel text-[12px] px-2 py-0.5 rounded border border-[var(--ink)] bg-theme-surface text-theme-textPrimary">
+                         <span className="font-pixel text-[14px] px-2 py-0.5 rounded border border-[var(--ink)] bg-theme-surface text-theme-textPrimary">
                            {(reportHierarchyView === "parent" ? parentBreakdown : childBreakdown).length} MỤC
                          </span>
                        </div>
@@ -5168,7 +5200,7 @@
                                          <div className="min-w-0">
                                              <div className="flex items-center gap-2">
                                                <p className="font-bold text-theme-textPrimary text-base truncate">{item.category}</p>
-                                               <span className="font-pixel text-[11px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] font-bold px-1.5 py-0.5 rounded shrink-0">LỚN</span>
+                                               <span className="font-pixel text-[13px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] font-bold px-1.5 py-0.5 rounded shrink-0">LỚN</span>
                                              </div>
                                              <p className="text-xs text-theme-textSecondary font-semibold mt-0.5">{item.txCount} giao dịch • {percent}% tổng kỳ</p>
                                          </div>
@@ -5220,9 +5252,9 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[var(--accent)] px-led" />
-                      <span className="font-pixel text-[12px] tracking-wider uppercase">KHO HẠNG MỤC</span>
+                      <span className="font-pixel text-[14px] tracking-wider uppercase">KHO HẠNG MỤC</span>
                     </div>
-                    <span className="font-pixel text-[12px] text-[#FFD875]">{parentCategories.length} NHÓM · {subCategories.length} CON</span>
+                    <span className="font-pixel text-[14px] text-[#FFD875]">{parentCategories.length} NHÓM · {subCategories.length} CON</span>
                   </div>
                   <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5303,7 +5335,7 @@
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <h3 className="font-display text-2xl text-theme-textPrimary leading-none truncate">{parent.name}</h3>
-                                  <span className="font-pixel text-[11px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold px-2 py-0.5 rounded border border-[var(--ink)] shrink-0">
+                                  <span className="font-pixel text-[13px] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] font-bold px-2 py-0.5 rounded border border-[var(--ink)] shrink-0">
                                     NHÓM LỚN
                                   </span>
                                 </div>
@@ -5413,9 +5445,9 @@
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[12px] tracking-wider uppercase">TRỢ LÝ MAI · TỰ ĐỘNG</span>
+                      <span className="font-pixel text-[14px] tracking-wider uppercase">TRỢ LÝ MAI · TỰ ĐỘNG</span>
                     </div>
-                    <span className="font-pixel text-[12px] text-[#FFD875]">GEMINI FLASH-LITE</span>
+                    <span className="font-pixel text-[14px] text-[#FFD875]">GEMINI FLASH-LITE</span>
                   </div>
                   <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex gap-3.5 items-start">
@@ -5508,8 +5540,8 @@
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <p className="font-display text-2xl text-theme-textPrimary leading-none">Trợ lý ảo Mai</p>
-                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)] text-[12px]">0% PIN CHỜ</span>
-                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[12px]">NHƯ GEMINI</span>
+                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)] text-[14px]">0% PIN CHỜ</span>
+                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[14px]">NHƯ GEMINI</span>
                         </div>
                         <p className="text-xs text-theme-textSecondary mt-1">Gọi Mai bất cứ lúc nào bằng nút nguồn hoặc cử chỉ như Gemini trên Android. Không chạy ngầm, không mở mic khi chờ.</p>
                       </div>
@@ -5531,7 +5563,7 @@
                     </div>
 
                     <div className="border-t-2 border-dashed border-theme-border pt-2.5 space-y-1.5 text-xs text-theme-textSecondary">
-                      <p className="font-pixel text-[12px] text-theme-textPrimary uppercase tracking-wider">3 cách gọi nhanh tiết kiệm pin:</p>
+                      <p className="font-pixel text-[14px] text-theme-textPrimary uppercase tracking-wider">3 cách gọi nhanh tiết kiệm pin:</p>
                       <p>⚡ <b>Giữ nút nguồn / vuốt góc</b>: Mai hiện ngay để nghe hoặc nhận text.</p>
                       <p>📲 <b>Ô Cài đặt nhanh</b>: Vuốt thanh thông báo → bấm <b>“Gọi Mai”</b>.</p>
                       <p>🔘 <b>Lối tắt</b>: Nhấn giữ icon app → chọn <b>“Nói với Mai”</b>.</p>
@@ -5540,7 +5572,7 @@
 
                   {/* Nút bấm nói trong app */}
                   <div className="space-y-2">
-                    <p className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider">Hoặc nói ngay trong app:</p>
+                    <p className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Hoặc nói ngay trong app:</p>
                     <button disabled={!voiceAvailable} onClick={() => voice.state === "listening" ? voiceStop() : voiceListen("command")} className="game-btn w-full py-3 bg-theme-primary text-[var(--on-primary)] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
                       <span className="console-key">START</span>
                       <MicIcon anim="pulse" className="w-5 h-5" /> {voiceAvailable ? (voice.state === "listening" ? "Đang nghe… (bấm dừng)" : "Bấm và nói với Mai") : "Máy chưa hỗ trợ mic"}
@@ -5572,7 +5604,7 @@
                         <div className="flex-1">
                           <div className="flex items-center gap-1.5">
                             <p className="text-sm font-bold text-theme-textPrimary">Gọi “Mai ơi” rảnh tay khi khoá máy</p>
-                            {lockVoice && <span className="font-pixel text-[12px] px-1.5 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)]">ON</span>}
+                            {lockVoice && <span className="font-pixel text-[14px] px-1.5 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)]">ON</span>}
                           </div>
                           <p className="text-xs text-theme-textSecondary mt-0.5">Chạy nền micro liên tục. <b>Tốn pin hơn</b>; chỉ nên bật khi lái xe.</p>
                         </div>
@@ -5664,7 +5696,7 @@
                               <p className={`font-display text-3xl leading-none tabular ${item.type === "INCOME" ? 'text-[var(--income)]' : 'text-theme-textPrimary'}`}>{item.type === "INCOME" ? "+" : "−"}{formatVND(item.amount)}</p>
                               <p className="text-xs text-theme-textSecondary font-semibold mt-1 truncate">{accLabel} · {new Date(item.date).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</p>
                             </div>
-                            <span className="font-pixel text-[12px] px-2 py-1 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] shrink-0">{badgeText}</span>
+                            <span className="font-pixel text-[14px] px-2 py-1 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] shrink-0">{badgeText}</span>
                           </div>
                           <p className="text-sm font-bold text-theme-textPrimary mt-2 truncate">{item.note}</p>
                           <p className="text-xs text-theme-textSecondary mt-1 line-clamp-2 italic">“{item.raw}”</p>
@@ -5722,7 +5754,7 @@
                   <div className="flex items-center gap-2">
                     <Icon name="sparkles" anim="sparkle" className="w-5 h-5" />
                     <h3 className="font-display text-2xl text-theme-textPrimary flex-1">Cài đặt Gemini</h3>
-                    <span className="font-pixel text-[12px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">FREE TIER</span>
+                    <span className="font-pixel text-[14px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">FREE TIER</span>
                   </div>
                   {window.VinaGemini && (
                     <div className="rounded-lg border-2 border-dashed border-theme-border p-3 space-y-1.5 bg-theme-background">
@@ -5733,7 +5765,7 @@
                         const used = window.VinaGemini.lastModel() === m.id;
                         return (
                           <div key={m.id} className="flex items-center gap-2 text-xs">
-                            <span className="w-5 h-5 rounded border border-[var(--ink)] bg-theme-surface flex items-center justify-center font-pixel text-[12px] text-theme-textPrimary">{i + 1}</span>
+                            <span className="w-5 h-5 rounded border border-[var(--ink)] bg-theme-surface flex items-center justify-center font-pixel text-[14px] text-theme-textPrimary">{i + 1}</span>
                             <span className="flex-1 font-semibold text-theme-textPrimary truncate">{m.id}</span>
                             <span className={`font-bold shrink-0 ${off ? "text-[var(--expense)]" : used ? "text-[var(--income)]" : "text-theme-textSecondary"}`}>{off ? `nghỉ ${until - Date.now() >= 3600000 ? Math.round((until - Date.now()) / 3600000) + "g" : Math.max(1, Math.round((until - Date.now()) / 60000)) + "p"}` : used ? "đang dùng" : "sẵn sàng"}</span>
                           </div>
@@ -5821,8 +5853,8 @@
                   <div className="space-y-4">
                     <form onSubmit={handleAddDebt} className="console-bezel overflow-hidden">
                       <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
-                        <span className="font-pixel text-[12px] uppercase tracking-wider">SỔ VAY MƯỢN</span>
-                        <button type="button" onClick={() => setSubTab("wallet")} className="font-pixel text-[12px] text-[#FFD875] hover:underline">◄ QUAY LẠI VÍ</button>
+                        <span className="font-pixel text-[14px] uppercase tracking-wider">SỔ VAY MƯỢN</span>
+                        <button type="button" onClick={() => setSubTab("wallet")} className="font-pixel text-[14px] text-[#FFD875] hover:underline">◄ QUAY LẠI VÍ</button>
                       </div>
                       <div className="p-4 space-y-3">
                         <div className="grid grid-cols-2 gap-2.5">
@@ -5853,11 +5885,11 @@
                     {/* TỔNG HỢP SỔ NỢ */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="retro-card-soft bg-[var(--expense-light)] p-3.5">
-                        <p className="font-pixel text-[12px] text-[var(--expense)] uppercase tracking-wider">Bạn đang nợ</p>
+                        <p className="font-pixel text-[14px] text-[var(--expense)] uppercase tracking-wider">Bạn đang nợ</p>
                         <p className="font-display text-2xl text-[var(--expense)] mt-0.5 tabular">{formatVND(totalDebtBorrowed)}</p>
                       </div>
                       <div className="retro-card-soft bg-[var(--income-light)] p-3.5">
-                        <p className="font-pixel text-[12px] text-[var(--income)] uppercase tracking-wider">Người khác nợ bạn</p>
+                        <p className="font-pixel text-[14px] text-[var(--income)] uppercase tracking-wider">Người khác nợ bạn</p>
                         <p className="font-display text-2xl text-[var(--income)] mt-0.5 tabular">{formatVND(totalDebtLent)}</p>
                       </div>
                     </div>
@@ -5901,7 +5933,7 @@
                                     <div key={d.id} className={`p-3 flex items-center justify-between gap-2 ${d.isPaid ? 'opacity-55 grayscale' : ''}`}>
                                       <div className="flex flex-col min-w-0">
                                         <p className="font-bold text-theme-textPrimary text-xs flex items-center gap-2">
-                                          {d.type === "VAY" ? <span className="text-[var(--expense)] font-pixel text-[12px] px-1.5 py-0.5 rounded bg-[var(--expense-light)] border border-[var(--expense)]/40">ĐI VAY</span> : <span className="text-[var(--income)] font-pixel text-[12px] px-1.5 py-0.5 rounded bg-[var(--income-light)] border border-[var(--income)]/40">CHO VAY</span>}
+                                          {d.type === "VAY" ? <span className="text-[var(--expense)] font-pixel text-[14px] px-1.5 py-0.5 rounded bg-[var(--expense-light)] border border-[var(--expense)]/40">ĐI VAY</span> : <span className="text-[var(--income)] font-pixel text-[14px] px-1.5 py-0.5 rounded bg-[var(--income-light)] border border-[var(--income)]/40">CHO VAY</span>}
                                           {d.isPaid && <span className="text-[12px] font-bold text-theme-textSecondary">Đã xong</span>}
                                         </p>
                                         <p className="text-xs font-semibold text-theme-textSecondary mt-1 truncate">{d.note || "Không ghi chú"} · {new Date(d.date).toLocaleDateString('vi-VN')}</p>
@@ -5926,7 +5958,7 @@
                           <div key={d.id} className={`retro-card bg-theme-surface p-3.5 rounded-xl flex justify-between items-center gap-2 ${d.isPaid ? 'opacity-55 grayscale' : ''}`}>
                             <div className="flex flex-col min-w-0">
                                <p className="font-bold text-theme-textPrimary text-sm flex items-center gap-2 truncate">
-                                 {d.type === "VAY" ? <span className="text-[var(--expense)] font-pixel text-[12px] px-1.5 py-0.5 rounded bg-[var(--expense-light)]">ĐI VAY</span> : <span className="text-[var(--income)] font-pixel text-[12px] px-1.5 py-0.5 rounded bg-[var(--income-light)]">CHO VAY</span>}
+                                 {d.type === "VAY" ? <span className="text-[var(--expense)] font-pixel text-[14px] px-1.5 py-0.5 rounded bg-[var(--expense-light)]">ĐI VAY</span> : <span className="text-[var(--income)] font-pixel text-[14px] px-1.5 py-0.5 rounded bg-[var(--income-light)]">CHO VAY</span>}
                                  <span className="truncate">{d.title}</span>
                                </p>
                                <p className="text-xs font-semibold text-theme-textSecondary mt-1 truncate">{d.note || "Không ghi chú"} · {new Date(d.date).toLocaleDateString('vi-VN')}</p>
@@ -5973,7 +6005,7 @@
           {voice.lock && (
             <div className="fixed inset-0 z-[80] bg-theme-background flex flex-col items-center justify-center px-5 text-center overflow-y-auto py-8">
               <div className="console-top-strip fixed top-0 inset-x-0 px-4 py-1.5 flex items-center justify-between pt-safe">
-                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[13px] uppercase">MAI · TRỢ LÝ TỰ ĐỘNG</span></div>
+                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[15px] uppercase">MAI · TRỢ LÝ TỰ ĐỘNG</span></div>
                 <button onClick={() => { setAssistInput(""); lockFinish(0); }} className="console-key">ESC</button>
               </div>
               <div className="fixed top-8 inset-x-0 h-1.5 retro-stripes-h" />
@@ -6113,7 +6145,7 @@
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led shrink-0" />
-                    <span className="font-pixel text-[12px] uppercase tracking-wider truncate">MAI · XÁC NHẬN GHI SỔ</span>
+                    <span className="font-pixel text-[14px] uppercase tracking-wider truncate">MAI · XÁC NHẬN GHI SỔ</span>
                   </div>
                   <button type="button" onClick={() => setMaiDraft(null)} aria-label="Đóng" className="console-key shrink-0">✕</button>
                 </div>
@@ -6136,12 +6168,12 @@
                     <input name="date" type="date" defaultValue={(() => { const d = new Date(maiDraft.date || Date.now()); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-xs font-bold text-theme-textPrimary w-[122px]" />
                   </div>
                   <div className="console-lcd px-3 py-2 bg-theme-background">
-                    <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider block">Số tiền</label>
+                    <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Số tiền</label>
                     <CurrencyInput name="amount" defaultValue={maiDraft.amount} required={true} className="w-full bg-transparent border-0 p-0 font-display text-2xl text-theme-textPrimary tabular focus:outline-none focus:ring-0 focus:shadow-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase">Hạng mục</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Hạng mục</label>
                       <select name="category" defaultValue={maiDraft.category} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2 text-xs font-bold text-theme-textPrimary">
                         {parentCategories.map(pc => (
                           <optgroup key={pc.name} label={pc.name}>
@@ -6152,7 +6184,7 @@
                       </select>
                     </div>
                     <div>
-                      <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase">Tài khoản / Ví</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Tài khoản / Ví</label>
                       {(() => {
                         const matched = resolveAccount(accounts, maiDraft);
                         const defaultVal = matched ? String(matched.id) : (maiDraft.bank ? "" : (maiDraft.bankName ? `legacy:${maiDraft.bankName}` : (accounts[0] ? String(accounts[0].id) : "")));
@@ -6171,7 +6203,7 @@
                     </div>
                   </div>
                   <div>
-                    <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase">Ghi chú</label>
+                    <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Ghi chú</label>
                     <input name="note" defaultValue={maiDraft.note || ""} placeholder="Ghi chú..." className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-2 px-2.5 text-xs font-semibold text-theme-textPrimary" />
                   </div>
                   <button type="submit" className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2"><span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Đúng rồi, ghi sổ</button>
@@ -6187,7 +6219,7 @@
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                    <span className="font-pixel text-[12px] uppercase tracking-wider">GHI GIAO DỊCH MỚI</span>
+                    <span className="font-pixel text-[14px] uppercase tracking-wider">GHI GIAO DỊCH MỚI</span>
                   </div>
                   <button type="button" onClick={()=>setIsAddTxModalOpen(false)} aria-label="Đóng" className="console-key">✕</button>
                 </div>
@@ -6209,7 +6241,7 @@
 
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <label htmlFor="amountVisibleInput" className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
+                      <label htmlFor="amountVisibleInput" className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
                       <button
                         type="button"
                         onClick={() => ocrFileInputRef.current && ocrFileInputRef.current.click()}
@@ -6228,7 +6260,7 @@
                   {/* Category Selection compact grid */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider">Hạng mục</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Hạng mục</label>
                       <span className="text-[12px] text-theme-textSecondary font-semibold">Lọc theo nhóm lớn</span>
                     </div>
                     <CategoryParentFilterBar
@@ -6258,13 +6290,13 @@
 
                   <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[12px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
                       <select name="bankSelect" required className="flex-1 min-w-0 bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-bold">
                         {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
                       </select>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[12px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
                       <input name="note" type="text" onChange={e => suggestFromNote(e.target.value)} placeholder="Ví dụ: Ăn phở sáng..." className="flex-1 min-w-0 bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-semibold" />
                     </div>
                     {addTxHint && (
@@ -6291,7 +6323,7 @@
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#FFD875] px-led" />
-                    <span className="font-pixel text-[12px] uppercase tracking-wider">CHỈNH SỬA GIAO DỊCH</span>
+                    <span className="font-pixel text-[14px] uppercase tracking-wider">CHỈNH SỬA GIAO DỊCH</span>
                   </div>
                   <button type="button" onClick={()=>setEditingTx(null)} aria-label="Đóng" className="console-key">✕</button>
                 </div>
@@ -6311,7 +6343,7 @@
 
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
                       <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] truncate max-w-[160px]">{editingTx.category}</span>
                     </div>
                     <CurrencyInput name="amount" defaultValue={editingTx.amount} placeholder="0" required={true} className="w-full bg-transparent border-0 p-0 text-theme-textPrimary font-display text-2xl tabular focus:outline-none focus:ring-0 focus:shadow-none" />
@@ -6319,7 +6351,7 @@
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                      <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider">Đổi hạng mục</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Đổi hạng mục</label>
                       <span className="text-[12px] text-theme-textSecondary font-semibold">Lọc theo nhóm lớn</span>
                     </div>
                     <CategoryParentFilterBar
@@ -6349,7 +6381,7 @@
 
                   <div className="grid grid-cols-1 gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[12px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
                       {(() => {
                         const matched = resolveAccount(accounts, editingTx);
                         const defaultVal = matched ? String(matched.id) : (editingTx.bankName ? `legacy:${editingTx.bankName}` : (accounts[0] ? String(accounts[0].id) : ""));
@@ -6364,7 +6396,7 @@
                       })()}
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[12px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
                       <input name="note" type="text" defaultValue={editingTx.note || ""} placeholder="Ví dụ: Ăn phở sáng..." className="flex-1 min-w-0 bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-semibold" />
                     </div>
                   </div>
@@ -6411,7 +6443,7 @@
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                    <span className="font-pixel text-[12px] uppercase tracking-wider">{editingBank ? "SỬA THÔNG TIN VÍ" : "LIÊN KẾT VÍ / THẺ"}</span>
+                    <span className="font-pixel text-[14px] uppercase tracking-wider">{editingBank ? "SỬA THÔNG TIN VÍ" : "LIÊN KẾT VÍ / THẺ"}</span>
                   </div>
                   <button type="button" onClick={()=>{setIsAddBankModalOpen(false); setEditingBank(null);}} aria-label="Đóng" className="console-key">✕</button>
                 </div>
@@ -6435,7 +6467,7 @@
 
                   {bankNameType === "preset" ? (
                     <div>
-                      <label className="font-pixel text-[12px] text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Thương hiệu</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1.5 block uppercase tracking-wider">Thương hiệu</label>
                       <div className="grid grid-cols-4 gap-1.5 max-h-[150px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                         {BANK_LOGOS.map(b => (
                           <label key={b.name} className="cursor-pointer relative group">
@@ -6449,14 +6481,14 @@
                     </div>
                   ) : (
                     <div>
-                      <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase tracking-wider">Tên Ngân hàng / Ví</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase tracking-wider">Tên Ngân hàng / Ví</label>
                       <input name="customBankName" type="text" defaultValue={editingBank?.name || ""} placeholder="Ví dụ: Techcombank Phụ..." required={bankNameType==="custom"} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-sm font-semibold" />
                     </div>
                   )}
 
                   <div className="space-y-2.5">
                     <div>
-                      <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase tracking-wider">{bankKind === "credit" ? "Số thẻ (không bắt buộc)" : "Số tài khoản (không bắt buộc)"}</label>
+                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase tracking-wider">{bankKind === "credit" ? "Số thẻ (không bắt buộc)" : "Số tài khoản (không bắt buộc)"}</label>
                       <input name="accountNo" type="text" inputMode="numeric" autoComplete="off" defaultValue={(editingBank?.accountNo && editingBank?.accountNo !== "N/A") ? formatAccNo(editingBank.accountNo, false) : ""}
                         onChange={e => { const raw = e.target.value.replace(/[^0-9A-Za-z]/g, "").slice(0, 19); e.target.value = raw.replace(/(\w{4})(?=\w)/g, "$1 "); }}
                         placeholder={bankKind === "credit" ? "4 số cuối hoặc số thẻ…" : "Nhập số tài khoản…"} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-sm font-mono tracking-wider" />
@@ -6464,18 +6496,18 @@
                     {bankKind === "credit" ? (
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
-                          <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase">Hạn mức</label>
+                          <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Hạn mức</label>
                           <CurrencyInput name="limit" defaultValue={editingBank?.limit || ""} placeholder="0" required={true} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-base font-bold" />
                         </div>
                         <div>
-                          <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase">Dư nợ hiện tại</label>
+                          <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Dư nợ hiện tại</label>
                           <CurrencyInput name="debt" defaultValue={editingBank && editingBank.kind === "credit" ? Math.abs(Math.min(0, Number(editingBank.balance) || 0)) || "" : ""} placeholder="0" className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-base font-bold" />
                         </div>
                         <p className="col-span-2 text-[13px] text-theme-textSecondary">Chi bằng thẻ tăng dư nợ; trả thẻ ghi là "Thu" vào thẻ.</p>
                       </div>
                     ) : (
                       <div>
-                        <label className="font-pixel text-[12px] text-theme-textSecondary mb-1 block uppercase tracking-wider">Số dư hiện tại</label>
+                        <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase tracking-wider">Số dư hiện tại</label>
                         <CurrencyInput name="balance" defaultValue={editingBank?.balance || ""} placeholder="0" required={true} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary font-display text-xl" />
                       </div>
                     )}
@@ -6497,7 +6529,7 @@
                 <div className="console-top-strip px-4 py-2 flex items-center justify-between shrink-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" />
-                    <span className="font-pixel text-[13px] uppercase tracking-wider">HỆ THỐNG · CÀI ĐẶT & ĐỒNG BỘ</span>
+                    <span className="font-pixel text-[15px] uppercase tracking-wider">HỆ THỐNG · CÀI ĐẶT & ĐỒNG BỘ</span>
                   </div>
                   <button type="button" onClick={() => setShowSettingsDialog(false)} aria-label="Đóng" className="console-key">✕</button>
                 </div>
@@ -6506,7 +6538,7 @@
 
                   {/* Giao diện TV Pastel */}
                   <section className="space-y-2.5">
-                    <p className="font-pixel text-[13px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" anim="wiggle" className="w-4 h-4" /> Giao diện TV Pastel</p>
+                    <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" anim="wiggle" className="w-4 h-4" /> Giao diện TV Pastel</p>
                     <div className="grid grid-cols-2 gap-2.5">
                       {Object.entries(THEMES).map(([key, t]) => {
                         const active = theme === key;
@@ -6520,7 +6552,7 @@
                                   <span key={i} className="w-5 h-5 rounded border-2" style={{ background: c, borderColor: t.colors.textPrimary }} />
                                 ))}
                               </div>
-                              {active && <span className="font-pixel text-[11px] px-1.5 py-0.5 rounded" style={{ background: t.colors.primary, color: t.colors.onPrimary }}>CHỌN</span>}
+                              {active && <span className="font-pixel text-[13px] px-1.5 py-0.5 rounded" style={{ background: t.colors.primary, color: t.colors.onPrimary }}>CHỌN</span>}
                             </div>
                             <p className="font-display text-lg leading-tight" style={{ color: t.colors.textPrimary }}>{t.name}</p>
                             <p className="text-[13px] font-semibold leading-snug mt-0.5" style={{ color: t.colors.textSecondary }}>{t.desc}</p>
@@ -6535,8 +6567,8 @@
                   {/* Đồng bộ Firebase bằng Google & Email */}
                   <section className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="font-pixel text-[13px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="cloud" anim="float" className="w-4 h-4" /> Sao lưu Cloud Firebase</p>
-                      {googleUser && <span className="font-pixel text-[12px] px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)]">{isRealtimeLive ? "LIVE" : "CONNECTED"}</span>}
+                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="cloud" anim="float" className="w-4 h-4" /> Sao lưu Cloud Firebase</p>
+                      {googleUser && <span className="font-pixel text-[14px] px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)]">{isRealtimeLive ? "LIVE" : "CONNECTED"}</span>}
                     </div>
 
                     {!googleUser ? (
@@ -6634,8 +6666,8 @@
                   {/* Sao lưu thủ công */}
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <p className="font-pixel text-[13px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu tệp .JSON</p>
-                      <span className="font-pixel text-[12px] text-[var(--on-accent,#4A2B18)] bg-[var(--accent)] px-2 py-0.5 rounded border border-[var(--ink)]">{transactions.length} GD · {accounts.length} VÍ</span>
+                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu tệp .JSON</p>
+                      <span className="font-pixel text-[14px] text-[var(--on-accent,#4A2B18)] bg-[var(--accent)] px-2 py-0.5 rounded border border-[var(--ink)]">{transactions.length} GD · {accounts.length} VÍ</span>
                     </div>
                     <p className="text-xs text-theme-textSecondary">Xuất toàn bộ dữ liệu ra file .json để cất giữ hoặc nhập lại (Gộp / Thay thế).</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -6651,13 +6683,13 @@
                     <React.Fragment>
                       <div className="retro-dash" />
                       <section className="space-y-2">
-                        <p className="font-pixel text-[12px] uppercase tracking-wider text-[var(--expense)] flex items-center gap-2"><Icon name="alert" className="w-4 h-4" /> Vùng nguy hiểm</p>
+                        <p className="font-pixel text-[14px] uppercase tracking-wider text-[var(--expense)] flex items-center gap-2"><Icon name="alert" className="w-4 h-4" /> Vùng nguy hiểm</p>
                         <button onClick={handleWipeCloudData} className="game-btn-sm w-full py-2.5 bg-[var(--expense-light)] text-[var(--expense)] font-bold text-xs flex items-center justify-center gap-2"><Icon name="trash" className="w-4 h-4" /> Xoá toàn bộ dữ liệu của tài khoản này</button>
                       </section>
                     </React.Fragment>
                   )}
 
-                  <p className="text-center font-pixel text-[12px] text-theme-textSecondary pt-1">VINASPENDS MAI 4.7 · RETRO PIXEL CONSOLE</p>
+                  <p className="text-center font-pixel text-[14px] text-theme-textSecondary pt-1">VINASPENDS MAI 4.7 · RETRO PIXEL CONSOLE</p>
                 </div>
               </div>
             </div>
@@ -6670,7 +6702,7 @@
                 <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-sm bg-[#FFD875] px-led" />
-                    <span className="font-pixel text-[12px] uppercase tracking-wider">NHẬP TỆP SAO LƯU .JSON</span>
+                    <span className="font-pixel text-[14px] uppercase tracking-wider">NHẬP TỆP SAO LƯU .JSON</span>
                   </div>
                   <button type="button" onClick={() => setImportPreview(null)} aria-label="Đóng" className="console-key">✕</button>
                 </div>
@@ -6713,7 +6745,7 @@
                     ) : (
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led shrink-0" />
                     )}
-                    <span className="font-pixel text-[12px] uppercase tracking-wider truncate">
+                    <span className="font-pixel text-[14px] uppercase tracking-wider truncate">
                       {editingBudgetCat ? `NGÂN SÁCH · ${editingBudgetCat}` : "THIẾT LẬP NGÂN SÁCH"}
                     </span>
                   </div>
@@ -6725,7 +6757,7 @@
                   {editingBudgetCat ? (
                     <div className="space-y-3">
                       <div className="console-lcd p-3 bg-theme-background">
-                        <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider block mb-1">
+                        <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block mb-1">
                           Hạn mức tháng · “{editingBudgetCat}” (VNĐ)
                         </label>
                         <input
@@ -6775,7 +6807,7 @@
                   ) : (
                     <div className="space-y-3.5">
                       <div className="console-lcd bg-theme-background p-3 space-y-2.5">
-                        <label className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider block">
+                        <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">
                           Tổng ngân sách chi tiêu hàng tháng (VNĐ)
                         </label>
                         <input
@@ -6812,7 +6844,7 @@
                       </div>
 
                       <div className="space-y-1.5">
-                        <span className="font-pixel text-[12px] text-theme-textSecondary uppercase tracking-wider block">
+                        <span className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">
                           Hoặc chọn nhóm lớn đặt hạn mức riêng:
                         </span>
                         <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto no-scrollbar">
@@ -6826,7 +6858,7 @@
                                 <Icon name={p.icon} className="w-5 h-5" />
                                 <span className="text-xs font-bold text-theme-textPrimary truncate">{p.name}</span>
                               </div>
-                              <span className="font-pixel text-[11px] text-theme-primary shrink-0">ĐẶT</span>
+                              <span className="font-pixel text-[13px] text-theme-primary shrink-0">ĐẶT</span>
                             </button>
                           ))}
                         </div>
@@ -6869,7 +6901,7 @@
             <div className="min-h-screen bg-[#DCECC8] text-[#4A2B18] flex items-center justify-center p-5 font-sans">
               <div className="max-w-md w-full bg-[#FBF2DE] rounded-xl border-[3px] border-[#54321D] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] overflow-hidden text-center">
                 <div className="bg-[#C8945C] text-[#FFF9EC] px-3.5 py-1.5 flex items-center justify-between border-b-2 border-[#54321D]">
-                  <span className="font-pixel text-[12px] tracking-wider uppercase">SYSTEM · RECOVERY MODE</span>
+                  <span className="font-pixel text-[14px] tracking-wider uppercase">SYSTEM · RECOVERY MODE</span>
                   <span className="w-2.5 h-2.5 rounded-sm bg-[#FF7B95]" />
                 </div>
                 <div className="h-1.5 retro-stripes-h" />
