@@ -29,7 +29,9 @@ ICONS_JS = ROOT / "web" / "icons.js"
 
 def encode_image(img: Image.Image, mode: str, size: int) -> str:
     img = img.convert("RGBA")
-    if mode == "pixel":
+    if mode == "native":
+        pass
+    elif mode == "pixel":
         target = size or 32
         img = img.resize((target, target), Image.NEAREST)
     else:
@@ -79,8 +81,8 @@ def load_patch(source: Path, mode: str, size: int) -> dict[str, str]:
 def main():
     ap = argparse.ArgumentParser(description="Nạp hình vẽ Procreate / Patch vào web/icons.js")
     ap.add_argument("source", help="Đường dẫn file .zip, .json, .png hoặc thư mục chứa ảnh PNG")
-    ap.add_argument("--mode", choices=["hd", "pixel"], default="hd", help="hd (128x128 mượt cho Procreate) hoặc pixel (32x32)")
-    ap.add_argument("--size", type=int, default=0, help="Kích thước tuỳ chọn (mặc định 128 cho hd, 32 cho pixel)")
+    ap.add_argument("--mode", choices=["native", "hd", "pixel"], default="native", help="native (giữ nguyên đúng kích cỡ gốc anh vẽ), hd (tối đa 128px), hoặc pixel (32x32)")
+    ap.add_argument("--size", type=int, default=0, help="Kích thước tuỳ chọn")
     args = ap.parse_args()
 
     src = Path(args.source)
