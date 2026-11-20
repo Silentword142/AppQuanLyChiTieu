@@ -446,22 +446,51 @@
     .dock-ico {
       position: absolute;
       left: 50%; top: 43%;
-      width: 21px; height: 21px;
+      width: 20px; height: 20px;
       transform: translate(-50%, -50%);
       display: block;
       pointer-events: none;
+      color: #341D3E;
+      opacity: .76;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,.45));
+      transition: color .16s var(--ease-soft), opacity .16s var(--ease-soft), filter .18s var(--ease-soft), transform .16s var(--ease-spring);
     }
+    .dock-ico svg, .dock-ico img {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    .dock-ico img.dock-custom-mono {
+      filter: brightness(0) saturate(100%) invert(11%) sepia(31%) saturate(1658%) hue-rotate(248deg) brightness(92%) contrast(96%);
+    }
+    .dock-cap.shape-triangle { --dock-glow: #FFE27A; --dock-glow-2: #FF5E8E; }
+    .dock-cap.shape-circle   { --dock-glow: #EAFF8A; --dock-glow-2: #4FD86B; }
+    .dock-cap.shape-square   { --dock-glow: #F6D8FF; --dock-glow-2: #9E5CFF; }
+    .dock-cap.shape-star     { --dock-glow: #C8F6FF; --dock-glow-2: #3A9BFF; }
     .dock-cap.shape-triangle .dock-ico {
       top: 50%;
-      width: 19px; height: 19px;
+      width: 18px; height: 18px;
     }
     .dock-cap.shape-star .dock-ico {
       top: 45%;
-      width: 19px; height: 19px;
+      width: 18px; height: 18px;
     }
     .dock-key.on .dock-cap {
       transform: translateY(4.2px);
       filter: brightness(1.03) saturate(1.06);
+    }
+    .dock-key.on .dock-ico,
+    .dock-key:active .dock-ico {
+      color: #FFFFFF;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.06);
+      filter:
+        drop-shadow(0 1px 0 rgba(34,23,43,.5))
+        drop-shadow(0 0 2.5px var(--dock-glow, #FFE680))
+        drop-shadow(0 0 6px var(--dock-glow-2, #FFA834));
+    }
+    .dock-key.on .dock-ico img.dock-custom-mono,
+    .dock-key:active .dock-ico img.dock-custom-mono {
+      filter: brightness(0) invert(1);
     }
     .dock-key:active .dock-cap {
       transform: translateY(5.6px) !important;
@@ -1957,6 +1986,89 @@
         "...######.........######...",
         "....####...........####...."
       ], { hi: "#CAE5FF", base: "#86B9EC", side: "#346296" })
+    };
+
+    // Icon bên trong 4 nút danh mục dưới đáy: dạng đơn màu (currentColor) phát sáng khi được chọn
+    const DOCK_MONO_SVGS = {
+      home: pixelSvg([
+        ".......#.......",
+        "......###......",
+        ".....#####.##..",
+        "....#########..",
+        "...##########..",
+        "..###########..",
+        ".#############.",
+        "...............",
+        "...#########...",
+        "...#########...",
+        "...###...###...",
+        "...###...###...",
+        "...###...###...",
+        "...###...###...",
+        "..............."
+      ], { "#": "currentColor" }),
+      chart: pixelSvg([
+        "...............",
+        "...............",
+        "..........###..",
+        "..........###..",
+        "..........###..",
+        "......###.###..",
+        "......###.###..",
+        "......###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "...............",
+        ".#############.",
+        "..............."
+      ], { "#": "currentColor" }),
+      mai: pixelSvg([
+        "....#.....#....",
+        ".....#...#.....",
+        "......###......",
+        "..###########..",
+        ".#############.",
+        ".##.........##.",
+        ".##..#...#..##.",
+        ".##..#...#..##.",
+        ".##.........##.",
+        ".#############.",
+        "..###########..",
+        "....##...##....",
+        "...............",
+        "...............",
+        "..............."
+      ], { "#": "currentColor" }),
+      wallet: pixelSvg([
+        "...............",
+        "...#########...",
+        "...##.....##...",
+        "...............",
+        ".#############.",
+        ".#############.",
+        ".#######.......",
+        ".#######..####.",
+        ".#######..####.",
+        ".#######.......",
+        ".#############.",
+        ".#############.",
+        "..###########..",
+        "...............",
+        "..............."
+      ], { "#": "currentColor" })
+    };
+    const renderDockMonoIcon = (name) => {
+      const V = window.VinaIcons;
+      if (V && V.CUSTOM32) {
+        const key = V.resolve ? V.resolve(name) : name;
+        if (V.CUSTOM32[key]) {
+          return `<img class="vi vi32 dock-custom-mono" src="data:image/png;base64,${V.CUSTOM32[key]}" alt="" draggable="false">`;
+        }
+      }
+      if (DOCK_MONO_SVGS[name]) return DOCK_MONO_SVGS[name];
+      return V ? V.svg(name, "dock-custom-mono") : "";
     };
 
     const TV_ANTENNA_SVG = pixelSvg([
@@ -6338,7 +6450,7 @@
                       <span className="dock-well" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "" }} />
                       <span className={`dock-cap shape-${item.shape}`}>
                         <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "" }} />
-                        <span className="dock-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(item.icon) : "" }} />
+                        <span className="dock-ico" dangerouslySetInnerHTML={{ __html: renderDockMonoIcon(item.icon) }} />
                       </span>
                     </span>
                     <span className="dock-label">{item.label}</span>
