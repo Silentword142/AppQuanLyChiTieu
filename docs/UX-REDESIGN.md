@@ -1,13 +1,11 @@
 # VinaSpends – Phân tích UX/UI & các lần thiết kế lại
 
-## 0c. Bộ icon 32×32 (5.2) – nâng cấp từ bản vẽ 16×16
+## 0c. Bộ icon 32×32 (5.3) – vẽ vector trước, rồi chuyển pixel
 
-- Giữ nguyên hình dáng 175 icon màu vẽ tay 16×16 trong `web/icons.js`, nâng lên **32×32** bằng `tools/icons32/from16.py`:
-  1. Scale2x (EPX) phóng 2× giữ nét chéo mượt;
-  2. làm mảnh viền 2px → 1px, nửa trong thành mép tối của mảng màu;
-  3. tô khối từng mảng (gộp cặp màu sáng/tối vẽ tay thành một khối): dải 6 tông HSV lệch sắc (tối ngả tím, sáng ngả vàng), sáng trên-trái, lọc đa số để mảng màu sạch, điểm bóng loáng;
-  4. viền ngoài = tông tối của mảng kề bên pha mực.
-- Sửa icon: sửa lưới 16×16 trong `web/icons.js` → chạy `python3 tools/icons32/from16.py --sheet /tmp/xem.png` để xem, `--inject` để nhúng PNG (IMG32) vào `web/icons.js`.
+- **Vector trước**: 173 icon màu được vẽ lại bằng SVG trong `tools/icons32/vec_*.py` theo một hệ lưới chung (viewBox 32, vùng vẽ 3..29, tròn Ø25, vuông 24 bo 3, ngang 26×20, đứng 20×26; nét chi tiết dày 1–2; góc nhìn chính diện; bảng màu chung ~26 màu ký hiệu bằng 1 chữ).
+- **Chuyển pixel** (`tools/icons32/vector.py`): dựng SVG ở 256×256 không khử răng cưa → mỗi ô 8×8 lấy màu chiếm đa số (nét chi tiết được ưu tiên) → dọn điểm lẻ → viền ngoài 1px màu tối của mảng kề bên.
+- **Tô khối** (dùng chung `from16.py`): dải 6 tông HSV lệch sắc cho mỗi màu, sáng trên-trái, lọc đa số cho mảng sạch, điểm bóng loáng.
+- Sửa/thêm icon: sửa `vec_*.py` → `python3 tools/icons32/vector.py --sheet /tmp/xem` (ra `xem_vector.png` và `xem_pixel.png`) → `--inject` để nhúng PNG (IMG32) vào `web/icons.js`. Cần Node + Playwright (Chromium) để dựng SVG.
 - Icon nét đơn sắc (mũi tên, +, ✕, ‹ ›…) vẫn là SVG 16×16 theo màu chữ.
 
 ## 0b. Bản 5.1 – "Spendy"

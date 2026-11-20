@@ -166,7 +166,7 @@ def upgrade(g16, pal):
     return col
 
 
-def shade_region(region, ch, pal, g, col, edge_dark):
+def shade_region(region, ch, pal, g, col, edge_dark, pairs=True):
     rp = ramp(pal[ch])
     S = set(region)
     xs = [p[0] for p in region]; ys = [p[1] for p in region]
@@ -213,7 +213,7 @@ def shade_region(region, ch, pal, g, col, edge_dark):
         tone = sm
     for (x, y) in region:
         t = tone[(x, y)]
-        if g[y][x] in PAIR:          # ô tô bóng vẽ tay trong bản 16×16
+        if pairs and g[y][x] in PAIR:          # ô tô bóng vẽ tay trong bản 16×16
             t = max(1, t - 1)
         if (x, y) in edge_dark:      # nửa trong của viền cũ -> mép tối
             t = min(t, 3 if lits[(x, y)] > 0.25 else 2)
