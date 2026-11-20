@@ -1,5 +1,11 @@
 # VinaSpends – Phân tích UX/UI & các lần thiết kế lại
 
+## 0c. Bộ icon 32×32 (5.2)
+
+- 173 icon màu vẽ lại ở lưới **32×32** (trước là 16×16) bằng bộ dựng `tools/icons32/` (`engine.py` + `defs_*.py`): mỗi icon là tập khối hình (cầu, trụ, hộp, đa giác, nét) gắn chất liệu; bộ dựng tự tạo dải 6 tông có lệch sắc (bóng ngả tím, sáng ngả vàng), tô khối theo ánh sáng trên-trái, viền trong theo màu khối, viền ngoài màu tối của vật liệu, điểm bóng loáng.
+- Sửa/thêm icon: sửa `tools/icons32/defs_*.py` rồi chạy `python3 tools/icons32/build.py --sheet /tmp/xem.png` để xem và `--inject` để nhúng PNG vào `web/icons.js`.
+- Icon nét đơn sắc (mũi tên, +, ✕, ‹ ›…) vẫn là SVG 16×16 theo màu chữ.
+
 ## 0b. Bản 5.1 – "Spendy"
 
 - **Tên app: Spendy** (tên hiển thị trên web, launcher Android, trang đăng nhập Google, file sao lưu `spendy_sao_luu_*.json`). Không đổi package Android, khoá `localStorage` hay collection Firebase nên dữ liệu cũ giữ nguyên. Trợ lý vẫn tên Mai.
