@@ -51,7 +51,7 @@
   };
 
   var SYSTEM = [
-    "Bạn là bộ phân tích thông báo và tự động ghi sổ của app quản lý chi tiêu VinaSpends tại Việt Nam.",
+    "Bạn là bộ phân tích thông báo và tự động ghi sổ của app quản lý chi tiêu Spendy tại Việt Nam.",
     "Thực hiện nghiêm ngặt 2 bước lọc:",
     "BƯỚC 1 — Lọc nguồn ứng dụng tài chính (với thông báo có app=...):",
     "- Chỉ nhận thông báo từ ứng dụng tài chính (ngân hàng, ngân hàng số, ví điện tử, tài chính tiêu dùng/thẻ tín dụng) hoặc tin nhắn SMS từ brandname ngân hàng/ví.",

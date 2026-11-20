@@ -2167,21 +2167,21 @@ oooooooooooooooo
   /* ===================== DI CHUYỂN ===================== */
   I.scooter = `
 ................
-................
-...........ooo..
-..........oSSo..
-...........oo...
-....oooooo.opo..
-...oDDDDDDoopo..
-..oooooooooopo..
-.oppppppppppppo.
-.ophppppppppppo.
-.opppppoooooppo.
-..ooooo....oooo.
-..oSSo....oSSo..
-.oSwwSo..oSwwSo.
-..oSSo....oSSo..
-...oo......oo...`;
+..........oooo..
+.........oSSSSo.
+..........ooyo..
+..........otto..
+...ooooo..otto..
+..oDDDDDo.otto..
+.oDDDDDDDootto..
+.otttttttootto..
+otthhhttttottto.
+otttttttttottto.
+.otttttttttttto.
+.oSSSSooooSSSSo.
+.oSwSSo..oSwSSo.
+.oSSSSo..oSSSSo.
+..oooo....oooo..`;
   I.bike = `
 ................
 ................
@@ -2491,22 +2491,22 @@ oobbbbbbbbbbbboo
 ................
 ................`;
   I["ao-dai"] = `
-................
 ......oooo......
-.....ollllo.....
-...oolllllloo...
-..ollllllllllo..
-.ollllhlllllllo.
-.oloollllllooLo.
-.olo.ollllLo.oLo
-.ooo.ollllLo.ooo
-.....ollllLo....
-....olllllLLo...
-....olllllLLo...
-...ollllllLLLo..
-...ollllllLLLo..
-...oooooooooooo.
-................`;
+.....oPPPPo.....
+....ooPPPPoo....
+..oolllllllloo..
+.olllhhlllllllo.
+.ollolllpllollo.
+.ollollpyplollo.
+.ollolllpllollo.
+.ollollllllollo.
+.ollwwllllwwllo.
+..oowwllllwwoo..
+...owwllllwwo...
+...owllllllwo...
+...owllllllwo...
+...owllllllwo...
+....oooooooo....`;
   I.shoe = `
 ................
 ................
@@ -2988,39 +2988,39 @@ owwwwwwwwwwwwsso
 .....oooooo.....
 ................`;
   I.baby = `
-................
-......ooo.......
-.....oyyyoooo...
-....okkkkkkkko..
-...okkkkkkkkkko.
-..okkkokkkkokko.
-..okkkokkkkokko.
-..okpkkkkkkkpko.
-..okkkkooookkko.
-..okkkkkoookkko.
-...okkkkkkkkko..
-....oobbbbbbo...
-...obbbbbbbbbo..
-...oooooooooo...
-................
-................`;
+.......oo.......
+.....oobboo.....
+...oobbbbbboo...
+..obhhbbbbbbbo..
+..obbbbbbbbbbo..
+..okkkkkkkkkko..
+.okkkkkkkkkkkko.
+.okkkkkkkkkkkko.
+.okkkokkkkokkko.
+.okkkokkkkokkko.
+.okppkkkkkkppko.
+..okkkkPPkkkko..
+..okkkkrrkkkko..
+...okkkkkkkko...
+....ookkkkoo....
+......oooo......`;
   I.yoga = `
-................
-......oooo......
+.......oo.......
+......okko......
+.....okooko.....
+....okkkkkko....
+....okkkkkko....
 .....okkkko.....
-.....okhkko.....
-.oo..okkkko..oo.
-.oko..oooo..oko.
-..oko.oooo.oko..
-...ookllllkoo...
-....olllllLo....
-....olllllLo....
-....oLLLLLLo....
-...okko..okko...
-..okko....okko..
-.okko......okko.
-.ooo........ooo.
-................`;
+......ollo......
+.....ollllo.....
+......ollo......
+......ollo......
+......ollo......
+......oLLLo.....
+......oLooLo....
+......oLLLo.....
+..oooooLoooooo..
+.oppppppppppppo.`;
 
   /* ===================== HỌC TẬP ===================== */
   I.book = `
@@ -3315,19 +3315,19 @@ oyyyyyoyyoyyyYo.
   I.dog = `
 ................
 ................
-...ooo....ooo...
-..oCCCo..oCCCo..
-.oCCcoooooocCCo.
-.oCCccccccccCCo.
-.oCcccccccccccCo
-..ocoocccccoocoo
-..ocoocccccoococ
-..occccccccccco.
-..occccoooccccco
-...occcwoowccco.
-....occwwwwcco..
-.....oocccco....
-.......oooo.....
+.ooo.oooooo.ooo.
+oCCCoccccccoCCCo
+oCCCcchhccccCCCo
+oCCCccccccccCCCo
+oCCCcoccccocCCCo
+oCCCcoccccocCCCo
+oCCCccccccccCCCo
+oCCCccwoowccCCCo
+.oCccwwoowwccCo.
+..occwwwwwwcco..
+...ocwwwpwwco...
+....owwwpwwo....
+.....oooooo.....
 ................`;
 
   /* ===================== KHÁC ===================== */
@@ -3459,28 +3459,78 @@ o.oooooooooooo.o
     }
     return out.map(function (a) { return a.join(""); });
   }
+  // ---- màu: trộn / làm sáng / làm tối ----
+  var INK = [74, 51, 80];
+  function hex2rgb(h) { var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  function rgb2hex(c) { return "#" + c.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? "0" : "") + v.toString(16); }).join(""); }
+  function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+  var SHADE_SKIP = { h: 1, w: 1, "#": 1, o: 1 };   // không tô bóng tự động lên điểm sáng/kem/nét đơn sắc
+
+  // Dựng icon + "tô bóng tự động" kiểu pixel art:
+  //  1) viền trong (nét chi tiết không giáp nền trong suốt) đổi sang màu tối của vùng kề -> mềm mắt hơn
+  //  2) mép trên-trái của mỗi mảng màu sáng lên, mép dưới-phải tối đi -> có khối
+  //  3) bóng đổ 1 điểm phía dưới silhouette
   function inner(name) {
     if (CACHE[name] != null) return CACHE[name];
     var r = rows(name);
     if (!r) return "";
+    var W = 16, g = [], x, y, i;
+    for (y = 0; y < W; y++) { g.push([]); for (x = 0; x < W; x++) { var ch0 = r[y].charAt(x); g[y].push(PAL[ch0] && ch0 !== " " ? ch0 : "."); } }
+    var at = function (xx, yy) { return xx < 0 || yy < 0 || xx >= W || yy >= W ? "." : g[yy][xx]; };
+    var mono = false;
+    for (y = 0; y < W && !mono; y++) for (x = 0; x < W; x++) if (g[y][x] === "#") { mono = true; break; }
+    var col = [];   // màu cuối cùng của từng điểm: "k" | "currentColor" | "#rrggbb"
+    for (y = 0; y < W; y++) {
+      col.push([]);
+      for (x = 0; x < W; x++) {
+        var ch = g[y][x];
+        if (ch === ".") { col[y].push(null); continue; }
+        if (ch === "#") { col[y].push("currentColor"); continue; }
+        if (ch === "o") {
+          var outer = false, counts = {}, best = null, bestN = 0;
+          [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) {
+            var n = at(x + d[0], y + d[1]);
+            if (n === ".") outer = true;
+            else if (n !== "o" && n !== "#" && n !== "h" && n !== "w") { counts[n] = (counts[n] || 0) + 1; if (counts[n] > bestN) { bestN = counts[n]; best = n; } }
+          });
+          if (outer || !best || mono) col[y].push("k");
+          else col[y].push(rgb2hex(mix(hex2rgb(PAL[best]), INK, 0.58)));
+          continue;
+        }
+        var base = hex2rgb(PAL[ch]);
+        if (mono || SHADE_SKIP[ch]) { col[y].push(PAL[ch]); continue; }
+        var up = at(x, y - 1), left = at(x - 1, y), down = at(x, y + 1), right = at(x + 1, y);
+        var edgeTL = (up === "o" || up === ".") || (left === "o" || left === ".");
+        var edgeBR = (down === "o" || down === ".") || (right === "o" || right === ".");
+        if (edgeTL && !edgeBR) base = mix(base, [255, 255, 255], 0.28);
+        else if (edgeBR && !edgeTL) base = mix(base, INK, 0.14);
+        col[y].push(rgb2hex(base));
+      }
+    }
     var paths = {}, order = [];
-    for (var y = 0; y < 16; y++) {
-      var line = r[y], x = 0;
-      while (x < 16) {
-        var ch = line.charAt(x);
-        if (ch === "." || ch === " " || !PAL[ch]) { x++; continue; }
-        var s = x;
-        while (x < 16 && line.charAt(x) === ch) x++;
-        if (!paths[ch]) { paths[ch] = ""; order.push(ch); }
-        paths[ch] += "M" + s + " " + y + "h" + (x - s) + "v1h-" + (x - s) + "z";
+    var add = function (key, d) { if (!paths[key]) { paths[key] = ""; order.push(key); } paths[key] += d; };
+    // bóng đổ (dưới silhouette, lệch xuống 1 điểm)
+    if (!mono) {
+      for (y = 0; y < W; y++) for (x = 0; x < W; x++) {
+        if (col[y][x] && (y + 1 >= W || !col[y + 1][x])) add("shadow", "M" + x + " " + (y + 1) + "h1v1h-1z");
+      }
+    }
+    for (y = 0; y < W; y++) {
+      x = 0;
+      while (x < W) {
+        var c = col[y][x];
+        if (!c) { x++; continue; }
+        var s0 = x;
+        while (x < W && col[y][x] === c) x++;
+        add(c, "M" + s0 + " " + y + "h" + (x - s0) + "v1h-" + (x - s0) + "z");
       }
     }
     var out = "";
-    // vẽ màu nền trước, viền sau cùng để nét viền luôn sắc
-    order.sort(function (a, b) { return (a === "o" ? 1 : 0) - (b === "o" ? 1 : 0); });
-    order.forEach(function (ch) {
-      var col = PAL[ch];
-      out += col === "k" ? '<path class="k" d="' + paths[ch] + '"/>' : '<path fill="' + col + '" d="' + paths[ch] + '"/>';
+    order.sort(function (a, b) { var ra = a === "shadow" ? 0 : a === "k" ? 2 : 1, rb = b === "shadow" ? 0 : b === "k" ? 2 : 1; return ra - rb; });
+    order.forEach(function (key) {
+      if (key === "shadow") out += '<path class="ks" d="' + paths[key] + '"/>';
+      else if (key === "k") out += '<path class="k" d="' + paths[key] + '"/>';
+      else out += '<path fill="' + key + '" d="' + paths[key] + '"/>';
     });
     CACHE[name] = out;
     return out;

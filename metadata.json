@@ -1,6 +1,6 @@
 {
-  "name": "Remix VinaSpends web",
-  "description": "Ứng dụng quản lý chi tiêu phong cách vintage, trợ lý Mai tự đọc thông báo biến động số dư ngay trên máy (offline), đồng bộ qua Firebase.",
+  "name": "Spendy web",
+  "description": "Ứng dụng quản lý chi tiêu phong cách pixel pastel TV retro, trợ lý Mai tự đọc thông báo biến động số dư ngay trên máy (offline), đồng bộ qua Firebase.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

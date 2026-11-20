@@ -1,5 +1,13 @@
 # VinaSpends – Phân tích UX/UI & các lần thiết kế lại
 
+## 0b. Bản 5.1 – "Spendy"
+
+- **Tên app: Spendy** (tên hiển thị trên web, launcher Android, trang đăng nhập Google, file sao lưu `spendy_sao_luu_*.json`). Không đổi package Android, khoá `localStorage` hay collection Firebase nên dữ liệu cũ giữ nguyên. Trợ lý vẫn tên Mai.
+- **Icon app mới**: đồng xu vàng pixel khắc "S" trên ô hồng bo góc pixel (`tools/gen-app-icon.py`, lưới 32×32, xuất 512 px + 5 mật độ Android).
+- **Chữ to hơn**: giữ font Handjet / VT323 / Tiny5; chữ thường 18 px, chữ nhỏ 14 px, nhãn pixel 12 px, tiêu đề và số tiền lớn theo. Khoảng cách bố cục (rem) giữ nguyên.
+- **Khung pixel toàn bộ**: mọi cửa sổ, thẻ, nút, phím, ô nhập, HUD, TV đều bo góc bậc thang (2–3 nấc) bằng `clip-path` + điểm ảnh góc vẽ lại qua `::after`; nút nổi có gờ đáy dày 2 điểm, bấm thì lún 1 điểm. Nút arcade "GHI" và núm xoay TV là hình tròn pixel vẽ bằng SVG. Các phần tử bo tròn còn lại dùng góc khuyết 1 điểm.
+- **Icon đẹp hơn**: bộ dựng icon tự tô bóng kiểu pixel art (viền trong theo màu vùng, mép sáng trên-trái, mép tối dưới-phải, bóng đổ 1 điểm); vẽ lại xe máy, áo dài, em bé, chó, yoga.
+
 ## 0. Bản 5.0 – "Pastel Dusk Pixel": màn hình chính TV retro + nút bấm điện tử
 
 Lấy cảm hứng từ phong cách đồ hoạ game pixel pastel (trời hồng hoàng hôn, khung cửa sổ viền mận, giấy kem, nút vuông nổi khối), nhưng toàn bộ hình vẽ, icon và bố cục đều là thiết kế riêng của VinaSpends.

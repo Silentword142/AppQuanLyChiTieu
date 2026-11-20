@@ -1,4 +1,4 @@
-# VinaSpends – bản Web
+# Spendy – bản Web
 
 Sổ chi tiêu phong cách pixel pastel với màn hình chính dạng **TV retro** và nút bấm điện tử, có trợ lý **Mai** đọc thông báo biến động số dư ngay trên máy (không cần mạng, không dùng API ngoài).
 
