@@ -223,65 +223,41 @@ def downsample(img):
 
 
 def _unblast_tones(hex_col):
-    """Trả về (shadow_hex, base_hex, highlight_hex) phẳng, tươi sáng kiểu Unblast Colored Icons."""
+    """Trả về (shadow_hex, base_hex) phẳng, tối giản kiểu Unblast Colored Icons (không bóng loáng)."""
     r, g, b = F._hex(hex_col)
     import colorsys
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    # Base: tươi sáng
-    s_base = min(1.0, s * 1.12) if s > 0.12 else s
+    s_base = min(1.0, s * 1.06) if s > 0.12 else s
     base = F._to_hex(colorsys.hsv_to_rgb(h, s_base, v))
-    # Shadow: đậm hơn ~20%, ngả nhẹ về tím mận để tách khối phẳng rõ nét
-    h_sh = F._shift(h, 0.76, 0.08)
-    s_sh = min(1.0, s_base + 0.10) if s > 0.08 else s_base + 0.05
-    v_sh = max(0.18, v * 0.78)
+    h_sh = F._shift(h, 0.76, 0.04)
+    s_sh = min(1.0, s_base + 0.05) if s > 0.08 else s_base + 0.02
+    v_sh = max(0.22, v * 0.85)
     shade = F._to_hex(colorsys.hsv_to_rgb(h_sh, s_sh, v_sh))
-    # Highlight: sáng hơn ở mép trên-trái
-    h_hi = F._shift(h, 0.14, 0.05)
-    s_hi = max(0.0, s_base * 0.72)
-    v_hi = min(1.0, v + (1.0 - v) * 0.55)
-    hi = F._to_hex(colorsys.hsv_to_rgb(h_hi, s_hi, v_hi))
-    return shade, base, hi
+    return shade, base
 
 
 def _shade_flat_unblast(region, ch, col):
-    """Tô màu phẳng 2 sắc độ (+ viền sáng nhẹ trên-trái cho mảng lớn) kiểu Unblast Colored Icons."""
-    shade, base, hi = _unblast_tones(PAL[ch])
+    """Tô màu phẳng tối giản: nền phẳng + đúng 1 đường shading mảnh ở đáy mảng lớn, bỏ hoàn toàn bóng sáng."""
+    shade, base = _unblast_tones(PAL[ch])
     S = set(region)
     area = len(region)
     xs = [p[0] for p in region]
     ys = [p[1] for p in region]
     w = max(xs) - min(xs) + 1
     h = max(ys) - min(ys) + 1
-    big = area >= 48 and min(w, h) >= 6
-    med = area >= 14 and min(w, h) >= 3
 
     for (x, y) in region:
         col[y][x] = base
 
-    if not med:
-        # Mảng nhỏ: chỉ 2 sắc độ (mép dưới/phải đậm hơn)
+    # Chỉ thêm 1 lớp shading tối giản (1px đáy) cho mảng đủ lớn, các chi tiết nhỏ giữ phẳng hoàn toàn
+    if area >= 18 and min(w, h) >= 3:
         for (x, y) in region:
-            if (x + 1, y) not in S or (x, y + 1) not in S:
-                if (x - 1, y) in S or (x, y - 1) in S:
-                    col[y][x] = shade
-        return
-
-    # Mảng vừa & lớn: dải bóng phẳng 1-2px ở đáy/phải + vệt sáng 1px ở đỉnh/trái
-    for (x, y) in region:
-        is_bot = (x, y + 1) not in S
-        is_rgt = (x + 1, y) not in S
-        is_top = (x, y - 1) not in S
-        is_lft = (x - 1, y) not in S
-        if is_bot or is_rgt:
-            col[y][x] = shade
-        elif big and ((x, y + 2) not in S and (x + 1, y + 1) not in S or (x + 2, y) not in S and (x + 1, y + 1) not in S):
-            col[y][x] = shade
-        elif (is_top and not is_rgt) or (is_lft and not is_bot and y <= min(ys) + h * 0.55):
-            col[y][x] = hi
+            if (x, y + 1) not in S and (x, y - 1) in S:
+                col[y][x] = shade
 
 
 def to_pixel(g):
-    """lưới ký hiệu -> màu cuối: tô màu phẳng 2 sắc độ kiểu Unblast + viền mực đậm rõ nét"""
+    """lưới ký hiệu -> màu cuối: tô màu phẳng tối giản 1 lớp shading + viền mực đậm rõ nét"""
     col = [[None] * N for _ in range(N)]
     at = lambda x, y: g[y][x] if 0 <= x < N and 0 <= y < N else "."
     seen = [[False] * N for _ in range(N)]
@@ -302,7 +278,7 @@ def to_pixel(g):
                 for x, y in region:
                     col[y][x] = INK_HEX
             elif c in ("u", "n"):
-                shade, base, _ = _unblast_tones(PAL[c])
+                _, base = _unblast_tones(PAL[c])
                 for x, y in region:
                     col[y][x] = base
             elif c == "h":

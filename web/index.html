@@ -395,61 +395,83 @@
     .tv-feet { display: flex; justify-content: space-between; padding: 0 38px; margin-top: -3px; position: relative; z-index: 1; }
     .tv-feet span { width: 34px; height: 12px; background: var(--hud); border: 3px solid var(--ink); border-top: 0; border-radius: 0 0 8px 8px; }
 
-    /* ======================= DOCK (4 nút ấn tivi cơ học + nút GHI) ======================= */
+    /* ======================= DOCK (4 nút hình học pixel 2D giả 3D không viền đen + nút GHI) ======================= */
     .dock { background: transparent; padding-bottom: 0 !important; }
     .dock-inner {
       position: relative;
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-      margin: 0; padding: 7px 10px calc(var(--safe-bottom) + 7px);
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 4px;
+      margin: 0; padding: 6px 8px calc(var(--safe-bottom) + 6px);
       background: var(--tv-body);
       border-top: 3px solid var(--ink);
       box-shadow: inset 0 3px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(74,51,80,.24), 0 -3px 12px rgba(20,12,30,.28);
     }
     .dock-key {
       position: relative; flex: 1; min-width: 0;
-      display: flex; flex-direction: column; align-items: center;
-      background: #191124;
-      border: 2.5px solid var(--ink);
-      padding: 3px 3px 5px;
-      box-shadow: inset 0 3px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.25);
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      background: transparent !important;
+      border: 0 !important;
+      padding: 2px 2px 1px;
+      box-shadow: none !important;
       -webkit-user-select: none; user-select: none;
+      touch-action: manipulation;
     }
     .dock-face {
-      --c: var(--surface);
-      position: relative; width: 100%; height: 62px;
-      padding: 4px 2px 3px;
-      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-      background: var(--c); border: 2.5px solid var(--ink);
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.78), inset 0 -7px 0 rgba(42,24,48,.28), 0 4px 0 var(--ink);
-      transform: translateY(-2px);
-      transition: transform .22s var(--ease-spring), box-shadow .22s var(--ease-spring), filter .2s var(--ease-soft);
+      position: relative; width: 100%;
+      padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      clip-path: none !important;
     }
-    .dock-face .vi { width: 25px; height: 25px; }
-    .dock-face .dock-ico { width: 25px; height: 25px; display: block; }
-    .dock-key:active .dock-face,
-    .dock-key.on .dock-face {
-      transform: translateY(3px) !important;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(42,24,48,.32), 0 0 0 var(--ink) !important;
-      transition-duration: .06s;
+    .dock-shape {
+      position: relative;
+      width: 48px; height: 50px;
+      display: block;
+      image-rendering: pixelated;
     }
-    .dock-key:not(.on) .dock-face { filter: saturate(.92); }
-    .dock-led {
-      position: static; width: 22px; height: 5px; flex: none;
-      background: #2A1D38; border: 1.5px solid var(--ink);
-      box-shadow: inset 0 1px 0 rgba(0,0,0,.55);
-      transition: background-color .25s var(--ease-soft), box-shadow .25s var(--ease-soft);
+    .dock-shape svg {
+      width: 100%; height: 100%;
+      display: block; overflow: visible;
+      shape-rendering: crispEdges;
     }
-    .dock-key.on .dock-led { background: #7DFFB0; box-shadow: 0 0 8px #7DFFB0, inset 0 1px 0 #FFFFFF; }
+    .dock-shape .pbtn-cap {
+      transform: translateY(0px);
+      transition: transform .14s var(--ease-spring), filter .14s var(--ease-soft);
+    }
+    .dock-shape .pbtn-shadow {
+      transition: opacity .14s var(--ease-soft);
+    }
+    .dock-key.on .dock-shape .pbtn-cap {
+      transform: translateY(3.2px);
+      filter: brightness(.98) saturate(1.06);
+    }
+    .dock-key:active .dock-shape .pbtn-cap {
+      transform: translateY(4px) !important;
+      filter: brightness(.95);
+      transition-duration: .04s;
+    }
+    .dock-key:active .dock-shape .pbtn-shadow,
+    .dock-key.on .dock-shape .pbtn-shadow {
+      opacity: .25;
+    }
     .dock-label {
-      width: calc(100% - 4px);
-      padding-top: 2px; margin-top: 0;
-      border-top: 1.5px solid rgba(34,23,43,.26);
-      font: 700 13px/1 'Handjet', sans-serif; letter-spacing: .03em;
-      color: #22172B; text-align: center; text-transform: uppercase;
+      width: 100%;
+      padding-top: 2px; margin-top: 1px;
+      border-top: 0;
+      font: 700 13px/1 'Handjet', sans-serif; letter-spacing: .04em;
+      color: #35203C; text-align: center; text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255,255,255,.45);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: transform .14s var(--ease-spring), color .15s var(--ease-soft);
     }
-    .dock-key.on .dock-label { color: #140C1C; text-shadow: 0 1px 0 rgba(255,255,255,.45); }
-    .dock-key.on .dock-ico { animation: icoHop .55s var(--ease-spring) both; }
+    .dock-key.on .dock-label {
+      color: #FFF6E8;
+      text-shadow: 0 1px 0 rgba(42,24,48,.85), 0 0 6px rgba(255,242,226,.35);
+    }
+    .dock-key:active .dock-label {
+      transform: translateY(1px);
+    }
     .arcade { position: relative; width: 68px; height: 70px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin: 0 1px; -webkit-user-select: none; user-select: none; }
     .arcade-ring { position: relative; width: 64px; height: 64px; border-radius: 999px; background: var(--hud); border: 3px solid var(--ink); box-shadow: inset 0 3px 0 rgba(255,255,255,.15), 0 4px 0 var(--ink); display: grid; place-items: center; margin-top: -18px; }
     .arcade-ring::before { content: ""; position: absolute; inset: -9px; border-radius: 999px; border: 3px solid rgb(var(--primary-rgb) / .9); opacity: 0; animation: arcadePing 3.2s var(--ease-out) infinite; }
@@ -609,7 +631,7 @@
     :where(html[data-retro="1"]) :where(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) { clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
     :where(html[data-retro="1"]) :where(input, select, textarea) { border-radius: 0 !important; clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
 
-    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .dock-face, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
+    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
       --pc: var(--ink);
       position: relative;
       border-style: solid !important; border-color: var(--pc) !important;
@@ -617,16 +639,16 @@
       border-radius: 0 !important;
       clip-path: polygon(calc(2 * var(--u)) 0, calc(100% - calc(2 * var(--u))) 0, calc(100% - calc(2 * var(--u))) var(--u), calc(100% - var(--u)) var(--u), calc(100% - var(--u)) calc(2 * var(--u)), 100% calc(2 * var(--u)), 100% calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) 100%, calc(2 * var(--u)) 100%, calc(2 * var(--u)) calc(100% - var(--u)), var(--u) calc(100% - var(--u)), var(--u) calc(100% - calc(2 * var(--u))), 0 calc(100% - calc(2 * var(--u))), 0 calc(2 * var(--u)), var(--u) calc(2 * var(--u)), var(--u) var(--u), calc(2 * var(--u)) var(--u));
     }
-    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .dock-face::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
+    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
       background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat;
     }
-    .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .dock-key:active .dock-face, .dock-key.on .dock-face, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
+    .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
       transform: translateY(var(--u)) !important;
       border-bottom-width: var(--u) !important;
       margin-bottom: var(--u);
     }
-    .game-btn:active::after, html[data-retro="1"] button.bg-theme-primary:active::after, .ekey:active::after, .ekey.is-down::after, .dock-key:active .dock-face::after, .dock-key.on .dock-face::after, .hud-btn:active::after, .hud-sub:active::after, .game-btn-sm:active::after, .console-key:active::after, .tv-mini:active::after { background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat, linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 100% / 100% var(--u) no-repeat; }
+    .game-btn:active::after, html[data-retro="1"] button.bg-theme-primary:active::after, .ekey:active::after, .ekey.is-down::after, .hud-btn:active::after, .hud-sub:active::after, .game-btn-sm:active::after, .console-key:active::after, .tv-mini:active::after { background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat, linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 100% / 100% var(--u) no-repeat; }
     .console-lcd, .day-card, .xp-bar, .hp-seg, .lvl-tag {
       --pc: var(--ink);
       position: relative;
@@ -641,7 +663,7 @@
     }
     /* kích thước điểm ảnh từng loại */
     .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
-    .game-btn, .ekey, .dock-face, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
+    .game-btn, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
     html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
     .day-card { --pc: rgb(var(--border-rgb)); }
     .lvl-tag { --pc: #D79A3C; }
@@ -692,7 +714,7 @@
     html.dark .hp-seg, html.dark .border-retro-ink { border-color: #0E0914 !important; }
     html.dark .retro-card, html.dark .bg-theme-surface.border.rounded-2xl, html.dark .bg-theme-surface.border.rounded-3xl { box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 4px 0 #0E0914, 0 8px 0 rgba(0,0,0,.25); }
     html.dark .console-bezel { box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px #0E0914, 0 10px 0 4px rgba(0,0,0,.35); }
-    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .dock-face, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
+    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
     html.dark .game-btn-neutral { border-color: rgb(var(--border-rgb)) !important; }
     html.dark .dock-label { color: var(--text-secondary); }
     html.dark .hud-cell-light { background: var(--variant); color: var(--text-primary); }
@@ -1748,6 +1770,171 @@
     const ARCADE_RING_SVG = pixelDisc(17, { body: "var(--hud)", hl: "rgba(255,255,255,.22)", sh: "rgba(0,0,0,.28)", ink: "var(--ink)" });
     const ARCADE_DOME_SVG = pixelDisc(13, { body: "var(--key-add)", hl: "#FFF6D8", sh: "rgba(190,110,30,.45)", ink: "var(--ink)" }, `<rect x="3" y="3" width="2" height="1" fill="#FFFFFF"/><rect x="3" y="4" width="1" height="1" fill="#FFFFFF"/>`);
     const TV_KNOB_SVG = pixelDisc(12, { body: "var(--tv-trim)", hl: "#FFFFFF", sh: "rgba(74,51,80,.22)", ink: "var(--ink)" }, `<rect x="5" y="2" width="2" height="4" fill="var(--ink)"/>`);
+
+    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng pixel shade 2D giả 3D không viền đen
+    const pixel3dBtnSvg = (rows, pal) => {
+      const H = rows.length, W = rows[0].length, DEPTH = 4;
+      const at = (x, y) => x >= 0 && x < W && y >= 0 && y < H && rows[y][x] === "#";
+      const runs = (grid, h) => {
+        let out = "";
+        for (let y = 0; y < h; y++) {
+          let x = 0;
+          while (x < W) {
+            const c = grid[y][x];
+            if (!c) { x++; continue; }
+            const x0 = x;
+            while (x < W && grid[y][x] === c) x++;
+            out += `<rect x="${x0}" y="${y}" width="${x - x0}" height="1" fill="${c}"/>`;
+          }
+        }
+        return out;
+      };
+      const VH = H + DEPTH + 2;
+      const shGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const baseGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const capGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (at(x, y) && (!at(x, y + 1) || !at(x + 1, y) || !at(x - 1, y))) {
+          if (y + DEPTH + 1 < VH) shGrid[y + DEPTH + 1][x] = "rgba(46,24,56,0.24)";
+        }
+      }
+
+      for (let d = DEPTH; d >= 1; d--) {
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          if (!at(x, y)) continue;
+          const yy = y + d;
+          if (yy >= VH) continue;
+          const isBotEdge = !at(x, y + 1);
+          const isLeftEdge = !at(x - 1, y);
+          const isRightEdge = !at(x + 1, y);
+          let c = pal.side;
+          if (d === DEPTH && isBotEdge) c = pal.deep;
+          else if (isLeftEdge || (x < W * 0.42 && !isRightEdge)) c = pal.sideL;
+          else if (isRightEdge || x > W * 0.62) c = pal.deep;
+          baseGrid[yy][x] = c;
+        }
+      }
+
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (!at(x, y)) continue;
+        const up = at(x, y - 1), dn = at(x, y + 1), lf = at(x - 1, y), rt = at(x + 1, y);
+        const up2 = at(x, y - 2), dn2 = at(x, y + 2), lf2 = at(x - 2, y), rt2 = at(x + 2, y);
+        const up3 = at(x, y - 3), dn3 = at(x, y + 3), lf3 = at(x - 3, y), rt3 = at(x + 3, y);
+        const up4 = at(x, y - 4), dn4 = at(x, y + 4), lf4 = at(x - 4, y), rt4 = at(x + 4, y);
+        let c = pal.base;
+        if (!up || !lf || !dn || !rt) {
+          if (!up && !lf && dn && rt) c = pal.spec;
+          else if ((!up && dn && rt) || (!lf && dn && rt && y < H * 0.72)) c = pal.hi;
+          else if (!dn || !rt) c = pal.rim;
+          else c = pal.light;
+        } else if (!up2 || !lf2 || !dn2 || !rt2) {
+          if ((!up2 || !lf2) && dn2 && rt2) c = pal.light;
+          else if (!dn2 || !rt2) c = pal.mid;
+          else c = pal.base;
+        } else if (up3 && dn3 && lf3 && rt3 && (!up4 || !dn4 || !lf4 || !rt4)) {
+          if (!up4 || !lf4) c = pal.mid;
+          else if (!dn4 || !rt4) c = pal.light;
+        }
+        capGrid[y][x] = c;
+      }
+
+      return `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true"><g class="pbtn-shadow">${runs(shGrid, VH)}</g><g class="pbtn-well">${runs(baseGrid, VH)}</g><g class="pbtn-cap">${runs(capGrid, VH)}</g></svg>`;
+    };
+
+    const DOCK_SHAPE_SVGS = {
+      triangle: pixel3dBtnSvg([
+        ".........................",
+        "...........###...........",
+        "..........#####..........",
+        "..........#####..........",
+        ".........#######.........",
+        "........#########........",
+        "........#########........",
+        ".......###########.......",
+        "......#############......",
+        "......#############......",
+        ".....###############.....",
+        "....#################....",
+        "....#################....",
+        "...###################...",
+        "..#####################..",
+        "..#####################..",
+        ".#######################.",
+        ".#######################.",
+        "..#####################..",
+        "........................."
+      ], { spec: "#FFF7F8", hi: "#FFD2D9", light: "#FCAEB9", base: "#F48899", mid: "#E26F83", rim: "#CE576D", sideL: "#B23F56", side: "#972E45", deep: "#761D32" }),
+
+      circle: pixel3dBtnSvg([
+        ".........#######.........",
+        ".......###########.......",
+        ".....###############.....",
+        "....#################....",
+        "...###################...",
+        "...###################...",
+        "..#####################..",
+        "..#####################..",
+        "..#####################..",
+        "..#####################..",
+        "..#####################..",
+        "..#####################..",
+        "..#####################..",
+        "...###################...",
+        "...###################...",
+        "....#################....",
+        ".....###############.....",
+        ".......###########.......",
+        ".........#######.........",
+        "........................."
+      ], { spec: "#F8FFF2", hi: "#E3F2C4", light: "#C9E29E", base: "#A9CE74", mid: "#93BA5E", rim: "#7CA349", sideL: "#628634", side: "#4E6F24", deep: "#395417" }),
+
+      square: pixel3dBtnSvg([
+        ".........................",
+        ".....###############.....",
+        "....#################....",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "...###################...",
+        "....#################....",
+        ".....###############.....",
+        "........................."
+      ], { spec: "#FCF7FF", hi: "#E8D7FC", light: "#D3BBF3", base: "#BA98E6", mid: "#A480D4", rim: "#8D68BF", sideL: "#714DA1", side: "#5B3A88", deep: "#43266C" }),
+
+      star: pixel3dBtnSvg([
+        "............#............",
+        "...........###...........",
+        "...........###...........",
+        "..........#####..........",
+        "..........#####..........",
+        ".........#######.........",
+        "..#####################..",
+        ".#######################.",
+        "..#####################..",
+        "...###################...",
+        "....#################....",
+        ".....###############.....",
+        "......#############......",
+        ".....###############.....",
+        ".....###############.....",
+        "....#######...#######....",
+        "....######.....######....",
+        "...######.......######...",
+        "...#####.........#####...",
+        "....###...........###...."
+      ], { spec: "#F5FBFF", hi: "#CCE6FF", light: "#AAD2F8", base: "#82B6EA", mid: "#6AA0D9", rim: "#548AC3", sideL: "#3D6EA4", side: "#2C588A", deep: "#1D416C" })
+    };
 
     const TV_ANTENNA_SVG = pixelSvg([
       "..yy................................yy..",
@@ -4622,11 +4809,11 @@
         { id: "category", icon: "tags", label: "Hạng mục" }
       ];
       const DOCK = [
-        { id: "overview", icon: "home", label: "Nhà", c: "var(--key-home)" },
-        { id: "report", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
+        { id: "overview", shape: "triangle", icon: "home", label: "Nhà", c: "var(--key-home)" },
+        { id: "report", shape: "circle", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
         { id: "__add" },
-        { id: "mai", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
-        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ", c: "var(--key-wallet)" }
+        { id: "mai", shape: "square", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
+        { id: "wallet_ai", shape: "star", icon: "wallet", label: "Ví & Nợ", c: "var(--key-wallet)" }
       ];
       const maiBadge = maiInbox.length;
       const canGoBackUI = activeTab !== "overview" || (activeTab === "wallet_ai" && subTab !== "wallet") || (activeTab === "report" && !!drillDownParent) || (activeTab === "wallet_ai" && subTab === "debts" && !!expandedDebtPerson);
@@ -6112,7 +6299,7 @@
             )}
           </main>
 
-          {/* DOCK – 4 nút ấn tivi cơ học + nút GHI ở giữa (MOBILE) */}
+          {/* DOCK – 4 nút hình học (Tam giác · Tròn · Vuông · Ngôi sao) pixel shade 2D giả 3D + nút GHI ở giữa (MOBILE) */}
           <nav className="dock fixed bottom-0 inset-x-0 md:hidden z-30 pb-safe" aria-label="Điều hướng chính">
             <div className="dock-inner">
               {DOCK.map(item => item.id === "__add" ? (
@@ -6123,11 +6310,10 @@
               ) : (
                 <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
                   onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
-                  <span className="dock-face" style={{ "--c": item.c }}>
-                    <span className="dock-led" />
-                    <span className="dock-ico block" style={{ width: 25, height: 25 }} dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(item.icon) : "" }} />
+                  <span className="dock-face">
+                    <span className="dock-shape" dangerouslySetInnerHTML={{ __html: DOCK_SHAPE_SVGS[item.shape] || "" }} />
                     <span className="dock-label">{item.label}</span>
-                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 2 }}>{maiBadge}</span>}
+                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
                   </span>
                 </button>
               ))}
