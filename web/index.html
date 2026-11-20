@@ -1764,7 +1764,7 @@
     const uiArt = (key, fallbackHtml, cls = "") => {
       const V = window.VinaIcons;
       const p = V && V.png32 ? V.png32(key) : null;
-      return p ? `<img class="w-full h-full object-contain ${cls}" src="data:image/png;base64,${p}" alt="" draggable="false">` : fallbackHtml;
+      return p ? `<img class="w-full h-full object-contain ${cls}" style="image-rendering:pixelated" src="data:image/png;base64,${p}" alt="" draggable="false">` : fallbackHtml;
     };
     const CLOUD_SVG = pixelSvg([
       "..........wwwwww............",
