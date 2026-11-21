@@ -145,7 +145,7 @@
     .vi .k { fill: var(--icon-ink); }
     .vi32 { image-rendering: pixelated; image-rendering: -moz-crisp-edges; object-fit: contain; pointer-events: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .vi .ks { fill: rgba(74, 51, 80, .22); }
-    /* hoạt ảnh sprite (art/anims.png → VinaIcons.anim): dải khung trượt theo steps() */
+    /* hoạt ảnh sprite (art/procreate → VinaIcons.anim): dải khung trượt theo steps() */
     .via { overflow: hidden; position: relative; pointer-events: none; }
     .via > img { display: block; height: 100%; width: calc(var(--n) * 100%); max-width: none; image-rendering: pixelated; animation: viaPlay var(--d) steps(var(--n)) var(--it, infinite); }
     @keyframes viaPlay { to { transform: translateX(-100%); } }
@@ -1772,6 +1772,7 @@
     // Cho phép thay thế mọi UI Element (nút 2.5D, nút + Ghi, mây...) bằng ảnh vẽ tay từ Procreate / Studio
     const uiArt = (key, fallbackHtml, cls = "") => {
       const V = window.VinaIcons;
+      if (V && V.hasAnim && V.hasAnim(key)) return V.anim(key, cls);
       const p = V && V.png32 ? V.png32(key) : null;
       return p ? `<img class="w-full h-full object-contain ${cls}" style="image-rendering:pixelated" src="data:image/png;base64,${p}" alt="" draggable="false">` : fallbackHtml;
     };
@@ -2076,6 +2077,7 @@
     };
     const renderDockMonoIcon = (name) => {
       const V = window.VinaIcons;
+      if (V && V.hasAnim && V.hasAnim(`ui-dock-ico-${name}`)) return V.anim(`ui-dock-ico-${name}`, "dock-custom-mono");
       const uiPng = V && V.png32 ? V.png32(`ui-dock-ico-${name}`) : null;
       if (uiPng) {
         return `<img class="vi vi32 dock-custom-mono" src="data:image/png;base64,${uiPng}" alt="" draggable="false">`;

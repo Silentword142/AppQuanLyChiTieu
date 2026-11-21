@@ -1,165 +1,148 @@
-# Spendy · Quy trình vẽ icon & hoạt ảnh trên Procreate
+# Spendy · Vẽ icon & hoạt ảnh trên Procreate (khung 64×64)
 
-Toàn bộ hình vẽ của app nằm trong **2 ảnh**. Anh vẽ trên Procreate, xuất PNG, chép đè vào `art/`,
-rồi chạy **1 lệnh**. Không cần đụng vào code.
+**Mỗi phần tử là 1 file PNG.** Một khung có cỡ **64×64**. Hoạt ảnh thì đặt **các khung cạnh nhau theo chiều ngang**.
+Anh vẽ xong, lưu lại và gửi cho Claude; Claude chạy 1 lệnh để đưa vào app.
 
 ```
 art/
-├── icons.png      ← MỌI icon 32×32, 16 ô / hàng        (anh vẽ)
-├── icons.txt      ← tên từng ô, mỗi dòng = 1 hàng        (anh sửa khi thêm icon)
-├── anims.png      ← MỌI hoạt ảnh, mỗi hàng 1 hoạt ảnh, tối đa 12 khung   (anh vẽ)
-├── anims.txt      ← tên · fps · kiểu lặp · số nhịp giữ từng khung        (anh sửa)
-├── anims/         ← (tuỳ chọn) <tên>.gif / <tên>.png động xuất từ Animation Assist
-├── guide/         ← lớp lưới, bản đồ tên ô, bảng màu .swatches cho Procreate
-└── out/           ← ảnh xem trước do lệnh build sinh ra (không commit)
+├── procreate/<tên>.png     ← 188 file: 173 icon + 15 UI element (dock, nút arcade, mây)
+├── elements.txt            ← cỡ khung + nhịp hoạt ảnh của từng phần tử
+├── guide/                  ← lưới 64 cho Procreate, 3 bảng màu .swatches
+├── Spendy-Procreate-64.zip ← tất cả những thứ trên trong 1 file để chép sang iPad
+└── out/                    ← ảnh xem trước (tự sinh, không commit)
 ```
 
-```bash
-python3 tools/art.py          # cắt ảnh → kiểm tra → nhúng vào web/icons.js → art/out/*
-python3 tools/art.py check    # chỉ kiểm tra
+## 1. Cỡ khung
+
+| Loại | 1 khung | Ví dụ hoạt ảnh 8 khung |
+|---|---|---|
+| Icon (173 cái) | 64 × 64 | 512 × 64 |
+| `ui-dock-*-cap/well` | 58 × 54 | 464 × 54 |
+| `ui-dock-ico-*` | 30 × 30 | 240 × 30 |
+| `ui-arcade-ring` / `ui-arcade-dome` | 34 × 34 / 26 × 26 | |
+| `ui-sky-cloud` | 56 × 20 | |
+
+Cỡ chính xác của từng phần tử ghi trong `art/elements.txt`.
+
+**Tự phóng to mà không vỡ nét pixel:**
+- File mẫu được làm từ hình đang có trong app, phóng ×2 bằng nearest-neighbour. Mỗi pixel cũ thành một khối 2×2, nên mở ra là y hệt app. Anh vẽ thêm chi tiết đến từng pixel nhỏ của khung 64.
+- Canvas Procreate phóng to theo bội số nguyên (128, 256, 512 px mỗi khung) cũng được. Khi nhập, mỗi khối được lấy đúng điểm giữa, nên viền nhoè của cọ bị loại bỏ.
+- Anh vẫn có thể vẽ ở 32×32; ảnh sẽ được tự phóng lên 64.
+- Phần nào anh chưa vẽ thêm chi tiết (vẫn là các khối 2×2) sẽ được lưu ở bản nhỏ cho app nhẹ. Hiển thị không khác gì.
+- Trong app, ảnh luôn được vẽ bằng `image-rendering: pixelated`, nên nét pixel giữ nguyên ở mọi cỡ.
+
+## 2. Cài Procreate (làm 1 lần)
+
+1. Giải nén `art/Spendy-Procreate-64.zip` trong app Tệp trên iPad.
+2. Chạm vào 3 file `guide/Spendy-*.swatches` để nhập bảng màu. Mỗi bảng có 3 hàng: bóng, màu gốc, sáng.
+3. **Cọ:** *Airbrushing → Hard Airbrush*, cỡ 1 px, độ mờ 100 %, Streamline 0.
+4. **Lưới:** *Actions → Canvas → Drawing Guide → 2D Grid*, **Grid Size 64 px**: mỗi ô lưới là một khung.
+5. Khi dịch hoặc xoay hình, chọn **Nearest Neighbor** trong công cụ Transform.
+
+## 3. Vẽ một icon
+
+1. *Gallery → Import* rồi chọn `procreate/<tên>.png`. Canvas tự đúng 64×64.
+2. (Tuỳ chọn) Kéo `guide/grid-64.png` vào làm layer trên cùng, chế độ Multiply, độ mờ khoảng 30 %. Lớp này có:
+   - khung 64 (tím);
+   - lưới mỗi 8 px;
+   - vùng vẽ 6…57 (hồng);
+   - vòng tròn Ø50 (xanh);
+   - đường chân đế y = 58 (xanh lá).
+3. Vẽ xong, ẩn lớp guide, *Share → PNG*, giữ nguyên tên file.
+
+**Luật để cả bộ đều nhau:**
+- Hình chính nằm trong vùng 6…57.
+- Viền 1–2 px, liền nét. Dùng màu tối nhất (hàng 1) của mảng đó, hoặc màu mực `#3B2A40`.
+- Ánh sáng chiếu từ **trên-trái**: bóng phía dưới-phải, mảng sáng và 1–3 điểm trắng bóng loáng phía trên-trái.
+- Mỗi icon có khoảng 4 mảng màu chính, mỗi mảng 3 sắc độ. Không tô chuyển màu, không dùng cọ mềm.
+- Pixel có độ trong suốt dưới 50 % sẽ bị xoá, trên 50 % sẽ thành đặc.
+
+## 4. Vẽ hoạt ảnh: các khung cạnh nhau
+
+1. Mở file của phần tử, rồi *Actions → Canvas → Crop & Resize*. Tăng **chiều rộng** lên số khung × 64 (8 khung → 512), neo canvas ở bên trái.
+2. Nhân đôi layer khung 1 rồi dịch sang phải 64 px (Transform, bật Snapping) để làm khung tiếp theo. Giảm độ mờ khung trước còn 30 % để làm onion skin.
+3. Có thể dùng `guide/grid-64x8-anim.png` làm lớp lưới.
+4. *Share → PNG*, giữ nguyên tên.
+
+> Nếu anh quen **Animation Assist** (mỗi layer một khung), cứ *Share → Animated PNG / GIF* với tên `<tên>.png`/`.gif`.
+> Khi nhập, các khung sẽ tự được ghép cạnh nhau.
+
+Nhịp chạy khai báo trong `elements.txt` (anh tự sửa được):
+
+```
+# tên    rộng cao  fps  kiểu  giữ-khung (khung 1, 2, 3… đứng bao nhiêu nhịp)
+bell     64   64   14   loop  6 1 1 1 1 1 10
 ```
 
----
-
-## 1. Chuẩn bị Procreate (làm 1 lần)
-
-| Việc | Cách làm |
-|---|---|
-| Bảng màu | AirDrop/Files 3 file `art/guide/Spendy-*.swatches` sang iPad, chạm vào là Procreate nhập. Mỗi bảng có 10 màu × 3 hàng: **hàng 1 bóng · hàng 2 màu gốc · hàng 3 sáng**. |
-| Cọ pixel | Dùng *Airbrushing → Hard Airbrush*, cỡ **1 px**, độ mờ 100 %, Streamline 0. Tẩy dùng cùng cọ. |
-| Lưới | *Actions → Canvas → Drawing Guide → 2D Grid*, **Grid Size 32 px**. Tắt Drawing Assist. |
-| Dịch/xoay | Trong công cụ Transform, chọn **Nearest Neighbor**, nếu không điểm ảnh sẽ bị nhoè. |
-
-## 2. Vẽ / sửa icon
-
-1. Mở `art/icons.png` trong Procreate (*Gallery → Import*). Canvas tự đúng cỡ 512 × (số hàng × 32) px.
-2. Kéo `art/guide/icons_guide.png` vào làm **layer trên cùng**, chế độ Multiply, độ mờ khoảng 30 %. Lớp này có:
-   khung ô (tím), vùng vẽ 3…28 (hồng), vòng tròn Ø25 (xanh), chấm chân đế y = 29 (xanh lá).
-3. Mở `art/guide/icons_map.png` bên cạnh (Split View) để biết ô nào là icon nào.
-4. Vẽ, rồi **ẩn lớp guide** và lớp nền, sau đó *Share → PNG*. Chép đè lên `art/icons.png`.
-
-> Canvas phóng to 2×, 4×, 8× (lưới 64/128/256 px) cũng được. Lệnh build tự nhận hệ số phóng.
-
-### Luật vẽ icon (để cả bộ đều nhau)
-
-- **Khung hình:** hình chính nằm trong vùng 3…28. Hình tròn Ø25, hình vuông 24, ngang 26×20, đứng 20×26.
-  Viền ngoài có thể chạm 1…30, không vượt ra ngoài.
-- **Viền:** 1 px, liền nét. Dùng màu tối nhất (hàng 1) của chính mảng màu đó, hoặc màu mực `#3B2A40` cho nét chi tiết.
-- **Ánh sáng:** luôn chiếu từ **trên-trái**. Bóng đổ phía dưới-phải bằng màu hàng 1, mảng sáng phía trên-trái bằng màu hàng 3,
-  thêm 1–3 điểm trắng bóng loáng.
-- **Màu:** tối đa khoảng 4 mảng màu chính mỗi icon, mỗi mảng 3 sắc độ. Không tô chuyển màu, không dùng cọ mềm.
-- **Không có pixel nửa trong suốt.** Điểm nào mờ dưới 50 % sẽ bị xoá, trên 50 % sẽ thành đặc.
-
-### Thêm icon mới
-
-1. Ghi tên vào một ô `-` trống trong `art/icons.txt`, hoặc thêm một dòng mới. Tên viết thường, nối bằng dấu gạch (`bubble-tea`).
-2. Vẽ vào đúng ô đó trên `icons.png`. Hàng mới thì nới canvas cao thêm 32 px (*Actions → Canvas → Crop & Resize*).
-3. Chạy `python3 tools/art.py guides` để vẽ lại bản đồ tên ô.
-4. Để icon mới hiện trong bộ chọn icon của app, cần thêm tên vào nhóm `GROUPS` trong `web/icons.js` (1 dòng). Nhờ Claude làm việc này.
-
----
-
-## 3. Vẽ hoạt ảnh — tất cả trên một ảnh
-
-`art/anims.png` rộng 384 px (12 ô), mỗi **hàng là một hoạt ảnh**, khung đọc từ trái sang phải.
-Ô trống ở cuối hàng sẽ được bỏ qua. Ở `art/anims.txt`, mỗi dòng tương ứng một hàng của ảnh:
-
-```
-# tên      fps  kiểu     giữ khung
-bell       14   loop     6 1 1 1 1 1 1 10
-```
-
-- **tên:** trùng tên icon thì icon đó tự chạy hoạt ảnh khi được bấm hoặc chọn (nút dock, Mai…).
-  Tên khác thì code gọi bằng `VinaIcons.anim("tên")`.
-- **fps:** số nhịp mỗi giây, thường là 12.
-- **kiểu:** `loop` (lặp mãi) · `once` (chạy một lần rồi về khung 1) · `pingpong` (chạy đi rồi chạy về).
-- **giữ khung:** khung thứ *i* đứng yên bao nhiêu nhịp. Đây là cách tạo **easing** cho pixel art:
-  khung giữ lâu tạo cảm giác chậm hoặc dừng, khung 1 nhịp tạo cảm giác nhanh.
-  Nhờ vậy không cần vẽ nhiều khung trùng nhau.
-
-Hai cách vẽ trong Procreate:
-
-**A. Vẽ thẳng trên ảnh chung (khuyên dùng).** Mở `art/anims.png`, đặt `art/guide/anims_guide.png` làm lớp lưới,
-mở `anims_map.png` bên cạnh để xem số khung và số nhịp giữ. Bật **Onion skin thủ công** bằng cách nhân đôi
-layer, giảm độ mờ còn 30 % và dịch sang ô bên cạnh (Transform, bật Snapping, dịch đúng 32 px).
-
-**B. Animation Assist.** Tạo canvas 32×32 (hoặc 256×256), mỗi layer một khung, có onion skin sẵn.
-*Share → Animated PNG* (hoặc GIF), lưu thành `art/anims/<tên>.png`. File riêng này **được ưu tiên** hơn
-hàng tương ứng trong `anims.png`. Nếu dòng trong `anims.txt` để trống phần giữ khung, nhịp sẽ lấy theo
-thời lượng từng khung trong file.
+- **kiểu:** `loop` (lặp mãi) · `once` (chạy 1 lần) · `pingpong` (đi rồi về).
+- **giữ-khung:** đây là cách tạo easing cho pixel art. Khung giữ lâu tạo cảm giác chậm hoặc dừng, khung 1 nhịp tạo cảm giác nhanh. Không cần vẽ khung trùng.
+- Phần tử có nhiều khung sẽ tự chạy hoạt ảnh trong app:
+  - icon có `anim`, ví dụ linh vật Mai;
+  - UI element như nút dock, nút arcade, mây.
+  
+  Hình anh tự đặt trong Studio vẫn được ưu tiên. Người dùng bật *Giảm chuyển động* chỉ thấy khung 1.
 
 ### Guideline chuyển động
 
-**Nhịp chuẩn:** 12 fps, tức 1 nhịp khoảng 83 ms.
+**Nhịp chuẩn:** 10–12 fps.
 
-Hoạt ảnh lặp kiểu *idle* có cấu trúc:
+Hoạt ảnh lặp kiểu idle có cấu trúc:
 
 ```
-NGHỈ (≥ 0.5s) → LẤY ĐÀ (1 khung) → HÀNH ĐỘNG (2–4 khung) → VƯỢT ĐÍCH (1) → ỔN ĐỊNH (1) → NGHỈ
+NGHỈ (≥ 0.5s) → LẤY ĐÀ (1) → HÀNH ĐỘNG (2–4) → VƯỢT ĐÍCH (1) → ỔN ĐỊNH (1) → NGHỈ
 ```
 
-Tổng thời lượng 1.5–3.5 giây để không gây rối mắt. Khung nghỉ dài đặt ở **cuối** hàng.
+Tổng 1.5–3.5 giây. Khung nghỉ dài đặt ở cuối.
 
-| Kiểu | Dùng cho | Công thức khung (ví dụ có sẵn trong `anims.png`) |
+| Kiểu | Mẫu có sẵn | Công thức |
 |---|---|---|
-| **Nhảy** (hop) | home, wallet | đứng ×6 · nén 108/90 % · vươn 94/108 % lên 2px · đỉnh 4px ×2 · rơi 2px · chạm đất nén · hồi ×8 |
-| **Nảy** (pop) | chart | đứng ×6 · nén · vươn · phồng 106/110 % · hồi 96 % · đứng ×10 |
-| **Lắc** (swing) | bell | treo tại đỉnh (16,3) · −10° · +8° · −6° · +4° · −2° · 0° ×10 (biên độ giảm dần) |
-| **Đập** (beat) | heart | 100 % ×3 · 114 % · 96 % · 108 % · 100 % ×6 (nhịp "thình–thịch") |
-| **Lấp lánh** (twinkle) | sparkles | sáng lên 25/50 % · phóng 110 % · thu 92 % · về |
-| **Vệt sáng** (sheen) | coins | vệt chéo trắng 3px quét từ trái-trên sang phải-dưới, 8 khung, rồi nghỉ ×10 |
-| **Chớp mắt** (blink) | mai | mở ×8 · nhắm 1 · mở ×6 · nhún 1px ×2 · về · nhún · về |
+| Nhảy | home, wallet | đứng ×6 · nén 108/90 % · vươn lên 4px · đỉnh ×2 · rơi · chạm đất nén · hồi ×8 |
+| Nảy | chart | đứng ×6 · nén · vươn · phồng nhẹ · hồi · đứng ×10 |
+| Lắc | bell | treo ở đỉnh: −10° · +8° · −6° · +4° · −2° · đứng ×10 |
+| Đập | heart | 100 % ×3 · 114 % · 96 % · 108 % · 100 % ×6 |
+| Lấp lánh | sparkles | sáng 25/50 % · phóng 110 % · thu 92 % · về |
+| Vệt sáng | coins | vệt chéo trắng quét qua 8 khung · nghỉ ×10 |
+| Chớp mắt | mai | mở ×8 · nhắm 1 · mở ×6 · nhún 2px · về |
 
-**Luật chung**
+Các mẫu này được sinh tự động từ icon để anh có điểm bắt đầu; anh vẽ đè lên cho đẹp hơn.
 
-1. **Khung 1 = icon tĩnh**, giống y hệt ô trong `icons.png`, để lúc chuyển giữa tĩnh và động không bị giật.
-   Với `loop`, khung cuối phải nối mượt về khung 1.
-2. **Chân đế cố định** tại y = 29 với các chuyển động nhảy. Nhảy cao tối đa 4 px; nén/giãn trong khoảng ±10 %.
-   Khi nén ngang thì giãn dọc, giữ diện tích gần như không đổi.
-3. **Xoay quanh điểm treo** (chuông: đỉnh, biển hiệu: móc treo), tối đa 10°. Vẽ lại viền sau khi xoay để viền vẫn liền 1 px.
-4. **Ánh sáng không đổi** (trên-trái) ở mọi khung. Vệt bóng không được "đi theo" vật xoay.
-5. **Không vượt khỏi ô 32×32**: phần nằm ngoài ô sẽ bị cắt.
-6. **Tối đa 12 khung khác nhau.** Kéo dài thời gian bằng số nhịp giữ khung, không vẽ khung trùng.
-7. Không nhấp nháy quá 3 lần mỗi giây. Người dùng bật *Giảm chuyển động* sẽ chỉ thấy khung 1 (app tự xử lý).
+**Luật chung:**
+1. **Khung 1 = hình tĩnh** của phần tử. Với hoạt ảnh lặp, khung cuối phải nối mượt về khung 1.
+2. **Chân đế cố định** ở y = 58. Nhảy cao tối đa 8 px; nén/giãn trong khoảng ±10 %, nén ngang thì giãn dọc.
+3. **Xoay quanh điểm treo**, tối đa 10°. Vẽ lại viền sau khi xoay để viền vẫn liền.
+4. **Ánh sáng không đổi** (trên-trái) ở mọi khung.
+5. **Không vẽ ra ngoài khung 64**: phần đó sẽ bị cắt.
+6. Tối đa khoảng 12 khung khác nhau. Kéo dài thời gian bằng số nhịp giữ khung.
+7. Không nhấp nháy quá 3 lần mỗi giây.
 
-### Chuyển động giao diện (CSS, trong `web/index.html`)
+## 5. Đưa lên app: nhờ Claude, tốn ít usage nhất
 
-| Token | Giá trị | Dùng cho |
-|---|---|---|
-| `--ease-out` | `cubic-bezier(.16,1,.3,1)` | vào màn, chuyển tab (460 ms), thẻ trồi lên (500 ms) |
-| `--ease-spring` | `cubic-bezier(.34,1.56,.64,1)` | nút bấm, icon nảy khi hover/chạm (300 ms) |
-| `--ease-soft` | `cubic-bezier(.45,0,.2,1)` | chuyển động lặp chậm: mây, đèn LED, ăng-ten |
+1. Gom các file PNG đã vẽ vào **một file zip** (chọn nhiều file trong app Tệp, chọn *Nén*). Đặt tên file nào cũng được.
+2. Đính kèm zip vào chat, hoặc tải lên GitHub vào `art/procreate/`.
+3. Nhắn một câu: **"Đẩy art lên app + xuất APK"**.
 
-Nguyên tắc: phần tử **vào** dùng ease-out từ 300 đến 500 ms, phần tử **ra** nhanh hơn khoảng 30 %.
-Nút bấm nhấn xuống tức thì và bật lên bằng spring. Hoạt ảnh pixel dùng `steps()`, không dùng nội suy mượt.
+Claude chỉ chạy:
 
----
+```bash
+python3 tools/art.py file.zip    # nhập → đưa về khung chuẩn → ghi web/icons.js → art/out/preview.png
+```
 
-## 4. Nhờ Claude sửa mà tốn ít usage nhất
+Lệnh in cảnh báo khi:
+- sai cỡ;
+- số khung không khớp số nhịp giữ;
+- khung 1 trống;
+- có tên mới.
 
-Claude chỉ cần chạy một lệnh, không phải vẽ lại hay đọc code:
+Claude chỉ đọc phần cảnh báo, không cần mở ảnh. Anh nên gom nhiều thay đổi vào một lần gửi.
 
-1. **Gửi file, không gửi ảnh chụp màn hình.** Tải `icons.png` / `anims.png` (và `.txt` nếu có sửa) lên
-   nhánh GitHub vào thư mục `art/`, hoặc đính kèm vào chat.
-2. **Một câu yêu cầu, nói rõ phạm vi**, ví dụ:
-   - "Build art + xuất APK" → Claude chạy `python3 tools/art.py`, test, build APK, push.
-   - "Thêm icon `bubble-tea` vào nhóm Ăn uống" → sửa 1 dòng `GROUPS`.
-   - "Hoạt ảnh mẫu cho `gift`, kiểu hop" → thêm 1 dòng vào `STARTERS` trong `tools/art.py`, chạy `starter gift`.
-3. **Gom nhiều thay đổi vào một lần** thay vì gửi từng icon.
-4. Trong `art/icons.txt` và `art/anims.txt`, anh **tự sửa được**: tên, fps, số nhịp giữ, thứ tự hàng.
-   Chỉ cần chạy lại build.
-
-Lệnh build in ra các cảnh báo: ô trống, hình quá nhỏ, quá nhiều màu (dấu hiệu cọ bị nhoè), số khung không khớp số nhịp giữ.
-Claude đọc phần này để biết cần sửa gì mà không phải mở ảnh.
-
-## 5. Các lệnh khác
-
-| Lệnh | Tác dụng |
+| Lệnh khác | Tác dụng |
 |---|---|
-| `python3 tools/art.py export` | Xuất lại `icons.png` từ `web/icons.js` (chỉ dùng để khởi tạo; **ghi đè** ảnh anh đã vẽ) |
-| `python3 tools/art.py starter [tên…]` | Tự sinh hoạt ảnh mẫu (nhảy, lắc, đập…) để làm điểm bắt đầu; chỉ ghi đè những hàng được liệt kê |
-| `python3 tools/art.py vector tên…` | Vẽ icon từ bản vector (`tools/icons32/vec_*.py`) vào ô của nó trên `icons.png` |
-| `python3 tools/art.py guides` | Vẽ lại `art/guide/*` sau khi thêm hàng hoặc ô |
+| `python3 tools/art.py check` | chỉ kiểm tra |
+| `python3 tools/art.py template [--force]` | tạo lại file mẫu từ hình trong app (`--force` ghi đè cả file anh đã vẽ) |
+| `python3 tools/art.py starter [tên…]` | sinh lại hoạt ảnh mẫu |
+| `python3 tools/art.py pack` | đóng gói lại `art/Spendy-Procreate-64.zip` |
 
-> Từ giờ `art/icons.png` là nguồn chính. **Không** chạy `tools/icons32/vector.py --inject` nữa,
-> vì lệnh đó ghi thẳng vào `icons.js` và bỏ qua ảnh anh đã vẽ. Hãy dùng `art.py vector` thay thế.
+**Thêm icon mới:** đặt file `tên-mới.png` (64×64) vào zip. Dòng trong `elements.txt` sẽ được thêm tự động.
+Muốn icon hiện trong bộ chọn hạng mục thì nhờ Claude thêm tên vào `GROUPS` trong `web/icons.js`.
+
+`tools/icons32/apply_patch.py` và Studio trong app vẫn dùng được như trước. `art/procreate` mới là nguồn chính khi build lại toàn bộ.
