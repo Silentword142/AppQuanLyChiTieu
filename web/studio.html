@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spendy Studio – Kéo Thả & Vẽ Trực Tiếp Icon / Element 32×32</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="icons.js"></script>
+  <style>
+    .px-img { image-rendering: pixelated; image-rendering: -moz-crisp-edges; }
+    .checker {
+      background-color: #261c38;
+      background-image:
+        linear-gradient(45deg, #32254a 25%, transparent 25%),
+        linear-gradient(-45deg, #32254a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #32254a 75%),
+        linear-gradient(-45deg, transparent 75%, #32254a 75%);
+      background-size: 12px 12px;
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    }
+    .drop-active { outline: 3px dashed #9DF5C2 !important; background: rgba(157, 245, 194, 0.14) !important; }
+  </style>
+</head>
+<body class="bg-[#171126] text-[#FFF2E2] min-h-screen font-sans antialiased selection:bg-[#F48E9E] selection:text-[#171126]">
+  <header class="sticky top-0 z-30 bg-[#231B38]/95 backdrop-blur border-b-2 border-[#5E4A84] px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="px-3 py-1.5 rounded bg-[#32254E] hover:bg-[#433266] border border-[#6E569B] text-xs font-bold">← Về App Spendy</a>
+        <div>
+          <h1 class="text-base font-extrabold tracking-wide text-[#9DF5C2]">🎨 SPENDY ELEMENT & ICON STUDIO (32×32 ASEPRITE)</h1>
+          <p class="text-xs text-[#C8B6DE]">Kéo thả ảnh vào từng ô để thay thế nhanh, hoặc bấm vào bất kỳ Element nào để mở bảng vẽ Pixel 32×32 trực tiếp & lưu lại.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="modifiedBadge" class="px-2.5 py-1 rounded bg-[#32254E] border border-[#5E4A84] text-xs font-bold text-[#FFE08A]">0 đã sửa</span>
+        <button id="btnCopyPatch" type="button" class="px-3 py-1.5 rounded bg-[#9DF5C2] text-[#171126] hover:brightness-105 text-xs font-extrabold shadow">📋 Copy mã gửi AI</button>
+        <button id="btnDownloadPatch" type="button" class="px-3 py-1.5 rounded bg-[#FFE08A] text-[#171126] hover:brightness-105 text-xs font-extrabold shadow">📦 Tải file Patch (.json) gửi AI</button>
+        <label class="px-3 py-1.5 rounded bg-[#32254E] hover:bg-[#413063] border border-[#6E569B] text-xs font-bold cursor-pointer">
+          📂 Nhập Patch / Ảnh hàng loạt
+          <input id="batchInput" type="file" multiple accept="image/*,.json" class="hidden" />
+        </label>
+        <button id="btnResetAll" type="button" class="px-2.5 py-1.5 rounded bg-[#4A2235] hover:bg-[#632C46] border border-[#D4506A] text-xs font-bold text-[#FFA5BC]">↺ Xoá bản sửa</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <!-- CỘT TRÁI: BẢNG VẼ PIXEL 32x32 TRỰC TIẾP -->
+    <section class="lg:col-span-5 bg-[#231B38] border-2 border-[#5E4A84] rounded-xl p-4 space-y-4 lg:sticky lg:top-20 self-start">
+      <div class="flex items-center justify-between border-b border-[#5E4A84] pb-2.5">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[#C8B6DE] block">Đang mở Element:</span>
+          <div class="flex items-center gap-2">
+            <h2 id="currentKeyTitle" class="text-lg font-extrabold text-[#FFE08A] font-mono">home</h2>
+            <span id="currentStatusTag" class="text-xs px-2 py-0.5 rounded bg-[#32254E] text-[#C8B6DE]">Mặc định</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Xem trước 1x, 2x và trong nút 2.5D có viền đen -->
+          <div class="checker w-10 h-10 rounded border border-[#5E4A84] grid place-items-center" title="Kích thước 1x (32x32)">
+            <canvas id="preview1x" width="32" height="32" class="w-6 h-6 px-img"></canvas>
+          </div>
+          <div class="w-12 h-12 rounded-lg bg-[#F48E9E] border-2 border-[#22172B] shadow-[0_4px_0_#A83A52,0_5px_0_#22172B] grid place-items-center" title="Xem trước trong nút 2.5D có border đen">
+            <canvas id="previewBtn" width="32" height="32" class="w-7 h-7 px-img"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KHUNG CANVAS 32x32 + KÉO THẢ -->
+      <div id="canvasDropZone" class="relative mx-auto w-full max-w-[352px] aspect-square checker rounded-lg border-2 border-[#6E569B] overflow-hidden shadow-inner select-none touch-none">
+        <canvas id="editorCanvas" width="320" height="320" class="w-full h-full block cursor-crosshair"></canvas>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-[#C8B6DE]">
+        <span id="coordReadout" class="font-mono">X: --, Y: --</span>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input id="chkGrid" type="checkbox" checked class="accent-[#9DF5C2]" /> Hiện lưới 32×32
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer" title="Khử răng cưa góc chữ L khi vẽ tay giống Aseprite">
+          <input id="chkPixelPerfect" type="checkbox" checked class="accent-[#9DF5C2]" /> Bút Pixel-Perfect (Aseprite)
+        </label>
+      </div>
+
+      <!-- CÔNG CỤ VẼ -->
+      <div class="space-y-2">
+        <div class="grid grid-cols-4 gap-1.5 text-xs font-bold">
+          <button type="button" data-tool="pencil" class="tool-btn py-1.5 px-2 rounded bg-[#9DF5C2] text-[#171126]">✏️ Bút 1px</button>
+          <button type="button" data-tool="brush2" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">🖌️ Bút 2px</button>
+          <button type="button" data-tool="eraser" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">🧽 Tẩy</button>
+          <button type="button" data-tool="bucket" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">🪣 Đổ màu</button>
+          <button type="button" data-tool="line" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">📏 Đường thẳng</button>
+          <button type="button" data-tool="rect" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">▭ Hình hộp</button>
+          <button type="button" data-tool="circle" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">◯ Hình tròn</button>
+          <button type="button" data-tool="picker" class="tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]">💧 Hút màu</button>
+        </div>
+
+        <!-- BỘ LỌC TỰ ĐỘNG CHUẨN ASEPRITE -->
+        <div class="grid grid-cols-2 gap-1.5 pt-1">
+          <button id="btnAutoOutline" type="button" class="py-1.5 px-2.5 rounded bg-[#3A2B5C] hover:bg-[#4B3875] border border-[#8E73C7] text-xs font-bold text-[#FFE08A]">
+            ✨ Tự động bao viền đen 1px (Aseprite)
+          </button>
+          <button id="btnAutoShade25D" type="button" class="py-1.5 px-2.5 rounded bg-[#3A2B5C] hover:bg-[#4B3875] border border-[#8E73C7] text-xs font-bold text-[#9DF5C2]">
+            🌗 Tự động đổ bóng đáy 2.5D (1px)
+          </button>
+        </div>
+
+        <!-- THAO TÁC NHANH -->
+        <div class="flex flex-wrap items-center justify-between gap-1 pt-1 text-xs font-bold">
+          <div class="flex items-center gap-1">
+            <button id="btnUndo" type="button" class="px-2.5 py-1 rounded bg-[#32254E] hover:bg-[#423266]" title="Hoàn tác">↶ Undo</button>
+            <button id="btnRedo" type="button" class="px-2.5 py-1 rounded bg-[#32254E] hover:bg-[#423266]" title="Làm lại">↷ Redo</button>
+            <button id="btnFlipH" type="button" class="px-2 py-1 rounded bg-[#32254E] hover:bg-[#423266]" title="Lật ngang">⇄ Lật</button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button type="button" data-shift="-1,0" class="shift-btn px-2 py-1 rounded bg-[#32254E]">←</button>
+            <button type="button" data-shift="0,-1" class="shift-btn px-2 py-1 rounded bg-[#32254E]">↑</button>
+            <button type="button" data-shift="0,1" class="shift-btn px-2 py-1 rounded bg-[#32254E]">↓</button>
+            <button type="button" data-shift="1,0" class="shift-btn px-2 py-1 rounded bg-[#32254E]">→</button>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="btnClearCanvas" type="button" class="px-2 py-1 rounded bg-[#4A2235] text-[#FFA5BC]">Xoá trắng</button>
+            <button id="btnRevertIcon" type="button" class="px-2 py-1 rounded bg-[#32254E] text-[#FFE08A]">Về gốc</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BẢNG MÀU SPENDY / ASEPRITE -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-[#C8B6DE] font-bold">Bảng màu Pixel (Chuột phải = Tẩy trong suốt):</span>
+          <div class="flex items-center gap-1.5">
+            <input id="colorPicker" type="color" value="#22172B" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0" />
+            <span id="colorHex" class="font-mono text-xs text-[#FFE08A]">#22172B</span>
+          </div>
+        </div>
+        <div id="paletteGrid" class="grid grid-cols-13 gap-1"></div>
+      </div>
+
+      <!-- NÚT LƯU TRỰC TIẾP HOẶC TẢI ẢNH LÊN -->
+      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[#5E4A84]">
+        <button id="btnSaveCurrent" type="button" class="py-2.5 px-3 rounded-lg bg-[#9DF5C2] text-[#171126] font-extrabold text-xs shadow-md hover:brightness-105">
+          💾 LƯU TRỰC TIẾP VÀO APP
+        </button>
+        <label class="py-2.5 px-3 rounded-lg bg-[#32254E] hover:bg-[#433266] border border-[#6E569B] text-center font-bold text-xs cursor-pointer">
+          🖼️ Thay bằng file Ảnh...
+          <input id="singleFileInput" type="file" accept="image/*" class="hidden" />
+        </label>
+      </div>
+    </section>
+
+    <!-- CỘT PHẢI: DANH SÁCH 173 ICON & ELEMENT KÉO-THẢ -->
+    <section class="lg:col-span-7 space-y-3">
+      <div class="bg-[#231B38] border-2 border-[#5E4A84] rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+        <input id="searchInput" type="search" placeholder="Tìm tên icon (vd: home, wallet, pho, car, mai...)" class="flex-1 min-w-[200px] bg-[#171126] border border-[#5E4A84] rounded-lg px-3 py-1.5 text-xs text-[#FFF2E2] focus:outline-none focus:border-[#9DF5C2]" />
+        <label class="flex items-center gap-1.5 text-xs text-[#C8B6DE] cursor-pointer">
+          <input id="chkAutoProcessDrop" type="checkbox" checked class="accent-[#9DF5C2]" />
+          Khi kéo thả ảnh ngoài vào: Tự chuẩn hoá 32×32 + Viền đen 1px Aseprite
+        </label>
+      </div>
+
+      <!-- BỘ LỌC NHÓM DANH MỤC -->
+      <div id="groupTabs" class="flex flex-wrap gap-1.5"></div>
+
+      <!-- LƯỚI KÉO THẢ ELEMENT -->
+      <div id="iconsGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5"></div>
+    </section>
+  </main>
+
+  <!-- HỘP THOẠI HIỂN THỊ MÃ PATCH GỬI AI -->
+  <div id="patchModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#231B38] border-2 border-[#9DF5C2] rounded-xl max-w-xl w-full p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-extrabold text-[#9DF5C2]">📋 MÃ PATCH GỬI AI CẬP NHẬT APP & APK</h3>
+        <button id="btnCloseModal" type="button" class="px-2 py-0.5 rounded bg-[#32254E] text-xs">✕ Đóng</button>
+      </div>
+      <p class="text-xs text-[#C8B6DE]">Anh chỉ cần bấm <b>"Đã copy"</b> rồi dán thẳng đoạn mã dưới đây vào khung chat (hoặc gửi file <code>spendy-elements-patch.json</code> vừa tải), em sẽ nhúng toàn bộ hình anh vừa vẽ vào App và đóng gói APK ngay!</p>
+      <textarea id="patchTextarea" readonly rows="7" class="w-full bg-[#171126] border border-[#5E4A84] rounded p-2.5 font-mono text-xs text-[#FFE08A]"></textarea>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const N = 32, SCALE = 10;
+      const PALETTE = [
+        "#22172B", "#3B2A40", "#4D4666", "#8C96AD", "#CBD1E0", "#F6F4FA", "#FFF4E0", "#FFFFFF",
+        "#FF5765", "#EC5F93", "#FFA3C2", "#FF9638", "#F5AA27", "#FFDA47", "#52CF68", "#2FA355",
+        "#82E8BE", "#2AC4B3", "#63C7FF", "#4582EC", "#9665E6", "#C9B0F9", "#FFD1AD", "#F2BF82",
+        "#B5703D", "#704430"
+      ];
+
+      const V = window.VinaIcons || { IMG32: {}, CUSTOM32: {}, GROUPS: [], names: [] };
+      const ORIG_IMG32 = Object.assign({}, V.IMG32 || {});
+      const CUSTOM_KEY = "vina_custom_elements_v1";
+      let customMap = {};
+      try {
+        customMap = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "{}") || {};
+      } catch (e) {}
+
+      const allNames = Object.keys(ORIG_IMG32).sort();
+      let activeGroup = "Tất cả";
+      let currentKey = allNames.includes("home") ? "home" : (allNames[0] || "home");
+      let currentTool = "pencil";
+      let currentColor = "#22172B";
+
+      // Lưới pixel 32x32 đang vẽ: mảng 32x32 chuỗi hex "#rrggbb" hoặc null (trong suốt)
+      let grid = Array.from({ length: N }, () => Array(N).fill(null));
+      let undoStack = [];
+      let redoStack = [];
+
+      const editorCanvas = document.getElementById("editorCanvas");
+      const ctx = editorCanvas.getContext("2d");
+      const p1x = document.getElementById("preview1x").getContext("2d");
+      const pBtn = document.getElementById("previewBtn").getContext("2d");
+
+      function cloneGrid(g) { return g.map(r => r.slice()); }
+      function pushUndo() {
+        undoStack.push(cloneGrid(grid));
+        if (undoStack.length > 40) undoStack.shift();
+        redoStack = [];
+      }
+
+      function rgbToHex(r, g, b) {
+        return "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
+      }
+      function hexToRgb(h) {
+        const s = h.replace("#", "");
+        return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+      }
+
+      function renderEditor() {
+        ctx.clearRect(0, 0, N * SCALE, N * SCALE);
+        p1x.clearRect(0, 0, N, N);
+        pBtn.clearRect(0, 0, N, N);
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const c = grid[y][x];
+            if (c) {
+              ctx.fillStyle = c;
+              ctx.fillRect(x * SCALE, y * SCALE, SCALE, SCALE);
+              p1x.fillStyle = c;
+              p1x.fillRect(x, y, 1, 1);
+              pBtn.fillStyle = c;
+              pBtn.fillRect(x, y, 1, 1);
+            }
+          }
+        }
+        if (document.getElementById("chkGrid").checked) {
+          ctx.strokeStyle = "rgba(255, 242, 226, 0.12)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let i = 1; i < N; i++) {
+            ctx.moveTo(i * SCALE + 0.5, 0); ctx.lineTo(i * SCALE + 0.5, N * SCALE);
+            ctx.moveTo(0, i * SCALE + 0.5); ctx.lineTo(N * SCALE, i * SCALE + 0.5);
+          }
+          ctx.stroke();
+        }
+      }
+
+      function gridToBase64Png() {
+        const c = document.createElement("canvas");
+        c.width = N; c.height = N;
+        const cx = c.getContext("2d");
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            if (grid[y][x]) {
+              cx.fillStyle = grid[y][x];
+              cx.fillRect(x, y, 1, 1);
+            }
+          }
+        }
+        return c.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
+      }
+
+      function loadImageDataToGrid(img) {
+        const c = document.createElement("canvas");
+        c.width = N; c.height = N;
+        const cx = c.getContext("2d");
+        cx.imageSmoothingEnabled = false;
+        cx.drawImage(img, 0, 0, N, N);
+        const data = cx.getImageData(0, 0, N, N).data;
+        const next = Array.from({ length: N }, () => Array(N).fill(null));
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const i = (y * N + x) * 4;
+            if (data[i + 3] >= 110) {
+              next[y][x] = rgbToHex(data[i], data[i + 1], data[i + 2]);
+            }
+          }
+        }
+        return next;
+      }
+
+      function loadElement(key) {
+        currentKey = key;
+        document.getElementById("currentKeyTitle").textContent = key;
+        const isMod = !!customMap[key];
+        const tag = document.getElementById("currentStatusTag");
+        tag.textContent = isMod ? "Đã chỉnh sửa" : "Mặc định";
+        tag.className = isMod
+          ? "text-xs px-2 py-0.5 rounded bg-[#9DF5C2] text-[#171126] font-bold"
+          : "text-xs px-2 py-0.5 rounded bg-[#32254E] text-[#C8B6DE]";
+
+        const b64 = customMap[key] || ORIG_IMG32[key];
+        undoStack = []; redoStack = [];
+        if (!b64) {
+          grid = Array.from({ length: N }, () => Array(N).fill(null));
+          renderEditor();
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          grid = loadImageDataToGrid(img);
+          renderEditor();
+        };
+        img.src = "data:image/png;base64," + b64;
+      }
+
+      // Thuật toán Aseprite: Bao viền đen 1px (OutlineFilter Matrix::Circle 0252 + khử góc L)
+      function applyAsepriteOutlineToGrid(g) {
+        const INK = "#22172B";
+        const isInk = (c) => c && (c.toLowerCase() === "#22172b" || c.toLowerCase() === "#3b2a40");
+        // Bóc viền ngoài cũ nếu có để không bị viền kép
+        const clean = g.map(r => r.slice());
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          if (!isInk(clean[y][x])) continue;
+          const n4 = [[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => (x+dx>=0 && x+dx<N && y+dy>=0 && y+dy<N) ? clean[y+dy][x+dx] : null);
+          if (n4.includes(null) && n4.some(c => c && !isInk(c))) clean[y][x] = null;
+        }
+        const out = clean.map(r => r.slice());
+        const isOut = Array.from({ length: N }, () => Array(N).fill(false));
+        const hasFill = (x, y) => x >= 0 && x < N && y >= 0 && y < N && clean[y][x] !== null && !isInk(clean[y][x]);
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          if (out[y][x] !== null) continue;
+          if (hasFill(x+1,y) || hasFill(x-1,y) || hasFill(x,y+1) || hasFill(x,y-1)) {
+            out[y][x] = INK;
+            isOut[y][x] = true;
+          }
+        }
+        // Khử góc chữ L mặt trong (Aseprite IntertwineAsPixelPerfect)
+        const hasO = (x, y) => x >= 0 && x < N && y >= 0 && y < N && isOut[y][x];
+        for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) {
+          if (!isOut[y][x]) continue;
+          for (const [dx, dy] of [[1,1],[1,-1],[-1,1],[-1,-1]]) {
+            if (hasO(x-dx,y) && hasO(x,y-dy) && hasFill(x+dx,y) && hasFill(x,y+dy) && !hasFill(x-dx,y-dy)) {
+              out[y][x] = clean[y][x+dx] || clean[y+dy][x];
+              isOut[y][x] = false;
+              break;
+            }
+          }
+        }
+        return out;
+      }
+
+      // Thuật toán đổ bóng đáy 2.5D 1px tối giản
+      function apply25DShadeToGrid(g) {
+        const isInk = (c) => c && (c.toLowerCase() === "#22172b" || c.toLowerCase() === "#3b2a40");
+        const out = g.map(r => r.slice());
+        for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) {
+          const c = g[y][x];
+          if (!c || isInk(c)) continue;
+          const below = g[y + 1][x];
+          const above = g[y - 1][x];
+          if ((below === null || isInk(below)) && above === c) {
+            const [r, gg, b] = hexToRgb(c);
+            out[y][x] = rgbToHex(Math.max(0, Math.round(r * 0.82)), Math.max(0, Math.round(gg * 0.80)), Math.min(255, Math.round(b * 0.88)));
+          }
+        }
+        return out;
+      }
+
+      // Bảng màu
+      const palEl = document.getElementById("paletteGrid");
+      PALETTE.forEach(col => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.style.backgroundColor = col;
+        b.className = "w-full aspect-square rounded border border-white/25 hover:scale-110 transition-transform";
+        b.onclick = () => {
+          currentColor = col;
+          document.getElementById("colorPicker").value = col;
+          document.getElementById("colorHex").textContent = col.toUpperCase();
+        };
+        palEl.appendChild(b);
+      });
+      document.getElementById("colorPicker").oninput = (e) => {
+        currentColor = e.target.value;
+        document.getElementById("colorHex").textContent = currentColor.toUpperCase();
+      };
+
+      // Chọn công cụ
+      document.querySelectorAll(".tool-btn").forEach(btn => {
+        btn.onclick = () => {
+          currentTool = btn.dataset.tool;
+          document.querySelectorAll(".tool-btn").forEach(x => {
+            x.className = x === btn
+              ? "tool-btn py-1.5 px-2 rounded bg-[#9DF5C2] text-[#171126]"
+              : "tool-btn py-1.5 px-2 rounded bg-[#32254E] text-[#FFF2E2]";
+          });
+        };
+      });
+
+      // Vẽ trên Canvas 32x32 (hỗ trợ Pixel-Perfect freehand của Aseprite)
+      let isDrawing = false, drawButton = 0, startPt = null, snapshotBeforeShape = null, strokePts = [], strokeSaved = [];
+
+      function getCell(e) {
+        const r = editorCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = Math.floor(((clientX - r.left) / r.width) * N);
+        const y = Math.floor(((clientY - r.top) / r.height) * N);
+        return { x: Math.max(0, Math.min(N - 1, x)), y: Math.max(0, Math.min(N - 1, y)) };
+      }
+
+      function floodFill(sx, sy, newCol) {
+        const target = grid[sy][sx];
+        if (target === newCol) return;
+        const st = [[sx, sy]];
+        const seen = new Set();
+        while (st.length) {
+          const [x, y] = st.pop();
+          const k = y * N + x;
+          if (seen.has(k)) continue;
+          seen.add(k);
+          if (grid[y][x] !== target) continue;
+          grid[y][x] = newCol;
+          if (x > 0) st.push([x - 1, y]);
+          if (x < N - 1) st.push([x + 1, y]);
+          if (y > 0) st.push([x, y - 1]);
+          if (y < N - 1) st.push([x, y + 1]);
+        }
+      }
+
+      function drawBresenhamLine(x0, y0, x1, y1, col) {
+        let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        let err = dx + dy;
+        while (true) {
+          if (x0 >= 0 && x0 < N && y0 >= 0 && y0 < N) grid[y0][x0] = col;
+          if (x0 === x1 && y0 === y1) break;
+          const e2 = 2 * err;
+          if (e2 >= dy) { err += dy; x0 += sx; }
+          if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+      }
+
+      function applyPoint(x, y, col) {
+        if (currentTool === "brush2") {
+          for (let dy = 0; dy <= 1; dy++) for (let dx = 0; dx <= 1; dx++) {
+            if (x + dx < N && y + dy < N) grid[y + dy][x + dx] = col;
+          }
+          return;
+        }
+        // Aseprite IntertwineAsPixelPerfect L-corner cleanup khi vẽ bút 1px
+        const last = strokePts[strokePts.length - 1];
+        if (last && last.x === x && last.y === y) return;
+        strokeSaved.push({ x, y, prev: grid[y][x] });
+        strokePts.push({ x, y });
+        grid[y][x] = col;
+        if (document.getElementById("chkPixelPerfect").checked && currentTool === "pencil" && strokePts.length >= 3) {
+          const c = strokePts.length - 2;
+          const p0 = strokePts[c - 1], p1 = strokePts[c], p2 = strokePts[c + 1];
+          if ((p0.x === p1.x || p0.y === p1.y) && (p2.x === p1.x || p2.y === p1.y) && p0.x !== p2.x && p0.y !== p2.y) {
+            grid[p1.y][p1.x] = strokeSaved[c].prev;
+            strokePts.splice(c, 1);
+            strokeSaved.splice(c, 1);
+          }
+        }
+      }
+
+      editorCanvas.oncontextmenu = (e) => e.preventDefault();
+      const onPointerDown = (e) => {
+        const pt = getCell(e);
+        drawButton = e.button === 2 ? 2 : 0;
+        const paintCol = (drawButton === 2 || currentTool === "eraser") ? null : currentColor;
+        if (currentTool === "picker" && drawButton === 0) {
+          if (grid[pt.y][pt.x]) {
+            currentColor = grid[pt.y][pt.x];
+            document.getElementById("colorPicker").value = currentColor;
+            document.getElementById("colorHex").textContent = currentColor.toUpperCase();
+          }
+          return;
+        }
+        pushUndo();
+        if (currentTool === "bucket" && drawButton === 0) {
+          floodFill(pt.x, pt.y, paintCol);
+          renderEditor();
+          return;
+        }
+        isDrawing = true;
+        startPt = pt;
+        snapshotBeforeShape = cloneGrid(grid);
+        strokePts = []; strokeSaved = [];
+        applyPoint(pt.x, pt.y, paintCol);
+        renderEditor();
+      };
+
+      const onPointerMove = (e) => {
+        const pt = getCell(e);
+        document.getElementById("coordReadout").textContent = `X: ${pt.x}, Y: ${pt.y}`;
+        if (!isDrawing) return;
+        const paintCol = (drawButton === 2 || currentTool === "eraser") ? null : currentColor;
+        if (currentTool === "pencil" || currentTool === "brush2" || currentTool === "eraser") {
+          applyPoint(pt.x, pt.y, paintCol);
+        } else if (currentTool === "line") {
+          grid = cloneGrid(snapshotBeforeShape);
+          drawBresenhamLine(startPt.x, startPt.y, pt.x, pt.y, paintCol);
+        } else if (currentTool === "rect") {
+          grid = cloneGrid(snapshotBeforeShape);
+          const x1 = Math.min(startPt.x, pt.x), x2 = Math.max(startPt.x, pt.x);
+          const y1 = Math.min(startPt.y, pt.y), y2 = Math.max(startPt.y, pt.y);
+          for (let x = x1; x <= x2; x++) { grid[y1][x] = paintCol; grid[y2][x] = paintCol; }
+          for (let y = y1; y <= y2; y++) { grid[y][x1] = paintCol; grid[y][x2] = paintCol; }
+        } else if (currentTool === "circle") {
+          grid = cloneGrid(snapshotBeforeShape);
+          const cx = (startPt.x + pt.x) / 2, cy = (startPt.y + pt.y) / 2;
+          const rx = Math.max(1, Math.abs(pt.x - startPt.x) / 2), ry = Math.max(1, Math.abs(pt.y - startPt.y) / 2);
+          for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+            const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
+            if (d >= 0.85 && d <= 1.15) grid[y][x] = paintCol;
+          }
+        }
+        renderEditor();
+      };
+
+      const onPointerUp = () => { isDrawing = false; };
+      editorCanvas.addEventListener("mousedown", onPointerDown);
+      window.addEventListener("mousemove", onPointerMove);
+      window.addEventListener("mouseup", onPointerUp);
+      editorCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); onPointerDown(e); }, { passive: false });
+      editorCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); onPointerMove(e); }, { passive: false });
+      window.addEventListener("touchend", onPointerUp);
+
+      document.getElementById("chkGrid").onchange = renderEditor;
+      document.getElementById("btnUndo").onclick = () => {
+        if (!undoStack.length) return;
+        redoStack.push(cloneGrid(grid));
+        grid = undoStack.pop();
+        renderEditor();
+      };
+      document.getElementById("btnRedo").onclick = () => {
+        if (!redoStack.length) return;
+        undoStack.push(cloneGrid(grid));
+        grid = redoStack.pop();
+        renderEditor();
+      };
+      document.getElementById("btnFlipH").onclick = () => {
+        pushUndo();
+        grid = grid.map(r => r.slice().reverse());
+        renderEditor();
+      };
+      document.querySelectorAll(".shift-btn").forEach(btn => {
+        btn.onclick = () => {
+          pushUndo();
+          const [dx, dy] = btn.dataset.shift.split(",").map(Number);
+          const next = Array.from({ length: N }, () => Array(N).fill(null));
+          for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+            const nx = (x + dx + N) % N, ny = (y + dy + N) % N;
+            next[ny][nx] = grid[y][x];
+          }
+          grid = next;
+          renderEditor();
+        };
+      });
+      document.getElementById("btnClearCanvas").onclick = () => {
+        pushUndo();
+        grid = Array.from({ length: N }, () => Array(N).fill(null));
+        renderEditor();
+      };
+      document.getElementById("btnRevertIcon").onclick = () => {
+        delete customMap[currentKey];
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMap));
+        if (V.setCustom) V.setCustom(currentKey, null);
+        loadElement(currentKey);
+        renderCatalog();
+      };
+      document.getElementById("btnAutoOutline").onclick = () => {
+        pushUndo();
+        grid = applyAsepriteOutlineToGrid(grid);
+        renderEditor();
+      };
+      document.getElementById("btnAutoShade25D").onclick = () => {
+        pushUndo();
+        grid = apply25DShadeToGrid(grid);
+        renderEditor();
+      };
+
+      function saveCurrentToStore(b64Override) {
+        const b64 = b64Override || gridToBase64Png();
+        customMap[currentKey] = b64;
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMap));
+        if (V.setCustom) V.setCustom(currentKey, b64);
+        loadElement(currentKey);
+        renderCatalog();
+      }
+      document.getElementById("btnSaveCurrent").onclick = () => saveCurrentToStore();
+
+      function processDroppedImageFile(file, targetKey) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let g = loadImageDataToGrid(img);
+            if (document.getElementById("chkAutoProcessDrop").checked) {
+              g = apply25DShadeToGrid(g);
+              g = applyAsepriteOutlineToGrid(g);
+            }
+            currentKey = targetKey;
+            grid = g;
+            renderEditor();
+            saveCurrentToStore();
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Kéo thả vào khung canvas chính
+      const cZone = document.getElementById("canvasDropZone");
+      cZone.ondragover = (e) => { e.preventDefault(); cZone.classList.add("drop-active"); };
+      cZone.ondragleave = () => cZone.classList.remove("drop-active");
+      cZone.ondrop = (e) => {
+        e.preventDefault(); cZone.classList.remove("drop-active");
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f && f.type.startsWith("image/")) processDroppedImageFile(f, currentKey);
+      };
+
+      document.getElementById("singleFileInput").onchange = (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (f) processDroppedImageFile(f, currentKey);
+        e.target.value = "";
+      };
+
+      // Nhập hàng loạt file ảnh hoặc JSON patch
+      document.getElementById("batchInput").onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach(f => {
+          if (f.name.endsWith(".json")) {
+            const r = new FileReader();
+            r.onload = () => {
+              try {
+                const d = JSON.parse(r.result);
+                const m = d.icons || d;
+                Object.keys(m).forEach(k => {
+                  if (typeof m[k] === "string") {
+                    customMap[k] = m[k].replace(/^data:image\/\w+;base64,/, "");
+                    if (V.setCustom) V.setCustom(k, customMap[k]);
+                  }
+                });
+                localStorage.setItem(CUSTOM_KEY, JSON.stringify(customMap));
+                loadElement(currentKey);
+                renderCatalog();
+              } catch (err) {}
+            };
+            r.readAsText(f);
+          } else if (f.type.startsWith("image/")) {
+            const baseName = f.name.replace(/\.[^.]+$/, "").toLowerCase();
+            const matchKey = allNames.find(n => n === baseName) || currentKey;
+            processDroppedImageFile(f, matchKey);
+          }
+        });
+        e.target.value = "";
+      };
+
+      // Danh mục nhóm
+      const groups = (V.GROUPS && V.GROUPS.length) ? V.GROUPS : [{ name: "Tất cả", icons: allNames }];
+      const tabsEl = document.getElementById("groupTabs");
+      function renderTabs() {
+        tabsEl.innerHTML = "";
+        groups.forEach(g => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.textContent = `${g.name} (${g.icons.length})`;
+          b.className = activeGroup === g.name
+            ? "px-2.5 py-1 rounded-lg bg-[#9DF5C2] text-[#171126] text-xs font-extrabold"
+            : "px-2.5 py-1 rounded-lg bg-[#231B38] border border-[#5E4A84] text-[#C8B6DE] text-xs font-bold hover:text-white";
+          b.onclick = () => { activeGroup = g.name; renderTabs(); renderCatalog(); };
+          tabsEl.appendChild(b);
+        });
+      }
+
+      // Lưới 173 Icon kéo thả
+      function renderCatalog() {
+        const modCount = Object.keys(customMap).length;
+        document.getElementById("modifiedBadge").textContent = `${modCount} đã sửa`;
+        const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+        const grp = groups.find(g => g.name === activeGroup) || groups[0];
+        const list = (q ? allNames : grp.icons).filter(k =>ORIG_IMG32[k] && (!q || k.includes(q)));
+
+        const gridEl = document.getElementById("iconsGrid");
+        gridEl.innerHTML = "";
+        list.forEach(key => {
+          const isMod = !!customMap[key];
+          const isSel = key === currentKey;
+          const b64 = customMap[key] || ORIG_IMG32[key];
+          const card = document.createElement("div");
+          card.className = `relative rounded-xl p-2.5 flex flex-col items-center gap-1.5 cursor-pointer transition-all border-2 ${
+            isSel ? "bg-[#352654] border-[#9DF5C2] shadow-lg" : "bg-[#231B38] border-[#5E4A84] hover:border-[#FFE08A]"
+          }`;
+          card.innerHTML = `
+            ${isMod ? '<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-[#9DF5C2]" title="Đã chỉnh sửa"></span>' : ""}
+            <div class="w-12 h-12 checker rounded-lg border border-[#5E4A84] grid place-items-center">
+              <img src="data:image/png;base64,${b64}" class="w-9 h-9 px-img" alt="${key}" />
+            </div>
+            <span class="font-mono text-xs font-bold truncate w-full text-center ${isMod ? "text-[#9DF5C2]" : "text-[#FFF2E2]"}">${key}</span>
+          `;
+          card.onclick = () => { loadElement(key); renderCatalog(); };
+          card.ondragover = (e) => { e.preventDefault(); card.classList.add("drop-active"); };
+          card.ondragleave = () => card.classList.remove("drop-active");
+          card.ondrop = (e) => {
+            e.preventDefault(); card.classList.remove("drop-active");
+            const f = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (f && f.type.startsWith("image/")) processDroppedImageFile(f, key);
+          };
+          gridEl.appendChild(card);
+        });
+      }
+
+      document.getElementById("searchInput").oninput = renderCatalog;
+
+      function buildPatchJson() {
+        return JSON.stringify({
+          version: "5.1.0-aseprite",
+          updatedAt: new Date().toISOString(),
+          count: Object.keys(customMap).length,
+          icons: customMap
+        }, null, 2);
+      }
+
+      document.getElementById("btnCopyPatch").onclick = async () => {
+        saveCurrentToStore();
+        const json = buildPatchJson();
+        document.getElementById("patchTextarea").value = json;
+        document.getElementById("patchModal").classList.remove("hidden");
+        try { await navigator.clipboard.writeText(json); } catch (e) {}
+      };
+      document.getElementById("btnCloseModal").onclick = () => {
+        document.getElementById("patchModal").classList.add("hidden");
+      };
+      document.getElementById("btnDownloadPatch").onclick = () => {
+        saveCurrentToStore();
+        const blob = new Blob([buildPatchJson()], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "spendy-elements-patch.json";
+        a.click();
+      };
+      document.getElementById("btnResetAll").onclick = () => {
+        if (!confirm("Xoá toàn bộ các chỉnh sửa tạm và quay về bộ icon mặc định?")) return;
+        customMap = {};
+        localStorage.removeItem(CUSTOM_KEY);
+        loadElement(currentKey);
+        renderCatalog();
+      };
+
+      renderTabs();
+      renderCatalog();
+      loadElement(currentKey);
+    })();
+  </script>
+</body>
+</html>

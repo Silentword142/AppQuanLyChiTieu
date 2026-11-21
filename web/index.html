@@ -399,32 +399,130 @@
     .tv-feet { display: flex; justify-content: space-between; padding: 0 38px; margin-top: -3px; position: relative; z-index: 1; }
     .tv-feet span { width: 34px; height: 12px; background: var(--hud); border: 3px solid var(--ink); border-top: 0; border-radius: 0 0 8px 8px; }
 
-    /* ======================= DOCK (thanh điều khiển dưới) ======================= */
-    .dock { background: linear-gradient(180deg, rgb(var(--background-rgb) / 0) 0, rgb(var(--background-rgb) / .96) 24px); }
-    .dock-inner { display: flex; align-items: flex-end; justify-content: center; gap: 8px; padding: 10px 10px 6px; }
-    .dock-key { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 60px; -webkit-user-select: none; user-select: none; }
-    .dock-face {
-      --c: var(--surface);
-      position: relative; width: 56px; height: 54px; display: grid; place-items: center;
-      background: var(--c); border: 3px solid var(--ink); border-radius: 12px;
-      box-shadow: inset 0 0 0 3px rgba(255,248,238,.75), inset 0 -6px 0 rgba(74,51,80,.16), 0 5px 0 var(--ink);
-      transition: transform .36s var(--ease-spring), box-shadow .36s var(--ease-spring), filter .3s var(--ease-soft);
+    /* ======================= DOCK (4 nút hình học pixel 2D giả 3D không viền đen + nút GHI) ======================= */
+    .dock { background: transparent; padding-bottom: 0 !important; }
+    .dock-inner {
+      position: relative;
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 4px;
+      margin: 0; padding: 6px 8px calc(var(--safe-bottom) + 6px);
+      background: var(--tv-body);
+      border-top: 3px solid var(--ink);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(74,51,80,.24), 0 -3px 12px rgba(20,12,30,.28);
     }
-    .dock-face .vi { width: 30px; height: 30px; }
-    .dock-face > span:first-child { width: 30px; height: 30px; }
-    .dock-key:active .dock-face { transform: translateY(4px) scale(.97); box-shadow: inset 0 0 0 3px rgba(255,248,238,.6), inset 0 -2px 0 rgba(74,51,80,.16), 0 1px 0 var(--ink); transition-duration: .06s; }
-    .dock-key.on .dock-face { transform: translateY(3px); box-shadow: inset 0 0 0 3px rgba(255,248,238,.9), inset 0 -3px 0 rgba(74,51,80,.2), 0 2px 0 var(--ink); }
-    .dock-key:not(.on) .dock-face { filter: saturate(.82) brightness(1.02); }
-    .dock-led { position: absolute; top: 4px; right: 5px; width: 6px; height: 6px; border-radius: 2px; background: rgba(74,51,80,.25); transition: background-color .3s var(--ease-soft), box-shadow .3s var(--ease-soft); }
-    .dock-key.on .dock-led { background: #7DFFB0; box-shadow: 0 0 6px #7DFFB0; }
-    .dock-label { font: 700 15px/1 'Handjet', sans-serif; letter-spacing: .04em; color: var(--text-secondary); text-transform: uppercase; transition: color .3s var(--ease-soft); margin-top: 6px; white-space: nowrap; }
-    .dock-key.on .dock-label { color: var(--text-primary); }
-    .dock-key.on .dock-ico { animation: icoHop .55s var(--ease-spring) both; }
-    .arcade { position: relative; width: 70px; height: 74px; display: flex; flex-direction: column; align-items: center; margin: 0 2px; -webkit-user-select: none; user-select: none; }
-    .arcade-ring { position: relative; width: 68px; height: 68px; border-radius: 999px; background: var(--hud); border: 3px solid var(--ink); box-shadow: inset 0 3px 0 rgba(255,255,255,.15), 0 4px 0 var(--ink); display: grid; place-items: center; margin-top: -16px; }
+    .dock-key {
+      position: relative; flex: 1; min-width: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      background: transparent !important;
+      border: 0 !important;
+      padding: 2px 2px 1px;
+      box-shadow: none !important;
+      -webkit-user-select: none; user-select: none;
+      touch-action: manipulation;
+    }
+    .dock-face {
+      position: relative; width: 100%;
+      padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      clip-path: none !important;
+    }
+    .dock-shape {
+      position: relative;
+      width: 52px; height: 52px;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .dock-well, .dock-cap, .dock-cap-art {
+      position: absolute; inset: 0;
+      display: block; pointer-events: none;
+    }
+    .dock-shape svg {
+      width: 100%; height: 100%;
+      display: block; overflow: visible;
+      shape-rendering: crispEdges;
+    }
+    .dock-cap {
+      transform: translateY(0px);
+      transition: transform .14s var(--ease-spring), filter .14s var(--ease-soft);
+    }
+    .dock-ico {
+      position: absolute;
+      left: 50%; top: 43%;
+      width: 20px; height: 20px;
+      transform: translate(-50%, -50%);
+      display: block;
+      pointer-events: none;
+      color: #341D3E;
+      opacity: .76;
+      filter: drop-shadow(0 1px 0 rgba(255,255,255,.45));
+      transition: color .16s var(--ease-soft), opacity .16s var(--ease-soft), filter .18s var(--ease-soft), transform .16s var(--ease-spring);
+    }
+    .dock-ico svg, .dock-ico img {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    .dock-ico img.dock-custom-mono {
+      filter: brightness(0) saturate(100%) invert(11%) sepia(31%) saturate(1658%) hue-rotate(248deg) brightness(92%) contrast(96%);
+    }
+    .dock-cap.shape-triangle { --dock-glow: #FFE27A; --dock-glow-2: #FF5E8E; }
+    .dock-cap.shape-circle   { --dock-glow: #EAFF8A; --dock-glow-2: #4FD86B; }
+    .dock-cap.shape-square   { --dock-glow: #F6D8FF; --dock-glow-2: #9E5CFF; }
+    .dock-cap.shape-star     { --dock-glow: #C8F6FF; --dock-glow-2: #3A9BFF; }
+    .dock-cap.shape-triangle .dock-ico {
+      top: 50%;
+      width: 18px; height: 18px;
+    }
+    .dock-cap.shape-star .dock-ico {
+      top: 45%;
+      width: 18px; height: 18px;
+    }
+    .dock-key.on .dock-cap {
+      transform: translateY(4.2px);
+      filter: brightness(1.03) saturate(1.06);
+    }
+    .dock-key.on .dock-ico,
+    .dock-key:active .dock-ico {
+      color: #FFFFFF;
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.06);
+      filter:
+        drop-shadow(0 1px 0 rgba(34,23,43,.5))
+        drop-shadow(0 0 2.5px var(--dock-glow, #FFE680))
+        drop-shadow(0 0 6px var(--dock-glow-2, #FFA834));
+    }
+    .dock-key.on .dock-ico img.dock-custom-mono,
+    .dock-key:active .dock-ico img.dock-custom-mono {
+      filter: brightness(0) invert(1);
+    }
+    .dock-key:active .dock-cap {
+      transform: translateY(5.6px) !important;
+      filter: brightness(.96);
+      transition-duration: .04s;
+    }
+    .dock-label {
+      width: 100%;
+      padding-top: 2px; margin-top: 1px;
+      border-top: 0;
+      font: 700 13px/1 'Handjet', sans-serif; letter-spacing: .04em;
+      color: #35203C; text-align: center; text-transform: uppercase;
+      text-shadow: 0 1px 0 rgba(255,255,255,.45);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: transform .14s var(--ease-spring), color .15s var(--ease-soft);
+    }
+    .dock-key.on .dock-label {
+      color: #FFF6E8;
+      text-shadow: 0 1px 0 rgba(42,24,48,.85), 0 0 6px rgba(255,242,226,.35);
+    }
+    .dock-key:active .dock-label {
+      transform: translateY(1px);
+    }
+    .arcade { position: relative; width: 68px; height: 70px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; margin: 0 1px; -webkit-user-select: none; user-select: none; }
+    .arcade-ring { position: relative; width: 64px; height: 64px; border-radius: 999px; background: var(--hud); border: 3px solid var(--ink); box-shadow: inset 0 3px 0 rgba(255,255,255,.15), 0 4px 0 var(--ink); display: grid; place-items: center; margin-top: -18px; }
     .arcade-ring::before { content: ""; position: absolute; inset: -9px; border-radius: 999px; border: 3px solid rgb(var(--primary-rgb) / .9); opacity: 0; animation: arcadePing 3.2s var(--ease-out) infinite; }
     .arcade-dome {
-      width: 50px; height: 50px; border-radius: 999px; display: grid; place-items: center;
+      width: 48px; height: 48px; border-radius: 999px; display: grid; place-items: center;
       background: radial-gradient(circle at 34% 28%, #FFF6D8 0 14%, var(--key-add) 40%, #F1B24C 100%);
       border: 3px solid var(--ink); color: var(--ink);
       box-shadow: inset 0 -5px 0 rgba(164,92,30,.25), 0 5px 0 #2F1F33;
@@ -433,7 +531,7 @@
     }
     .arcade-dome .vi { width: 24px; height: 24px; }
     .arcade:active .arcade-dome { transform: translateY(1px) scale(.96); box-shadow: inset 0 -2px 0 rgba(164,92,30,.25), 0 0 0 #2F1F33; transition-duration: .06s; }
-    .arcade .dock-label { margin-top: 4px; color: var(--text-primary); }
+    .arcade .dock-label { width: auto; border-top: 0; padding-top: 0; margin-top: 2px; color: #FFF2E2; text-shadow: 1px 1px 0 var(--ink); font-size: 14px; }
 
     /* ======================= BIỂU MẪU ======================= */
     html[data-retro="1"] input:not(.border-0), html[data-retro="1"] select, html[data-retro="1"] textarea {
@@ -579,7 +677,7 @@
     :where(html[data-retro="1"]) :where(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full) { clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
     :where(html[data-retro="1"]) :where(input, select, textarea) { border-radius: 0 !important; clip-path: polygon(2px 0, calc(100% - 2px) 0, calc(100% - 2px) 2px, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 2px calc(100% - 2px), 0 calc(100% - 2px), 0 2px, 2px 2px); }
 
-    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .dock-face, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
+    .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl, .game-btn, html[data-retro="1"] button.bg-theme-primary, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .console-bezel {
       --pc: var(--ink);
       position: relative;
       border-style: solid !important; border-color: var(--pc) !important;
@@ -587,16 +685,16 @@
       border-radius: 0 !important;
       clip-path: polygon(calc(2 * var(--u)) 0, calc(100% - calc(2 * var(--u))) 0, calc(100% - calc(2 * var(--u))) var(--u), calc(100% - var(--u)) var(--u), calc(100% - var(--u)) calc(2 * var(--u)), 100% calc(2 * var(--u)), 100% calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - calc(2 * var(--u))), calc(100% - var(--u)) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) calc(100% - var(--u)), calc(100% - calc(2 * var(--u))) 100%, calc(2 * var(--u)) 100%, calc(2 * var(--u)) calc(100% - var(--u)), var(--u) calc(100% - var(--u)), var(--u) calc(100% - calc(2 * var(--u))), 0 calc(100% - calc(2 * var(--u))), 0 calc(2 * var(--u)), var(--u) calc(2 * var(--u)), var(--u) var(--u), calc(2 * var(--u)) var(--u));
     }
-    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .dock-face::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
+    .retro-card::after, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl::after, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl::after, .game-btn::after, html[data-retro="1"] button.bg-theme-primary::after, .ekey::after, .hud::after, .hud-btn::after, .hud-sub::after, .wallet-card::after, .game-btn-sm::after, .retro-card-soft::after, .console-key::after, .tv-mini::after, .tx-ico::after, .console-bezel::after {
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
       background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat;
     }
-    .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .dock-key:active .dock-face, .dock-key.on .dock-face, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
+    .game-btn:active, html[data-retro="1"] button.bg-theme-primary:active, .ekey:active, .ekey.is-down, .hud-btn:active, .hud-sub:active, .game-btn-sm:active, .console-key:active, .tv-mini:active {
       transform: translateY(var(--u)) !important;
       border-bottom-width: var(--u) !important;
       margin-bottom: var(--u);
     }
-    .game-btn:active::after, html[data-retro="1"] button.bg-theme-primary:active::after, .ekey:active::after, .ekey.is-down::after, .dock-key:active .dock-face::after, .dock-key.on .dock-face::after, .hud-btn:active::after, .hud-sub:active::after, .game-btn-sm:active::after, .console-key:active::after, .tv-mini:active::after { background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat, linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 100% / 100% var(--u) no-repeat; }
+    .game-btn:active::after, html[data-retro="1"] button.bg-theme-primary:active::after, .ekey:active::after, .ekey.is-down::after, .hud-btn:active::after, .hud-sub:active::after, .game-btn-sm:active::after, .console-key:active::after, .tv-mini:active::after { background: linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 0 / 100% var(--u) no-repeat, linear-gradient(90deg, var(--pc) 0 var(--u), transparent var(--u) calc(100% - var(--u)), var(--pc) calc(100% - var(--u))) 0 100% / 100% var(--u) no-repeat; }
     .console-lcd, .day-card, .xp-bar, .hp-seg, .lvl-tag {
       --pc: var(--ink);
       position: relative;
@@ -611,7 +709,7 @@
     }
     /* kích thước điểm ảnh từng loại */
     .retro-card, html[data-retro="1"] .bg-theme-surface.border.rounded-2xl, html[data-retro="1"] .bg-theme-surface.border.rounded-3xl,
-    .game-btn, .ekey, .dock-face, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
+    .game-btn, .ekey, .hud, .hud-btn, .hud-sub, .wallet-card, .console-bezel, .console-lcd, .xp-bar { --u: 3px; }
     html[data-retro="1"] button.bg-theme-primary, .game-btn-sm, .retro-card-soft, .console-key, .tv-mini, .tx-ico, .day-card, .hp-seg, .lvl-tag { --u: 2px; }
     .day-card { --pc: rgb(var(--border-rgb)); }
     .lvl-tag { --pc: #D79A3C; }
@@ -662,7 +760,7 @@
     html.dark .hp-seg, html.dark .border-retro-ink { border-color: #0E0914 !important; }
     html.dark .retro-card, html.dark .bg-theme-surface.border.rounded-2xl, html.dark .bg-theme-surface.border.rounded-3xl { box-shadow: inset 0 2px 0 rgba(255,255,255,.08), 0 4px 0 #0E0914, 0 8px 0 rgba(0,0,0,.25); }
     html.dark .console-bezel { box-shadow: 0 0 0 4px var(--wood), 0 0 0 7px #0E0914, 0 10px 0 4px rgba(0,0,0,.35); }
-    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .dock-face, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
+    html.dark button.bg-theme-primary, html.dark .bg-theme-primary, html.dark .retro-btn, html.dark .game-btn, html.dark .game-btn-accent, html.dark .game-btn-sm, html.dark .ekey, html.dark .hud, html.dark .hud-btn, html.dark .tv-body, html.dark .tv-bezel, html.dark .tv-screen, html.dark .arcade-ring, html.dark .arcade-dome, html.dark .tv-knob, html.dark .tv-mini, html.dark .tx-ico { border-color: #0E0914 !important; }
     html.dark .game-btn-neutral { border-color: rgb(var(--border-rgb)) !important; }
     html.dark .dock-label { color: var(--text-secondary); }
     html.dark .hud-cell-light { background: var(--variant); color: var(--text-primary); }
@@ -672,7 +770,116 @@
     html.dark .dock-key.on .dock-label { color: var(--text-primary); }
     html.dark input:focus, html.dark select:focus, html.dark textarea:focus { border-color: rgb(var(--primary-rgb)); }
     html.dark .panel-head:not(.dark) { background: var(--variant); color: var(--text-primary); text-shadow: none; }
-    html.dark .day-card { border-color: rgb(var(--border-rgb) / .6); }
+    /* ======================= MÀN HÌNH CRT LIỀN MẠCH CHO MỌI MỤC ======================= */
+    .crt-stage { position: relative; max-width: 768px; margin: 0 auto; }
+    .tv-bezel-full {
+      background: var(--tv-trim);
+      padding: 7px;
+      box-shadow: inset 0 -4px 0 rgba(74,51,80,.16), inset 0 3px 0 rgba(255,255,255,.78), 0 6px 0 var(--ink);
+    }
+    .tv-screen.tv-screen-full {
+      height: auto !important;
+      min-height: calc(100vh - 232px);
+      overflow: hidden;
+      background: radial-gradient(125% 95% at 50% 25%, var(--screen2) 0%, var(--screen) 58%, #150F20 100%) !important;
+      color: #FFF2E2;
+      --surface: #231B38; --surface-rgb: 35 27 56;
+      --background: #171126; --background-rgb: 23 17 38;
+      --variant: #32254E; --variant-rgb: 50 37 78;
+      --text-primary: #FFF2E2; --text-primary-rgb: 255 242 226;
+      --text-secondary: #C8B6DE; --text-secondary-rgb: 200 182 222;
+      --border: #5E4A84; --border-rgb: 94 74 132;
+      --income: #9DF5C2; --income-light: rgba(157, 245, 194, 0.14); --on-income: #161024;
+      --expense: #FFA5BC; --expense-light: rgba(255, 165, 188, 0.16); --on-expense: #161024;
+      --accent: #FFE08A; --accent-rgb: 255 224 138; --on-accent: #1B1226;
+      --primary: #9DF5C2; --primary-rgb: 157 245 194; --on-primary: #161024;
+    }
+    .tv-screen-full .crt-body {
+      position: relative; z-index: 2;
+      padding: 10px 12px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      animation: crtFlicker 6s steps(1, end) infinite;
+    }
+    .tv-screen-full .crt-hero {
+      position: relative;
+      min-height: 146px;
+      display: flex; flex-direction: column;
+      padding: 2px 2px 4px;
+    }
+    .tv-screen-full .crt-sep {
+      height: 0;
+      border-top: 2px dashed rgba(157, 245, 194, 0.24);
+      margin: 2px 0;
+    }
+    .tv-screen-full .osd-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px dashed rgba(157, 245, 194, 0.24);
+    }
+    .tv-screen-full .tv-ch-btn {
+      height: 22px; padding: 0 7px;
+      background: rgba(157, 245, 194, 0.14);
+      color: #9DF5C2;
+      border: 2px solid rgba(157, 245, 194, 0.48);
+      font: 700 14px/1 'Handjet', sans-serif;
+      letter-spacing: .05em;
+      text-shadow: 0 0 6px rgba(157, 245, 194, 0.7);
+      transition: transform .15s var(--ease-spring), background-color .15s;
+    }
+    .tv-screen-full .tv-ch-btn:active { transform: translateY(1px); background: rgba(157, 245, 194, 0.28); }
+    .tv-screen-full .console-bezel,
+    .tv-screen-full .retro-card,
+    .tv-screen-full .retro-card-soft,
+    .tv-screen-full .console-lcd,
+    .tv-screen-full .day-card,
+    .tv-screen-full .bg-theme-surface.border.rounded-2xl,
+    .tv-screen-full .bg-theme-surface.border.rounded-3xl {
+      --pc: #5E4A84 !important;
+      background: rgba(18, 12, 30, 0.56) !important;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.06), inset 0 0 18px rgba(0,0,0,.32) !important;
+    }
+    .tv-screen-full .console-bezel { padding: 0 !important; margin: 0 !important; }
+    .tv-screen-full .console-bezel.p-4, .tv-screen-full .console-bezel.md\:p-5 { padding: 14px !important; }
+    .tv-screen-full .console-top-strip,
+    .tv-screen-full .panel-head {
+      background: rgba(157, 245, 194, 0.10) !important;
+      color: #9DF5C2 !important;
+      border-bottom: 2px solid rgba(157, 245, 194, 0.24) !important;
+      text-shadow: 0 0 6px rgba(157, 245, 194, 0.55) !important;
+      box-shadow: none !important;
+    }
+    .tv-screen-full .panel-head { color: #FFE08A !important; text-shadow: 0 0 6px rgba(255, 224, 138, 0.45) !important; }
+    .tv-screen-full .retro-stripes-h { opacity: .45; }
+    .tv-screen-full .font-display { text-shadow: 0 0 8px currentColor; }
+    .tv-screen-full .tx-ico {
+      --pc: #140D20 !important;
+      background: #3B2D5C !important;
+      box-shadow: inset 0 1.5px 0 rgba(255,255,255,.18), inset 0 -3px 0 #24193C !important;
+    }
+    .tv-screen-full .tv-keys { margin-top: 2px; }
+    .tv-screen-full .tv-keys .ekey {
+      --pc: var(--c) !important;
+      background: rgba(17, 11, 28, 0.78) !important;
+      color: var(--c) !important;
+      min-height: 58px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.12), 0 0 8px rgba(0,0,0,.35) !important;
+    }
+    .tv-screen-full .tv-keys .ekey .ekey-label { text-shadow: 0 0 6px currentColor; }
+    .tv-screen-full input:not(.border-0),
+    .tv-screen-full select,
+    .tv-screen-full textarea {
+      background-color: rgba(16, 11, 28, 0.75) !important;
+      color: #FFF2E2 !important;
+      border-color: #5E4A84 !important;
+    }
+    .tv-screen-full input::placeholder,
+    .tv-screen-full textarea::placeholder { color: rgba(200, 182, 222, 0.6) !important; }
+    .tv-screen-full .console-key {
+      --pc: #6A5594 !important;
+      background: #2C2144 !important;
+      color: #FFE08A !important;
+    }
+
     .pt-safe { padding-top: var(--safe-top); }
     .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
   </style>
@@ -918,9 +1125,7 @@
     };
     const WalletCard = ({ acc, index = 0, onClick, onEdit, onDelete, vertical = false }) => {
       const b = bankStyleOf(acc.name);
-      const color = mixHex((b && b.color) || "#8E7BC9", "#FFF6E9", 0.52);
-      const cardInk = contrastInk(color);
-      const isDarkInk = cardInk === "#1A1423";
+      const color = mixHex((b && b.color) || "#8E7BC9", "#FFF6E9", 0.42);
       const credit = isCreditAcc(acc);
       const bal = Number(acc.balance) || 0;
       const debt = Math.max(0, -bal), limit = Number(acc.limit) || 0;
@@ -929,37 +1134,36 @@
       const fmt = (n) => new Intl.NumberFormat("vi-VN").format(Math.round(n));
       return (
         <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => { if (e.key === "Enter") onClick && onClick(); }}
-          className={`${vertical ? "wallet-row w-full min-h-[164px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-2xl border-[3px] border-[var(--ink)] relative overflow-hidden active:translate-y-1 transition-transform duration-300`}
-          style={{ animationDelay: `${index * 65}ms`, background: `radial-gradient(rgba(255,255,255,.28) 1.2px, transparent 1.3px) 0 0 / 10px 10px, linear-gradient(150deg, ${mixHex(color, "#FFFFFF", .25)} 0%, ${color} 45%, ${darkenHex(color, 0.88)} 100%)`, boxShadow: "inset 0 3px 0 rgba(255,255,255,.45), 0 5px 0 var(--ink), 0 9px 0 rgba(74,51,80,.18)" }}>
-          <span className="absolute right-3 top-2 w-12 h-2 rounded-sm bg-white/20" />
-          <span className="absolute -right-8 -bottom-10 w-36 h-36 rounded-lg rotate-12 border-[10px] border-white/10" />
+          className={`${vertical ? "wallet-row w-full min-h-[152px] flex flex-col" : "wallet-in snap-start shrink-0 w-[248px]"} wallet-card cursor-pointer text-left rounded-2xl border-[3px] relative overflow-hidden active:translate-y-1 transition-transform duration-300`}
+          style={{ "--pc": color, animationDelay: `${index * 65}ms`, background: `radial-gradient(rgba(157,245,194,.08) 1px, transparent 1.2px) 0 0 / 10px 10px, linear-gradient(155deg, rgba(48, 36, 76, 0.92) 0%, rgba(18, 12, 32, 0.96) 100%)`, boxShadow: "inset 0 2px 0 rgba(255,255,255,.1), inset 0 0 18px rgba(0,0,0,.4)" }}>
+          <span className="absolute inset-x-0 top-0 h-1" style={{ background: color }} />
           <span className="wallet-sheen" />
-          <div className="relative p-3.5 h-full flex-1 flex flex-col" style={{ color: cardInk }}>
+          <div className="relative p-3.5 h-full flex-1 flex flex-col text-[#FFF2E2]">
             <div className="flex items-center justify-between gap-2">
               <BankBadge name={acc.name} size={30} />
               <div className="flex items-center gap-1.5">
-                <span className={`font-pixel text-[14px] uppercase tracking-wider px-2 py-0.5 rounded border ${isDarkInk ? "bg-[#FBF2DE]/85 border-[#54321D]/40 text-[#4A2B18]" : "bg-black/35 border-white/25 text-white"}`}>{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
-                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#FBF2DE] text-[#4A2B18] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
-                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#FFF8EE] text-[#D9385A] border-2 border-[var(--ink)] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
+                <span className="font-pixel text-[14px] uppercase tracking-wider px-2 py-0.5 rounded border border-[#9DF5C2]/40 bg-[#140D20]/80 text-[#9DF5C2]">{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
+                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFE08A] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
+                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFA5BC] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
               </div>
             </div>
-            <p className="mt-2.5 font-display text-[22px] leading-tight truncate">{acc.name}</p>
-            <p className="font-mono text-[14px] tracking-[0.12em] opacity-85 h-4 truncate">{no || "\u00A0"}</p>
+            <p className="mt-2 font-display text-[23px] leading-tight truncate text-[#FFF2E2] crt-glow">{acc.name}</p>
+            <p className="font-mono text-[14px] tracking-[0.12em] text-[#C8B6DE] h-4 truncate">{no || "\u00A0"}</p>
             {credit ? (
               <div className="mt-auto pt-2">
                 <div className="flex items-end justify-between">
-                  <span className="font-pixel text-[14px] uppercase opacity-80">Dư nợ</span>
-                  <span className="font-display text-2xl tabular leading-none">{fmt(debt)} ₫</span>
+                  <span className="font-pixel text-[14px] uppercase text-[#C8B6DE]">Dư nợ</span>
+                  <span className="font-display text-2xl tabular leading-none text-[#FFA5BC] crt-glow">−{fmt(debt)} ₫</span>
                 </div>
-                <div className="mt-1.5 h-3 rounded-full bg-[var(--hud)] border-2 border-[var(--ink)] overflow-hidden p-[1px]">
-                  <div className="wallet-bar h-full rounded-full bg-[#FFD87E]" style={{ width: `${usedPct}%` }} />
+                <div className="mt-1.5 h-3 bg-[#140D20] border-2 border-[#5E4A84] overflow-hidden p-[1px]">
+                  <div className="wallet-bar h-full bg-[#FFA5BC]" style={{ width: `${usedPct}%`, boxShadow: "0 0 6px #FFA5BC" }} />
                 </div>
-                <p className="mt-1 text-[13px] font-semibold opacity-90">{limit > 0 ? `Khả dụng ${fmt(limit - debt)} / ${fmt(limit)} ₫` : "Chưa nhập hạn mức"}</p>
+                <p className="mt-1 text-[13px] font-semibold text-[#C8B6DE]">{limit > 0 ? `Khả dụng ${fmt(limit - debt)} / ${fmt(limit)} ₫` : "Chưa nhập hạn mức"}</p>
               </div>
             ) : (
               <div className="mt-auto pt-2 flex items-end justify-between">
-                <span className="font-pixel text-[14px] uppercase opacity-80">Số dư</span>
-                <span className="font-display text-2xl tabular leading-none" style={bal < 0 ? { background: "rgba(26,20,35,0.72)", color: "#FFE2E8", padding: "1px 6px", borderRadius: "4px" } : undefined}>{fmt(bal)} ₫</span>
+                <span className="font-pixel text-[14px] uppercase text-[#C8B6DE]">Số dư</span>
+                <span className={`font-display text-2xl tabular leading-none crt-glow ${bal < 0 ? "text-[#FFA5BC]" : "text-[#9DF5C2]"}`}>{fmt(bal)} ₫</span>
               </div>
             )}
           </div>
@@ -1565,6 +1769,12 @@
       });
       return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" preserveAspectRatio="none">${out}</svg>`;
     };
+    // Cho phép thay thế mọi UI Element (nút 2.5D, nút + Ghi, mây...) bằng ảnh vẽ tay từ Procreate / Studio
+    const uiArt = (key, fallbackHtml, cls = "") => {
+      const V = window.VinaIcons;
+      const p = V && V.png32 ? V.png32(key) : null;
+      return p ? `<img class="w-full h-full object-contain ${cls}" style="image-rendering:pixelated" src="data:image/png;base64,${p}" alt="" draggable="false">` : fallbackHtml;
+    };
     const CLOUD_SVG = pixelSvg([
       "..........wwwwww............",
       "........wwhhhhhhww..........",
@@ -1592,7 +1802,7 @@
         <div className="sky" aria-hidden="true" style={{ zIndex: -1 }}>
           {clouds.map((c, i) => (
             <div key={i} className="sky-cloud" style={{ top: c.top, left: 0, width: c.w, height: c.w * 10 / 28, animationDuration: `${c.d}s`, animationDelay: `${c.delay}s` }}
-              dangerouslySetInnerHTML={{ __html: CLOUD_SVG }} />
+              dangerouslySetInnerHTML={{ __html: uiArt("ui-sky-cloud", CLOUD_SVG) }} />
           ))}
           {stars.map((s, i) => <span key={i} className="sky-star" style={{ left: s.left, top: s.top, animationDelay: s.delay }} />)}
           <div className="sky-hill" />
@@ -1617,6 +1827,268 @@
     const ARCADE_RING_SVG = pixelDisc(17, { body: "var(--hud)", hl: "rgba(255,255,255,.22)", sh: "rgba(0,0,0,.28)", ink: "var(--ink)" });
     const ARCADE_DOME_SVG = pixelDisc(13, { body: "var(--key-add)", hl: "#FFF6D8", sh: "rgba(190,110,30,.45)", ink: "var(--ink)" }, `<rect x="3" y="3" width="2" height="1" fill="#FFFFFF"/><rect x="3" y="4" width="1" height="1" fill="#FFFFFF"/>`);
     const TV_KNOB_SVG = pixelDisc(12, { body: "var(--tv-trim)", hl: "#FFFFFF", sh: "rgba(74,51,80,.22)", ink: "var(--ink)" }, `<rect x="5" y="2" width="2" height="4" fill="var(--ink)"/>`);
+
+    // 4 nút điều hướng hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản có border line màu đen ôm theo khối + icon bên trong
+    const pixel25dBtnSvg = (rows, pal) => {
+      const H0 = rows.length, W0 = rows[0].length, DEPTH = 3;
+      const INK = pal.ink || "#22172B";
+      // Pad 1px trống quanh lưới để viền 1px pixel-perfect không bao giờ bị cắt ở mép
+      const P = [".".repeat(W0 + 2), ...rows.map(r => "." + r + "."), ".".repeat(W0 + 2)];
+      const H = P.length, W = W0 + 2;
+      const at = (x, y) => x >= 0 && x < W && y >= 0 && y < H && P[y][x] === "#";
+      const runs = (grid, h) => {
+        let out = "";
+        for (let y = 0; y < h; y++) {
+          let x = 0;
+          while (x < W) {
+            const c = grid[y][x];
+            if (!c) { x++; continue; }
+            const x0 = x;
+            while (x < W && grid[y][x] === c) x++;
+            out += `<rect x="${x0}" y="${y}" width="${x - x0}" height="1" fill="${c}"/>`;
+          }
+        }
+        return out;
+      };
+      const addAsepriteOutline = (grid, vh, fillMask, defaultFill) => {
+        const isOut = Array.from({ length: vh }, () => Array(W).fill(false));
+        const hasF = (x, y) => x >= 0 && x < W && y >= 0 && y < vh && fillMask[y][x];
+        for (let y = 0; y < vh; y++) for (let x = 0; x < W; x++) {
+          if (hasF(x, y)) continue;
+          if (hasF(x + 1, y) || hasF(x - 1, y) || hasF(x, y + 1) || hasF(x, y - 1)) {
+            grid[y][x] = INK;
+            isOut[y][x] = true;
+          }
+        }
+        // Khử góc chữ L bậc thang ở mặt trong của viền (Aseprite IntertwineAsPixelPerfect)
+        const hasO = (x, y) => x >= 0 && x < W && y >= 0 && y < vh && isOut[y][x];
+        for (let y = 1; y < vh - 1; y++) for (let x = 1; x < W - 1; x++) {
+          if (!isOut[y][x]) continue;
+          for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            if (hasO(x - dx, y) && hasO(x, y - dy) && hasF(x + dx, y) && hasF(x, y + dy) && !hasF(x - dx, y - dy)) {
+              grid[y][x] = grid[y][x + dx] || defaultFill;
+              isOut[y][x] = false;
+              fillMask[y][x] = true;
+              break;
+            }
+          }
+        }
+      };
+
+      const VH = H + DEPTH + 1;
+      const baseGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const baseMask = Array.from({ length: VH }, () => Array(W).fill(false));
+      const capGrid = Array.from({ length: VH }, () => Array(W).fill(null));
+      const capMask = Array.from({ length: VH }, () => Array(W).fill(false));
+
+      // 1) Đế 2.5D đơn giản + viền đen 1px pixel-perfect ôm quanh chân đế
+      for (let d = DEPTH; d >= 1; d--) {
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          if (!at(x, y)) continue;
+          baseGrid[y + d][x] = pal.side;
+          baseMask[y + d][x] = true;
+        }
+      }
+      addAsepriteOutline(baseGrid, VH, baseMask, pal.side);
+
+      // 2) Mặt trên 2.5D phẳng đơn giản + viền đen 1px pixel-perfect ôm quanh mặt nút
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (!at(x, y)) continue;
+        capGrid[y][x] = !at(x, y - 1) ? pal.hi : pal.base;
+        capMask[y][x] = true;
+      }
+      addAsepriteOutline(capGrid, VH, capMask, pal.base);
+
+      return {
+        well: `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true">${runs(baseGrid, VH)}</svg>`,
+        cap: `<svg viewBox="0 0 ${W} ${VH}" shape-rendering="crispEdges" aria-hidden="true">${runs(capGrid, VH)}</svg>`
+      };
+    };
+
+    const DOCK_SHAPE_SVGS = {
+      triangle: pixel25dBtnSvg([
+        "...........#####...........",
+        "..........#######..........",
+        ".........#########.........",
+        ".........#########.........",
+        "........###########........",
+        ".......#############.......",
+        ".......#############.......",
+        "......###############......",
+        ".....#################.....",
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "..#######################..",
+        "..#######################..",
+        ".#########################.",
+        ".#########################.",
+        ".#########################.",
+        ".#########################.",
+        "..#######################..",
+        "...#####################..."
+      ], { hi: "#FFC8D0", base: "#F48E9E", side: "#A83A52" }),
+
+      circle: pixel25dBtnSvg([
+        ".........#########.........",
+        ".......#############.......",
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "..#######################..",
+        "...#####################...",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        ".......#############.......",
+        ".........#########.........",
+        "..........................."
+      ], { hi: "#E2F2C2", base: "#ACD078", side: "#5B802B" }),
+
+      square: pixel25dBtnSvg([
+        ".....#################.....",
+        "....###################....",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        "..........................."
+      ], { hi: "#E7D5FC", base: "#BE9CE8", side: "#684498" }),
+
+      star: pixel25dBtnSvg([
+        "............###............",
+        "...........#####...........",
+        "..........#######..........",
+        "..........#######..........",
+        ".........#########.........",
+        "..#######################..",
+        ".#########################.",
+        ".#########################.",
+        "..#######################..",
+        "...#####################...",
+        "....###################....",
+        ".....#################.....",
+        ".....#################.....",
+        "....###################....",
+        "....###################....",
+        "...#####################...",
+        "...#########...#########...",
+        "..#########.....#########..",
+        "..########.......########..",
+        "...######.........######...",
+        "....####...........####...."
+      ], { hi: "#CAE5FF", base: "#86B9EC", side: "#346296" })
+    };
+
+    // Icon bên trong 4 nút danh mục dưới đáy: dạng đơn màu (currentColor) phát sáng khi được chọn
+    const DOCK_MONO_SVGS = {
+      home: pixelSvg([
+        ".......#.......",
+        "......###......",
+        ".....#####.##..",
+        "....#########..",
+        "...##########..",
+        "..###########..",
+        ".#############.",
+        "...............",
+        "...#########...",
+        "...#########...",
+        "...###...###...",
+        "...###...###...",
+        "...###...###...",
+        "...###...###...",
+        "..............."
+      ], { "#": "currentColor" }),
+      chart: pixelSvg([
+        "...............",
+        "...............",
+        "..........###..",
+        "..........###..",
+        "..........###..",
+        "......###.###..",
+        "......###.###..",
+        "......###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "..###.###.###..",
+        "...............",
+        ".#############.",
+        "..............."
+      ], { "#": "currentColor" }),
+      mai: pixelSvg([
+        "....#.....#....",
+        ".....#...#.....",
+        "......###......",
+        "..###########..",
+        ".#############.",
+        ".##.........##.",
+        ".##..#...#..##.",
+        ".##..#...#..##.",
+        ".##.........##.",
+        ".#############.",
+        "..###########..",
+        "....##...##....",
+        "...............",
+        "...............",
+        "..............."
+      ], { "#": "currentColor" }),
+      wallet: pixelSvg([
+        "...............",
+        "...#########...",
+        "...##.....##...",
+        "...............",
+        ".#############.",
+        ".#############.",
+        ".#######.......",
+        ".#######..####.",
+        ".#######..####.",
+        ".#######.......",
+        ".#############.",
+        ".#############.",
+        "..###########..",
+        "...............",
+        "..............."
+      ], { "#": "currentColor" })
+    };
+    const renderDockMonoIcon = (name) => {
+      const V = window.VinaIcons;
+      const uiPng = V && V.png32 ? V.png32(`ui-dock-ico-${name}`) : null;
+      if (uiPng) {
+        return `<img class="vi vi32 dock-custom-mono" src="data:image/png;base64,${uiPng}" alt="" draggable="false">`;
+      }
+      if (V && V.CUSTOM32) {
+        const key = V.resolve ? V.resolve(name) : name;
+        if (V.CUSTOM32[key]) {
+          return `<img class="vi vi32 dock-custom-mono" src="data:image/png;base64,${V.CUSTOM32[key]}" alt="" draggable="false">`;
+        }
+      }
+      if (DOCK_MONO_SVGS[name]) return DOCK_MONO_SVGS[name];
+      return V ? V.svg(name, "dock-custom-mono") : "";
+    };
 
     const TV_ANTENNA_SVG = pixelSvg([
       "..yy................................yy..",
@@ -1658,8 +2130,8 @@
       );
     };
 
-    // TV CRT retro: màn hình nhiều kênh + núm xoay + hàng phím bấm chức năng
-    const RetroTV = ({ channels, ch, onChange, keys }) => {
+    // Màn hình CRT liền mạch cho mục Nhà (gộp cả kênh tổng quan + phím tác vụ + nhật ký gần đây vào chung 1 màn CRT tối như vùng khoanh đỏ)
+    const RetroTV = ({ channels, ch, onChange, keys, children }) => {
       const n = channels.length;
       const idx = ((ch % n) + n) % n;
       const cur = channels[idx];
@@ -1667,15 +2139,7 @@
       const [noise, setNoise] = useState(false);
       const [now, setNow] = useState(() => new Date());
       const firstRef = useRef(true);
-      const rotRef = useRef(idx * 90);
-      const prevIdxRef = useRef(idx);
       const touchRef = useRef(null);
-      if (prevIdxRef.current !== idx) {
-        let d = (idx - prevIdxRef.current + n) % n;
-        if (d > n / 2) d -= n;
-        rotRef.current += d * 90;
-        prevIdxRef.current = idx;
-      }
       useEffect(() => {
         if (firstRef.current) {
           firstRef.current = false;
@@ -1690,60 +2154,85 @@
       const go = (d) => { buzz(10); onChange((idx + d + n) % n); };
       const pad = (v) => String(v).padStart(2, "0");
       return (
-        <section className="tv" aria-label="Màn hình TV tổng quan">
-          <div className="tv-antenna" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TV_ANTENNA_SVG }} />
-          <div className="tv-body">
-            <div className="tv-top">
-              <div className="tv-bezel">
-                <div className="tv-screen"
+        <section className="crt-stage tab-enter" aria-label="Màn hình TV tổng quan">
+          <div className="tv-bezel tv-bezel-full">
+            <div className="tv-screen tv-screen-full">
+              <div className="crt-roll" />
+              <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
+              <div className="crt-body">
+                <div className="osd-bar osd shrink-0">
+                  <span className="truncate">CH{pad(idx + 1)} <span className="opacity-85">{cur.title}</span></span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button type="button" className="tv-ch-btn" aria-label="Kênh trước" onClick={() => go(-1)}>CH▲</button>
+                    <button type="button" className="tv-ch-btn" aria-label="Kênh sau" onClick={() => go(1)}>CH▼</button>
+                    <span className="ml-1">{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
+                  </div>
+                </div>
+                <div key={cur.id} className={`crt-hero ${phase}`}
                   onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; }}
                   onTouchEnd={(e) => {
                     const s = touchRef.current; touchRef.current = null; if (!s) return;
                     const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
                     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
                   }}>
-                  <div className="crt-roll" />
-                  <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
-                  <div key={cur.id} className={`crt-content ${phase}`}>
-                    <div className="flex items-center justify-between osd shrink-0">
-                      <span>CH{pad(idx + 1)} <span className="opacity-80">{cur.title}</span></span>
-                      <span>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
-                    </div>
-                    <div className="flex-1 min-h-0 mt-1.5 flex flex-col" onClick={cur.onOpen ? () => { buzz(); cur.onOpen(); } : undefined} role={cur.onOpen ? "button" : undefined}>
-                      {cur.render()}
-                    </div>
-                    <div className="tv-dots shrink-0 mt-1.5">
-                      {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); if (i !== idx) { buzz(); onChange(i); } }} />)}
-                    </div>
+                  <div className="flex-1 min-h-0 flex flex-col" onClick={cur.onOpen ? () => { buzz(); cur.onOpen(); } : undefined} role={cur.onOpen ? "button" : undefined}>
+                    {cur.render()}
+                  </div>
+                  <div className="tv-dots shrink-0 mt-2.5">
+                    {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); if (i !== idx) { buzz(); onChange(i); } }} />)}
                   </div>
                 </div>
-              </div>
-              <div className="tv-side">
-                <div className="tv-knob-wrap">
-                  <span className="ticks" />
-                  <button type="button" className="tv-knob block" aria-label="Xoay núm đổi kênh" style={{ transform: `rotate(${rotRef.current}deg)` }} onClick={() => go(1)} dangerouslySetInnerHTML={{ __html: TV_KNOB_SVG }} />
-                </div>
-                <button type="button" className="tv-mini" aria-label="Kênh trước" onClick={() => go(-1)}>CH▲</button>
-                <button type="button" className="tv-mini" aria-label="Kênh sau" onClick={() => go(1)}>CH▼</button>
-                <div className="tv-grille" />
-                <span className="tv-led" title="Đang bật" />
+                {keys && keys.length > 0 && (
+                  <>
+                    <div className="crt-sep" />
+                    <div className="tv-keys" style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0, 1fr))` }}>
+                      {keys.map(k => (
+                        <button key={k.id} type="button" className="ekey" style={{ "--c": k.color }} aria-label={k.aria || k.label}
+                          onClick={() => { buzz(12); k.onClick(); }}>
+                          <span className={`led ${k.led || ""}`} />
+                          {k.badge ? <span className="ekey-badge">{k.badge}</span> : null}
+                          <span className="ekey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
+                          <span className={`ekey-label ${k.small ? "is-small" : ""}`}>{k.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {children && (
+                  <>
+                    <div className="crt-sep" />
+                    {children}
+                  </>
+                )}
               </div>
             </div>
-            {keys && keys.length > 0 && (
-              <div className="tv-keys" style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0, 1fr))` }}>
-                {keys.map(k => (
-                  <button key={k.id} type="button" className="ekey" style={{ "--c": k.color }} aria-label={k.aria || k.label}
-                    onClick={() => { buzz(12); k.onClick(); }}>
-                    <span className={`led ${k.led || ""}`} />
-                    {k.badge ? <span className="ekey-badge">{k.badge}</span> : null}
-                    <span className="ekey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
-                    <span className={`ekey-label ${k.small ? "is-small" : ""}`}>{k.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-          <div className="tv-feet" aria-hidden="true"><span /><span /></div>
+        </section>
+      );
+    };
+
+    // Màn hình CRT liền mạch cho các mục khác (Báo cáo, Tự động, Ví & Nợ, Hạng mục)
+    const CrtSectionScreen = ({ chCode = "CH02", title, badge, children }) => {
+      const [now, setNow] = useState(() => new Date());
+      useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
+      const pad = (v) => String(v).padStart(2, "0");
+      return (
+        <section className="crt-stage tab-enter" aria-label={title}>
+          <div className="tv-bezel tv-bezel-full">
+            <div className="tv-screen tv-screen-full">
+              <div className="crt-roll" />
+              <div className="crt-body">
+                <div className="osd-bar osd shrink-0">
+                  <span className="truncate">{chCode} <span className="opacity-85">{title}</span></span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {badge && <span className="text-[#FFE08A] text-[14px]">{badge}</span>}
+                    <span>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
+                  </div>
+                </div>
+                {children}
+              </div>
+            </div>
+          </div>
         </section>
       );
     };
@@ -4474,11 +4963,11 @@
         { id: "category", icon: "tags", label: "Hạng mục" }
       ];
       const DOCK = [
-        { id: "overview", icon: "home", label: "Nhà", c: "var(--key-home)" },
-        { id: "report", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
+        { id: "overview", shape: "triangle", icon: "home", label: "Nhà", c: "var(--key-home)" },
+        { id: "report", shape: "circle", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
         { id: "__add" },
-        { id: "mai", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
-        { id: "wallet_ai", icon: "wallet", label: "Ví & Nợ", c: "var(--key-wallet)" }
+        { id: "mai", shape: "square", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
+        { id: "wallet_ai", shape: "star", icon: "wallet", label: "Ví & Nợ", c: "var(--key-wallet)" }
       ];
       const maiBadge = maiInbox.length;
       const canGoBackUI = activeTab !== "overview" || (activeTab === "wallet_ai" && subTab !== "wallet") || (activeTab === "report" && !!drillDownParent) || (activeTab === "wallet_ai" && subTab === "debts" && !!expandedDebtPerson);
@@ -4729,50 +5218,48 @@
           {/* MAIN CONTENT AREA */}
           <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-36 md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
 
-            {/* TAB: MÀN HÌNH CHÍNH – TV retro + nhật ký */}
+            {/* TAB: MÀN HÌNH CHÍNH – 1 màn hình CRT liền mạch */}
             {activeTab === "overview" && (
-              <div className="max-w-3xl mx-auto space-y-5 tab-enter">
-                <RetroTV ch={tvChannel} onChange={setTvChannel} channels={tvChannels} keys={tvKeys} />
-
+              <RetroTV ch={tvChannel} onChange={setTvChannel} channels={tvChannels} keys={tvKeys}>
                 {/* Nhắc quyền đọc thông báo trên Android */}
                 {canListen && !maiAccess && (
-                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 bg-[var(--accent)] flex items-center gap-3 text-[var(--on-accent)]">
+                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 flex items-center gap-3 text-[#FFE08A]">
                     <MaiAvatar size={42} animated />
                     <div className="flex-1">
-                      <p className="font-bold text-[17px]">Cho phép đọc thông báo ngân hàng</p>
-                      <p className="text-xs font-semibold mt-0.5">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
+                      <p className="font-bold text-[17px] text-[#FFE08A]">Cho phép đọc thông báo ngân hàng</p>
+                      <p className="text-xs font-semibold mt-0.5 text-[#C8B6DE]">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
                     </div>
                     <Icon name="chevron-right" anim="wiggle" className="w-5 h-5 shrink-0" />
                   </button>
                 )}
 
-                {/* NHẬT KÝ GẦN ĐÂY – cửa sổ danh sách, nhóm theo ngày */}
-                <section className="console-bezel">
-                  <div className="console-top-strip px-3.5 py-2 flex items-center justify-between gap-2">
+                {/* NHẬT KÝ GẦN ĐÂY – nằm liền mạch trong cùng màn hình CRT tối */}
+                <section className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2 px-1">
                     <span className="flex items-center gap-2 min-w-0">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led shrink-0" />
-                      <span className="font-pixel text-[15px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
+                      <span className="w-2.5 h-2.5 bg-[#7DFFB0] px-led shrink-0" style={{ boxShadow: "0 0 6px #7DFFB0" }} />
+                      <span className="osd text-[16px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
                     </span>
-                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[14px] text-[#FFE08A] flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3 h-3" /></button>
+                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[15px] text-[#FFE08A] crt-glow flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3.5 h-3.5" /></button>
                   </div>
                   {recentGroups.length === 0 ? (
-                    <div className="text-center px-6 py-9">
+                    <div className="console-lcd text-center px-6 py-8">
                       <MaiAvatar size={64} animated className="mx-auto mb-3" />
                       <p className="font-display text-[30px] leading-none text-theme-textPrimary">Sổ còn trống</p>
                       <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
                     </div>
                   ) : (
-                    <div className="p-2.5 space-y-2.5 stagger">
+                    <div className="space-y-2.5 stagger">
                       {recentGroups.map(g => (
                         <div key={g.key} className="day-card">
                           <div className="panel-head">
                             <span className="truncate">{g.label}</span>
-                            <span className={`font-display text-[19px] leading-none normal-case tracking-normal px-1.5 py-0.5 rounded-md bg-theme-surface border-2 border-[var(--ink)]/25 [text-shadow:none] ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</span>
+                            <span className={`font-display text-[20px] leading-none normal-case tracking-normal px-2 py-0.5 bg-[#140D20]/80 border border-[#5E4A84] crt-glow ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</span>
                           </div>
-                          <div className="divide-y-2 divide-dashed divide-theme-border/50">
+                          <div className="divide-y-2 divide-dashed divide-theme-border/45">
                             {g.items.map(tx => {
                               const col = getColorForCategoryName(tx.category);
-                              const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? `${col}40` : "rgb(var(--variant-rgb))";
+                              const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? `${col}35` : "rgba(255,242,226,.09)";
                               return (
                                 <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="tx-row px-3 py-2.5 flex items-center gap-3 cursor-pointer">
                                   <div className="tx-ico" style={{ background: tint }}>
@@ -4785,7 +5272,7 @@
                                     </p>
                                     <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                                   </div>
-                                  <p className={`font-display text-[22px] leading-none tabular shrink-0 ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>
+                                  <p className={`font-display text-[22px] leading-none tabular shrink-0 crt-glow ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>
                                     {tx.type==="INCOME" ? '+' : '−'}{formatVND(tx.amount)}
                                   </p>
                                 </div>
@@ -4797,20 +5284,13 @@
                     </div>
                   )}
                 </section>
-              </div>
+              </RetroTV>
             )}
 
             {/* TAB: BÁO CÁO */}
             {activeTab === "report" && (
-              <div className="max-w-3xl mx-auto space-y-5 pb-10 tab-enter">
+              <CrtSectionScreen chCode="CH02" title="BÁO CÁO · THỐNG KÊ" badge={reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}>
                 <section className="console-bezel">
-                  <div className="console-top-strip px-3.5 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-[#7DFFB0] px-led" />
-                      <span className="font-pixel text-[15px] tracking-wider uppercase">Báo cáo · Thống kê</span>
-                    </div>
-                    <span className="font-pixel text-[14px] text-[#FFE08A]">{reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}</span>
-                  </div>
                   <div className="p-3 space-y-3">
                     {/* Chi tiêu / Thu nhập */}
                     <div className="grid grid-cols-2 gap-2">
@@ -5252,21 +5732,13 @@
                     </div>
                   </>
                 )}
-              </div>
+              </CrtSectionScreen>
             )}
 
             {/* TAB: HẠNG MỤC (Hierarchy Management) */}
             {activeTab === "category" && (
-              <div className="max-w-3xl mx-auto space-y-5 pb-12 tab-enter">
+              <CrtSectionScreen chCode="CH05" title="KHO HẠNG MỤC" badge={`${parentCategories.length} NHÓM · ${subCategories.length} CON`}>
                 <section className="console-bezel overflow-hidden">
-                  <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-sm bg-[var(--accent)] px-led" />
-                      <span className="font-pixel text-[14px] tracking-wider uppercase">KHO HẠNG MỤC</span>
-                    </div>
-                    <span className="font-pixel text-[14px] text-[#FFD875]">{parentCategories.length} NHÓM · {subCategories.length} CON</span>
-                  </div>
-                  <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
@@ -5445,21 +5917,13 @@
                     })}
                   </div>
                 )}
-              </div>
+              </CrtSectionScreen>
             )}
 
             {/* TAB: TỰ ĐỘNG (Gemini đọc thông báo) */}
             {activeTab === "mai" && (
-              <div className="max-w-3xl mx-auto space-y-4 tab-enter">
+              <CrtSectionScreen chCode="CH03" title="TRỢ LÝ MAI · TỰ ĐỘNG" badge="GEMINI FLASH-LITE">
                 <section className="console-bezel overflow-hidden">
-                  <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led" />
-                      <span className="font-pixel text-[14px] tracking-wider uppercase">TRỢ LÝ MAI · TỰ ĐỘNG</span>
-                    </div>
-                    <span className="font-pixel text-[14px] text-[#FFD875]">GEMINI FLASH-LITE</span>
-                  </div>
-                  <div className="h-1.5 retro-stripes-h" />
                   <div className="p-4 flex gap-3.5 items-start">
                     <span className="w-14 h-14 shrink-0 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center">
                       <MaiAvatar size={40} animated />
@@ -5508,17 +5972,17 @@
                     )}
                   </div>
                   {canListen && !maiAccess && (
-                    <div className="rounded-lg border-2 border-dashed border-[var(--ink)]/50 bg-[#FFF0B5] p-3 text-xs text-[var(--on-accent,#4A2B18)] space-y-2">
-                      <p className="font-bold text-sm">Không bật được quyền?</p>
-                      <p>Android 13 trở lên chặn quyền này với app cài từ file APK. Mở khoá một lần là xong:</p>
-                      <ol className="list-decimal pl-5 space-y-1">
+                    <div className="rounded-lg border-2 border-dashed border-[#FFE08A]/45 bg-[#140D20]/80 p-3 text-xs text-[#FFF2E2] space-y-2">
+                      <p className="font-bold text-sm text-[#FFE08A]">Không bật được quyền?</p>
+                      <p className="text-[#C8B6DE]">Android 13 trở lên chặn quyền này với app cài từ file APK. Mở khoá một lần là xong:</p>
+                      <ol className="list-decimal pl-5 space-y-1 text-[#FFF2E2]">
                         <li>Bấm <b>"Cấp quyền"</b>, chạm vào <b>công tắc bị mờ</b> một lần → OK.</li>
                         <li>Quay lại, bấm <b>"Mở thông tin ứng dụng"</b> bên dưới.</li>
                         <li>Bấm dấu <b>⋮</b> góc trên bên phải → <b>"Cho phép chế độ cài đặt bị hạn chế"</b>.</li>
                         <li>Quay lại đây, bấm <b>"Cấp quyền"</b> và bật Spendy.</li>
                       </ol>
                       <div className="flex gap-2 pt-1">
-                        <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-[#FBF2DE] text-[#4A2B18]">Thông tin app</button>
+                        <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-[#2C2144] text-[#FFE08A]">Thông tin app</button>
                         <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-theme-primary text-[var(--on-primary)]">Cấp quyền</button>
                       </div>
                     </div>
@@ -5811,12 +6275,12 @@
                     ))}
                   </div>
                 </section>
-              </div>
+              </CrtSectionScreen>
             )}
 
             {/* TAB: VÍ & SỔ NỢ */}
             {activeTab === "wallet_ai" && (
-              <div className="max-w-3xl mx-auto space-y-5 tab-enter">
+              <CrtSectionScreen chCode="CH04" title="VÍ & SỔ VAY NỢ" badge={`${accounts.length} VÍ`}>
                 
                 {/* Segmented Control */}
                 <div className="flex bg-theme-surface border-2 border-[var(--ink)] p-1 rounded-xl shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] gap-1">
@@ -5985,27 +6449,32 @@
                     )}
                   </div>
                 )}
-              </div>
+              </CrtSectionScreen>
             )}
           </main>
 
-          {/* DOCK – hàng phím bấm điện tử (MOBILE) */}
+          {/* DOCK – 4 nút hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản có icon bên trong + nút GHI ở giữa (MOBILE) */}
           <nav className="dock fixed bottom-0 inset-x-0 md:hidden z-30 pb-safe" aria-label="Điều hướng chính">
             <div className="dock-inner">
               {DOCK.map(item => item.id === "__add" ? (
                 <button key="add" type="button" className="arcade" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
-                  <span className="arcade-ring"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: ARCADE_RING_SVG }} /><span className="arcade-dome"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: ARCADE_DOME_SVG }} /><Icon name="plus" className="w-6 h-6" /></span></span>
+                  <span className="arcade-ring"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-ring", ARCADE_RING_SVG) }} /><span className="arcade-dome"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-dome", ARCADE_DOME_SVG) }} /><Icon name="plus" className="w-6 h-6" /></span></span>
                   <span className="dock-label">Ghi</span>
                 </button>
               ) : (
                 <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
                   onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
-                  <span className="dock-face" style={{ "--c": item.c }}>
-                    <span className="dock-ico block" style={{ width: 30, height: 30 }} dangerouslySetInnerHTML={{ __html: window.VinaIcons ? (activeTab === item.id && window.VinaIcons.hasAnim(item.icon) ? window.VinaIcons.anim(item.icon) : window.VinaIcons.svg(item.icon)) : "" }} />
-                    <span className="dock-led" />
-                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 2 }}>{maiBadge}</span>}
+                  <span className="dock-face">
+                    <span className="dock-shape">
+                      <span className="dock-well" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-well`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "") }} />
+                      <span className={`dock-cap shape-${item.shape}`}>
+                        <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-cap`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "") }} />
+                        <span className="dock-ico" dangerouslySetInnerHTML={{ __html: renderDockMonoIcon(item.icon) }} />
+                      </span>
+                    </span>
+                    <span className="dock-label">{item.label}</span>
+                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
                   </span>
-                  <span className="dock-label">{item.label}</span>
                 </button>
               ))}
             </div>
@@ -6570,6 +7039,10 @@
                         );
                       })}
                     </div>
+                    <a href="studio.html" className="game-btn-sm w-full py-2.5 px-3 bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs flex items-center justify-center gap-2 mt-2">
+                      <Icon name="palette" className="w-4 h-4" />
+                      <span>Mở Xưởng Vẽ & Kéo Thả Icon / Element 32×32</span>
+                    </a>
                   </section>
 
                   <div className="retro-dash" />
