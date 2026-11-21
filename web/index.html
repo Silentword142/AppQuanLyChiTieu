@@ -145,6 +145,10 @@
     .vi .k { fill: var(--icon-ink); }
     .vi32 { image-rendering: pixelated; image-rendering: -moz-crisp-edges; object-fit: contain; pointer-events: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
     .vi .ks { fill: rgba(74, 51, 80, .22); }
+    /* hoạt ảnh sprite (art/anims.png → VinaIcons.anim): dải khung trượt theo steps() */
+    .via { overflow: hidden; position: relative; pointer-events: none; }
+    .via > img { display: block; height: 100%; width: calc(var(--n) * 100%); max-width: none; image-rendering: pixelated; animation: viaPlay var(--d) steps(var(--n)) var(--it, infinite); }
+    @keyframes viaPlay { to { transform: translateX(-100%); } }
     html.dark .vi .ks { fill: rgba(0, 0, 0, .4); }
 
     /* ======================= NỀN TRỜI HOÀNG HÔN ======================= */
@@ -1077,13 +1081,18 @@
     };
 
     // Bộ icon Pixel Pastel 24×24 (web/icons.js) kèm hỗ trợ motion (anim="float|hop|wiggle|pulse|sparkle|scan|spin")
-    const Icon = ({ name, className = "", style = {}, anim = "" }) => (
-      <span
-        className={`inline-flex items-center justify-center shrink-0 ${anim && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}
-        style={style.color && style.color !== "currentColor" ? { ...style, color: "rgb(var(--text-primary-rgb))" } : style}
-        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(name) : "" }}
-      />
-    );
+    // anim: nếu icon có hoạt ảnh vẽ tay (art/anims.png) thì chạy sprite, không thì dùng chuyển động CSS
+    const Icon = ({ name, className = "", style = {}, anim = "" }) => {
+      const V = window.VinaIcons;
+      const sprite = !!(anim && V && V.hasAnim && V.hasAnim(name));
+      return (
+        <span
+          className={`inline-flex items-center justify-center shrink-0 ${anim && !sprite && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}
+          style={style.color && style.color !== "currentColor" ? { ...style, color: "rgb(var(--text-primary-rgb))" } : style}
+          dangerouslySetInnerHTML={{ __html: V ? (sprite ? V.anim(name) : V.svg(name)) : "" }}
+        />
+      );
+    };
 
     const MicIcon = ({ className = "", anim = "" }) => (
       <span className={`inline-flex items-center justify-center shrink-0 ${anim && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}
@@ -1091,8 +1100,8 @@
     );
     // Linh vật Mai: chiếc TV nhỏ mặt cười (icon "mai" trong web/icons.js)
     const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
-      <span role="img" aria-label="Tự động" className={`inline-block shrink-0 ${className} ${animated ? "px-anim-float" : ""}`} style={{ width: size, height: size }}
-        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("mai") : "" }} />
+      <span role="img" aria-label="Tự động" className={`inline-block shrink-0 ${className} ${animated && !(window.VinaIcons && window.VinaIcons.hasAnim && window.VinaIcons.hasAnim("mai")) ? "px-anim-float" : ""}`} style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? (animated && window.VinaIcons.hasAnim && window.VinaIcons.hasAnim("mai") ? window.VinaIcons.anim("mai") : window.VinaIcons.svg("mai")) : "" }} />
     );
 
     // Bảng màu hạng mục: tông Pastel Retro tương phản cao
@@ -5992,7 +6001,7 @@
                 <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
                   onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
                   <span className="dock-face" style={{ "--c": item.c }}>
-                    <span className="dock-ico block" style={{ width: 30, height: 30 }} dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(item.icon) : "" }} />
+                    <span className="dock-ico block" style={{ width: 30, height: 30 }} dangerouslySetInnerHTML={{ __html: window.VinaIcons ? (activeTab === item.id && window.VinaIcons.hasAnim(item.icon) ? window.VinaIcons.anim(item.icon) : window.VinaIcons.svg(item.icon)) : "" }} />
                     <span className="dock-led" />
                     {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 2 }}>{maiBadge}</span>}
                   </span>
