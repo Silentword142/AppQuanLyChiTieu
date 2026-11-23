@@ -2691,8 +2691,25 @@
           || accs.find(a => a.name === cleanGAcc)
           || null;
         let date = job.local && job.local.date;
-        const dm = String(g.date || "").match(/^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/);
-        if (dm && (dm[2] || !date)) { const d = new Date(`${dm[1]}T${dm[2] || "12:00"}:00+07:00`); if (!isNaN(d) && d.getTime() < Date.now() + 86400000) date = d.toISOString(); }
+        const gDateStr = String(g.date || "").trim();
+        const dm = gDateStr.match(/^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/);
+        if (dm && (dm[2] || !date)) {
+          const d = new Date(`${dm[1]}T${dm[2] || "12:00"}:00+07:00`);
+          if (!isNaN(d) && d.getTime() < Date.now() + 86400000) date = d.toISOString();
+        } else if (!dm && gDateStr) {
+          const dmy = gDateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:[^\d]+(\d{1,2}):(\d{2}))?/);
+          const hmOnly = !dmy && gDateStr.match(/(\d{1,2}):(\d{2})/);
+          if (dmy) {
+            const yr = dmy[3].length === 2 ? `20${dmy[3]}` : dmy[3];
+            const mo = dmy[2].padStart(2, "0"), dy = dmy[1].padStart(2, "0");
+            const hh = (dmy[4] || "12").padStart(2, "0"), mm = (dmy[5] || "00").padStart(2, "0");
+            const d = new Date(`${yr}-${mo}-${dy}T${hh}:${mm}:00+07:00`);
+            if (!isNaN(d) && d.getTime() < Date.now() + 86400000) date = d.toISOString();
+          } else if (hmOnly) {
+            const d = new Date(`${todayKey()}T${hmOnly[1].padStart(2, "0")}:${hmOnly[2]}:00+07:00`);
+            if (!isNaN(d)) date = d.toISOString();
+          }
+        }
         const conf = Math.max(0, Math.min(1, Number(g.confidence) || 0));
         const balanceKind = g.balance_kind || (job.local && job.local.balanceKind) || (isCredit ? "available" : "balance");
         const draft = {
@@ -2965,6 +2982,7 @@
       // Ảnh chụp màn hình (biên lai, lịch sử giao dịch, hoá đơn) -> Gemini đọc 1 hoặc nhiều ảnh -> phiếu xác nhận / ghi hàng loạt
       const [gemImgBusy, setGemImgBusy] = useState(false);
       const [batchImageDrafts, setBatchImageDrafts] = useState(null);
+      const [batchPicker, setBatchPicker] = useState(null);
       const gemImgInputRef = React.useRef(null);
       const prepareBatchDrafts = (rawList) => {
         const { accounts: accs, categories: cats } = stateRef.current;
@@ -4688,13 +4706,26 @@
               }
             }
             if (!(amount > 0)) return null;
+            let parsedDate = new Date();
+            const dmyHm = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2}|\d{2})[\s,\-–]*(\d{1,2}):(\d{2})/) || text.match(/(\d{1,2}):(\d{2})[\s,\-–]*(\d{1,2})[\/\-](\d{1,2})[\/\-](20\d{2}|\d{2})/);
+            if (dmyHm) {
+              const isTimeFirst = text.indexOf(dmyHm[0]) !== -1 && /^\d{1,2}:\d{2}/.test(dmyHm[0]);
+              const dd = isTimeFirst ? dmyHm[3] : dmyHm[1], mo = isTimeFirst ? dmyHm[4] : dmyHm[2], yy = isTimeFirst ? dmyHm[5] : dmyHm[3];
+              const hh = isTimeFirst ? dmyHm[1] : dmyHm[4], mm = isTimeFirst ? dmyHm[2] : dmyHm[5];
+              const yr = yy.length === 2 ? `20${yy}` : yy;
+              const cand = new Date(`${yr}-${mo.padStart(2, "0")}-${dd.padStart(2, "0")}T${hh.padStart(2, "0")}:${mm}:00+07:00`);
+              if (!isNaN(cand) && cand.getTime() < Date.now() + 86400000) parsedDate = cand;
+            } else {
+              const hm = text.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/);
+              if (hm) parsedDate.setHours(Number(hm[1]), Number(hm[2]), 0, 0);
+            }
             return {
               ok: true,
               amount,
               type,
               category: type === "INCOME" ? "Thu nhập khác" : "Khác",
               note: note || `Quét từ ${imgName || "ảnh chụp"}`,
-              date: new Date().toISOString(),
+              date: parsedDate.toISOString(),
               imgLabel: total > 1 ? `Ảnh ${imgIdx + 1}/${total}` : (imgName || "Ảnh chụp"),
               inboxId: null
             };
@@ -4746,6 +4777,11 @@
             if (form.type) form.type.value = type;
             const radios = form.querySelectorAll('input[name="type"]');
             radios.forEach(r => r.checked = (r.value === type));
+            if (single && single.date) {
+              const sd = new Date(single.date);
+              if (form.date) form.date.value = `${sd.getFullYear()}-${pad2(sd.getMonth()+1)}-${pad2(sd.getDate())}`;
+              if (form.time) form.time.value = `${pad2(sd.getHours())}:${pad2(sd.getMinutes())}`;
+            }
             if (form.amount) {
               form.amount.value = amount ? amount.toString() : "";
               const visibleAmountInput = document.getElementById("amountVisibleInput");
@@ -4777,7 +4813,12 @@
         e.preventDefault();
         let txDate = new Date();
         const dv = e.target.date && e.target.date.value;
-        if (dv && dv !== todayKey()) { const [y, m, d] = dv.split("-").map(Number); txDate = new Date(y, m - 1, d, txDate.getHours(), txDate.getMinutes()); }
+        const tv = e.target.time && e.target.time.value;
+        if (dv || tv) {
+          const [y, m, d] = (dv || todayKey()).split("-").map(Number);
+          const [hh, mm] = tv ? tv.split(":").map(Number) : [txDate.getHours(), txDate.getMinutes()];
+          txDate = new Date(y, m - 1, d, isNaN(hh) ? txDate.getHours() : hh, isNaN(mm) ? txDate.getMinutes() : mm);
+        }
         const sel = parseBankSelection(e.target.bankSelect ? e.target.bankSelect.value : (e.target.bankName && e.target.bankName.value));
         const tx = {
           id: Date.now(),
@@ -4838,13 +4879,15 @@
         const newBankId = sel.bankId;
         const newNote = form.note.value;
         const newDateVal = form.date ? form.date.value : null;
-        // Giữ nguyên giờ trong ngày, chỉ đổi ngày theo lịch địa phương (tránh lệch múi giờ)
+        const newTimeVal = form.time ? form.time.value : null;
+        // Giữ nguyên giây, cập nhật ngày và giờ theo lịch địa phương
         let newDate = editingTx.date;
-        if (newDateVal) {
-          const [y, m, d] = newDateVal.split("-").map(Number);
+        if (newDateVal || newTimeVal) {
           const old = new Date(editingTx.date);
           const base = isNaN(old) ? new Date() : old;
-          newDate = new Date(y, m - 1, d, base.getHours(), base.getMinutes(), base.getSeconds()).toISOString();
+          const [y, m, d] = newDateVal ? newDateVal.split("-").map(Number) : [base.getFullYear(), base.getMonth() + 1, base.getDate()];
+          const [hh, mm] = newTimeVal ? newTimeVal.split(":").map(Number) : [base.getHours(), base.getMinutes()];
+          newDate = new Date(y, m - 1, d, isNaN(hh) ? base.getHours() : hh, isNaN(mm) ? base.getMinutes() : mm, base.getSeconds()).toISOString();
         }
 
         const updatedTx = {
@@ -6761,7 +6804,12 @@
                   draft.noteEdited = draft.note !== (maiDraft.note || "");
                   draft.typeEdited = draft.type !== maiDraft.type;
                   draft.edited = draft.amount !== maiDraft.amount || draft.type !== maiDraft.type || ((maiDraft.bankId != null || maiDraft.bankName) && (draft.bankId !== maiDraft.bankId || draft.bankName !== maiDraft.bankName));
-                  if (f.date && f.date.value) { const [y, m, d] = f.date.value.split("-").map(Number); const old = new Date(maiDraft.date || Date.now()); draft.date = new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString(); }
+                  if ((f.date && f.date.value) || (f.time && f.time.value)) {
+                    const old = new Date(maiDraft.date || Date.now());
+                    const [y, m, d] = (f.date && f.date.value) ? f.date.value.split("-").map(Number) : [old.getFullYear(), old.getMonth() + 1, old.getDate()];
+                    const [hh, mm] = (f.time && f.time.value) ? f.time.value.split(":").map(Number) : [old.getHours(), old.getMinutes()];
+                    draft.date = new Date(y, m - 1, d, isNaN(hh) ? old.getHours() : hh, isNaN(mm) ? old.getMinutes() : mm).toISOString();
+                  }
                   const tx = maiCommit(draft);
                   if (tx) { if (maiDraft.inboxId) setMaiInbox(prev => prev.filter(x => x.inboxId !== maiDraft.inboxId)); setMaiDraft(null); }
                 }}
@@ -6782,50 +6830,75 @@
                       {maiDraft.confidence != null && <p className="text-[13px] font-semibold text-theme-textSecondary truncate">Chắc chắn {Math.round(maiDraft.confidence * 100)}%{maiDraft.balance != null ? ` · Sau GD ${formatVND(maiDraft.balance)}` : ""}</p>}
                     </div>
                   </div>
-                  <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-center">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {[["EXPENSE", "Chi tiền", "arrow-up-right"], ["INCOME", "Thu tiền", "arrow-down-left"]].map(([v, l, ic]) => (
                       <label key={v} className="cursor-pointer">
                         <input type="radio" name="type" value={v} defaultChecked={maiDraft.type === v} className="peer sr-only" />
                         <span className={`flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] ${v === "INCOME" ? "peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)]" : "peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)]"}`}><Icon name={ic} className="w-3.5 h-3.5" /> {l}</span>
                       </label>
                     ))}
-                    <input name="date" type="date" defaultValue={(() => { const d = new Date(maiDraft.date || Date.now()); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-xs font-bold text-theme-textPrimary w-[122px]" />
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
+                    <input name="date" type="date" defaultValue={(() => { const d = new Date(maiDraft.date || Date.now()); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })()} className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-xs font-bold text-theme-textPrimary" />
+                    <input name="time" type="time" defaultValue={(() => { const d = new Date(maiDraft.date || Date.now()); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; })()} className="w-[104px] bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-xs font-bold text-theme-textPrimary" />
                   </div>
                   <div className="console-lcd px-3 py-2 bg-theme-background">
                     <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Số tiền</label>
                     <CurrencyInput name="amount" defaultValue={maiDraft.amount} required={true} className="w-full bg-transparent border-0 p-0 font-display text-2xl text-theme-textPrimary tabular focus:outline-none focus:ring-0 focus:shadow-none" />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Hạng mục</label>
-                      <select name="category" defaultValue={maiDraft.category} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2 text-xs font-bold text-theme-textPrimary">
-                        {parentCategories.map(pc => (
-                          <optgroup key={pc.name} label={pc.name}>
-                            <option value={pc.name}>{pc.name} (chung)</option>
-                            {subCategories.filter(c => (c.parent || categoryParentMap[c.name]) === pc.name).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                          </optgroup>
-                        ))}
-                      </select>
+
+                  {/* Chọn Hạng mục đồng bộ UI App */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Hạng mục</label>
+                      <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">{maiDraft.category}</span>
                     </div>
-                    <div>
-                      <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Tài khoản / Ví</label>
-                      {(() => {
-                        const matched = resolveAccount(accounts, maiDraft);
-                        const defaultVal = matched ? String(matched.id) : (maiDraft.bank ? "" : (maiDraft.bankName ? `legacy:${maiDraft.bankName}` : (accounts[0] ? String(accounts[0].id) : "")));
-                        return (
-                          <select name="bankSelect" defaultValue={defaultVal} className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2 text-xs font-bold text-theme-textPrimary">
-                            {!matched && maiDraft.bank && (
-                              <option value="">+ Tạo ví “{maiDraft.bank}{maiDraft.accountTail ? ` · •••• ${maiDraft.accountTail}` : ""}{maiDraft.isCredit ? " (credit)" : ""}”</option>
-                            )}
-                            {!matched && maiDraft.bankName && !maiDraft.bank && (
-                              <option value={`legacy:${maiDraft.bankName}`}>{maiDraft.bankName} (ví cũ)</option>
-                            )}
-                            {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
-                          </select>
-                        );
-                      })()}
+                    <CategoryParentFilterBar parentCategories={parentCategories} selectedParent={txParentFilter} onSelectParent={setTxParentFilter} />
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[116px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                      {filteredCategoriesForTx.map((c, i) => (
+                        <label key={c.id || `md_cat_${c.name}_${i}`} className="cursor-pointer">
+                          <input type="radio" name="category" value={c.name} defaultChecked={maiDraft.category === c.name}
+                            onChange={() => setMaiDraft(prev => prev ? { ...prev, category: c.name } : prev)} className="peer sr-only" />
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                            <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
+                            <span className="text-[13px] font-bold truncate">{c.name}</span>
+                          </div>
+                        </label>
+                      ))}
                     </div>
                   </div>
+
+                  {/* Chọn Nguồn tiền / Ví đồng bộ UI App */}
+                  <div className="space-y-1.5">
+                    <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Nguồn tiền / Ví</label>
+                    {(() => {
+                      const matched = resolveAccount(accounts, maiDraft);
+                      const defaultVal = matched ? String(matched.id) : (maiDraft.bank ? "" : (maiDraft.bankName ? `legacy:${maiDraft.bankName}` : (accounts[0] ? String(accounts[0].id) : "")));
+                      return (
+                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 border-2 border-theme-border rounded-lg bg-theme-background">
+                          {!matched && maiDraft.bank && (
+                            <label className="cursor-pointer shrink-0">
+                              <input type="radio" name="bankSelect" value="" defaultChecked={defaultVal === ""} className="peer sr-only" />
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
+                                <Icon name="plus" className="w-4 h-4 shrink-0" />
+                                <span className="text-xs font-bold whitespace-nowrap">Tạo ví “{maiDraft.bank}”</span>
+                              </div>
+                            </label>
+                          )}
+                          {accounts.map(a => (
+                            <label key={a.id} className="cursor-pointer shrink-0">
+                              <input type="radio" name="bankSelect" value={String(a.id)} defaultChecked={defaultVal === String(a.id)} className="peer sr-only" />
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
+                                <BankBadge name={a.name} size={18} />
+                                <span className="text-xs font-bold whitespace-nowrap">{formatAccountLabel(a)}</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
                   <div>
                     <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Ghi chú</label>
                     <input name="note" defaultValue={maiDraft.note || ""} placeholder="Ghi chú..." className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-2 px-2.5 text-xs font-semibold text-theme-textPrimary" />
@@ -6847,15 +6920,16 @@
               const next = (prev || []).filter(x => x._bid !== bid);
               return next.length ? next : null;
             });
+            const closeBatch = () => { setBatchPicker(null); setBatchImageDrafts(null); };
             return (
-              <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setBatchImageDrafts(null)}>
+              <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={closeBatch}>
                 <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-lg max-h-[93vh] overflow-hidden flex flex-col">
                   <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-2 h-2 rounded-sm bg-[#72E6BA] px-led shrink-0" />
                       <span className="font-pixel text-[14px] uppercase tracking-wider truncate">QUÉT NHIỀU ẢNH · {batchImageDrafts.length} GIAO DỊCH</span>
                     </div>
-                    <button type="button" onClick={() => setBatchImageDrafts(null)} aria-label="Đóng" className="console-key shrink-0">✕</button>
+                    <button type="button" onClick={closeBatch} aria-label="Đóng" className="console-key shrink-0">✕</button>
                   </div>
                   <div className="h-1 retro-stripes-h shrink-0" />
 
@@ -6876,9 +6950,13 @@
                   <div className="p-3 space-y-2.5 overflow-y-auto no-scrollbar flex-1 min-h-0">
                     {batchImageDrafts.map((item, idx) => {
                       const matchedAcc = resolveAccount(accounts, item);
-                      const bankVal = matchedAcc ? String(matchedAcc.id) : (item.bank ? "" : (accounts[0] ? String(accounts[0].id) : ""));
+                      const accDisplayName = matchedAcc ? matchedAcc.name : (item.bank || item.bankName || (accounts[0] ? accounts[0].name : "Tiền mặt"));
+                      const accDisplayLabel = matchedAcc ? formatAccountLabel(matchedAcc) : (item.bank ? `+ Tạo ví “${item.bank}”` : accDisplayName);
                       const dObj = item.date ? new Date(item.date) : new Date();
                       const dateStr = `${dObj.getFullYear()}-${pad2(dObj.getMonth() + 1)}-${pad2(dObj.getDate())}`;
+                      const timeStr = `${pad2(dObj.getHours())}:${pad2(dObj.getMinutes())}`;
+                      const catPickerOpen = batchPicker && batchPicker.bid === item._bid && batchPicker.kind === "cat";
+                      const bankPickerOpen = batchPicker && batchPicker.bid === item._bid && batchPicker.kind === "bank";
                       return (
                         <div key={item._bid} className={`rounded-xl border-2 p-2.5 space-y-2 transition-all ${item.selected ? "border-[var(--ink)] bg-theme-background" : "border-theme-border bg-theme-background/50 opacity-55"}`}>
                           <div className="flex items-center justify-between gap-2">
@@ -6898,11 +6976,11 @@
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
+                          <div className="grid grid-cols-[1fr_auto_auto] gap-1.5 items-center">
                             <input type="number" inputMode="numeric" value={item.amount || ""}
                               onChange={e => patchItem(item._bid, { amount: Math.max(0, Number(e.target.value) || 0), edited: true })}
                               placeholder="Số tiền..."
-                              className="w-full bg-theme-surface border-2 border-theme-border rounded-lg px-2.5 py-1 font-display text-xl text-theme-textPrimary tabular" />
+                              className="w-full min-w-0 bg-theme-surface border-2 border-theme-border rounded-lg px-2.5 py-1 font-display text-xl text-theme-textPrimary tabular" />
                             <input type="date" value={dateStr}
                               onChange={e => {
                                 if (!e.target.value) return;
@@ -6910,25 +6988,79 @@
                                 const old = new Date(item.date || Date.now());
                                 patchItem(item._bid, { date: new Date(y, m - 1, d, old.getHours(), old.getMinutes()).toISOString() });
                               }}
-                              className="bg-theme-surface border-2 border-theme-border rounded-lg py-1.5 px-2 text-xs font-bold text-theme-textPrimary w-[124px]" />
+                              className="bg-theme-surface border-2 border-theme-border rounded-lg py-1.5 px-1.5 text-[12px] font-bold text-theme-textPrimary w-[112px]" />
+                            <input type="time" value={timeStr}
+                              onChange={e => {
+                                if (!e.target.value) return;
+                                const [hh, mm] = e.target.value.split(":").map(Number);
+                                const old = new Date(item.date || Date.now());
+                                patchItem(item._bid, { date: new Date(old.getFullYear(), old.getMonth(), old.getDate(), hh, mm).toISOString() });
+                              }}
+                              className="bg-theme-surface border-2 border-theme-border rounded-lg py-1.5 px-1.5 text-[12px] font-bold text-theme-textPrimary w-[84px]" />
                           </div>
 
+                          {/* Nút chọn Hạng mục & Nguồn tiền đồng bộ UI App */}
                           <div className="grid grid-cols-2 gap-1.5">
-                            <select value={item.category}
-                              onChange={e => patchItem(item._bid, { category: e.target.value, categoryEdited: true })}
-                              className="w-full bg-theme-surface border-2 border-theme-border rounded-lg p-1.5 text-xs font-bold text-theme-textPrimary">
-                              {categories.map(c => <option key={c.id || c.name} value={c.name}>{c.name}</option>)}
-                            </select>
-                            <select value={bankVal}
-                              onChange={e => {
-                                const sel = parseBankSelection(e.target.value);
-                                patchItem(item._bid, { bankId: sel.bankId, bankName: sel.bankName || null, isCredit: sel.account ? isCreditAcc(sel.account) : item.isCredit });
-                              }}
-                              className="w-full bg-theme-surface border-2 border-theme-border rounded-lg p-1.5 text-xs font-bold text-theme-textPrimary">
-                              {!matchedAcc && item.bank && <option value="">+ Tạo ví “{item.bank}”</option>}
-                              {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
-                            </select>
+                            <button type="button"
+                              onClick={() => setBatchPicker(catPickerOpen ? null : { bid: item._bid, kind: "cat" })}
+                              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-left transition-all ${catPickerOpen ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-2px_0_rgba(74,51,80,.22)]" : "border-[var(--ink)] bg-theme-surface text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.14)]"}`}>
+                              <Icon name={getIconForCategoryName(item.category) || getCategoryIcon(item.category)} className="w-4 h-4 shrink-0" />
+                              <span className="text-xs font-bold truncate flex-1">{item.category}</span>
+                              <Icon name={catPickerOpen ? "chevron-up" : "chevron-down"} className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                            </button>
+                            <button type="button"
+                              onClick={() => setBatchPicker(bankPickerOpen ? null : { bid: item._bid, kind: "bank" })}
+                              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-left transition-all ${bankPickerOpen ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-2px_0_rgba(74,51,80,.22)]" : "border-[var(--ink)] bg-theme-surface text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.14)]"}`}>
+                              <BankBadge name={accDisplayName} size={18} />
+                              <span className="text-xs font-bold truncate flex-1">{accDisplayLabel}</span>
+                              <Icon name={bankPickerOpen ? "chevron-up" : "chevron-down"} className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                            </button>
                           </div>
+
+                          {/* Bộ chọn Hạng mục đồng bộ App (CategoryParentFilterBar + lưới icon pixel) */}
+                          {catPickerOpen && (
+                            <div className="space-y-1.5 p-2 rounded-lg border-2 border-[var(--ink)] bg-theme-surface">
+                              <CategoryParentFilterBar parentCategories={parentCategories} selectedParent={txParentFilter} onSelectParent={setTxParentFilter} />
+                              <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1 rounded-lg border-2 border-theme-border bg-theme-background">
+                                {filteredCategoriesForTx.map((c, ci) => {
+                                  const active = item.category === c.name;
+                                  return (
+                                    <button key={c.id || `bcat_${c.name}_${ci}`} type="button"
+                                      onClick={() => { patchItem(item._bid, { category: c.name, categoryEdited: true }); setBatchPicker(null); }}
+                                      className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-left transition-all ${active ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-surface text-theme-textPrimary hover:border-[var(--ink)]"}`}>
+                                      <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
+                                      <span className="text-[12px] font-bold truncate">{c.name}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Bộ chọn Nguồn tiền / Ví đồng bộ App (BankBadge + thẻ ví pixel) */}
+                          {bankPickerOpen && (
+                            <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border-2 border-[var(--ink)] bg-theme-surface">
+                              {!matchedAcc && item.bank && (
+                                <button type="button"
+                                  onClick={() => { patchItem(item._bid, { bankId: null, bankName: null }); setBatchPicker(null); }}
+                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-bold ${!item.bankId ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>
+                                  <Icon name="plus" className="w-4 h-4 shrink-0" />
+                                  <span>+ Tạo ví “{item.bank}”</span>
+                                </button>
+                              )}
+                              {accounts.map(a => {
+                                const active = matchedAcc && String(matchedAcc.id) === String(a.id);
+                                return (
+                                  <button key={a.id} type="button"
+                                    onClick={() => { patchItem(item._bid, { bankId: a.id, bankName: a.name, isCredit: isCreditAcc(a) }); setBatchPicker(null); }}
+                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-bold transition-all ${active ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-background text-theme-textPrimary hover:border-[var(--ink)]"}`}>
+                                    <BankBadge name={a.name} size={18} />
+                                    <span className="truncate max-w-[160px]">{formatAccountLabel(a)}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
 
                           <input type="text" value={item.note || ""}
                             onChange={e => patchItem(item._bid, { note: e.target.value, noteEdited: true })}
@@ -6944,7 +7076,7 @@
                     <button type="button" onClick={() => {
                       const remain = batchImageDrafts.map(({ _bid, selected, ...rest }) => ({ ...rest, inboxId: rest.inboxId || `imgb_${_bid}` }));
                       setMaiInbox(prev => [...remain, ...prev].slice(0, 100));
-                      setBatchImageDrafts(null);
+                      closeBatch();
                       setActiveTab("mai");
                       showToast(`Đã chuyển ${remain.length} giao dịch vào “Chờ anh duyệt”`, "info");
                     }} className="game-btn-sm px-3 py-2.5 bg-theme-background text-theme-textPrimary font-bold text-xs shrink-0">
@@ -6952,7 +7084,7 @@
                     </button>
                     <button type="button" disabled={!picked.length} onClick={() => {
                       const committed = maiCommitBatch(picked);
-                      if (committed.length) setBatchImageDrafts(null);
+                      if (committed.length) closeBatch();
                     }} className="game-btn flex-1 py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
                       <span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Ghi tất cả ({picked.length})
                     </button>
@@ -6977,7 +7109,7 @@
                 <form id="addTxForm" onSubmit={handleAddTx} className="p-3 sm:p-3.5 space-y-2.5 overflow-y-auto no-scrollbar">
                   <input type="file" accept="image/*" multiple ref={ocrFileInputRef} onChange={handleScanBill} className="hidden" />
 
-                  <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-center">
+                  <div className="grid grid-cols-[1fr_1fr] gap-1.5 items-center">
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="EXPENSE" defaultChecked={addTxType !== "INCOME"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Chi tiền</span>
@@ -6986,7 +7118,10 @@
                       <input type="radio" name="type" value="INCOME" defaultChecked={addTxType === "INCOME"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-down-left" className="w-3.5 h-3.5" /> Thu tiền</span>
                     </label>
-                    <input name="date" type="date" defaultValue={todayKey()} className="bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-theme-textPrimary text-xs font-bold w-[124px]" />
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
+                    <input name="date" type="date" defaultValue={todayKey()} className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-bold" />
+                    <input name="time" type="time" defaultValue={(() => { const n = new Date(); return `${pad2(n.getHours())}:${pad2(n.getMinutes())}`; })()} className="w-[104px] bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-theme-textPrimary text-xs font-bold" />
                   </div>
 
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">
@@ -7080,7 +7215,7 @@
                 </div>
                 <div className="h-1 retro-stripes-h shrink-0" />
                 <form key={editingTx.id} onSubmit={handleUpdateTx} className="p-3 sm:p-3.5 space-y-2.5 overflow-y-auto no-scrollbar">
-                  <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-center">
+                  <div className="grid grid-cols-[1fr_1fr] gap-1.5 items-center">
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="EXPENSE" defaultChecked={editingTx.type === "EXPENSE"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Chi tiền</span>
@@ -7089,7 +7224,10 @@
                       <input type="radio" name="type" value="INCOME" defaultChecked={editingTx.type === "INCOME"} className="sr-only peer" />
                       <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-down-left" className="w-3.5 h-3.5" /> Thu tiền</span>
                     </label>
-                    <input name="date" type="date" defaultValue={(() => { const d = editingTx.date ? new Date(editingTx.date) : new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; })()} className="bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-theme-textPrimary text-xs font-bold w-[124px]" />
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
+                    <input name="date" type="date" defaultValue={(() => { const d = editingTx.date ? new Date(editingTx.date) : new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; })()} className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-bold" />
+                    <input name="time" type="time" defaultValue={(() => { const d = editingTx.date ? new Date(editingTx.date) : new Date(); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; })()} className="w-[104px] bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2 text-theme-textPrimary text-xs font-bold" />
                   </div>
 
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">

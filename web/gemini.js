@@ -122,10 +122,13 @@
   // Ảnh chụp màn hình: biên lai chuyển khoản, lịch sử giao dịch, hoá đơn, thông báo...
   function imagePrompt(ctx) {
     var lines = contextLines(ctx);
+    var now = new Date().toLocaleString("sv-SE", { timeZone: "Asia/Ho_Chi_Minh" }).slice(0, 16);
+    lines.push("BÂY GIỜ: " + now);
     lines.push("");
     lines.push("ẢNH ĐÍNH KÈM là ảnh chụp màn hình điện thoại hoặc ảnh chụp hoá đơn/biên lai.");
     lines.push("Liệt kê TỪNG giao dịch tiền nhìn thấy trong ảnh (ảnh lịch sử giao dịch có thể có nhiều dòng; biên lai/hoá đơn thường chỉ 1 giao dịch – lấy TỔNG TIỀN phải trả, không lấy từng món).");
     lines.push("Đặt id lần lượt img1, img2, ... Đọc kỹ dấu +/-, chữ 'nhận', 'chuyển', 'thanh toán' để biết thu hay chi. Số dư, hạn mức, mã giao dịch KHÔNG phải số tiền giao dịch.");
+    lines.push("date: BẮT BUỘC đọc kỹ ngày và giờ giao dịch trên biên lai/hoá đơn/dòng lịch sử (ví dụ '14:25 - 22/11/2026', '22/11/2026 08:30:15', '20:05') và trả về đúng định dạng YYYY-MM-DDTHH:mm (24h, giờ Việt Nam). Nếu ảnh chỉ có giờ HH:mm mà không ghi ngày thì lấy ngày từ HÔM NAY; nếu chỉ có ngày mà không có giờ thì dùng 12:00; nếu không thấy cả ngày lẫn giờ thì dùng BÂY GIỜ.");
     lines.push("Nếu ảnh không có giao dịch nào thì trả về 1 phần tử id=img1, is_transaction=false và ghi lý do.");
     return lines.join("\n");
   }
