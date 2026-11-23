@@ -348,12 +348,61 @@ def main():
     text = ICONS_JS.read_text(encoding="utf-8")
     m = re.search(r"var IMG32\s*=\s*\{([\s\S]*?)\};", text)
     img_keys = [k for k, _ in re.findall(r'"([^"]+)":\s*"([^"]+)"', m.group(1))]
-    priority = [
-        "app_icon", "mai", "pho", "banh-mi", "phin", "milk-tea", "scooter", "home",
-        "bag", "palm", "heart", "graduation", "receipt", "users", "wallet", "coins",
-        "piggy", "salary", "credit-card", "banknote", "non-la", "ao-dai", "envelope-red", "flower"
-    ]
-    ordered = priority + [k for k in img_keys if k not in priority]
+    CATEGORY_IDEAS_VI = {
+        "app_icon": "đồng tiền vàng kí hiệu dollar ở giữa trên nền hồng máy chơi game cầm tay",
+        "mai": "linh vật hoa mai vàng năm cánh cười dễ thương",
+        "wallet": "ví tiền da màu nâu đơn giản",
+        "banknote": "tờ tiền giấy polyme xanh lá đơn giản",
+        "coins": "đồng tiền xu vàng xếp chồng đơn giản",
+        # 11 Danh mục lớn (DEFAULT_PARENT_CATEGORIES)
+        "pho": "danh mục Ăn uống, tô phở bò nóng hổi",
+        "scooter": "danh mục Di chuyển, xe tay ga nhỏ gọn",
+        "home": "danh mục Nhà cửa, ngôi nhà mái ngói ấm áp",
+        "bag": "danh mục Mua sắm, túi xách mua sắm",
+        "palm": "danh mục Giải trí và Du lịch, cây dừa nhiệt đới",
+        "heart": "danh mục Sức khỏe và Y tế, trái tim đỏ",
+        "graduation": "danh mục Học tập và Bản thân, mũ tốt nghiệp",
+        "receipt": "danh mục Hóa đơn và Dịch vụ, tờ hóa đơn thanh toán",
+        "users": "danh mục Gia đình và Xã hội, biểu tượng ba người gia đình gắn kết tối giản không khung nền",
+        "salary": "danh mục Lương và Thu nhập, túi tiền lương",
+        "more": "danh mục Khác, hộp quà đa năng bốn chấm",
+        # Danh mục nhỏ (DEFAULT_SUBCATEGORIES)
+        "banh-mi": "danh mục Ăn sáng, ổ bánh mì Việt Nam",
+        "rice": "danh mục Cơm trưa tối, bát cơm trắng với đũa",
+        "phin": "danh mục Cà phê và Trà, ly cà phê phin Việt Nam",
+        "ice-cream": "danh mục Ăn vặt, que kem ốc quế pastel",
+        "basket": "danh mục Đi chợ và Siêu thị, giỏ đi chợ đầy rau củ",
+        "beer": "danh mục Tiệc tùng và Nhậu, ly bia vàng bọt trắng",
+        "fuel": "danh mục Xăng xe, trụ bơm xăng",
+        "taxi": "danh mục Grab và Taxi, xe taxi màu vàng",
+        "parking": "danh mục Gửi xe, biển báo chữ P đỗ xe",
+        "wrench": "danh mục Bảo dưỡng và Sửa xe, cờ lê sửa xe",
+        "plane": "danh mục Vé tàu và Máy bay, máy bay chở khách",
+        "bulb": "danh mục Tiền điện và Nước, bóng đèn sáng",
+        "wifi": "danh mục Internet và Wifi, biểu tượng sóng wifi",
+        "tv": "danh mục Đồ gia dụng, tivi cổ điển",
+        "ao-dai": "danh mục Quần áo và Giày dép, áo dài Việt Nam",
+        "phone": "danh mục Đồ công nghệ, điện thoại thông minh",
+        "lipstick": "danh mục Mỹ phẩm và Làm đẹp, thỏi son môi đỏ",
+        "watch": "danh mục Phụ kiện, đồng hồ đeo tay",
+        "film": "danh mục Xem phim, cuộn phim và vé xem phim",
+        "luggage": "danh mục Du lịch và Nghỉ dưỡng, vali du lịch",
+        "gamepad": "danh mục Game và Ứng dụng, tay cầm chơi game",
+        "pill": "danh mục Thuốc men, viên thuốc y tế",
+        "stethoscope": "danh mục Khám chữa bệnh, ống nghe bác sĩ",
+        "dumbbell": "danh mục Tập gym và Thể thao, quả tạ tay",
+        "book": "danh mục Học phí và Khóa học, quyển sách giáo khoa",
+        "book-open": "danh mục Sách vở và Tài liệu, cuốn sách mở trang",
+        "phone-call": "danh mục Cước điện thoại, điện thoại đang gọi",
+        "credit-card": "danh mục Phí dịch vụ và Ngân hàng, thẻ ngân hàng",
+        "shield": "danh mục Bảo hiểm và Thuế, chiếc khiên bảo vệ",
+        "baby": "danh mục Con cái và Tiền sữa, bình sữa em bé",
+        "envelope-red": "danh mục Hiếu hỉ và Quà biếu, bao lì xì đỏ may mắn",
+        "paw": "danh mục Thú cưng, dấu chân mèo dễ thương",
+        "trend-up": "danh mục Tiền thưởng và Làm thêm, biểu đồ mũi tên tăng trưởng",
+        "piggy": "danh mục Lãi đầu tư, heo đất tiết kiệm màu hồng"
+    }
+    ordered = list(CATEGORY_IDEAS_VI.keys())
 
     if args.keys:
         ordered = [x.strip() for x in args.keys.split(",") if x.strip()]
@@ -365,7 +414,7 @@ def main():
             continue
         if args.limit > 0 and done >= args.limit:
             break
-        subj = SUBJECTS_EN.get(key, f"cute pastel Vietnamese {key.replace('-', ' ')}")
+        subj = CATEGORY_IDEAS_VI.get(key) or SUBJECTS_EN.get(key, f"icon {key.replace('-', ' ')}")
         tsize = 512 if key == "app_icon" else size
         t0 = time.time()
         im_info = None
