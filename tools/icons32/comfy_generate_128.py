@@ -351,7 +351,7 @@ def main():
     CATEGORY_IDEAS_VI = {
         "app_icon": "đồng tiền vàng kí hiệu dollar ở giữa trên nền hồng máy chơi game cầm tay",
         "mai": "hoa mai vàng năm cánh cười dễ thương",
-        "wallet": "một chiếc ví da nâu",
+        "wallet": "chiếc ví gập màu nâu có khuy cài vàng",
         "banknote": "tờ tiền giấy xanh lá",
         "coins": "đồng tiền xu vàng xếp chồng",
         # 11 Danh mục lớn (DEFAULT_PARENT_CATEGORIES)
@@ -361,7 +361,7 @@ def main():
         "bag": "túi xách mua sắm",
         "palm": "cây dừa du lịch",
         "heart": "trái tim đỏ y tế",
-        "graduation": "một chiếc mũ tốt nghiệp đen",
+        "graduation": "chiếc mũ cử nhân tốt nghiệp có tua vàng",
         "receipt": "tờ hóa đơn thanh toán",
         "users": "biểu tượng gia đình",
         "salary": "túi tiền lương",
@@ -389,7 +389,7 @@ def main():
         "luggage": "vali du lịch",
         "gamepad": "tay cầm chơi game",
         "pill": "viên thuốc y tế",
-        "stethoscope": "ống nghe bác sĩ",
+        "stethoscope": "ống nghe y tế bác sĩ màu xanh",
         "dumbbell": "quả tạ tập gym",
         "book": "quyển sách giáo khoa",
         "book-open": "cuốn sách mở trang",
