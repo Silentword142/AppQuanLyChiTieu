@@ -7175,11 +7175,19 @@
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
-                      <select name="bankSelect" required className="flex-1 min-w-0 bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-bold">
-                        {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
-                      </select>
+                    <div className="space-y-1">
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase block">Ví / TK (Nguồn tiền)</span>
+                      <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 border-2 border-theme-border rounded-lg bg-theme-background">
+                        {accounts.map((a, idx) => (
+                          <label key={a.id} className="cursor-pointer shrink-0">
+                            <input type="radio" name="bankSelect" value={String(a.id)} defaultChecked={idx === 0} required className="peer sr-only" />
+                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                              <BankBadge name={a.name} size={18} />
+                              <span className="text-xs font-bold whitespace-nowrap">{formatAccountLabel(a)}</span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
@@ -7269,18 +7277,32 @@
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ví / TK</span>
+                    <div className="space-y-1">
+                      <span className="font-pixel text-[14px] text-theme-textSecondary uppercase block">Ví / TK (Nguồn tiền)</span>
                       {(() => {
                         const matched = resolveAccount(accounts, editingTx);
                         const defaultVal = matched ? String(matched.id) : (editingTx.bankName ? `legacy:${editingTx.bankName}` : (accounts[0] ? String(accounts[0].id) : ""));
                         return (
-                          <select name="bankSelect" defaultValue={defaultVal} required className="flex-1 min-w-0 bg-theme-background border-2 border-theme-border rounded-lg py-1.5 px-2.5 text-theme-textPrimary text-xs font-bold">
+                          <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 border-2 border-theme-border rounded-lg bg-theme-background">
                             {!matched && editingTx.bankName && (
-                              <option value={`legacy:${editingTx.bankName}`}>{editingTx.bankName} (ví cũ)</option>
+                              <label className="cursor-pointer shrink-0">
+                                <input type="radio" name="bankSelect" value={`legacy:${editingTx.bankName}`} defaultChecked={defaultVal === `legacy:${editingTx.bankName}`} className="peer sr-only" />
+                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                                  <BankBadge name={editingTx.bankName} size={18} />
+                                  <span className="text-xs font-bold whitespace-nowrap">{editingTx.bankName} (ví cũ)</span>
+                                </div>
+                              </label>
                             )}
-                            {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
-                          </select>
+                            {accounts.map(a => (
+                              <label key={a.id} className="cursor-pointer shrink-0">
+                                <input type="radio" name="bankSelect" value={String(a.id)} defaultChecked={defaultVal === String(a.id)} className="peer sr-only" />
+                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                                  <BankBadge name={a.name} size={18} />
+                                  <span className="text-xs font-bold whitespace-nowrap">{formatAccountLabel(a)}</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
                         );
                       })()}
                     </div>
