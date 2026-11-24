@@ -14,7 +14,7 @@
 html,body{background:#F2BDB4}
 body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1300px;position:relative;overflow:hidden;letter-spacing:.02em}
 #sky{position:absolute;left:0;top:0;z-index:0;image-rendering:pixelated}
-.app{position:relative;z-index:1;padding:14px 14px 170px;display:flex;flex-direction:column;gap:22px}
+.app{position:relative;z-index:1;padding:14px 14px 196px;display:flex;flex-direction:column;gap:22px}
 .px{border-style:solid;border-width:calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5);border-image-slice:5 6 7 5 fill;border-image-repeat:stretch;image-rendering:pixelated}
 .row{display:flex;align-items:center;gap:8px}
 .ico{width:calc(var(--S)*12);height:calc(var(--S)*12);image-rendering:pixelated;flex:none}
@@ -43,7 +43,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .item .m{font-weight:800;font-size:22px}
 .tile{width:42px;height:42px;display:grid;place-items:center;padding:0}
 /* dock */
-.dock{position:absolute;left:0;right:0;bottom:0;z-index:2;height:118px;padding:0 8px 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 92px repeat(2,minmax(0,1fr));align-items:end;gap:6px}
+.dock{position:fixed;left:0;width:400px;bottom:0;z-index:2;height:118px;padding:0 8px 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 92px repeat(2,minmax(0,1fr));align-items:end;gap:6px}
 .dock .base{position:absolute;inset:30px 0 0;z-index:-1}
 .dk{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:16px;letter-spacing:.04em;color:var(--cream);white-space:nowrap}
 .dk .cap{width:54px;height:50px;display:grid;place-items:center;padding:0}
@@ -125,7 +125,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .key:active,.dk .cap:active,.mini:active{transform:translate(0,4px)}
 
 /* ---------- Dock tràn đáy, chi tiết + hiệu ứng ---------- */
-.dock{height:150px!important;padding:0 6px 32px!important}
+.dock{height:176px!important;padding:0 6px 34px!important}
 .dock .base{position:absolute;left:0;right:0;bottom:0;top:36px!important;z-index:-1;background:
   radial-gradient(circle at 1.5px 1.5px,rgba(255,255,255,.07) 1.5px,transparent 1.6px) 0 0/9px 9px,
   linear-gradient(180deg,#8A6694 0 3px,#6A4872 3px 6px,#5A3D62 6px calc(100% - 9px),#4A3150 calc(100% - 9px));
@@ -175,6 +175,17 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .ghi .lb{color:#E7598A;text-shadow:2px 2px 0 #FFFFFF!important}
 .ghi::after{content:"";position:absolute;top:-2px;left:50%;width:92px;height:92px;margin-left:-46px;z-index:-1;border-radius:50%;
   background:radial-gradient(circle,#5A3D62 0 60%,#3B2A3F 60% 64%,transparent 64%)}
+
+/* ---------- Dock v4: bỏ hốc, nút keycap pixel mới ---------- */
+.dk::after,.ghi::after{display:none!important}
+.dk .cap.px{border:0!important;border-image:none!important;width:64px!important;height:60px!important;background:none!important}
+.dk .cap{display:block!important}
+.kc{position:absolute;inset:0;image-rendering:pixelated;width:100%;height:100%}
+.dk .cap .ico{position:absolute;left:50%;top:6px;margin-left:-18px;width:36px;height:36px;z-index:1}
+.dk .cap .led{position:absolute;right:7px;top:6px;width:6px;height:6px;z-index:2;background:#E9D2BE;box-shadow:0 0 0 2px #3B2A3F}
+.dk.on .cap .led{background:#7DFFB0;box-shadow:0 0 0 2px #3B2A3F,0 0 8px #7DFFB0}
+.dk.on .cap{transform:translateY(-6px)}
+.dk:active .cap{transform:translateY(4px)}
 </style></head>
 <body>
 <canvas id="sky" width="100" height="215"></canvas>
@@ -464,6 +475,29 @@ go((location.hash.match(/s=(\w+)/)||[])[1]||"home");
     if(f){P(g,x,bd.y,"#8C5A70");P(g,x+1,bd.y+1,"#8C5A70");P(g,x+2,bd.y,"#8C5A70")}else{P(g,x,bd.y+1,"#8C5A70");P(g,x+1,bd.y,"#8C5A70");P(g,x+2,bd.y+1,"#8C5A70")}bd.x+=bd.sp});
   tick++}
  draw();if(!location.hash.includes("still"))_si?_si(draw,160):setInterval(draw,160);
+})();
+
+// ---------- Keycap pixel cho dock (vẽ mới): mặt phím, viền sáng, thành dày, bóng ----------
+(function(){
+ const COL=[["#FBC2C8","#E7798F"],["#BDEBC9","#55B27F"],["#E1CFF6","#9C7BD3"],["#C4E4FA","#6E9FDE"]];
+ document.querySelectorAll(".dk .cap").forEach((cap,i)=>{
+  const [face,side]=COL[i];const W=32,H=30,cv=document.createElement("canvas");cv.width=W;cv.height=H;cv.className="kc";
+  const g=cv.getContext("2d");const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x,y,1,1)};
+  const inR=(x,y,x0,y0,x1,y1,r)=>{if(x<x0||x>x1||y<y0||y>y1)return false;const cx=x<x0+r?x0+r:x>x1-r?x1-r:x,cy=y<y0+r?y0+r:y>y1-r?y1-r:y;return Math.hypot(x-cx,y-cy)<=r+.3};
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+   // bóng đổ
+   if(!inR(x,y,0,0,29,26,4)&&inR(x,y,2,2,31,29,4)){P(x,y,"rgba(59,42,63,.35)");continue}
+   if(!inR(x,y,0,0,29,26,4))continue;
+   if(!inR(x,y,1,1,28,25,3)){P(x,y,"#3B2A3F");continue}          // viền mực
+   if(y>=20){P(x,y,y==20?"#3B2A3F":side);continue}                 // thành dày
+   if(!inR(x,y,2,2,27,19,2)){P(x,y,x<6||y<6?"#FFFFFF":side);continue}// mép
+   let c=face;if(y<=4&&x>=4&&x<=24)c="#FFFFFF";                     // dải bóng loáng
+   if((x+y)%13==0&&y>5&&y<18)c="rgba(255,255,255,.35)";
+   P(x,y,c)}
+  // vạch gờ dưới
+  for(let x=4;x<26;x+=3)P(x,23,"rgba(255,255,255,.35)");
+  cap.prepend(cv);const led=document.createElement("i");led.className="led";cap.appendChild(led);
+ });
 })();
 </script>
 </body></html>
