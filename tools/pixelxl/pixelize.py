@@ -82,10 +82,10 @@ def drop_shadow(im):
     if not bbox:
         return im
     x0, y0, x1, y1 = bbox
-    cut = y0 + int((y1 - y0) * 0.70)
+    cut = y0 + int((y1 - y0) * 0.60)
     px = im.load()
     w, h = im.size
-    for _ in range(3):  # bóc dần từ ngoài vào
+    for _ in range(5):  # bóc dần từ ngoài vào
         kill = []
         for y in range(cut, y1):
             for x in range(x0, x1):
@@ -93,7 +93,8 @@ def drop_shadow(im):
                 if al < 10:
                     continue
                 mx, mn = max(r, g, b), min(r, g, b)
-                grey = mx - mn < 28 and 90 < mx < 235
+                # bóng xám hoặc xám tím nhạt (độ bão hoà thấp, không quá tối/sáng)
+                grey = (mx - mn < 28 or (mx - mn < 60 and b >= g and r >= g)) and 90 < mx < 235
                 if not grey:
                     continue
                 edge = any(not (0 <= x + dx < w and 0 <= y + dy < h) or px[x + dx, y + dy][3] < 10

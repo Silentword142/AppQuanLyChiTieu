@@ -42,8 +42,8 @@ SUBJECTS.update({
     "book": "closed green textbook",
     "book-open": "open book with pages",
     "phone-call": "smartphone with ringing waves",
-    "ao-dai": "pink Vietnamese ao dai dress on a wooden hanger, no person",
-    "receipt": "long white paper receipt with zigzag torn edge and printed lines",
+    "ao-dai": "pink Vietnamese ao dai long dress, flat lay, isolated, no hanger, no person",
+    "receipt": "curled shop receipt paper strip with zigzag bottom edge, black text lines and total, slightly tilted",
     "heart": "plump pink filled heart, cute",
     "wallet": "small brown leather wallet with gold clasp, front view",
     "piggy": "cute pink piggy bank with coin slot, side view",
@@ -74,15 +74,15 @@ SKIP = lambda k: k.startswith("ui-") or k == "google"
 
 # Icon cho nút bấm / dock / HUD của giao diện TV mới (vẽ bằng AI, có màu)
 UI_SUBJECTS = {
-    "ui-key-chi": "pink paper money bills flying out with red up arrow",
-    "ui-key-thu": "stack of green banknotes and gold coins with green down arrow",
+    "ui-key-chi": "big bold red arrow pointing up above a pink wallet",
+    "ui-key-thu": "big bold green arrow pointing down into an open brown wallet with gold coins",
     "ui-key-scan": "cute pastel blue retro photo camera",
     "ui-key-budget": "red and white archery target with golden arrow in bullseye",
     "ui-key-voice": "cute retro pink microphone",
-    "ui-hud-settings": "silver gear cog with small wrench",
-    "ui-hud-coin": "shiny gold coin with letter S",
+    "ui-hud-settings": "single dark grey metal gear cog with eight square teeth and round hole, bold outline",
+    "ui-hud-coin": "shiny gold coin with a dollar sign",
     "ui-dock-home": "cozy small house with red roof, chimney and round window",
-    "ui-dock-report": "clipboard with colorful bar chart and pie chart",
+    "ui-dock-report": "simple bar chart with three thick colorful bars on a small board",
     "ui-dock-auto": "cute small retro tv robot with antenna and smiling face",
     "ui-dock-wallet": "brown leather wallet with green banknote and gold clasp",
 }
@@ -202,7 +202,7 @@ def main():
         pass
 
     a.size = a.size or a.grid * 2
-    out = Path(a.out); raw = Path(a.raw) if a.raw else out / "raw"; raw.mkdir(parents=True, exist_ok=True)
+    out = Path(a.out); raw = Path(a.raw) if a.raw else out / "raw"; raw.mkdir(parents=True, exist_ok=True); out.mkdir(parents=True, exist_ok=True)
     keys = UI_KEYS if a.ui else SAMPLE_KEYS if a.samples else ([k.strip() for k in a.keys.split(",") if k.strip()] or icon_keys())
     for i, k in enumerate(keys, 1):
         subj = SUBJECTS.get(k, k.replace("-", " "))
