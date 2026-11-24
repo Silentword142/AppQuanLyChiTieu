@@ -53,7 +53,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 
 /* ---------- TV pixel (vẽ mới) ---------- */
 .tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -14px}.tv.wide .cnt{padding:14px 12px}
-.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#FFE7A8;text-shadow:0 0 6px rgba(255,211,110,.6)}
+.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;text-shadow:1px 1px 0 rgba(255,255,255,.6)}
 .tvlist .it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:46px;height:46px}.tvlist .tile .ico.sm{width:30px;height:30px}.tvlist .t{flex:1;line-height:1.1;font-size:22px}.tvlist .t small{display:block;font-size:16px;opacity:.65}.tvlist .m{font-weight:800;font-size:24px}
 .it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
 .ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
@@ -92,7 +92,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .side{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
 .knob{width:48px;height:48px;image-rendering:pixelated;animation:knob 6s steps(1) infinite}
 .mini{width:48px;text-align:center;font-weight:800;font-size:15px;padding:0;line-height:16px}
-.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#2A1D30 0 3px,transparent 3px 6px);opacity:.7}
+.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.5}
 .led{width:9px;height:9px;background:#7DFFB0;box-shadow:0 0 0 3px #3B2A3F;animation:led 2.4s steps(4) infinite}
 .feet{display:flex;justify-content:space-between;padding:0 40px;margin-top:-6px}.feet span{width:36px;height:12px;background:#5A3D62;box-shadow:0 3px 0 #3B2A3F,3px 0 0 #3B2A3F,-3px 0 0 #3B2A3F}
 @keyframes blink{50%{opacity:0}}
@@ -233,19 +233,20 @@ const FR = {
   paper:{b:"#FFF6E9",h:"#FFFFFF",s:"#EED6C2"},
   hud:{b:"#5A3D62",h:"#7A5784",s:"#4A3150"},
   plum:{b:"#6A4872",h:"#8A6694",s:"#523858"},
-  pink:{b:"#FBC2C8",h:"#FFE3E6",s:"#EE96A4"},
-  mint:{b:"#BDEBC9",h:"#E2F8E8",s:"#86CFA0"},
-  sky:{b:"#C4E4FA",h:"#E8F5FF",s:"#8DBDEB"},
+  pink:{b:"#FFC2CF",h:"#FFE6EC",s:"#F08FA6"},
+  mint:{b:"#B6EEDC",h:"#E2FBF3",s:"#77CDB2"},
+  sky:{b:"#BFE1FB",h:"#E6F4FF",s:"#84BCEB"},
   tv:{b:"#F2A3AC",h:"#FBC9CE",s:"#D97F8D"},
-  gold:{b:"#FFE29A",h:"#FFF3CC",s:"#F2BE5C"},
-  lilac:{b:"#E1CFF6",h:"#F3EAFF",s:"#B89AE0"},
+  gold:{b:"#FFE29A",h:"#FFF4CF",s:"#F2BE5C"},
+  lilac:{b:"#D8CBFA",h:"#F1EBFF",s:"#A991E6"},
   // thân TV tông tối "đêm arcade", hợp dock CRT
-  tvRose:{b:"#8A5A7C",h:"#A87497",s:"#6A4060"},
-  tvTeal:{b:"#4E7377",h:"#6A9295",s:"#3A585C"},
-  tvWood:{b:"#8A6A4C",h:"#A88763",s:"#6A4F37"},
-  tvIndigo:{b:"#5F4F8A",h:"#7B6BA6",s:"#47396B"},
-  tvBlue:{b:"#4D6890",h:"#6884AC",s:"#3A5070"},
-  tvWine:{b:"#8C4D63",h:"#AA6880",s:"#6B3649"},
+  // thân TV pastel tươi, cùng độ sáng/độ đậm để hài hoà
+  tvRose:{b:"#F7A8BC",h:"#FFD4DF",s:"#DC7F98"},
+  tvTeal:{b:"#8EDBC9",h:"#C6F2E7",s:"#5DB7A3"},
+  tvWood:{b:"#FFC796",h:"#FFE5C9",s:"#E69F66"},
+  tvIndigo:{b:"#BBA7F2",h:"#E0D5FF",s:"#927BD6"},
+  tvBlue:{b:"#9BCDF5",h:"#D0E9FF",s:"#6AA6DB"},
+  tvWine:{b:"#FF9FAE",h:"#FFD0D8",s:"#E3707F"},
 };
 function centerGrid(g){const H=g.length,W=Math.max(...g.map(r=>r.length));let x0=W,x1=-1,y0=H,y1=-1;
   g.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=="."&&c!==" "){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}));
