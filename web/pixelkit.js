@@ -75,5 +75,16 @@ function sky(cv,opt){opt=opt||{};var g=cv.getContext("2d"),W,H,base,b,clouds,sta
  var onR=function(){build();draw()};addEventListener("resize",onR);
  var mo=new MutationObserver(onR);mo.observe(document.documentElement,{attributes:true,attributeFilter:["class","data-theme","style"]});
  return function(){clearInterval(iv);removeEventListener("resize",onR);mo.disconnect()}}
-root.PixelKit={icon:icon,keycap:keycap,drawCoin:drawCoin,drawSpark:drawSpark,sky:sky,gridSvg:gridSvg,mix:mix};
+
+/* Khung pixel 9-slice nhiều lớp bóng (viền sáng, thân, mép tối, 2 lớp bóng đổ) */
+var FRAME=["..kkkkkk....",".kHHHHHHk...","kHHHHHHHhk..","kHhbbbbbskd.","kHhbbbbbskde","kHhbbbbbskde","kHhbbbbbskde","kmmmmmmmmkde","kSSSSSSSSkde",".kSSSSSSkdde","..kkkkkkddee","...ddddddee.","....eeeeee.."];
+var FR={tvRose:{b:"#F7A8BC",h:"#FFD4DF",s:"#DC7F98"},tvTeal:{b:"#8EDBC9",h:"#C6F2E7",s:"#5DB7A3"},tvWood:{b:"#FFC796",h:"#FFE5C9",s:"#E69F66"},
+ tvIndigo:{b:"#BBA7F2",h:"#E0D5FF",s:"#927BD6"},tvBlue:{b:"#9BCDF5",h:"#D0E9FF",s:"#6AA6DB"},tvWine:{b:"#FF9FAE",h:"#FFD0D8",s:"#E3707F"}};
+var frameCache={};
+function frame(name){if(frameCache[name])return frameCache[name];var f=FR[name]||FR.tvRose;
+ var m={k:"#3B2A3F",d:"rgba(59,42,63,.42)",e:"rgba(59,42,63,.18)",H:mix(f.b,"#FFFFFF",.55),h:f.h,b:f.b,s:f.s,m:mix(f.b,"#3B2A3F",.55),S:mix(f.b,"#3B2A3F",.28)};
+ return frameCache[name]=gridSvg(FRAME,m)}
+function frameColor(name){return (FR[name]||FR.tvRose)}
+
+root.PixelKit={frame:frame,frameColor:frameColor,icon:icon,keycap:keycap,drawCoin:drawCoin,drawSpark:drawSpark,sky:sky,gridSvg:gridSvg,mix:mix};
 })(window);

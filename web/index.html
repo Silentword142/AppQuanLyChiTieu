@@ -880,6 +880,19 @@
     .pt-safe { padding-top: var(--safe-top); }
     .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
 
+
+    /* ======================= THÂN TV PASTEL + KHUNG PIXEL NHIỀU LỚP BÓNG ======================= */
+    .pxtv { --S: 4px; position: relative; border-style: solid; border-color: transparent; border-width: calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5); border-image-slice: 5 6 7 5 fill; border-image-repeat: stretch; image-rendering: pixelated; margin: 0 -4px 0 -2px; }
+    .pxtv > .tv-bezel-full { position: relative; }
+    .pxtv-ctrl { display: flex; align-items: center; gap: 8px; padding: 8px 4px 0; font: 700 15px/1 'Handjet', sans-serif; letter-spacing: .12em; color: var(--pxtv-ink, #3B2A3F); }
+    .pxtv-ctrl .brand { padding: 2px 8px; background: rgba(255,255,255,.45); box-shadow: 0 0 0 2px #3B2A3F, 2px 2px 0 2px rgba(59,42,63,.35); }
+    .pxtv-ctrl .led { width: 8px; height: 8px; background: #FFD36E; box-shadow: 0 0 0 2px #3B2A3F, 0 0 8px #FFD36E; animation: pxLedBlink 2.4s steps(1) infinite; }
+    .pxtv-ctrl .grille { flex: 1; height: 12px; background: repeating-linear-gradient(90deg, rgba(59,42,63,.55) 0 3px, transparent 3px 7px); }
+    .pxtv-ctrl .knob { width: 16px; height: 16px; background: radial-gradient(circle at 40% 35%, #FFFFFF 0 30%, #FCE6D2 31% 100%); box-shadow: 0 0 0 2px #3B2A3F, 2px 2px 0 2px rgba(59,42,63,.35); position: relative; }
+    .pxtv-ctrl .knob::after { content: ""; position: absolute; left: 7px; top: 2px; width: 2px; height: 6px; background: #3B2A3F; }
+    @keyframes pxLedBlink { 85% { background: #5A4632; box-shadow: 0 0 0 2px #3B2A3F; } }
+    html.dark .pxtv { filter: brightness(.82) saturate(.9); }
+    @media (prefers-reduced-motion: reduce) { .pxtv-ctrl .led { animation: none; } }
     /* ======================= DOCK CRT MỚI (nền tối, LED vàng, keycap pixel, đồng xu GHI) ======================= */
     .pxdock { height: calc(132px + var(--safe-bottom)); padding: 0 6px calc(var(--safe-bottom) + 22px) !important; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)) 88px repeat(2, minmax(0,1fr)); align-items: end; gap: 4px; background: transparent; }
     .pxdock .base { position: absolute; left: 0; right: 0; bottom: 0; top: 26px; z-index: -1; overflow: hidden;
@@ -1845,6 +1858,16 @@
       return <canvas ref={ref} className="pxsky" aria-hidden="true" style={{ zIndex: -1 }} />;
     });
 
+    // Thân TV pastel bọc màn CRT: khung pixel 9-slice nhiều lớp bóng + hàng nút dưới
+    const PixelTV = ({ color = "tvRose", brand = "SPENDY", children }) => {
+      if (!PK) return children;
+      return (
+        <div className="pxtv" style={{ borderImageSource: `url("${PK.frame(color)}")` }}>
+          {children}
+          <div className="pxtv-ctrl" aria-hidden="true"><i className="led" /><span className="brand">{brand}</span><span className="grille" /><i className="knob" /><i className="knob" /></div>
+        </div>
+      );
+    };
     // Bầu trời: mây pixel trôi chậm + sao lấp lánh (theme tối)
     const SkyLayer = React.memo(() => {
       const clouds = [
@@ -2212,7 +2235,7 @@
       const pad = (v) => String(v).padStart(2, "0");
       return (
         <section className="crt-stage tab-enter" aria-label="Màn hình TV tổng quan">
-          <div className="tv-bezel tv-bezel-full">
+          <PixelTV color="tvRose" brand="SPENDY"><div className="tv-bezel tv-bezel-full">
             <div className="tv-screen tv-screen-full">
               <div className="crt-roll" />
               <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
@@ -2263,19 +2286,19 @@
                 )}
               </div>
             </div>
-          </div>
+          </div></PixelTV>
         </section>
       );
     };
 
     // Màn hình CRT liền mạch cho các mục khác (Báo cáo, Tự động, Ví & Nợ, Hạng mục)
-    const CrtSectionScreen = ({ chCode = "CH02", title, badge, children }) => {
+    const CrtSectionScreen = ({ chCode = "CH02", title, badge, color, brand, children }) => {
       const [now, setNow] = useState(() => new Date());
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
       const pad = (v) => String(v).padStart(2, "0");
       return (
         <section className="crt-stage tab-enter" aria-label={title}>
-          <div className="tv-bezel tv-bezel-full">
+          <PixelTV color={color || "tvRose"} brand={brand || "SPENDY"}><div className="tv-bezel tv-bezel-full">
             <div className="tv-screen tv-screen-full">
               <div className="crt-roll" />
               <div className="crt-body">
@@ -2289,7 +2312,7 @@
                 {children}
               </div>
             </div>
-          </div>
+          </div></PixelTV>
         </section>
       );
     };
@@ -5533,7 +5556,7 @@
 
             {/* TAB: BÁO CÁO */}
             {activeTab === "report" && (
-              <CrtSectionScreen chCode="CH02" title="BÁO CÁO · THỐNG KÊ" badge={reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}>
+              <CrtSectionScreen chCode="CH02" color="tvTeal" brand="BÁO CÁO" title="BÁO CÁO · THỐNG KÊ" badge={reportPeriod === "Ngày" ? "TÙY CHỌN" : reportPeriod.toUpperCase()}>
                 <section className="console-bezel">
                   <div className="p-3 space-y-3">
                     {/* Chi tiêu / Thu nhập */}
@@ -5981,7 +6004,7 @@
 
             {/* TAB: HẠNG MỤC (Hierarchy Management) */}
             {activeTab === "category" && (
-              <CrtSectionScreen chCode="CH05" title="KHO HẠNG MỤC" badge={`${parentCategories.length} NHÓM · ${subCategories.length} CON`}>
+              <CrtSectionScreen chCode="CH05" color="tvWood" brand="HẠNG MỤC" title="KHO HẠNG MỤC" badge={`${parentCategories.length} NHÓM · ${subCategories.length} CON`}>
                 <section className="console-bezel overflow-hidden">
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -6166,7 +6189,7 @@
 
             {/* TAB: TỰ ĐỘNG (Gemini đọc thông báo) */}
             {activeTab === "mai" && (
-              <CrtSectionScreen chCode="CH03" title="TRỢ LÝ MAI · TỰ ĐỘNG" badge="GEMINI FLASH-LITE">
+              <CrtSectionScreen chCode="CH03" color="tvIndigo" brand="MAI" title="TRỢ LÝ MAI · TỰ ĐỘNG" badge="GEMINI FLASH-LITE">
                 <section className="console-bezel overflow-hidden">
                   <div className="p-4 flex gap-3.5 items-start">
                     <span className="w-14 h-14 shrink-0 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center">
@@ -6534,7 +6557,7 @@
 
             {/* TAB: VÍ & SỔ NỢ */}
             {activeTab === "wallet_ai" && (
-              <CrtSectionScreen chCode="CH04" title="VÍ & SỔ VAY NỢ" badge={`${accounts.length} VÍ`}>
+              <CrtSectionScreen chCode="CH04" color="tvBlue" brand="VÍ & NỢ" title="VÍ & SỔ VAY NỢ" badge={`${accounts.length} VÍ`}>
                 
                 {/* Segmented Control */}
                 <div className="flex bg-theme-surface border-2 border-[var(--ink)] p-1 rounded-xl shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] gap-1">
