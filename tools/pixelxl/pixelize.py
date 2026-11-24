@@ -26,6 +26,8 @@ PALETTE = [
     "#7DD3C6", "#3E9E98", "#A5D8F7", "#6E9FDE", "#D3B9F2", "#9C7BD3",
     "#EBC49A", "#B98058", "#84553F", "#E3D8E0", "#AE9DB0", "#6F5272",
     "#FFDCC2", "#3B2A3F", "#2F7A5A", "#4A6FB0", "#8E3550", "#C9A07A",
+    # hồng pastel thêm để heo đất, son... không bị ép thành trắng/xám
+    "#FFD6DC", "#F7B7C4", "#F59AAE", "#FCE3E8",
 ]
 INK = (0x3B, 0x2A, 0x3F)  # viền ngoài – mận đậm
 
@@ -70,6 +72,36 @@ def remove_bg(im, tol=40):
         if x < w - 1: stack.append((x + 1, y))
         if y > 0: stack.append((x, y - 1))
         if y < h - 1: stack.append((x, y + 1))
+    return im
+
+
+def drop_shadow(im):
+    """Xoá bóng đổ xám mềm dưới chân vật thể (SDXL hay vẽ dù đã cấm trong prompt)."""
+    a = im.getchannel("A").point(lambda v: 255 if v > 128 else 0)
+    bbox = a.getbbox()
+    if not bbox:
+        return im
+    x0, y0, x1, y1 = bbox
+    cut = y0 + int((y1 - y0) * 0.70)
+    px = im.load()
+    w, h = im.size
+    for _ in range(3):  # bóc dần từ ngoài vào
+        kill = []
+        for y in range(cut, y1):
+            for x in range(x0, x1):
+                r, g, b, al = px[x, y]
+                if al < 10:
+                    continue
+                mx, mn = max(r, g, b), min(r, g, b)
+                grey = mx - mn < 28 and 90 < mx < 235
+                if not grey:
+                    continue
+                edge = any(not (0 <= x + dx < w and 0 <= y + dy < h) or px[x + dx, y + dy][3] < 10
+                           for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+                if edge:
+                    kill.append((x, y))
+        for x, y in kill:
+            px[x, y] = (0, 0, 0, 0)
     return im
 
 
@@ -128,7 +160,7 @@ def tidy(g):
 
 
 def pixelize(im, grid=32, size=64, bg_tol=40):
-    g = tidy(to_grid(remove_bg(im, bg_tol), grid))
+    g = tidy(to_grid(drop_shadow(remove_bg(im, bg_tol)), grid))
     return g.resize((size, size), Image.NEAREST)
 
 

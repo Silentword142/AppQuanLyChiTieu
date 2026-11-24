@@ -42,6 +42,16 @@ SUBJECTS.update({
     "book": "closed green textbook",
     "book-open": "open book with pages",
     "phone-call": "smartphone with ringing waves",
+    "ao-dai": "pink Vietnamese ao dai dress on a wooden hanger, no person",
+    "receipt": "long white paper receipt with zigzag torn edge and printed lines",
+    "heart": "plump pink filled heart, cute",
+    "wallet": "small brown leather wallet with gold clasp, front view",
+    "piggy": "cute pink piggy bank with coin slot, side view",
+    "credit-card": "simple blue bank card with gold chip, flat",
+    "coffee": "Vietnamese iced coffee glass with straw",
+    "home": "small cute house with red roof and one door, compact",
+    "banh-mi": "Vietnamese banh mi baguette sandwich, side view",
+    "scooter": "mint green vespa scooter, side view",
     "alert": "yellow warning triangle with exclamation mark",
     "alert-circle": "red round alert badge with exclamation mark",
     "bell": "golden bell", "bell-off": "grey bell with slash", "bell-ring": "golden ringing bell with motion lines",
@@ -66,7 +76,7 @@ SAMPLE_KEYS = ["pho", "banh-mi", "scooter", "home", "wallet", "piggy",
                "credit-card", "coffee", "ao-dai", "gift", "heart", "receipt"]
 
 PROMPT = "pixel art, {subj}, simple icon, flat colors, bold dark outline, centered, single object, front view, plain white background"
-NEG = "3d render, realistic, photo, gradient, blurry, text, watermark, frame, border, circle badge, multiple objects, cast shadow, cropped"
+NEG = "3d render, realistic, photo, gradient, blurry, text, watermark, frame, border, circle badge, multiple objects, cast shadow, drop shadow, shadow on floor, ground, cropped, person, top-down view"
 
 
 def workflow(subj, seed, a):
@@ -166,6 +176,10 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "dist" / "pixelxl"))
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
     out = Path(a.out); raw = out / "raw"; raw.mkdir(parents=True, exist_ok=True)
     keys = SAMPLE_KEYS if a.samples else ([k.strip() for k in a.keys.split(",") if k.strip()] or icon_keys())
