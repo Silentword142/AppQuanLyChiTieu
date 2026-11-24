@@ -186,6 +186,29 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .dk.on .cap .led{background:#7DFFB0;box-shadow:0 0 0 2px #3B2A3F,0 0 8px #7DFFB0}
 .dk.on .cap{transform:translateY(-6px)}
 .dk:active .cap{transform:translateY(4px)}
+
+/* ---------- Dock v5: nền tối kiểu màn CRT, LED vàng ---------- */
+.dock .base{background:
+  repeating-linear-gradient(180deg,rgba(10,6,18,.35) 0 3px,transparent 3px 6px),
+  linear-gradient(135deg,transparent 0 30%,rgba(255,255,255,.05) 30% 36%,transparent 36% 40%,rgba(255,255,255,.035) 40% 43%,transparent 43%),
+  radial-gradient(120% 90% at 50% 40%,#41325C 0%,#2A2140 62%,#17111F 100%) !important;
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 #FCE6D2,0 -9px 0 #F2A3AC,0 -12px 0 #3B2A3F,0 -15px 0 rgba(59,42,63,.3) !important}
+.dock .base::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.35) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.35) calc(100% - 6px));animation:flick 5s steps(1) infinite}
+@keyframes flick{97%{opacity:.6}}
+.dock .base::before{content:"";position:absolute;left:0;right:0;height:16px;top:-16px;background:repeating-linear-gradient(180deg,rgba(255,211,110,.07) 0 3px,transparent 3px 6px);animation:droll 5s steps(40) infinite;pointer-events:none}
+@keyframes droll{to{top:100%}}
+.leds i{background:#5A4632!important;box-shadow:0 0 0 1px #17111F!important}
+.leds i.on,.leds i.on2{background:#FFD36E!important;box-shadow:0 0 0 1px #17111F,0 0 8px #FFD36E,0 0 2px #FFF6D0 inset!important}
+.leds i.on2{background:#FFB84A!important}
+.rv{background:#6B5A80!important;box-shadow:inset -2px -2px 0 #3B2A3F,0 0 0 2px #17111F!important}
+.grl{display:none}
+.dk .lab{color:#FFE7A8!important;text-shadow:0 0 6px rgba(255,211,110,.7),2px 0 0 rgba(255,90,140,.35),-2px 0 0 rgba(90,210,255,.3)!important}
+.dk.on .lab{color:#FFD36E!important}
+@keyframes labblink{90%{color:#FFF6E9}}
+.ghi .lb{color:#FFD36E!important;text-shadow:0 0 8px rgba(255,211,110,.8)!important}
+.dk.on::before{background:rgba(255,211,110,.55)!important;box-shadow:0 0 12px rgba(255,211,110,.9)!important}
+.dk .cap .led{background:#5A4632!important;box-shadow:0 0 0 2px #3B2A3F!important}
+.dk.on .cap .led{background:#FFD36E!important;box-shadow:0 0 0 2px #3B2A3F,0 0 8px #FFD36E!important}
 </style></head>
 <body>
 <canvas id="sky" width="100" height="215"></canvas>
@@ -280,7 +303,7 @@ document.querySelectorAll("img[data-i]").forEach(el=>{
  draw();if(!location.hash.includes("still"))(window._si||setInterval)(draw,110);
  // LED chạy dọc mép dock
  const L=document.querySelector(".leds");for(let i=0;i<24;i++)L.appendChild(document.createElement("i"));let g=0;
- const led=()=>{L.querySelectorAll("i").forEach((e,i)=>{e.className=((i+g)%8===0)?"on":((i+g)%8===4?"on2":"")});g++};led();
+ const led=()=>{L.querySelectorAll("i").forEach((e,i)=>{e.className=((i+g)%6<2)?"on":((i+g)%6===3?"on2":"")});g++};led();
  if(!location.hash.includes("still"))(window._si||setInterval)(led,140);
 })();
 // ---------- TV CRT pixel dùng chung cho mọi mục (vẽ mới) ----------
