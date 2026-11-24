@@ -162,6 +162,10 @@ const FR = {
   gold:{b:"#FFE29A",h:"#FFF3CC",s:"#F2BE5C"},
   lilac:{b:"#E1CFF6",h:"#F3EAFF",s:"#B89AE0"},
 };
+function centerGrid(g){const H=g.length,W=Math.max(...g.map(r=>r.length));let x0=W,x1=-1,y0=H,y1=-1;
+  g.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=="."&&c!==" "){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}));
+  if(x1<0)return g;const w=x1-x0+1,h=y1-y0+1,S=Math.max(w,h)+2,px=Math.floor((S-w)/2),py=Math.floor((S-h)/2);
+  const out=[];for(let y=0;y<S;y++){let r="";for(let x=0;x<S;x++){const gy=y-py+y0,gx=x-px+x0;r+=(gy>=y0&&gy<=y1&&gx>=x0&&gx<=x1)?(g[gy][gx]||"."):"."}out.push(r)}return out}
 function gridSvg(rows,cmap){
   const H=rows.length,W=Math.max(...rows.map(r=>r.length));let s="";
   rows.forEach((r,y)=>{[...r].forEach((ch,x)=>{const c=cmap[ch];if(c)s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`})});
@@ -201,7 +205,7 @@ C.gearc={g:["....kkkk....", ".kk.kssk.kk.", "kssksssskssk", "ksssssssssSk", ".ks
 C.downc={g:["............", "...kkkkkk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "kkkkppPPkkkk", ".kppppppPPk.", "..kpppppPk..", "...kpppPk...", "....kppk....", ".....kk....."],m:{"k": "#3B2A3F", "p": "#9BE0AE", "P": "#55B27F"}};
 document.querySelectorAll("img[data-i]").forEach(el=>{
   const n=el.dataset.i;
-  el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
+  el.src=C[n]?gridSvg(centerGrid(C[n].g),C[n].m):gridSvg(centerGrid(I[n]),{"#":el.dataset.c||"#3B2A3F"});
 });
 // ---------- Thanh ngân sách ----------
 
@@ -243,7 +247,7 @@ function decorate(root){
   });
   root.querySelectorAll("img[data-i]").forEach(el=>{
     const n=el.dataset.i;
-    el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
+    el.src=C[n]?gridSvg(centerGrid(C[n].g),C[n].m):gridSvg(centerGrid(I[n]),{"#":el.dataset.c||"#3B2A3F"});
   });
 }
 const pxl=(c,x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
