@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spendy Pixel UI mẫu</title>
+<link rel="stylesheet" href="../../assets-src/fonts/fonts.css">
+<style>
+:root{
+  --ink:#3B2A3F; --cream:#FFF6E9; --paper:#FCEBD8; --hl:#FFFFFF; --shade:#E9CDB8;
+  --pink:#F49CA6; --pinkD:#C8607A; --plum:#5A3D62; --plumL:#7A5784;
+  --gold:#FFD36E; --goldD:#E0A23C; --mint:#9BE0AE; --mintD:#3F9A6B; --sky:#A5D8F7; --skyD:#5E8FD0; --lilac:#D3B9F2; --lilacD:#9273C9;
+  --exp:#D4506A; --inc:#378F67;
+  --S:3px; /* 1 điểm ảnh UI = 3px */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F2BDB4}
+body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:860px;position:relative;overflow:hidden;letter-spacing:.02em}
+#sky{position:absolute;inset:0;z-index:0;image-rendering:pixelated}
+.app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:14px}
+.px{border-style:solid;border-width:calc(var(--S)*4) calc(var(--S)*4) calc(var(--S)*5);border-image-slice:4 4 5 4 fill;border-image-repeat:stretch;image-rendering:pixelated}
+.row{display:flex;align-items:center;gap:8px}
+.ico{width:calc(var(--S)*12);height:calc(var(--S)*12);image-rendering:pixelated;flex:none}
+.ico.sm{width:24px;height:24px}
+/* HUD */
+.hud{display:flex;gap:8px}
+.hud .chip{flex:1;padding:2px 6px;display:flex;align-items:center;gap:8px;color:var(--cream);font-weight:700;font-size:26px}
+.hud .chip small{font-size:13px;opacity:.75;display:block;line-height:1;font-weight:500;letter-spacing:.08em}
+.hud .sq{width:58px;display:grid;place-items:center;padding:0;color:var(--plum)}
+/* cửa sổ */
+.win .bar{display:flex;align-items:center;justify-content:space-between;background:var(--plum);color:var(--cream);margin:-2px -2px 10px;padding:4px 10px;font-weight:700;letter-spacing:.12em;font-size:16px;box-shadow:0 var(--S) 0 var(--ink)}
+.dots{display:flex;gap:var(--S)}.dots i{width:calc(var(--S)*2);height:calc(var(--S)*2);background:var(--pink)}.dots i:nth-child(2){background:var(--gold)}.dots i:nth-child(3){background:var(--mint)}
+.big{font-size:48px;font-weight:800;line-height:1;letter-spacing:.01em}
+.lbl{font-size:16px;letter-spacing:.14em;font-weight:700;color:var(--plumL)}
+.meter{height:calc(var(--S)*6);display:flex;gap:var(--S);padding:var(--S);background:var(--ink);margin-top:6px}
+.meter i{flex:1;background:#6B5670}.meter i.on{background:var(--gold)}.meter i.on.w{background:var(--exp)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.stat{padding:4px 8px}.stat b{font-size:26px;display:block;line-height:1.1}
+/* phím */
+.keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.key{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 2px;font-weight:800;font-size:19px;letter-spacing:.04em;white-space:nowrap}
+/* nhật ký */
+.item{display:flex;align-items:center;gap:10px;padding:6px 2px;border-bottom:var(--S) dashed var(--shade)}
+.item:last-child{border:0}
+.item .t{flex:1;line-height:1.15}.item .t small{display:block;color:var(--plumL);font-size:16px}
+.item .m{font-weight:800;font-size:22px}
+.tile{width:42px;height:42px;display:grid;place-items:center;padding:0}
+/* dock */
+.dock{position:absolute;left:0;right:0;bottom:0;z-index:2;height:118px;padding:0 8px 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 92px repeat(2,minmax(0,1fr));align-items:end;gap:6px}
+.dock .base{position:absolute;inset:30px 0 0;z-index:-1}
+.dk{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:16px;letter-spacing:.04em;color:var(--cream);white-space:nowrap}
+.dk .cap{width:54px;height:50px;display:grid;place-items:center;padding:0}
+.dk.on .lab{color:var(--gold)}
+.ghi{justify-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--gold);font-weight:800;font-size:16px;letter-spacing:.1em;margin-bottom:-2px}
+.ghi canvas{width:84px;height:84px;image-rendering:pixelated}
+</style></head>
+<body>
+<canvas id="sky" width="100" height="215"></canvas>
+<div class="app">
+  <div class="hud">
+    <div class="chip px" data-f="hud"><img class="ico" data-i="coin"><div><small>TÀI SẢN</small>12.450.000đ</div></div>
+    <div class="sq px" data-f="paper"><img class="ico" data-i="gear" data-c="#5A3D62"></div>
+  </div>
+
+  <div class="win px" data-f="paper">
+    <div class="bar"><span>THÁNG 11</span><div class="dots"><i></i><i></i><i></i></div></div>
+    <div class="lbl">CÒN LẠI THÁNG NÀY</div>
+    <div class="big">4.820.000đ</div>
+    <div class="meter" id="meter"></div>
+    <div class="row" style="justify-content:space-between;font-size:16px;color:var(--plumL);margin-top:4px"><span>Đã tiêu 62% ngân sách</span><span>còn 6 ngày</span></div>
+    <div class="two">
+      <div class="stat px" data-f="mint"><span class="lbl" style="color:var(--mintD)">THU</span><b style="color:var(--inc)">+15.000.000</b></div>
+      <div class="stat px" data-f="pink"><span class="lbl" style="color:var(--pinkD)">CHI</span><b style="color:var(--exp)">−10.180.000</b></div>
+    </div>
+  </div>
+
+  <div class="keys">
+    <div class="key px" data-f="pink"><img class="ico" data-i="up" data-c="#C8607A">CHI</div>
+    <div class="key px" data-f="mint"><img class="ico" data-i="down" data-c="#3F9A6B">THU</div>
+    <div class="key px" data-f="sky"><img class="ico" data-i="cam" data-c="#5E8FD0">QUÉT</div>
+    <div class="key px" data-f="gold"><img class="ico" data-i="target" data-c="#B97A1E">HẠN MỨC</div>
+  </div>
+
+  <div class="win px" data-f="paper">
+    <div class="bar"><span>NHẬT KÝ HÔM NAY</span><span style="color:var(--gold)">TẤT CẢ ›</span></div>
+    <div class="item"><div class="tile px" data-f="pink"><img class="ico sm" data-i="pho"></div><div class="t">Phở bò<small>Ăn uống · Ví MoMo</small></div><div class="m" style="color:var(--exp)">−55.000</div></div>
+    <div class="item"><div class="tile px" data-f="gold"><img class="ico sm" data-i="coffee"></div><div class="t">Cà phê sữa đá<small>Ăn uống · Tiền mặt</small></div><div class="m" style="color:var(--exp)">−29.000</div></div>
+    <div class="item"><div class="tile px" data-f="mint"><img class="ico sm" data-i="bag"></div><div class="t">Lương tháng 11<small>Thu nhập · Vietcombank</small></div><div class="m" style="color:var(--inc)">+15.000.000</div></div>
+  </div>
+</div>
+
+<div class="dock">
+  <div class="base px" data-f="plum"></div>
+  <div class="dk on"><div class="cap px" data-f="pink"><img class="ico" data-i="home" data-c="#3B2A3F"></div><span class="lab">NHÀ</span></div>
+  <div class="dk"><div class="cap px" data-f="mint"><img class="ico" data-i="chart" data-c="#3B2A3F"></div><span class="lab">BÁO CÁO</span></div>
+  <div class="ghi"><canvas id="coin" width="28" height="28"></canvas>GHI</div>
+  <div class="dk"><div class="cap px" data-f="lilac"><img class="ico" data-i="mai" data-c="#3B2A3F"></div><span class="lab">TỰ ĐỘNG</span></div>
+  <div class="dk"><div class="cap px" data-f="sky"><img class="ico" data-i="wallet" data-c="#3B2A3F"></div><span class="lab">VÍ & NỢ</span></div>
+</div>
+
+<script>
+// ---------- Khung pixel 9-slice (vẽ mới) ----------
+const FRAME = [
+  "..kkkkk..",
+  ".khhhhhk.",
+  "khhbbbbsk",
+  "khbbbbbsk",
+  "khbbbbbsk",
+  "khbbbbbsk",
+  "khbbbbssk",
+  ".kssssssk",
+  "..kkkkkk.",
+  "...ddddd.",
+];
+// cột/hàng giữa (chỉ số 4) được kéo giãn
+const FR = {
+  paper:{b:"#FFF6E9",h:"#FFFFFF",s:"#EED6C2"},
+  hud:{b:"#5A3D62",h:"#7A5784",s:"#4A3150"},
+  plum:{b:"#6A4872",h:"#8A6694",s:"#523858"},
+  pink:{b:"#FBC2C8",h:"#FFE3E6",s:"#EE96A4"},
+  mint:{b:"#BDEBC9",h:"#E2F8E8",s:"#86CFA0"},
+  sky:{b:"#C4E4FA",h:"#E8F5FF",s:"#8DBDEB"},
+  gold:{b:"#FFE29A",h:"#FFF3CC",s:"#F2BE5C"},
+  lilac:{b:"#E1CFF6",h:"#F3EAFF",s:"#B89AE0"},
+};
+function gridSvg(rows,cmap){
+  const H=rows.length,W=Math.max(...rows.map(r=>r.length));let s="";
+  rows.forEach((r,y)=>{[...r].forEach((ch,x)=>{const c=cmap[ch];if(c)s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`})});
+  return "data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${s}</svg>`);
+}
+document.querySelectorAll("[data-f]").forEach(el=>{
+  const f=FR[el.dataset.f];
+  el.style.borderImageSource=`url("${gridSvg(FRAME,{k:"#3B2A3F",d:"rgba(59,42,63,.35)",...f})}")`;
+  el.style.borderImageSlice="4 4 5 4 fill";
+});
+// ---------- Icon nét 12x12 (vẽ mới) ----------
+const I={
+home:[".....##.....","....####....","...######...","..########..",".##########.","############",".##########.",".####..####.",".####..####.",".####..####.",".##########.","............"],
+chart:["............",".........##.",".........##.","......##.##.","......##.##.","...##.##.##.","...##.##.##.","##.##.##.##.","##.##.##.##.","##.##.##.##.","############","............"],
+wallet:["............","..########..",".#........#.","############","############","#######...##","#######.#.##","#######...##","############","############","............","............"],
+mai:["..#......#..","...#....#...","############","#..........#","#.##....##.#","#.##....##.#","#..........#","#...####...#","#..........#","############","...#....#...","..##....##.."],
+up:[".....##.....","....####....","...######...","..########..",".##.####.##.","....####....","....####....","....####....","....####....","....####....","............","............"],
+down:["............","............","....####....","....####....","....####....","....####....","....####....",".##.####.##.","..########..","...######...","....####....",".....##....."],
+cam:["............","...####.....","############","#..........#","#...####...#","#..##..##..#","#..##..##..#","#...####...#","#..........#","############","............","............"],
+target:["...######...","..#......#..",".#..####..#.","#..#....#..#","#..#.##.#..#","#..#.##.#..#","#..#....#..#",".#..####..#.","..#......#..","...######...","............","............"],
+gear:["....####....","....#..#....",".###....###.",".#........#.",".#...##...#.","##..#..#..##","##..#..#..##",".#...##...#.",".#........#.",".###....###.","....#..#....","....####...."],
+};
+const C={ // icon màu 12x12 (tạm, sẽ thay bằng icon Pixel Art XL)
+coin:{g:["...kkkkkk...","..kyyyyyyk..",".kyhyyyyyyk.","kyhyykkyyyok","kyyykyyyyyok","kyyyykkyyyok","kyyyyyykyyok","kyyykkkyyyok",".kyyyyyyyok.","..koooooook.","...kkkkkk...","............"],m:{k:"#3B2A3F",y:"#FFD36E",h:"#FFF3CC",o:"#E0A23C"}},
+pho:{g:["...w...w....","....w...w...","...w...w....","kkkkkkkkkkkk","kyyyrgyyyggk","kbbbbbbbbbbk",".kbwbbbbbbk.","..kbbbbbbk..","...kkkkkk...","..kkkkkkkk..","............","............"],m:{k:"#3B2A3F",w:"#FFFFFF",y:"#FFDF85",r:"#EE6B6E",g:"#55B27F",b:"#A5D8F7"}},
+coffee:{g:["....w..w....","...w..w.....","....w..w....",".kkkkkkkk...",".kwwwwwwkkk.",".kccccccck.k",".kccccccck.k",".kccccccckk.",".kccccccck..","..kkkkkkk...","kkkkkkkkkkk.","............"],m:{k:"#3B2A3F",w:"#FFF6E9",c:"#B98058"}},
+bag:{g:["....kkkk....","...k....k...","...k....k...",".kkkkkkkkkk.",".kggggggggk.",".kgggyyggGk.",".kggy..ygGk.",".kgggyyggGk.",".kggggggggk.",".kGGGGGGGGk.",".kkkkkkkkkk.","............"],m:{k:"#3B2A3F",g:"#9BE0AE",G:"#55B27F",y:"#FFD36E"}},
+};
+document.querySelectorAll("img[data-i]").forEach(el=>{
+  const n=el.dataset.i;
+  el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
+});
+// ---------- Thanh ngân sách ----------
+const m=document.getElementById("meter");for(let i=0;i<16;i++){const e=document.createElement("i");if(i<10)e.className="on"+(i>=8?" w":"");m.appendChild(e)}
+// ---------- Nút GHI: đồng xu pixel (vẽ mới bằng thuật toán) ----------
+(function(){const c=document.getElementById("coin").getContext("2d"),D=28,r=13;
+ for(let y=0;y<D;y++)for(let x=0;x<D;x++){const dx=x+.5-14,dy=y+.5-13,d=Math.hypot(dx,dy);
+  let col=null;
+  if(d<=r){col="#FFD36E";
+   if(d>r-1.2)col="#3B2A3F";else if(d>r-3.2){col=(dx+dy<-4)?"#FFF3CC":(dx+dy>4?"#E0A23C":"#FFD36E")}
+   else if(d>r-4.3)col="#E9B04E";}
+  if(!col&&y>=26&&Math.abs(dx)<9)col="rgba(59,42,63,.35)";
+  if(col){c.fillStyle=col;c.fillRect(x,y,1,1)}}
+ // dấu cộng
+ c.fillStyle="#5A3D62";c.fillRect(12,7,3,13);c.fillRect(7,12,13,3);
+ c.fillStyle="#3B2A3F";c.fillRect(12,19,3,1);c.fillRect(19,14,1,1);c.fillRect(7,15,5,0);
+})();
+// ---------- Bầu trời: dải màu + dithering + mây + đồi (vẽ mới) ----------
+(function(){const cv=document.getElementById("sky"),g=cv.getContext("2d"),W=100,H=215;
+ const bands=["#F7A9A5","#F8B6AD","#F9C3B5","#FACFBD","#FADAC6"];
+ const bh=34;
+ for(let y=0;y<H;y++){const b=Math.min(bands.length-1,Math.floor(y/bh)),t=y%bh;
+  for(let x=0;x<W;x++){let c=bands[b];
+   if(t>=bh-4&&b<bands.length-1&&((x+y)%2===0)&&(t>=bh-2||x%4===0))c=bands[b+1];
+   g.fillStyle=c;g.fillRect(x,y,1,1)}}
+ const cloud=["....wwww..........","..wwhhhhww...www..",".whhhhhhhhwwwhhhw.","whhhhhhhhhhhhhhhhw","wsssssssssssssssss",".ssssssssssssssss."];
+ const cc={w:"#FFE9E0",h:"#FFF8F2",s:"#F7D2C8"};
+ [[6,18],[60,44],[24,80],[70,120]].forEach(([ox,oy])=>cloud.forEach((r,y)=>[...r].forEach((ch,x)=>{if(cc[ch]){g.fillStyle=cc[ch];g.fillRect(ox+x,oy+y,1,1)}})));
+ g.fillStyle="#FFF8F2";[[40,10],[88,30],[15,58],[92,96],[50,150]].forEach(([x,y])=>{g.fillRect(x,y,1,1)});
+ for(let x=0;x<W;x++){const h=Math.round(6+4*Math.sin(x/9)+2*Math.sin(x/4));for(let y=H-h-20;y<H;y++){g.fillStyle=y===H-h-20?"#D98F94":"#E8A9A5";g.fillRect(x,y,1,1)}}
+ cv.style.width="400px";cv.style.height="860px";
+})();
+</script>
+</body></html>
