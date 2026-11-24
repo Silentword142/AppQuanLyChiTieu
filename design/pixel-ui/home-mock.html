@@ -12,7 +12,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#F2BDB4}
-body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1120px;position:relative;overflow:hidden;letter-spacing:.02em}
+body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1300px;position:relative;overflow:hidden;letter-spacing:.02em}
 #sky{position:absolute;inset:0;z-index:0;image-rendering:pixelated}
 .app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:14px}
 .px{border-style:solid;border-width:calc(var(--S)*4) calc(var(--S)*4) calc(var(--S)*5);border-image-slice:4 4 5 4 fill;border-image-repeat:stretch;image-rendering:pixelated}
@@ -52,9 +52,9 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .ghi canvas{width:84px;height:84px;image-rendering:pixelated}
 
 /* ---------- TV pixel (vẽ mới) ---------- */
-.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -10px}.tv.wide .cnt{padding:14px 12px}
+.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -14px}.tv.wide .cnt{padding:14px 12px}
 .ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;opacity:.7}
-.tvlist .it{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:36px;height:36px}.tvlist .t{flex:1;line-height:1.1;font-size:19px}.tvlist .t small{display:block;font-size:15px;opacity:.65}.tvlist .m{font-weight:800;font-size:21px}
+.tvlist .it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:46px;height:46px}.tvlist .tile .ico.sm{width:30px;height:30px}.tvlist .t{flex:1;line-height:1.1;font-size:22px}.tvlist .t small{display:block;font-size:16px;opacity:.65}.tvlist .m{font-weight:800;font-size:24px}
 .it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
 .ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
 .tvbody{position:relative}
@@ -112,16 +112,16 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 <div class="app">
   <div class="hud">
     <div class="chip px" data-f="hud"><img class="ico" data-i="coin"><div><small>TÀI SẢN</small>12.450.000đ</div></div>
-    <div class="sq px" data-f="paper"><img class="ico" data-i="gear" data-c="#5A3D62"></div>
+    <div class="sq px" data-f="paper"><img class="ico" data-i="gearc"></div>
   </div>
 
   <div class="tv" data-tv="main"></div>
 
   <div class="keys">
-    <div class="key px" data-f="pink"><img class="ico" data-i="up" data-c="#C8607A">CHI</div>
-    <div class="key px" data-f="mint"><img class="ico" data-i="down" data-c="#3F9A6B">THU</div>
-    <div class="key px" data-f="sky"><img class="ico" data-i="cam" data-c="#5E8FD0">QUÉT</div>
-    <div class="key px" data-f="gold"><img class="ico" data-i="target" data-c="#B97A1E">HẠN MỨC</div>
+    <div class="key px" data-f="pink"><img class="ico" data-i="upc">CHI</div>
+    <div class="key px" data-f="mint"><img class="ico" data-i="downc">THU</div>
+    <div class="key px" data-f="sky"><img class="ico" data-i="camc">QUÉT</div>
+    <div class="key px" data-f="gold"><img class="ico" data-i="targetc">HẠN MỨC</div>
   </div>
 
   <div class="tv wide" data-tv="log"></div>
@@ -129,11 +129,11 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 
 <div class="dock">
   <div class="base px" data-f="plum"></div>
-  <div class="dk on"><div class="cap px" data-f="pink"><img class="ico" data-i="home" data-c="#3B2A3F"></div><span class="lab">NHÀ</span></div>
-  <div class="dk"><div class="cap px" data-f="mint"><img class="ico" data-i="chart" data-c="#3B2A3F"></div><span class="lab">BÁO CÁO</span></div>
+  <div class="dk on"><div class="cap px" data-f="pink"><img class="ico" data-i="homec"></div><span class="lab">NHÀ</span></div>
+  <div class="dk"><div class="cap px" data-f="mint"><img class="ico" data-i="chartc"></div><span class="lab">BÁO CÁO</span></div>
   <div class="ghi"><canvas id="coin" width="28" height="28"></canvas>GHI</div>
-  <div class="dk"><div class="cap px" data-f="lilac"><img class="ico" data-i="mai" data-c="#3B2A3F"></div><span class="lab">TỰ ĐỘNG</span></div>
-  <div class="dk"><div class="cap px" data-f="sky"><img class="ico" data-i="wallet" data-c="#3B2A3F"></div><span class="lab">VÍ & NỢ</span></div>
+  <div class="dk"><div class="cap px" data-f="lilac"><img class="ico" data-i="maic"></div><span class="lab">TỰ ĐỘNG</span></div>
+  <div class="dk"><div class="cap px" data-f="sky"><img class="ico" data-i="walletc"></div><span class="lab">VÍ & NỢ</span></div>
 </div>
 
 <script>
@@ -190,6 +190,15 @@ pho:{g:["...w...w....","....w...w...","...w...w....","kkkkkkkkkkkk","kyyyrgyyygg
 coffee:{g:["....w..w....","...w..w.....","....w..w....",".kkkkkkkk...",".kwwwwwwkkk.",".kccccccck.k",".kccccccck.k",".kccccccckk.",".kccccccck..","..kkkkkkk...","kkkkkkkkkkk.","............"],m:{k:"#3B2A3F",w:"#FFF6E9",c:"#B98058"}},
 bag:{g:["....kkkk....","...k....k...","...k....k...",".kkkkkkkkkk.",".kggggggggk.",".kgggyyggGk.",".kggy..ygGk.",".kgggyyggGk.",".kggggggggk.",".kGGGGGGGGk.",".kkkkkkkkkk.","............"],m:{k:"#3B2A3F",g:"#9BE0AE",G:"#55B27F",y:"#FFD36E"}},
 };
+C.homec={g:[".....kk.....", "....krrk....", "...krrrrk...", "..krrrrrrk..", ".krrrrrrrrk.", "kkkkkkkkkkkk", ".kwwwwwwwwk.", ".kwbbwwddwk.", ".kwbbwwddwk.", ".kwwwwwddwk.", ".kkkkkkkkkk.", "............"],m:{"k": "#3B2A3F", "r": "#EE6B6E", "w": "#FFF6E9", "b": "#A5D8F7", "d": "#B98058"}};
+C.chartc={g:[".........kkk", ".........kyk", "......kkkkyk", "......kgkkyk", "...kkkkgkkyk", "...kpkkgkkyk", "kkkkpkkgkkyk", "kbkkpkkgkkyk", "kbkkpkkgkkyk", "kbkkpkkgkkyk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "b": "#6E9FDE", "p": "#F49CA6", "g": "#55B27F", "y": "#FFD36E"}};
+C.maic={g:["..k......k..", "...k....k...", "kkkkkkkkkkkk", "klllllllllLk", "kldddddddlLk", "kldgdddgdlLk", "kldddddddlLk", "kldgggggdlLk", "kldddddddlLk", "klllllllllLk", "kkkkkkkkkkkk", ".kk......kk."],m:{"k": "#3B2A3F", "l": "#D3B9F2", "L": "#9C7BD3", "d": "#2A2140", "g": "#9DF5C2"}};
+C.walletc={g:["............", "..kkkkkkkk..", ".kggggggggk.", "kkkkkkkkkkkk", "kccccccccCCk", "kcccccckkkkk", "kcccccckyyYk", "kcccccckkkkk", "kccccccccCCk", "kCCCCCCCCCCk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "g": "#9BE0AE", "c": "#C98A5E", "C": "#84553F", "y": "#FFD36E", "Y": "#E0A23C"}};
+C.upc={g:[".....kk.....", "....kppk....", "...kpppPk...", "..kpppppPk..", ".kppppppPPk.", "kkkkppPPkkkk", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kkkkkk...", "............"],m:{"k": "#3B2A3F", "p": "#F49CA6", "P": "#D4506A"}};
+C.camc={g:["............", "..kkkk......", "kkkddkkkkkkk", "kbbbbbbbbrbk", "kbbbkkkkbbbk", "kbbkwwwwkbbk", "kbbkwddwkbbk", "kbbkwddwkbbk", "kbbkwwwwkbbk", "kBBBkkkkBBBk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "b": "#A5D8F7", "B": "#6E9FDE", "d": "#4A6FB0", "w": "#FFFFFF", "r": "#EE6B6E"}};
+C.targetc={g:["...kkkkkk...", "..krrrrrrk..", ".krrwwwwrrk.", "krrwwrrwwrrk", "krwwrrrrwwrk", "krwrryyrrwrk", "krwrryyrrwrk", "krwwrrrrwwrk", "krrwwrrwwrrk", ".krrwwwwrrk.", "..krrrrrrk..", "...kkkkkk..."],m:{"k": "#3B2A3F", "r": "#EE6B6E", "w": "#FFF6E9", "y": "#FFD36E"}};
+C.gearc={g:["....kkkk....", ".kk.kssk.kk.", "kssksssskssk", "ksssssssssSk", ".ksskkkksSk.", "kksskwwksSkk", "kksskwwksSkk", ".ksskkkksSk.", "kssssssssSSk", "ksSksSSkSSSk", ".kk.kSSk.kk.", "....kkkk...."],m:{"k": "#3B2A3F", "s": "#E3D8E0", "S": "#AE9DB0", "w": "#FFD36E"}};
+C.downc={g:["............", "...kkkkkk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "kkkkppPPkkkk", ".kppppppPPk.", "..kpppppPk..", "...kpppPk...", "....kppk....", ".....kk....."],m:{"k": "#3B2A3F", "p": "#9BE0AE", "P": "#55B27F"}};
 document.querySelectorAll("img[data-i]").forEach(el=>{
   const n=el.dataset.i;
   el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
@@ -292,8 +301,8 @@ buildTV(document.querySelector('[data-tv=main]'),{color:"tv",antenna:true,layout
   ()=>fmtCh(3,"NGÂN SÁCH")+`<div class="tvlbl">CÒN LẠI</div><div class="tvbig">4.820.000đ</div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<9?'on'+(i>=7?' r':''):''}"></i>`).join("")}</div><div class="tvlbl">ĐÃ TIÊU 62% · CÒN 6 NGÀY</div>`,
 ]});
 const row=(ic,f,name,sub,m,col,cls="")=>`<div class="it ${cls}"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<small>${sub}</small></div><div class="m" style="color:${col}">${m}</div></div>`;
-buildTV(document.querySelector('[data-tv=log]'),{color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:318,delay:500,ch:[
-  ()=>fmtCh(4,"HÔM NAY · −156.000")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo · 07:42","−55.000","#FF9DB0","new")}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt · 09:10","−29.000","#FF9DB0","new")}${row("pho","pink","Cơm tấm","Ăn uống · Tiền mặt · 12:05","−42.000","#FF9DB0","new")}${row("coffee","gold","Trà sữa","Ăn uống · ShopeePay · 15:30","−30.000","#FF9DB0","new")}${row("bag","mint","Hoàn tiền","Thu nhập · VCB · 16:02","+12.000","#9DF5C2","new")}</div>`,
+buildTV(document.querySelector('[data-tv=log]'),{color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:470,delay:500,ch:[
+  ()=>fmtCh(4,"HÔM NAY · −181.000")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo · 07:42","−55.000","#FF9DB0","new")}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt · 09:10","−29.000","#FF9DB0","new")}${row("pho","pink","Cơm tấm","Ăn uống · Tiền mặt · 12:05","−42.000","#FF9DB0","new")}${row("coffee","gold","Trà sữa","Ăn uống · ShopeePay · 15:30","−30.000","#FF9DB0","new")}${row("bag","mint","Hoàn tiền","Thu nhập · VCB · 16:02","+12.000","#9DF5C2","new")}${row("pho","pink","Bánh mì","Ăn uống · Tiền mặt · 18:20","−25.000","#FF9DB0","new")}</div>`,
   ()=>fmtCh(5,"HÔM QUA · +14.955.000")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB · 08:00","+15.000.000","#9DF5C2","new")}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt · 11:50","−45.000","#FF9DB0","new")}</div>`,
 ]});
 if(!location.hash.includes("still")){setInterval(()=>TVS[0](1),3000);setTimeout(()=>setInterval(()=>TVS[1](1),3000),1500)}
