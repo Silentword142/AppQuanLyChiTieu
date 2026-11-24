@@ -13,8 +13,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#F2BDB4}
 body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1300px;position:relative;overflow:hidden;letter-spacing:.02em}
-#sky{position:absolute;inset:0;z-index:0;image-rendering:pixelated}
-.app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:14px}
+#sky{position:absolute;left:0;top:0;z-index:0;image-rendering:pixelated}
+.app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:22px}
 .px{border-style:solid;border-width:calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5);border-image-slice:5 6 7 5 fill;border-image-repeat:stretch;image-rendering:pixelated}
 .row{display:flex;align-items:center;gap:8px}
 .ico{width:calc(var(--S)*12);height:calc(var(--S)*12);image-rendering:pixelated;flex:none}
@@ -214,22 +214,6 @@ document.querySelectorAll("img[data-i]").forEach(el=>{
  c.fillStyle="#5A3D62";c.fillRect(12,7,3,13);c.fillRect(7,12,13,3);
  c.fillStyle="#3B2A3F";c.fillRect(12,19,3,1);c.fillRect(19,14,1,1);c.fillRect(7,15,5,0);
 })();
-// ---------- Bầu trời: dải màu + dithering + mây + đồi (vẽ mới) ----------
-(function(){const cv=document.getElementById("sky"),g=cv.getContext("2d"),W=100,H=215;
- const bands=["#F7A9A5","#F8B6AD","#F9C3B5","#FACFBD","#FADAC6"];
- const bh=34;
- for(let y=0;y<H;y++){const b=Math.min(bands.length-1,Math.floor(y/bh)),t=y%bh;
-  for(let x=0;x<W;x++){let c=bands[b];
-   if(t>=bh-4&&b<bands.length-1&&((x+y)%2===0)&&(t>=bh-2||x%4===0))c=bands[b+1];
-   g.fillStyle=c;g.fillRect(x,y,1,1)}}
- const cloud=["....wwww..........","..wwhhhhww...www..",".whhhhhhhhwwwhhhw.","whhhhhhhhhhhhhhhhw","wsssssssssssssssss",".ssssssssssssssss."];
- const cc={w:"#FFE9E0",h:"#FFF8F2",s:"#F7D2C8"};
- [[6,18],[60,44],[24,80],[70,120]].forEach(([ox,oy])=>cloud.forEach((r,y)=>[...r].forEach((ch,x)=>{if(cc[ch]){g.fillStyle=cc[ch];g.fillRect(ox+x,oy+y,1,1)}})));
- g.fillStyle="#FFF8F2";[[40,10],[88,30],[15,58],[92,96],[50,150]].forEach(([x,y])=>{g.fillRect(x,y,1,1)});
- for(let x=0;x<W;x++){const h=Math.round(6+4*Math.sin(x/9)+2*Math.sin(x/4));for(let y=H-h-20;y<H;y++){g.fillStyle=y===H-h-20?"#D98F94":"#E8A9A5";g.fillRect(x,y,1,1)}}
- cv.style.width="400px";cv.style.height="860px";
-})();
-
 // ---------- TV CRT pixel dùng chung cho mọi mục (vẽ mới) ----------
 function decorate(root){
   root.querySelectorAll("[data-f]").forEach(el=>{
@@ -387,5 +371,41 @@ const _build=buildTV;
 buildTV=function(el,cfg){if(cfg.after){cfg.ch=cfg.ch.map(f=>()=>{setTimeout(cfg.after,20);return f()})}return _build(el,cfg)};
 document.querySelectorAll(".dk").forEach((d,i)=>d.onclick=()=>go(NAMES[i]));
 go((location.hash.match(/s=(\w+)/)||[])[1]||"home");
+// ---------- Bầu trời: dải màu dithering, mặt trời, đồi nhiều lớp, mây trôi nhiều tầng, sao lấp lánh, sao băng, chim (vẽ mới) ----------
+(function(){const cv=document.getElementById("sky"),W=100,H=Math.ceil(document.body.scrollHeight/4)||325;cv.width=W;cv.height=H;
+ cv.style.width=W*4+"px";cv.style.height=H*4+"px";const g=cv.getContext("2d");
+ const base=document.createElement("canvas");base.width=W;base.height=H;const b=base.getContext("2d");
+ const P=(c,x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
+ const bands=["#E99AAE","#F1A4AE","#F7AFAD","#F9BCB2","#FAC9B9","#FBD5C1","#FCDFC9"];const bh=Math.ceil(H/bands.length);
+ for(let y=0;y<H;y++){const i=Math.min(bands.length-1,Math.floor(y/bh)),t=y%bh;for(let x=0;x<W;x++){let c=bands[i];
+   if(i<bands.length-1&&t>=bh-5){const k=bh-t;if((k<=2&&(x+y)%2===0)||(k>2&&(x%2===0&&y%2===0)))c=bands[i+1]}P(b,x,y,c)}}
+ // mặt trời hoàng hôn sau đồi, có viền sáng
+ const sx=72,sy=H-30;for(let y=-14;y<=14;y++)for(let x=-14;x<=14;x++){const d=Math.hypot(x,y);
+   if(d<=11)P(b,sx+x,sy+y,(y>3&&y%3===0)?"#FBD5C1":"#FFE7B0");else if(d<=13&&(x+y)%2===0)P(b,sx+x,sy+y,"#FFE2C2")}
+ // đồi 3 lớp
+ [[26,"#E7A3B0","#D98FA0",5,2,.07],[19,"#E39A9E","#CE8390",4,1,.11],[11,"#D58A8F","#BE7380",3,1,.15]].forEach(([off,c1,c2,a1,a2,f])=>{
+   for(let x=0;x<W;x++){const h=Math.round(off+a1*Math.sin(x*f+off)+a2*Math.sin(x*f*2.7));for(let y=H-h;y<H;y++)P(b,x,y,y===H-h?c2:c1)}});
+ // mây
+ const CL={big:["......wwww..............","....wwhhhhww....wwww....","...whhhhhhhhw..whhhhw...",".wwhhhhhhhhhhwwhhhhhhww.","whhhhhhhhhhhhhhhhhhhhhhw","whhhhhhhhhhhhhhhhhhhhhhw","wsssssssssssssssssssssss",".ssssssssssssssssssssss.","...ssssss......ssssss..."],
+   mid:["....wwww........","..wwhhhhww.www..",".whhhhhhhhwhhhw.","whhhhhhhhhhhhhhw","wsssssssssssssss",".ssssssssssssss."],
+   sm:["..www....",".whhhwww.","whhhhhhhw","sssssssss"]};
+ const CC={w:"#FFE9E3",h:"#FFF8F3",s:"#F6CFC8"};
+ const clouds=[];const add=(t,x,y,sp)=>clouds.push({t,x,y,sp});
+ add("big",4,14,.05);add("mid",60,34,.09);add("sm",30,6,.14);add("big",70,74,.05);add("sm",12,58,.14);add("mid",26,104,.09);add("sm",80,128,.14);add("mid",-4,150,.09);add("big",50,180,.05);add("sm",36,214,.14);add("mid",76,240,.09);
+ const stars=[];for(let i=0;i<60;i++)stars.push({x:(i*37+11)%W,y:(i*53+7)%Math.floor(H*.75),p:i%7,big:i%3===0});
+ const birds=[{x:20,y:46,sp:.25},{x:28,y:50,sp:.25},{x:24,y:43,sp:.25}];
+ let tick=0,shoot=null;
+ function draw(){g.drawImage(base,0,0);
+  stars.forEach(s=>{const ph=(tick+s.p*3)%21;if(ph>15)return;const c=ph<5?"#FFFFFF":"#FFEFD8";P(g,s.x,s.y,c);
+    if(s.big&&ph<8){[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>P(g,s.x+dx,s.y+dy,"#FFE9C8"));if(ph<3)[[2,0],[-2,0],[0,2],[0,-2]].forEach(([dx,dy])=>P(g,s.x+dx,s.y+dy,"rgba(255,255,255,.6)"))}});
+  if(!shoot&&tick%90===40)shoot={x:90,y:8,l:0};
+  if(shoot){for(let i=0;i<6;i++)P(g,shoot.x+i,shoot.y-Math.floor(i/2),i===0?"#FFFFFF":"rgba(255,246,233,"+(1-i/6)+")");shoot.x-=2;shoot.y+=1;if(shoot.x<-6)shoot=null}
+  clouds.forEach(c=>{const s=CL[c.t];const w=s[0].length;let x=Math.round(c.x)%(W+w);if(x<-w)x+=W+w;x=x>W?x-(W+w):x;
+    s.forEach((r,y)=>[...r].forEach((ch,i)=>{if(CC[ch])P(g,x+i,c.y+y,CC[ch])}));c.x+=c.sp});
+  birds.forEach(bd=>{const f=Math.floor(tick/3)%2,x=Math.round(bd.x)%(W+10)-5;
+    if(f){P(g,x,bd.y,"#8C5A70");P(g,x+1,bd.y+1,"#8C5A70");P(g,x+2,bd.y,"#8C5A70")}else{P(g,x,bd.y+1,"#8C5A70");P(g,x+1,bd.y,"#8C5A70");P(g,x+2,bd.y+1,"#8C5A70")}bd.x+=bd.sp});
+  tick++}
+ draw();if(!location.hash.includes("still"))_si?_si(draw,160):setInterval(draw,160);
+})();
 </script>
 </body></html>
