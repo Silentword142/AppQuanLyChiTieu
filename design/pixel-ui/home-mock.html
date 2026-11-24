@@ -12,7 +12,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#F2BDB4}
-body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:860px;position:relative;overflow:hidden;letter-spacing:.02em}
+body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:900px;position:relative;overflow:hidden;letter-spacing:.02em}
 #sky{position:absolute;inset:0;z-index:0;image-rendering:pixelated}
 .app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:14px}
 .px{border-style:solid;border-width:calc(var(--S)*4) calc(var(--S)*4) calc(var(--S)*5);border-image-slice:4 4 5 4 fill;border-image-repeat:stretch;image-rendering:pixelated}
@@ -50,6 +50,62 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .dk.on .lab{color:var(--gold)}
 .ghi{justify-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--gold);font-weight:800;font-size:16px;letter-spacing:.1em;margin-bottom:-2px}
 .ghi canvas{width:84px;height:84px;image-rendering:pixelated}
+
+/* ---------- TV pixel (vẽ mới) ---------- */
+.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}
+.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;opacity:.7}
+.tvlist .it{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:36px;height:36px}.tvlist .t{flex:1;line-height:1.1;font-size:19px}.tvlist .t small{display:block;font-size:15px;opacity:.65}.tvlist .m{font-weight:800;font-size:21px}
+.it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
+.ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
+.tvbody{position:relative}
+.tvtop{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:8px}
+.bezel{padding:0}
+.scr{position:relative;height:var(--h,200px);overflow:hidden;background:#2A2140;color:#FFF2E2;
+ clip-path:polygon(0 9px,3px 9px,3px 6px,6px 6px,6px 3px,9px 3px,9px 0,calc(100% - 9px) 0,calc(100% - 9px) 3px,calc(100% - 6px) 3px,calc(100% - 6px) 6px,calc(100% - 3px) 6px,calc(100% - 3px) 9px,100% 9px,100% calc(100% - 9px),calc(100% - 3px) calc(100% - 9px),calc(100% - 3px) calc(100% - 6px),calc(100% - 6px) calc(100% - 6px),calc(100% - 6px) calc(100% - 3px),calc(100% - 9px) calc(100% - 3px),calc(100% - 9px) 100%,9px 100%,9px calc(100% - 3px),6px calc(100% - 3px),6px calc(100% - 6px),3px calc(100% - 6px),3px calc(100% - 9px),0 calc(100% - 9px))}
+/* nền màn: ô lưới phosphor + vignette bậc thang */
+.scr::before{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
+ background:repeating-linear-gradient(180deg,rgba(12,6,22,.26) 0 3px,transparent 3px 6px)}
+.scr::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+ background:
+  linear-gradient(135deg,transparent 0 14%,rgba(255,255,255,.10) 14% 20%,transparent 20% 23%,rgba(255,255,255,.07) 23% 26%,transparent 26%),
+  linear-gradient(90deg,rgba(0,0,0,.28) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.28) calc(100% - 6px)),
+  linear-gradient(180deg,rgba(0,0,0,.28) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.28) calc(100% - 6px))}
+.cnt{position:absolute;inset:0;z-index:2;padding:14px 16px;display:flex;flex-direction:column;gap:4px;
+ text-shadow:2px 0 0 rgba(255,90,140,.45),-2px 0 0 rgba(90,210,255,.35),0 0 8px rgba(157,245,194,.35)}
+.cnt.glitch{animation:glitch .36s steps(6) both}
+.osd{display:flex;justify-content:space-between;font-weight:700;letter-spacing:.1em;font-size:17px;color:#9DF5C2}
+.tvlbl{font-size:16px;letter-spacing:.12em;opacity:.8;margin-top:6px}
+.tvbig{font-size:46px;font-weight:800;line-height:1}
+.cur{display:inline-block;width:12px;height:30px;background:#9DF5C2;margin-left:4px;animation:blink 1s steps(1) infinite;vertical-align:-2px}
+.hp{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:6px}.hp i{height:12px;background:rgba(255,242,226,.14)}.hp i.on{background:#FFD36E}.hp i.on.r{background:#FF7D95}
+.cbar{display:flex;align-items:flex-end;gap:3px;height:70px;margin-top:4px}.cbar i{flex:1;background:#FFA5BC;animation:grow .5s steps(5) both}.cbar i.t{background:#FFD36E}
+.chdots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:6px}.chdots i{width:12px;height:6px;background:rgba(255,242,226,.22)}.chdots i.on{width:24px;background:#9DF5C2}
+.noise{position:absolute;inset:0;width:100%;height:100%;z-index:3;image-rendering:pixelated;opacity:0}
+.noise.on{opacity:1}
+.bars{position:absolute;inset:0;z-index:3;display:flex;opacity:0}.bars.on{opacity:1}
+.bars i{flex:1}.bars i:nth-child(1){background:#FFF6E9}.bars i:nth-child(2){background:#FFD36E}.bars i:nth-child(3){background:#7DD3C6}.bars i:nth-child(4){background:#9BE0AE}.bars i:nth-child(5){background:#F49CA6}.bars i:nth-child(6){background:#EE6B6E}.bars i:nth-child(7){background:#6E9FDE}
+.roll{position:absolute;left:0;right:0;height:18px;top:-18px;z-index:4;background:repeating-linear-gradient(180deg,rgba(157,245,194,.10) 0 3px,transparent 3px 6px);animation:roll 6s steps(60) infinite}
+.pwr{position:absolute;inset:0;z-index:7;background:#2A2140;pointer-events:none}
+.pwr.go{animation:pwrOff .9s steps(9) forwards}
+.pwr::before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1px;background:#FFF6E9;box-shadow:0 0 0 3px rgba(157,245,194,.5)}
+.pwr.go::before{animation:pwrLine .9s steps(9) forwards}
+.side{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
+.knob{width:48px;height:48px;image-rendering:pixelated;animation:knob 6s steps(1) infinite}
+.mini{width:48px;text-align:center;font-weight:800;font-size:15px;padding:0;line-height:16px}
+.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.55}
+.led{width:9px;height:9px;background:#7DFFB0;box-shadow:0 0 0 3px #3B2A3F;animation:led 2.4s steps(4) infinite}
+.feet{display:flex;justify-content:space-between;padding:0 40px;margin-top:-6px}.feet span{width:36px;height:12px;background:#5A3D62;box-shadow:0 3px 0 #3B2A3F,3px 0 0 #3B2A3F,-3px 0 0 #3B2A3F}
+@keyframes blink{50%{opacity:0}}
+@keyframes roll{to{top:100%}}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.cbar i{transform-origin:bottom}
+@keyframes glitch{0%{transform:translateX(-12px);clip-path:inset(20% 0 50% 0)}20%{transform:translateX(9px);clip-path:inset(60% 0 10% 0)}40%{transform:translateX(-6px);clip-path:inset(0 0 70% 0)}60%{transform:translateX(3px);clip-path:none}100%{transform:none}}
+@keyframes pwrOff{0%,40%{clip-path:inset(0)}100%{clip-path:inset(50% 0 50% 0)}}
+@keyframes pwrLine{0%{transform:scaleX(0)}40%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+@keyframes led{50%{background:#C9FFE0}}
+@keyframes knob{0%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg)}}
+.f-tv{}
 </style></head>
 <body>
 <canvas id="sky" width="100" height="215"></canvas>
@@ -59,17 +115,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
     <div class="sq px" data-f="paper"><img class="ico" data-i="gear" data-c="#5A3D62"></div>
   </div>
 
-  <div class="win px" data-f="paper">
-    <div class="bar"><span>THÁNG 11</span><div class="dots"><i></i><i></i><i></i></div></div>
-    <div class="lbl">CÒN LẠI THÁNG NÀY</div>
-    <div class="big">4.820.000đ</div>
-    <div class="meter" id="meter"></div>
-    <div class="row" style="justify-content:space-between;font-size:16px;color:var(--plumL);margin-top:4px"><span>Đã tiêu 62% ngân sách</span><span>còn 6 ngày</span></div>
-    <div class="two">
-      <div class="stat px" data-f="mint"><span class="lbl" style="color:var(--mintD)">THU</span><b style="color:var(--inc)">+15.000.000</b></div>
-      <div class="stat px" data-f="pink"><span class="lbl" style="color:var(--pinkD)">CHI</span><b style="color:var(--exp)">−10.180.000</b></div>
-    </div>
-  </div>
+  <div class="tv" data-tv="main"></div>
 
   <div class="keys">
     <div class="key px" data-f="pink"><img class="ico" data-i="up" data-c="#C8607A">CHI</div>
@@ -78,12 +124,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
     <div class="key px" data-f="gold"><img class="ico" data-i="target" data-c="#B97A1E">HẠN MỨC</div>
   </div>
 
-  <div class="win px" data-f="paper">
-    <div class="bar"><span>NHẬT KÝ HÔM NAY</span><span style="color:var(--gold)">TẤT CẢ ›</span></div>
-    <div class="item"><div class="tile px" data-f="pink"><img class="ico sm" data-i="pho"></div><div class="t">Phở bò<small>Ăn uống · Ví MoMo</small></div><div class="m" style="color:var(--exp)">−55.000</div></div>
-    <div class="item"><div class="tile px" data-f="gold"><img class="ico sm" data-i="coffee"></div><div class="t">Cà phê sữa đá<small>Ăn uống · Tiền mặt</small></div><div class="m" style="color:var(--exp)">−29.000</div></div>
-    <div class="item"><div class="tile px" data-f="mint"><img class="ico sm" data-i="bag"></div><div class="t">Lương tháng 11<small>Thu nhập · Vietcombank</small></div><div class="m" style="color:var(--inc)">+15.000.000</div></div>
-  </div>
+  <div class="tv" data-tv="log"></div>
 </div>
 
 <div class="dock">
@@ -117,6 +158,7 @@ const FR = {
   pink:{b:"#FBC2C8",h:"#FFE3E6",s:"#EE96A4"},
   mint:{b:"#BDEBC9",h:"#E2F8E8",s:"#86CFA0"},
   sky:{b:"#C4E4FA",h:"#E8F5FF",s:"#8DBDEB"},
+  tv:{b:"#F2A3AC",h:"#FBC9CE",s:"#D97F8D"},
   gold:{b:"#FFE29A",h:"#FFF3CC",s:"#F2BE5C"},
   lilac:{b:"#E1CFF6",h:"#F3EAFF",s:"#B89AE0"},
 };
@@ -153,7 +195,7 @@ document.querySelectorAll("img[data-i]").forEach(el=>{
   el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
 });
 // ---------- Thanh ngân sách ----------
-const m=document.getElementById("meter");for(let i=0;i<16;i++){const e=document.createElement("i");if(i<10)e.className="on"+(i>=8?" w":"");m.appendChild(e)}
+
 // ---------- Nút GHI: đồng xu pixel (vẽ mới bằng thuật toán) ----------
 (function(){const c=document.getElementById("coin").getContext("2d"),D=28,r=13;
  for(let y=0;y<D;y++)for(let x=0;x<D;x++){const dx=x+.5-14,dy=y+.5-13,d=Math.hypot(dx,dy);
@@ -182,5 +224,78 @@ const m=document.getElementById("meter");for(let i=0;i<16;i++){const e=document.
  for(let x=0;x<W;x++){const h=Math.round(6+4*Math.sin(x/9)+2*Math.sin(x/4));for(let y=H-h-20;y<H;y++){g.fillStyle=y===H-h-20?"#D98F94":"#E8A9A5";g.fillRect(x,y,1,1)}}
  cv.style.width="400px";cv.style.height="860px";
 })();
+
+// ---------- TV CRT pixel dùng chung cho mọi mục (vẽ mới) ----------
+function decorate(root){
+  root.querySelectorAll("[data-f]").forEach(el=>{
+    const f=FR[el.dataset.f];
+    el.style.borderImageSource=`url("${gridSvg(FRAME,{k:"#3B2A3F",d:"rgba(59,42,63,.35)",...f})}")`;
+    el.style.borderImageSlice="4 4 5 4 fill";
+  });
+  root.querySelectorAll("img[data-i]").forEach(el=>{
+    const n=el.dataset.i;
+    el.src=C[n]?gridSvg(C[n].g,C[n].m):gridSvg(I[n],{"#":el.dataset.c||"#3B2A3F"});
+  });
+}
+const pxl=(c,x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
+function drawAnt(a,t,body){a.clearRect(0,0,40,14);const sw=[0,1,0,-1][t%4];
+  for(let i=0;i<11;i++){pxl(a,8+i+Math.round(sw*i/10),2+i,"#3B2A3F");pxl(a,31-i+Math.round(-sw*i/10),2+i,"#3B2A3F")}
+  const on=t%2==0;[[7+sw,1],[32-sw,1]].forEach(([x,y])=>{a.fillStyle="#3B2A3F";a.fillRect(x-1,y-1,3,3);pxl(a,x,y,on?"#FFD36E":"#FF7D95")});
+  a.fillStyle="#3B2A3F";a.fillRect(16,11,8,3);a.fillStyle=body;a.fillRect(17,12,6,2)}
+function drawKnob(k){for(let y=0;y<14;y++)for(let x=0;x<14;x++){const d=Math.hypot(x+.5-7,y+.5-7);if(d<=7)pxl(k,x,y,d>6?"#3B2A3F":(x+y<10?"#FFFFFF":"#FCE6D2"))}
+  k.fillStyle="#3B2A3F";k.fillRect(6,2,2,5)}
+const TVS=[];
+function buildTV(el,cfg){
+  const body=FR[cfg.color].b;
+  el.style.setProperty("--h",cfg.h+"px");
+  if(!cfg.antenna)el.classList.add("noant");
+  const side=cfg.layout==="side";
+  el.innerHTML=`${cfg.antenna?'<canvas class="ant" width="40" height="14"></canvas>':''}
+  <div class="tvbody px" data-f="${cfg.color}">
+    <div class="${side?'tvtop':''}">
+      <div class="bezel px" data-f="paper"><div class="scr">
+        <div class="cnt"></div>
+        <canvas class="noise" width="80" height="50"></canvas>
+        <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="roll"></div><div class="pwr"></div>
+      </div></div>
+      ${side?`<div class="side"><canvas class="knob" width="14" height="14"></canvas>
+        <div class="mini px up" data-f="paper">CH▲</div><div class="mini px dn" data-f="paper">CH▼</div>
+        <div class="grille"></div><i class="led"></i></div>`:
+      `<div class="ctrl"><i class="led"></i><span class="brand">${cfg.brand||"SPENDY"}</span>
+        <div class="mini px dn" data-f="paper">◀</div><div class="mini px up" data-f="paper">▶</div>
+        <div class="mini px" data-f="gold">${cfg.cta||"TẤT CẢ"}</div></div>`}
+    </div>
+  </div>${side?'<div class="feet"><span></span><span></span></div>':''}`;
+  decorate(el);
+  const q=s=>el.querySelector(s);
+  if(cfg.antenna){const a=q(".ant").getContext("2d");let t=0;drawAnt(a,0,body);setInterval(()=>drawAnt(a,++t,body),500)}
+  if(q(".knob"))drawKnob(q(".knob").getContext("2d"));
+  const nz=q(".noise"),n=nz.getContext("2d"),bars=q(".bars"),cnt=q(".cnt");
+  const noise=()=>{for(let y=0;y<50;y++)for(let x=0;x<80;x++){const v=Math.random();n.fillStyle=v<.33?"#2A2140":v<.66?"#8E7FA8":"#FFF2E2";n.fillRect(x,y,1,1)}};
+  let cur=0;
+  const show=i=>{cnt.innerHTML=cfg.ch[i]()+(cfg.ch.length>1?`<div class="chdots">${cfg.ch.map((_,j)=>`<i class="${j==i?'on':''}"></i>`).join("")}</div>`:"")};
+  const sw=d=>{cur=(cur+d+cfg.ch.length)%cfg.ch.length;noise();nz.classList.add("on");
+    let f=0;const iv=setInterval(()=>{noise();if(++f>3)clearInterval(iv)},60);
+    setTimeout(()=>{nz.classList.remove("on");bars.classList.add("on")},240);
+    setTimeout(()=>{bars.classList.remove("on");show(cur);decorate(cnt);cnt.classList.remove("glitch");void cnt.offsetWidth;cnt.classList.add("glitch")},330)};
+  el.querySelectorAll(".up").forEach(b=>b.onclick=()=>sw(1));
+  el.querySelectorAll(".dn").forEach(b=>b.onclick=()=>sw(-1));
+  show(0);decorate(cnt);
+  setTimeout(()=>q(".pwr").classList.add("go"),cfg.delay||150);
+  TVS.push(sw);
+}
+const fmtCh=(n,t)=>`<div class="osd"><span>CH0${n} ${t}</span><span>04:15</span></div>`;
+buildTV(document.querySelector('[data-tv=main]'),{color:"tv",antenna:true,layout:"side",h:196,ch:[
+  ()=>fmtCh(1,"TÀI SẢN")+`<div class="tvlbl">TÀI SẢN RÒNG</div><div class="tvbig">12.450.000đ<span class="cur"></span></div><div class="tvlbl">TRONG 3 VÍ · ▲2,4%</div>`,
+  ()=>fmtCh(2,"THÁNG 11")+`<div class="tvlbl">CHI MỖI NGÀY</div><div class="cbar">${[30,55,20,70,40,90,35,60,25,80,45,100,30,65].map((h,i)=>`<i class="${i==11?'t':''}" style="height:${h}%;animation-delay:${i*30}ms"></i>`).join("")}</div>`,
+  ()=>fmtCh(3,"NGÂN SÁCH")+`<div class="tvlbl">CÒN LẠI</div><div class="tvbig">4.820.000đ</div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<9?'on'+(i>=7?' r':''):''}"></i>`).join("")}</div><div class="tvlbl">ĐÃ TIÊU 62% · CÒN 6 NGÀY</div>`,
+]});
+const row=(ic,f,name,sub,m,col,cls="")=>`<div class="it ${cls}"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<small>${sub}</small></div><div class="m" style="color:${col}">${m}</div></div>`;
+buildTV(document.querySelector('[data-tv=log]'),{color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:150,delay:500,ch:[
+  ()=>fmtCh(4,"HÔM NAY")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo","−55.000","#FF9DB0","new")}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt","−29.000","#FF9DB0","new")}</div>`,
+  ()=>fmtCh(5,"HÔM QUA")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB","+15.000.000","#9DF5C2","new")}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt","−45.000","#FF9DB0","new")}</div>`,
+]});
+if(!location.hash.includes("still")){setInterval(()=>TVS[0](1),3000);setTimeout(()=>setInterval(()=>TVS[1](1),3000),1500)}
 </script>
 </body></html>
