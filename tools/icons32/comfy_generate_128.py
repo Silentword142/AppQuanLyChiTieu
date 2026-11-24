@@ -186,6 +186,7 @@ def api_json(base_url, path, data=None, timeout=60):
         try:
             req = urllib.request.Request(url, method="POST" if data is not None else "GET")
             req.add_header("User-Agent", "Mozilla/5.0")
+            req.add_header("ngrok-skip-browser-warning", "true")
             if data is not None:
                 req.add_header("Content-Type", "application/json")
             with urllib.request.urlopen(req, data=body, timeout=timeout) as resp:
@@ -200,7 +201,7 @@ def api_bytes(base_url, path, timeout=60):
     url = base_url.rstrip("/") + path
     for attempt in range(5):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "ngrok-skip-browser-warning": "true"})
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
         except Exception:
@@ -362,8 +363,8 @@ def main():
         "palm": "cây dừa du lịch",
         "heart": "trái tim đỏ y tế",
         "graduation": "chiếc mũ cử nhân tốt nghiệp có tua vàng",
-        "receipt": "tờ hóa đơn thanh toán",
-        "users": "biểu tượng gia đình",
+        "receipt": "tờ giấy hóa đơn mua hàng màu trắng có dòng chữ",
+        "users": "hai người bạn đứng cạnh nhau",
         "salary": "túi tiền lương",
         "more": "hộp quà đa năng",
         # Danh mục nhỏ (DEFAULT_SUBCATEGORIES)
@@ -375,34 +376,34 @@ def main():
         "beer": "ly bia vàng bọt trắng",
         "fuel": "trụ bơm xăng",
         "taxi": "xe taxi màu vàng",
-        "parking": "biển báo đỗ xe màu xanh",
+        "parking": "biển báo giao thông hình vuông màu xanh chữ P",
         "wrench": "cờ lê sửa xe",
         "plane": "máy bay chở khách",
         "bulb": "bóng đèn điện sáng",
-        "wifi": "biểu tượng sóng wifi",
+        "wifi": "biểu tượng sóng wifi ba vạch cong màu xanh",
         "tv": "tivi màn hình phẳng",
         "ao-dai": "áo dài việt nam",
-        "phone": "điện thoại thông minh",
+        "phone": "chiếc điện thoại thông minh màn hình cảm ứng",
         "lipstick": "thỏi son môi đỏ",
         "watch": "đồng hồ đeo tay",
         "film": "cuộn phim xem phim",
         "luggage": "vali du lịch",
         "gamepad": "tay cầm chơi game",
         "pill": "viên thuốc y tế",
-        "stethoscope": "ống nghe y tế bác sĩ màu xanh",
+        "stethoscope": "ống nghe y tế bác sĩ hình chữ Y",
         "dumbbell": "quả tạ tập gym",
         "book": "quyển sách giáo khoa",
         "book-open": "cuốn sách mở trang",
         "phone-call": "điện thoại đang gọi",
-        "credit-card": "thẻ ngân hàng",
+        "credit-card": "chiếc thẻ tín dụng ngân hàng màu xanh dương có chip vàng",
         "shield": "chiếc khiên bảo hiểm",
-        "baby": "bình sữa em bé",
+        "baby": "bình sữa em bé có núm ti",
         "envelope-red": "bao lì xì đỏ may mắn",
         "paw": "dấu chân thú cưng",
-        "trend-up": "mũi tên tăng trưởng",
+        "trend-up": "biểu đồ cột tăng trưởng có mũi tên đi lên",
         "piggy": "heo đất tiết kiệm hồng"
     }
-    ordered = list(CATEGORY_IDEAS_VI.keys())
+    ordered = list(CATEGORY_IDEAS_VI.keys()) + [k for k in img_keys if k not in CATEGORY_IDEAS_VI]
 
     if args.keys:
         ordered = [x.strip() for x in args.keys.split(",") if x.strip()]
