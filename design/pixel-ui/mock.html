@@ -14,7 +14,7 @@
 html,body{background:#F2BDB4}
 body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1300px;position:relative;overflow:hidden;letter-spacing:.02em}
 #sky{position:absolute;left:0;top:0;z-index:0;image-rendering:pixelated}
-.app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:22px}
+.app{position:relative;z-index:1;padding:14px 14px 170px;display:flex;flex-direction:column;gap:22px}
 .px{border-style:solid;border-width:calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5);border-image-slice:5 6 7 5 fill;border-image-repeat:stretch;image-rendering:pixelated}
 .row{display:flex;align-items:center;gap:8px}
 .ico{width:calc(var(--S)*12);height:calc(var(--S)*12);image-rendering:pixelated;flex:none}
@@ -125,7 +125,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .key:active,.dk .cap:active,.mini:active{transform:translate(0,4px)}
 
 /* ---------- Dock tràn đáy, chi tiết + hiệu ứng ---------- */
-.dock{height:132px!important;padding:0 6px 14px!important}
+.dock{height:150px!important;padding:0 6px 32px!important}
 .dock .base{position:absolute;left:0;right:0;bottom:0;top:36px!important;z-index:-1;background:
   radial-gradient(circle at 1.5px 1.5px,rgba(255,255,255,.07) 1.5px,transparent 1.6px) 0 0/9px 9px,
   linear-gradient(180deg,#8A6694 0 3px,#6A4872 3px 6px,#5A3D62 6px calc(100% - 9px),#4A3150 calc(100% - 9px));
@@ -151,6 +151,30 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 @keyframes coinbob{50%{transform:translateY(-4px)}}
 .ghi .spk{position:absolute;width:84px;height:84px;top:0;left:50%;margin-left:-42px;pointer-events:none;image-rendering:pixelated}
 .ghi span.lb{text-shadow:2px 2px 0 #3B2A3F}
+
+/* ---------- Dock v3: console kem sọc san hô + bạc hà, phím nằm trong hốc ---------- */
+.dock .base{background:
+  linear-gradient(180deg,#FFFFFF 0 3px,#FFF6E9 3px 6px,transparent 6px),
+  linear-gradient(180deg,transparent 0 calc(100% - 27px),#F49CA6 calc(100% - 27px) calc(100% - 21px),#FFF6E9 calc(100% - 21px) calc(100% - 18px),#7DD3C6 calc(100% - 18px) calc(100% - 12px),#E9D2BE calc(100% - 12px)),
+  radial-gradient(circle at 1.5px 1.5px,rgba(90,61,98,.10) 1.5px,transparent 1.6px) 0 0/9px 9px,
+  #FCE6D2 !important;
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 rgba(59,42,63,.30),0 -9px 0 rgba(59,42,63,.12) !important}
+.leds i{background:#E9D2BE!important;box-shadow:0 0 0 1px #3B2A3F!important}
+.leds i.on{background:#FF7D95!important;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #FF7D95!important}
+.leds i.on2{background:#55D6BE!important;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #55D6BE!important}
+.rv{background:#FFF6E9!important;box-shadow:inset -2px -2px 0 #D9B8A0,0 0 0 2px #3B2A3F!important}
+.grl{background:repeating-linear-gradient(90deg,#5A3D62 0 3px,transparent 3px 6px)!important;opacity:.45!important}
+.dk .cap{position:relative}
+.dk::after{content:"";position:absolute;top:-4px;left:50%;width:66px;height:64px;margin-left:-33px;z-index:-1;
+  background:#5A3D62;box-shadow:inset 0 4px 0 #3B2A3F,inset 3px 0 0 #4A3150,0 3px 0 #FFFFFF,0 0 0 3px #3B2A3F;
+  clip-path:polygon(0 6px,3px 6px,3px 3px,6px 3px,6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,calc(100% - 3px) 3px,calc(100% - 3px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 3px) calc(100% - 6px),calc(100% - 3px) calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),3px calc(100% - 3px),3px calc(100% - 6px),0 calc(100% - 6px))}
+.dk .lab{color:#5A3D62!important;text-shadow:2px 2px 0 #FFFFFF!important}
+.dk.on .lab{color:#E7598A!important}
+@keyframes labblink{90%{color:#5A3D62}}
+.dk.on::before{background:rgba(255,125,149,.6)!important;box-shadow:0 0 10px rgba(255,125,149,.9)!important;top:56px!important}
+.ghi .lb{color:#E7598A;text-shadow:2px 2px 0 #FFFFFF!important}
+.ghi::after{content:"";position:absolute;top:-2px;left:50%;width:92px;height:92px;margin-left:-46px;z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,#5A3D62 0 60%,#3B2A3F 60% 64%,transparent 64%)}
 </style></head>
 <body>
 <canvas id="sky" width="100" height="215"></canvas>
