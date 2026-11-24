@@ -12,7 +12,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:#F2BDB4}
-body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:900px;position:relative;overflow:hidden;letter-spacing:.02em}
+body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1120px;position:relative;overflow:hidden;letter-spacing:.02em}
 #sky{position:absolute;inset:0;z-index:0;image-rendering:pixelated}
 .app{position:relative;z-index:1;padding:14px 14px 130px;display:flex;flex-direction:column;gap:14px}
 .px{border-style:solid;border-width:calc(var(--S)*4) calc(var(--S)*4) calc(var(--S)*5);border-image-slice:4 4 5 4 fill;border-image-repeat:stretch;image-rendering:pixelated}
@@ -52,9 +52,9 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .ghi canvas{width:84px;height:84px;image-rendering:pixelated}
 
 /* ---------- TV pixel (vẽ mới) ---------- */
-.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}
+.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -10px}.tv.wide .cnt{padding:14px 12px}
 .ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;opacity:.7}
-.tvlist .it{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:36px;height:36px}.tvlist .t{flex:1;line-height:1.1;font-size:19px}.tvlist .t small{display:block;font-size:15px;opacity:.65}.tvlist .m{font-weight:800;font-size:21px}
+.tvlist .it{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:36px;height:36px}.tvlist .t{flex:1;line-height:1.1;font-size:19px}.tvlist .t small{display:block;font-size:15px;opacity:.65}.tvlist .m{font-weight:800;font-size:21px}
 .it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
 .ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
 .tvbody{position:relative}
@@ -124,7 +124,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
     <div class="key px" data-f="gold"><img class="ico" data-i="target" data-c="#B97A1E">HẠN MỨC</div>
   </div>
 
-  <div class="tv" data-tv="log"></div>
+  <div class="tv wide" data-tv="log"></div>
 </div>
 
 <div class="dock">
@@ -292,9 +292,9 @@ buildTV(document.querySelector('[data-tv=main]'),{color:"tv",antenna:true,layout
   ()=>fmtCh(3,"NGÂN SÁCH")+`<div class="tvlbl">CÒN LẠI</div><div class="tvbig">4.820.000đ</div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<9?'on'+(i>=7?' r':''):''}"></i>`).join("")}</div><div class="tvlbl">ĐÃ TIÊU 62% · CÒN 6 NGÀY</div>`,
 ]});
 const row=(ic,f,name,sub,m,col,cls="")=>`<div class="it ${cls}"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<small>${sub}</small></div><div class="m" style="color:${col}">${m}</div></div>`;
-buildTV(document.querySelector('[data-tv=log]'),{color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:150,delay:500,ch:[
-  ()=>fmtCh(4,"HÔM NAY")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo","−55.000","#FF9DB0","new")}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt","−29.000","#FF9DB0","new")}</div>`,
-  ()=>fmtCh(5,"HÔM QUA")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB","+15.000.000","#9DF5C2","new")}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt","−45.000","#FF9DB0","new")}</div>`,
+buildTV(document.querySelector('[data-tv=log]'),{color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:318,delay:500,ch:[
+  ()=>fmtCh(4,"HÔM NAY · −156.000")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo · 07:42","−55.000","#FF9DB0","new")}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt · 09:10","−29.000","#FF9DB0","new")}${row("pho","pink","Cơm tấm","Ăn uống · Tiền mặt · 12:05","−42.000","#FF9DB0","new")}${row("coffee","gold","Trà sữa","Ăn uống · ShopeePay · 15:30","−30.000","#FF9DB0","new")}${row("bag","mint","Hoàn tiền","Thu nhập · VCB · 16:02","+12.000","#9DF5C2","new")}</div>`,
+  ()=>fmtCh(5,"HÔM QUA · +14.955.000")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB · 08:00","+15.000.000","#9DF5C2","new")}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt · 11:50","−45.000","#FF9DB0","new")}</div>`,
 ]});
 if(!location.hash.includes("still")){setInterval(()=>TVS[0](1),3000);setTimeout(()=>setInterval(()=>TVS[1](1),3000),1500)}
 </script>
