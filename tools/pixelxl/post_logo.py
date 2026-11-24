@@ -28,7 +28,8 @@ def remove_bg(a, tol=26):
     border = np.concatenate([a[0], a[-1], a[:, 0], a[:, -1]])
     bg = np.median(border, 0)
     dist = np.sqrt(((a - bg) ** 2).sum(2))
-    near = dist < tol
+    # nền + bóng đổ: điểm gần màu nền, hoặc xám nhạt ít bão hoà (bóng). Viền mực tối của vật chặn loang.
+    near = (dist < tol) | ((a.max(2) - a.min(2) < 14) & (a.mean(2) > 125))
     lab, _ = ndi.label(near)
     edge_labels = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
     bgmask = np.isin(lab, edge_labels[edge_labels > 0])
