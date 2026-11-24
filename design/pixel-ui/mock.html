@@ -123,16 +123,44 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .dk .cap{width:58px!important;height:56px!important}.dk .cap .ico{width:40px;height:40px}.sq .ico{width:40px;height:40px}.leg{font-size:15px!important;gap:4px!important}
 .key,.dk .cap,.sq,.mini{cursor:pointer;transition:transform .08s steps(2)}
 .key:active,.dk .cap:active,.mini:active{transform:translate(0,4px)}
+
+/* ---------- Dock tràn đáy, chi tiết + hiệu ứng ---------- */
+.dock{height:132px!important;padding:0 6px 14px!important}
+.dock .base{position:absolute;left:0;right:0;bottom:0;top:36px!important;z-index:-1;background:
+  radial-gradient(circle at 1.5px 1.5px,rgba(255,255,255,.07) 1.5px,transparent 1.6px) 0 0/9px 9px,
+  linear-gradient(180deg,#8A6694 0 3px,#6A4872 3px 6px,#5A3D62 6px calc(100% - 9px),#4A3150 calc(100% - 9px));
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 rgba(59,42,63,.35),0 -9px 0 rgba(59,42,63,.15)}
+.leds{position:absolute;left:12px;right:12px;top:9px;display:flex;justify-content:space-between}
+.leds i{width:6px;height:3px;background:#4A3150;box-shadow:0 0 0 1px #3B2A3F}
+.leds i.on{background:#FFD36E;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #FFD36E}
+.leds i.on2{background:#F49CA6;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #F49CA6}
+.rv{position:absolute;bottom:12px;width:6px;height:6px;background:#B89AC4;box-shadow:inset -2px -2px 0 #6A4872,0 0 0 2px #3B2A3F}.rv.l{left:8px}.rv.r{right:8px}
+.grl{position:absolute;bottom:10px;width:30px;height:10px;background:repeating-linear-gradient(90deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.55}.grl.l{left:24px}.grl.r{right:24px}
+.dk{position:relative;padding-bottom:4px}
+.dk .cap{transition:transform .2s steps(3)}
+.dk.on .cap{transform:translateY(-8px)}
+.dk.on .cap .ico{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.dk.on::before{content:"";position:absolute;left:50%;top:50px;width:50px;height:4px;margin-left:-25px;background:rgba(255,211,110,.55);box-shadow:0 0 10px rgba(255,211,110,.8);animation:glow 1.2s steps(3) infinite}
+@keyframes glow{50%{opacity:.45}}
+.dk .lab{text-shadow:2px 2px 0 #3B2A3F}
+.dk.on .lab{animation:labblink 2s steps(1) infinite}
+@keyframes labblink{90%{color:#FFF6E9}}
+.ghi{position:relative}
+.ghi canvas#coin{animation:coinbob 1.6s steps(4) infinite}
+@keyframes coinbob{50%{transform:translateY(-4px)}}
+.ghi .spk{position:absolute;width:84px;height:84px;top:0;left:50%;margin-left:-42px;pointer-events:none;image-rendering:pixelated}
+.ghi span.lb{text-shadow:2px 2px 0 #3B2A3F}
 </style></head>
 <body>
 <canvas id="sky" width="100" height="215"></canvas>
 <div class="app" id="app"></div>
 
 <div class="dock">
-  <div class="base px" data-f="plum"></div>
+  <div class="base"><div class="leds"></div><i class="rv l"></i><i class="rv r"></i><div class="grl l"></div><div class="grl r"></div></div>
   <div class="dk on"><div class="cap px" data-f="pink"><img class="ico" data-i="homec"></div><span class="lab">NHÀ</span></div>
   <div class="dk"><div class="cap px" data-f="mint"><img class="ico" data-i="chartc"></div><span class="lab">BÁO CÁO</span></div>
-  <div class="ghi"><canvas id="coin" width="28" height="28"></canvas>GHI</div>
+  <div class="ghi"><canvas id="coin" width="28" height="28"></canvas><canvas class="spk" id="spk" width="28" height="28"></canvas><span class="lb">GHI</span></div>
   <div class="dk"><div class="cap px" data-f="lilac"><img class="ico" data-i="maic"></div><span class="lab">TỰ ĐỘNG</span></div>
   <div class="dk"><div class="cap px" data-f="sky"><img class="ico" data-i="walletc"></div><span class="lab">VÍ & NỢ</span></div>
 </div>
@@ -201,18 +229,24 @@ document.querySelectorAll("img[data-i]").forEach(el=>{
 });
 // ---------- Thanh ngân sách ----------
 
-// ---------- Nút GHI: đồng xu pixel (vẽ mới bằng thuật toán) ----------
-(function(){const c=document.getElementById("coin").getContext("2d"),D=28,r=13;
- for(let y=0;y<D;y++)for(let x=0;x<D;x++){const dx=x+.5-14,dy=y+.5-13,d=Math.hypot(dx,dy);
-  let col=null;
-  if(d<=r){col="#FFD36E";
-   if(d>r-1.2)col="#3B2A3F";else if(d>r-3.2){col=(dx+dy<-4)?"#FFF3CC":(dx+dy>4?"#E0A23C":"#FFD36E")}
-   else if(d>r-4.3)col="#E9B04E";}
-  if(!col&&y>=26&&Math.abs(dx)<9)col="rgba(59,42,63,.35)";
-  if(col){c.fillStyle=col;c.fillRect(x,y,1,1)}}
- // dấu cộng
- c.fillStyle="#5A3D62";c.fillRect(12,7,3,13);c.fillRect(7,12,13,3);
- c.fillStyle="#3B2A3F";c.fillRect(12,19,3,1);c.fillRect(19,14,1,1);c.fillRect(7,15,5,0);
+// ---------- Nút GHI: đồng xu pixel có vệt sáng quét + lấp lánh ----------
+(function(){const c=document.getElementById("coin").getContext("2d"),sp=document.getElementById("spk").getContext("2d");let f=0;
+ function draw(){c.clearRect(0,0,28,28);const sh=(f%24)-6;
+  for(let y=0;y<28;y++)for(let x=0;x<28;x++){const dx=x+.5-14,dy=y+.5-13,d=Math.hypot(dx,dy);let col=null;
+   if(d<=13){col="#FFD36E";
+    if(d>11.8)col="#3B2A3F";else if(d>9.8){col=(dx+dy<-4)?"#FFF3CC":(dx+dy>4?"#E0A23C":"#FFD36E")}else if(d>8.7)col="#E9B04E";
+    const band=(x+y)/2-sh;if(d<=11.8&&band>=0&&band<2.2)col="#FFFBEA"}
+   if(!col&&y>=26&&Math.abs(dx)<9)col="rgba(59,42,63,.35)";
+   if(col){c.fillStyle=col;c.fillRect(x,y,1,1)}}
+  c.fillStyle="#5A3D62";c.fillRect(12,7,3,13);c.fillRect(7,12,13,3);c.fillStyle="#3B2A3F";c.fillRect(12,19,3,1);c.fillRect(19,14,1,1);
+  sp.clearRect(0,0,28,28);const pts=[[3,4],[24,6],[25,20],[2,18],[14,0]];const k=Math.floor(f/3)%pts.length,ph=f%3;const [px,py]=pts[k];
+  sp.fillStyle="#FFFFFF";sp.fillRect(px,py,1,1);if(ph<2){sp.fillStyle="#FFF3CC";sp.fillRect(px-1,py,1,1);sp.fillRect(px+1,py,1,1);sp.fillRect(px,py-1,1,1);sp.fillRect(px,py+1,1,1)}
+  f++}
+ draw();if(!location.hash.includes("still"))(window._si||setInterval)(draw,110);
+ // LED chạy dọc mép dock
+ const L=document.querySelector(".leds");for(let i=0;i<24;i++)L.appendChild(document.createElement("i"));let g=0;
+ const led=()=>{L.querySelectorAll("i").forEach((e,i)=>{e.className=((i+g)%8===0)?"on":((i+g)%8===4?"on2":"")});g++};led();
+ if(!location.hash.includes("still"))(window._si||setInterval)(led,140);
 })();
 // ---------- TV CRT pixel dùng chung cho mọi mục (vẽ mới) ----------
 function decorate(root){
