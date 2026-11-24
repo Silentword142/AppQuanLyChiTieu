@@ -89,11 +89,45 @@ UI_SUBJECTS = {
 UI_KEYS = list(UI_SUBJECTS)
 SUBJECTS.update(UI_SUBJECTS)
 
+# Mô tả rõ hơn cho các icon khái niệm (lượt 1 vẽ sai chủ thể)
+SUBJECTS.update({
+    "chart": "three thick colorful vertical bars bar chart on white base line",
+    "chart-up": "bar chart with three rising bars and a big green arrow going up",
+    "trend-up": "big bold green zigzag arrow pointing up and right",
+    "trend-down": "big bold red zigzag arrow pointing down and right",
+    "check-circle": "green circle badge with big white check mark",
+    "alert-circle": "red circle badge with big white exclamation mark",
+    "bell-off": "golden bell with a bold red diagonal slash line across it",
+    "cloud-off": "white cloud with a bold red diagonal slash line across it",
+    "cloud": "fluffy white cartoon cloud, light blue outline",
+    "cloud-up": "fluffy white cartoon cloud with a big blue arrow pointing up",
+    "chat": "two overlapping speech bubbles, blue and pink, with three dots",
+    "wifi": "wifi symbol, three thick curved blue arcs and a dot",
+    "upload": "big blue arrow pointing up out of an open cardboard box",
+    "percent": "big bold orange percent sign symbol",
+    "music": "two purple eighth music notes joined by a beam",
+    "zap": "bold yellow lightning bolt",
+    "road": "short curved grey asphalt road with white dashed center line",
+    "settings": "single dark grey metal gear cog with eight square teeth and round hole, bold outline",
+    "yoga": "rolled purple yoga mat with a water bottle",
+    "dice": "two red dice with white dots",
+    "mic": "retro silver microphone on a short stand",
+    "pie": "pie chart circle split into four colorful slices",
+    "contact": "address book with a person silhouette on the cover",
+    "stethoscope": "doctor stethoscope, black tubes and silver chest piece",
+    "ticket": "orange admission ticket with torn notched edges and star",
+    "key-house": "golden key with a small house shaped keychain",
+    "lamp": "desk lamp with pink lampshade",
+    "history": "round clock with a circular arrow going counterclockwise around it",
+    "user": "cute person head and shoulders bust, single person",
+    "users": "two cute people busts side by side",
+})
+
 SAMPLE_KEYS = ["pho", "banh-mi", "scooter", "home", "wallet", "piggy",
                "credit-card", "coffee", "ao-dai", "gift", "heart", "receipt"]
 
 PROMPT = "pixel art, {subj}, simple icon, flat colors, bold dark outline, centered, single object, front view, plain white background"
-NEG = "3d render, realistic, photo, gradient, blurry, text, watermark, frame, border, circle badge, multiple objects, cast shadow, drop shadow, shadow on floor, ground, cropped, person, top-down view"
+NEG = "3d render, realistic, photo, gradient, blurry, text, watermark, frame, border, circle badge, multiple objects, cast shadow, drop shadow, shadow on floor, ground, cropped, person, top-down view, card, sticker, white square, rounded square, app icon background, tile"
 
 
 def workflow(subj, seed, a):

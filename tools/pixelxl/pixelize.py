@@ -75,6 +75,31 @@ def remove_bg(im, tol=40):
     return im
 
 
+def strip_card(im):
+    """Ảnh bị vẽ trên một 'thẻ' trắng có viền: bóc viền rồi tách nền trắng bên trong."""
+    a = im.getchannel("A").point(lambda v: 255 if v > 128 else 0)
+    bbox = a.getbbox()
+    if not bbox:
+        return im
+    x0, y0, x1, y1 = bbox
+    px = im.load()
+    per = [(x, y0) for x in range(x0, x1)] + [(x, y1 - 1) for x in range(x0, x1)] + \
+          [(x0, y) for y in range(y0, y1)] + [(x1 - 1, y) for y in range(y0, y1)]
+    if sum(px[x, y][3] > 128 for x, y in per) < 0.8 * len(per):
+        return im  # không phải thẻ
+    # dò từ giữa mép trên xuống: qua viền tối đến khi gặp vùng gần trắng
+    cx, inset = (x0 + x1) // 2, 0
+    for y in range(y0, y0 + (y1 - y0) // 4):
+        r, g, b, al = px[cx, y]
+        if al > 128 and min(r, g, b) > 225:
+            inset = y - y0
+            break
+    if not inset:
+        return im
+    card = im.crop((x0 + inset, y0 + inset, x1 - inset, y1 - inset))
+    return remove_bg(card.convert("RGB"), 40)
+
+
 def drop_shadow(im):
     """Xoá bóng đổ xám mềm dưới chân vật thể (SDXL hay vẽ dù đã cấm trong prompt)."""
     a = im.getchannel("A").point(lambda v: 255 if v > 128 else 0)
@@ -161,7 +186,7 @@ def tidy(g):
 
 
 def pixelize(im, grid=32, size=64, bg_tol=40):
-    g = tidy(to_grid(drop_shadow(remove_bg(im, bg_tol)), grid))
+    g = tidy(to_grid(drop_shadow(strip_card(remove_bg(im, bg_tol))), grid))
     return g.resize((size, size), Image.NEAREST)
 
 
