@@ -53,7 +53,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 
 /* ---------- TV pixel (vẽ mới) ---------- */
 .tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -14px}.tv.wide .cnt{padding:14px 12px}
-.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;opacity:.7}
+.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#FFE7A8;text-shadow:0 0 6px rgba(255,211,110,.6)}
 .tvlist .it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:46px;height:46px}.tvlist .tile .ico.sm{width:30px;height:30px}.tvlist .t{flex:1;line-height:1.1;font-size:22px}.tvlist .t small{display:block;font-size:16px;opacity:.65}.tvlist .m{font-weight:800;font-size:24px}
 .it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
 .ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
@@ -92,7 +92,7 @@ body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;wi
 .side{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
 .knob{width:48px;height:48px;image-rendering:pixelated;animation:knob 6s steps(1) infinite}
 .mini{width:48px;text-align:center;font-weight:800;font-size:15px;padding:0;line-height:16px}
-.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.55}
+.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#2A1D30 0 3px,transparent 3px 6px);opacity:.7}
 .led{width:9px;height:9px;background:#7DFFB0;box-shadow:0 0 0 3px #3B2A3F;animation:led 2.4s steps(4) infinite}
 .feet{display:flex;justify-content:space-between;padding:0 40px;margin-top:-6px}.feet span{width:36px;height:12px;background:#5A3D62;box-shadow:0 3px 0 #3B2A3F,3px 0 0 #3B2A3F,-3px 0 0 #3B2A3F}
 @keyframes blink{50%{opacity:0}}
@@ -239,6 +239,13 @@ const FR = {
   tv:{b:"#F2A3AC",h:"#FBC9CE",s:"#D97F8D"},
   gold:{b:"#FFE29A",h:"#FFF3CC",s:"#F2BE5C"},
   lilac:{b:"#E1CFF6",h:"#F3EAFF",s:"#B89AE0"},
+  // thân TV tông tối "đêm arcade", hợp dock CRT
+  tvRose:{b:"#8A5A7C",h:"#A87497",s:"#6A4060"},
+  tvTeal:{b:"#4E7377",h:"#6A9295",s:"#3A585C"},
+  tvWood:{b:"#8A6A4C",h:"#A88763",s:"#6A4F37"},
+  tvIndigo:{b:"#5F4F8A",h:"#7B6BA6",s:"#47396B"},
+  tvBlue:{b:"#4D6890",h:"#6884AC",s:"#3A5070"},
+  tvWine:{b:"#8C4D63",h:"#AA6880",s:"#6B3649"},
 };
 function centerGrid(g){const H=g.length,W=Math.max(...g.map(r=>r.length));let x0=W,x1=-1,y0=H,y1=-1;
   g.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=="."&&c!==" "){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}));
@@ -393,11 +400,11 @@ home:{html:`
   <div class="keys"><div class="key px" data-f="pink"><img class="ico" data-i="upc">CHI</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">THU</div><div class="key px" data-f="sky"><img class="ico" data-i="camc">QUÉT</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">HẠN MỨC</div></div>
   <div class="tv wide" data-tv="b"></div>`,
  tvs:[
- {color:"tv",antenna:true,layout:"side",h:196,ch:[
+ {color:"tvRose",antenna:true,layout:"side",h:196,ch:[
   ()=>fmtCh(1,"TÀI SẢN")+`<div class="tvlbl">TÀI SẢN RÒNG</div><div class="tvbig">12.450.000đ<span class="cur"></span></div><div class="tvlbl">TRONG 3 VÍ · ▲2,4%</div>`,
   ()=>fmtCh(2,"THÁNG 11")+`<div class="tvlbl">CHI MỖI NGÀY</div>`+bars([30,55,20,70,40,90,35,60,25,80,45,100,30,65],11),
   ()=>fmtCh(3,"NGÂN SÁCH")+`<div class="tvlbl">CÒN LẠI</div><div class="tvbig">4.820.000đ</div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<9?'on'+(i>=7?' r':''):''}"></i>`).join("")}</div><div class="tvlbl">ĐÃ TIÊU 62% · CÒN 6 NGÀY</div>`]},
- {color:"mint",layout:"bottom",brand:"NHẬT KÝ",h:470,delay:500,ch:[
+ {color:"tvTeal",layout:"bottom",brand:"NHẬT KÝ",h:470,delay:500,ch:[
   ()=>fmtCh(4,"HÔM NAY · −181.000")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo · 07:42","−55.000",RED)}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt · 09:10","−29.000",RED)}${row("pho","pink","Cơm tấm","Ăn uống · Tiền mặt · 12:05","−42.000",RED)}${row("coffee","gold","Trà sữa","Ăn uống · ShopeePay · 15:30","−30.000",RED)}${row("bag","mint","Hoàn tiền","Thu nhập · VCB · 16:02","+12.000",GRN)}${row("pho","pink","Bánh mì","Ăn uống · Tiền mặt · 18:20","−25.000",RED)}</div>`,
   ()=>fmtCh(5,"HÔM QUA · +14.955.000")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB · 08:00","+15.000.000",GRN)}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt · 11:50","−45.000",RED)}</div>`]}]},
 
@@ -407,12 +414,12 @@ report:{html:`
   <div class="keys"><div class="key px on" data-f="pink"><img class="ico" data-i="upc">CHI</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">THU</div><div class="key px" data-f="paper">THÁNG</div><div class="key px" data-f="paper">NĂM</div></div>
   <div class="tv wide" data-tv="b"></div>`,
  tvs:[
- {color:"mint",antenna:true,layout:"side",h:210,ch:[
+ {color:"tvTeal",antenna:true,layout:"side",h:210,ch:[
   ()=>fmtCh(1,"CƠ CẤU CHI")+`<div class="pie"><canvas id="pie1" width="32" height="32"></canvas><div class="leg"><span><i style="background:#FFA5BC"></i>Ăn uống 42%</span><span><i style="background:#FFD36E"></i>Di chuyển 18%</span><span><i style="background:#7DD3C6"></i>Nhà cửa 25%</span><span><i style="background:#B9A2F0"></i>Khác 15%</span></div></div>`,
   ()=>fmtCh(2,"CHI MỖI NGÀY")+`<div class="tvlbl">TỔNG −10.180.000đ</div>`+bars([30,55,20,70,40,90,35,60,25,80,45,100,30,65,50,20,75,40],11),
   ()=>fmtCh(3,"SO VỚI THÁNG TRƯỚC")+`<div class="tvlbl">CHI TIÊU</div><div class="tvbig" style="color:#9DF5C2">▼ 8%</div><div class="tvlbl">TIẾT KIỆM ĐƯỢC 890.000đ</div>`],
   after:()=>pie("pie1",[[42,"#FFA5BC"],[18,"#FFD36E"],[25,"#7DD3C6"],[15,"#B9A2F0"]])},
- {color:"gold",layout:"bottom",brand:"DANH MỤC",cta:"LỌC",h:380,delay:500,ch:[
+ {color:"tvWood",layout:"bottom",brand:"DANH MỤC",cta:"LỌC",h:380,delay:500,ch:[
   ()=>fmtCh(4,"TOP CHI TIÊU")+`<div class="tvlist">${meterRow("pho","pink","Ăn uống","−4.276.000",90,"#FFA5BC")}${meterRow("bag","mint","Nhà cửa","−2.545.000",60,"#7DD3C6")}${meterRow("coffee","gold","Cà phê","−1.120.000",30,"#FFD36E")}${meterRow("pho","lilac","Giải trí","−860.000",22,"#B9A2F0")}${meterRow("bag","sky","Mua sắm","−640.000",16,"#8DC6F5")}</div>`]}]},
 
 auto:{html:`
@@ -421,11 +428,11 @@ auto:{html:`
   <div class="keys"><div class="key px" data-f="lilac"><img class="ico" data-i="maic">DUYỆT</div><div class="key px" data-f="sky"><img class="ico" data-i="camc">QUÉT</div><div class="key px" data-f="pink"><img class="ico" data-i="upc">DÁN</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">QUY TẮC</div></div>
   <div class="tv wide" data-tv="b"></div>`,
  tvs:[
- {color:"lilac",antenna:true,layout:"side",h:210,ch:[
+ {color:"tvIndigo",antenna:true,layout:"side",h:210,ch:[
   ()=>fmtCh(1,"MAI")+`<div class="mai"><canvas id="maiface" width="24" height="16"></canvas><div><div class="tvlbl">TIN NHẮN MỚI</div><div class="say">"VCB −55.000đ<br>PHO THIN" <span class="cur sm"></span></div></div></div><div class="stat3"><div><b>32</b>ĐÃ GHI</div><div><b style="color:#FFD36E">2</b>CHỜ DUYỆT</div><div><b>0</b>LỖI</div></div>`,
   ()=>fmtCh(2,"CHỜ DUYỆT")+`<div class="tvlist">${row("pho","pink","Phở bò · −55.000","VCB · 92% chắc chắn","✓",GRN)}${row("coffee","gold","Highlands · −45.000","MoMo · 71% chắc chắn","?","#FFD36E")}</div>`],
   after:()=>maiFace("maiface")},
- {color:"sky",layout:"bottom",brand:"CÀI ĐẶT",cta:"LƯU",h:330,delay:500,ch:[
+ {color:"tvBlue",layout:"bottom",brand:"CÀI ĐẶT",cta:"LƯU",h:330,delay:500,ch:[
   ()=>fmtCh(3,"TỰ ĐỘNG")+`<div class="tvlist">${setRow("maic","lilac","Đọc thông báo","Ngân hàng & ví điện tử",true)}${setRow("targetc","gold","Tự ghi khi chắc","Từ 80% trở lên",true)}${setRow("walletc","sky","Khớp số dư","Cập nhật số dư ví",true)}${setRow("upc","pink","Đọc to khi ghi","Giọng tiếng Việt",false)}</div>`]}]},
 
 wallet:{html:`
@@ -434,11 +441,11 @@ wallet:{html:`
   <div class="keys"><div class="key px" data-f="sky"><img class="ico" data-i="walletc">THÊM VÍ</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">NẠP</div><div class="key px" data-f="pink"><img class="ico" data-i="upc">CHUYỂN</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">CHO VAY</div></div>
   <div class="tv wide" data-tv="b"></div>`,
  tvs:[
- {color:"sky",antenna:true,layout:"side",h:200,ch:[
+ {color:"tvBlue",antenna:true,layout:"side",h:200,ch:[
   ()=>fmtCh(1,"TIỀN MẶT")+card("CASH","Tiền mặt","1.250.000đ","#FFD36E"),
   ()=>fmtCh(2,"VIETCOMBANK")+card("VCB","Vietcombank •• 4821","9.800.000đ","#9DF5C2"),
   ()=>fmtCh(3,"MOMO")+card("MOMO","Ví MoMo","1.400.000đ","#FFA5BC")]},
- {color:"pink",layout:"bottom",brand:"SỔ VAY NỢ",cta:"THÊM",h:300,delay:500,ch:[
+ {color:"tvWine",layout:"bottom",brand:"SỔ VAY NỢ",cta:"THÊM",h:300,delay:500,ch:[
   ()=>fmtCh(4,"ĐANG THEO DÕI")+`<div class="tvlist">${debt("Anh Tuấn mượn","Hạn 30/11 · còn 6 ngày","+2.000.000",60,GRN)}${debt("Trả góp điện thoại","Kỳ 4/12 · 15/12","−1.200.000",33,RED)}${debt("Chị Lan","Đã trả xong","0",100,"#FFF2E2")}</div>`]}]},
 };
 function card(tag,name,bal,col){return `<div class="wcard"><div class="row" style="justify-content:space-between"><span class="chipt" style="background:${col}">${tag}</span><span class="tvlbl">SỐ DƯ</span></div><div class="tvlbl" style="margin-top:8px">${name}</div><div class="tvbig" style="color:${col}">${bal}<span class="cur"></span></div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<10?'on':''}" style="${i<10?'background:'+col:''}"></i>`).join("")}</div></div>`}
