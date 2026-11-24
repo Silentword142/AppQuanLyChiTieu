@@ -72,6 +72,23 @@ SUBJECTS.update({
 # và logo thương hiệu (Google) phải giữ đúng bản gốc.
 SKIP = lambda k: k.startswith("ui-") or k == "google"
 
+# Icon cho nút bấm / dock / HUD của giao diện TV mới (vẽ bằng AI, có màu)
+UI_SUBJECTS = {
+    "ui-key-chi": "pink paper money bills flying out with red up arrow",
+    "ui-key-thu": "stack of green banknotes and gold coins with green down arrow",
+    "ui-key-scan": "cute pastel blue retro photo camera",
+    "ui-key-budget": "red and white archery target with golden arrow in bullseye",
+    "ui-key-voice": "cute retro pink microphone",
+    "ui-hud-settings": "silver gear cog with small wrench",
+    "ui-hud-coin": "shiny gold coin with letter S",
+    "ui-dock-home": "cozy small house with red roof, chimney and round window",
+    "ui-dock-report": "clipboard with colorful bar chart and pie chart",
+    "ui-dock-auto": "cute small retro tv robot with antenna and smiling face",
+    "ui-dock-wallet": "brown leather wallet with green banknote and gold clasp",
+}
+UI_KEYS = list(UI_SUBJECTS)
+SUBJECTS.update(UI_SUBJECTS)
+
 SAMPLE_KEYS = ["pho", "banh-mi", "scooter", "home", "wallet", "piggy",
                "credit-card", "coffee", "ao-dai", "gift", "heart", "receipt"]
 
@@ -170,10 +187,13 @@ def main():
     ap.add_argument("--lcm", default="lcm-lora-sdxl.safetensors")
     ap.add_argument("--no-lcm", action="store_true")
     ap.add_argument("--samples", action="store_true", help="chỉ sinh 12 icon mẫu")
+    ap.add_argument("--ui", action="store_true", help="chỉ sinh icon nút/dock/HUD (ui-*)")
     ap.add_argument("--keys", default="")
     ap.add_argument("--variants", type=int, default=1)
-    ap.add_argument("--grid", type=int, default=32)
+    ap.add_argument("--grid", type=int, default=32, help="số ô pixel mỗi cạnh: 32 đơn giản, 48/64 chi tiết hơn")
+    ap.add_argument("--size", type=int, default=0, help="cỡ PNG xuất ra (mặc định = 2 x grid)")
     ap.add_argument("--out", default=str(ROOT / "dist" / "pixelxl"))
+    ap.add_argument("--raw", default="", help="thư mục ảnh gốc 1024px dùng chung (để thử nhiều --grid không phải vẽ lại)")
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args()
     try:
@@ -181,17 +201,21 @@ def main():
     except Exception:
         pass
 
-    out = Path(a.out); raw = out / "raw"; raw.mkdir(parents=True, exist_ok=True)
-    keys = SAMPLE_KEYS if a.samples else ([k.strip() for k in a.keys.split(",") if k.strip()] or icon_keys())
+    a.size = a.size or a.grid * 2
+    out = Path(a.out); raw = Path(a.raw) if a.raw else out / "raw"; raw.mkdir(parents=True, exist_ok=True)
+    keys = UI_KEYS if a.ui else SAMPLE_KEYS if a.samples else ([k.strip() for k in a.keys.split(",") if k.strip()] or icon_keys())
     for i, k in enumerate(keys, 1):
         subj = SUBJECTS.get(k, k.replace("-", " "))
         for v in range(a.variants):
             name = k if v == 0 else f"{k}_v{v + 1}"
             if (out / f"{name}.png").exists(): continue
             t0 = time.time()
-            img = render(subj, 2400 + i * 7 + v * 1000, a)
-            img.save(raw / f"{name}.png")
-            pixelize(img, a.grid, 64).save(out / f"{name}.png", optimize=True)
+            if (raw / f"{name}.png").exists():  # đã vẽ rồi -> chỉ làm lại hậu kỳ (đổi --grid)
+                img = Image.open(raw / f"{name}.png")
+            else:
+                img = render(subj, 2400 + i * 7 + v * 1000, a)
+                img.save(raw / f"{name}.png")
+            pixelize(img, a.grid, a.size).save(out / f"{name}.png", optimize=True)
             print(f"[{i}/{len(keys)}] {name} {time.time() - t0:.1f}s")
     sheet(out, keys, out / "_sheet.png")
     print("Ảnh so sánh:", out / "_sheet.png")
