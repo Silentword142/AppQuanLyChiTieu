@@ -76,6 +76,7 @@
   <script src="config.js" onerror="void 0"></script>
   <script src="gemini.js"></script>
   <script src="icons.js"></script>
+  <script src="pixelkit.js"></script>
   <script>
     // Trong app Android, WebView không tải được link blob: -> chuyển sang hộp thoại "Lưu tệp" của Android
     (function () {
@@ -878,6 +879,47 @@
 
     .pt-safe { padding-top: var(--safe-top); }
     .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
+
+    /* ======================= DOCK CRT MỚI (nền tối, LED vàng, keycap pixel, đồng xu GHI) ======================= */
+    .pxdock { height: calc(132px + var(--safe-bottom)); padding: 0 6px calc(var(--safe-bottom) + 22px) !important; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)) 88px repeat(2, minmax(0,1fr)); align-items: end; gap: 4px; background: transparent; }
+    .pxdock .base { position: absolute; left: 0; right: 0; bottom: 0; top: 26px; z-index: -1; overflow: hidden;
+      background: repeating-linear-gradient(180deg, rgba(10,6,18,.35) 0 3px, transparent 3px 6px),
+        linear-gradient(135deg, transparent 0 30%, rgba(255,255,255,.05) 30% 36%, transparent 36% 40%, rgba(255,255,255,.035) 40% 43%, transparent 43%),
+        radial-gradient(120% 90% at 50% 40%, #41325C 0%, #2A2140 62%, #17111F 100%);
+      box-shadow: 0 -3px 0 #3B2A3F, 0 -6px 0 #FCE6D2, 0 -9px 0 #F2A3AC, 0 -12px 0 #3B2A3F, 0 -15px 0 rgba(59,42,63,.3); }
+    .pxdock .base::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,.35) 0 6px, transparent 6px calc(100% - 6px), rgba(0,0,0,.35) calc(100% - 6px)); animation: pxFlick 5s steps(1) infinite; }
+    .pxdock .base::before { content: ""; position: absolute; left: 0; right: 0; height: 16px; top: -16px; background: repeating-linear-gradient(180deg, rgba(255,211,110,.07) 0 3px, transparent 3px 6px); animation: pxRoll 5s steps(40) infinite; pointer-events: none; }
+    @keyframes pxFlick { 97% { opacity: .6; } }
+    @keyframes pxRoll { to { top: 100%; } }
+    .pxdock .leds { position: absolute; left: 12px; right: 12px; top: 9px; display: flex; justify-content: space-between; }
+    .pxdock .leds i { width: 6px; height: 3px; background: #5A4632; box-shadow: 0 0 0 1px #17111F; animation: pxLed 1.68s steps(1) infinite; }
+    @keyframes pxLed { 0%, 33% { background: #FFD36E; box-shadow: 0 0 0 1px #17111F, 0 0 8px #FFD36E, inset 0 0 2px #FFF6D0; } 34%, 49% { background: #5A4632; box-shadow: 0 0 0 1px #17111F; } 50%, 66% { background: #FFB84A; box-shadow: 0 0 0 1px #17111F, 0 0 8px #FFB84A; } 67%, 100% { background: #5A4632; box-shadow: 0 0 0 1px #17111F; } }
+    .pxdock .rv { position: absolute; bottom: calc(var(--safe-bottom) + 10px); width: 6px; height: 6px; background: #6B5A80; box-shadow: inset -2px -2px 0 #3B2A3F, 0 0 0 2px #17111F; }
+    .pxdock .rv.l { left: 8px; } .pxdock .rv.r { right: 8px; }
+    .dk { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 0 4px; min-width: 0; background: none; border: 0; -webkit-user-select: none; user-select: none; touch-action: manipulation; cursor: pointer; }
+    .dk .cap { position: relative; display: block; width: 64px; height: 60px; transition: transform .2s steps(3); }
+    .dk .cap .kc { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+    .dk .cap .ico { position: absolute; left: 50%; top: 9px; margin-left: -21px; width: 32px; height: 32px; z-index: 1; image-rendering: pixelated; }
+    .dk .cap .led { position: absolute; right: 11px; top: 10px; width: 6px; height: 6px; z-index: 2; background: #5A4632; box-shadow: 0 0 0 2px #3B2A3F; }
+    .dk.on .cap { transform: translateY(-6px); }
+    .dk.on .cap .ico { animation: pxBob 1s steps(2) infinite; }
+    .dk.on .cap .led { background: #FFD36E; box-shadow: 0 0 0 2px #3B2A3F, 0 0 8px #FFD36E; }
+    .dk:active .cap { transform: translateY(4px); }
+    .dk.on::before { content: ""; position: absolute; left: 50%; top: 56px; width: 50px; height: 4px; margin-left: -25px; background: rgba(255,211,110,.55); box-shadow: 0 0 12px rgba(255,211,110,.9); animation: pxGlow 1.2s steps(3) infinite; }
+    .dk .lab, .ghi .lab { font-family: var(--font-pixel, inherit); font-weight: 800; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; color: #FFE7A8; text-shadow: 0 0 6px rgba(255,211,110,.7), 2px 0 0 rgba(255,90,140,.35), -2px 0 0 rgba(90,210,255,.3); }
+    .dk.on .lab { color: #FFD36E; animation: pxLab 2s steps(1) infinite; }
+    .ghi { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 0 4px; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+    .ghi .coin { width: 84px; height: 84px; image-rendering: pixelated; animation: pxCoin 1.6s steps(4) infinite; }
+    .ghi .spk { position: absolute; width: 84px; height: 84px; top: 0; left: 50%; margin-left: -42px; pointer-events: none; image-rendering: pixelated; }
+    .ghi:active .coin { transform: translateY(4px); animation: none; }
+    .ghi .lab { color: #FFD36E; text-shadow: 0 0 8px rgba(255,211,110,.8); }
+    .dk .ekey-badge { z-index: 3; }
+    @keyframes pxBob { 50% { transform: translateY(-3px); } }
+    @keyframes pxGlow { 50% { opacity: .45; } }
+    @keyframes pxLab { 90% { color: #FFF6E9; } }
+    @keyframes pxCoin { 50% { transform: translateY(-4px); } }
+    @media (prefers-reduced-motion: reduce) { .pxdock *, .pxdock *::before, .pxdock *::after, .pxdock .base::before, .pxdock .base::after { animation: none !important; } }
+    .pxsky { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; image-rendering: pixelated; }
   </style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
@@ -1778,6 +1820,30 @@
       ".sssswwwwwwwwwwwwwwwwwsssss.",
       "...ssssssssssssssssssss....."
     ], { w: "#FFF1E8", h: "#FFFAF4", s: "#F6D8D2" });
+
+    // Dock CRT mới: keycap pixel + icon màu vẽ tay (web/pixelkit.js)
+    const PK = window.PixelKit;
+    const DOCK_KEYCAPS = PK ? { overview: PK.keycap("#FBC2C8", "#E7798F"), report: PK.keycap("#BDEBC9", "#55B27F"), mai: PK.keycap("#E1CFF6", "#9C7BD3"), wallet_ai: PK.keycap("#C4E4FA", "#6E9FDE") } : {};
+    const DOCK_ICONS = PK ? { overview: PK.icon("home"), report: PK.icon("chart"), mai: PK.icon("mai"), wallet_ai: PK.icon("wallet") } : {};
+    // Nút GHI: đồng xu pixel có vệt sáng quét + lấp lánh
+    const PixelCoin = React.memo(() => {
+      const coin = useRef(null), spk = useRef(null);
+      useEffect(() => {
+        if (!PK) return;
+        const c = coin.current.getContext("2d"), s = spk.current.getContext("2d");
+        let f = 0; const draw = () => { PK.drawCoin(c, f); PK.drawSpark(s, f); f++; };
+        draw();
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const iv = setInterval(draw, 110); return () => clearInterval(iv);
+      }, []);
+      return (<><canvas ref={coin} className="coin" width="28" height="28" /><canvas ref={spk} className="spk" width="28" height="28" /></>);
+    });
+    // Bầu trời pixel động vẽ trên canvas (dải màu dithering, mặt trời, đồi, mây, sao, sao băng, chim)
+    const PixelSky = React.memo(() => {
+      const ref = useRef(null);
+      useEffect(() => (PK ? PK.sky(ref.current) : undefined), []);
+      return <canvas ref={ref} className="pxsky" aria-hidden="true" style={{ zIndex: -1 }} />;
+    });
 
     // Bầu trời: mây pixel trôi chậm + sao lấp lánh (theme tối)
     const SkyLayer = React.memo(() => {
@@ -5287,7 +5353,7 @@
 
       return (
         <div className="flex flex-col h-screen md:flex-row font-sans relative isolate">
-          <SkyLayer />
+          {window.PixelKit ? <PixelSky /> : <SkyLayer />}
 
           {/* FLOATING EDGE-SWIPE BACK PILL */}
           <div
@@ -5394,7 +5460,7 @@
           </aside>
 
           {/* MAIN CONTENT AREA */}
-          <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-36 md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
+          <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-44 md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
 
             {/* TAB: MÀN HÌNH CHÍNH – 1 màn hình CRT liền mạch */}
             {activeTab === "overview" && (
@@ -6642,30 +6708,25 @@
           </main>
 
           {/* DOCK – 4 nút hình học (Tam giác · Tròn · Vuông · Ngôi sao) dạng 2.5D shape đơn giản có icon bên trong + nút GHI ở giữa (MOBILE) */}
-          <nav className="dock fixed bottom-0 inset-x-0 md:hidden z-30 pb-safe" aria-label="Điều hướng chính">
-            <div className="dock-inner">
-              {DOCK.map(item => item.id === "__add" ? (
-                <button key="add" type="button" className="arcade" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
-                  <span className="arcade-ring"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-ring", ARCADE_RING_SVG) }} /><span className="arcade-dome"><span className="arcade-art" dangerouslySetInnerHTML={{ __html: uiArt("ui-arcade-dome", ARCADE_DOME_SVG) }} /><Icon name="plus" className="w-6 h-6" /></span></span>
-                  <span className="dock-label">Ghi</span>
-                </button>
-              ) : (
-                <button key={item.id} type="button" className={`dock-key ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
-                  onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
-                  <span className="dock-face">
-                    <span className="dock-shape">
-                      <span className="dock-well" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-well`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].well : "") }} />
-                      <span className={`dock-cap shape-${item.shape}`}>
-                        <span className="dock-cap-art" dangerouslySetInnerHTML={{ __html: uiArt(`ui-dock-${item.shape}-cap`, DOCK_SHAPE_SVGS[item.shape] ? DOCK_SHAPE_SVGS[item.shape].cap : "") }} />
-                        <span className="dock-ico" dangerouslySetInnerHTML={{ __html: renderDockMonoIcon(item.icon) }} />
-                      </span>
-                    </span>
-                    <span className="dock-label">{item.label}</span>
-                    {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
-                  </span>
-                </button>
-              ))}
-            </div>
+          <nav className="dock pxdock fixed bottom-0 inset-x-0 md:hidden z-30" aria-label="Điều hướng chính">
+            <div className="base" aria-hidden="true"><div className="leds">{Array.from({ length: 24 }, (_, i) => <i key={i} style={{ animationDelay: `${-((i % 12) * 0.14)}s` }} />)}</div><i className="rv l" /><i className="rv r" /></div>
+            {DOCK.map(item => item.id === "__add" ? (
+              <button key="add" type="button" className="ghi" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
+                <PixelCoin />
+                <span className="lab">Ghi</span>
+              </button>
+            ) : (
+              <button key={item.id} type="button" className={`dk ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
+                onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
+                <span className="cap">
+                  <img className="kc" alt="" src={DOCK_KEYCAPS[item.id]} />
+                  <img className="ico" alt="" src={DOCK_ICONS[item.id]} />
+                  <i className="led" />
+                </span>
+                <span className="lab">{item.label}</span>
+                {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
+              </button>
+            ))}
           </nav>
 
           {/* "MAI ƠI" – giao diện Trợ lý ảo toàn màn hình (hiện cả trên màn hình khoá) */}

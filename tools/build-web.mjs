@@ -36,7 +36,7 @@ for (const l of ["vie", "eng"]) {
 for (const f of fs.readdirSync(path.join(ROOT, "assets-src", "fonts"))) {
   fs.copyFileSync(path.join(ROOT, "assets-src", "fonts", f), path.join(OUT, "fonts", f));
 }
-for (const f of ["mai.js", "icons.js", "gemini.js", "icon-512.png", "studio.html"]) {
+for (const f of ["mai.js", "icons.js", "pixelkit.js", "gemini.js", "icon-512.png", "studio.html"]) {
   if (fs.existsSync(path.join(ROOT, "web", f))) fs.copyFileSync(path.join(ROOT, "web", f), path.join(OUT, f));
 }
 // Gemini API key: chỉ nhúng vào bản đóng gói (APK), lấy từ biến môi trường GEMINI_API_KEY hoặc file .gemini.key
