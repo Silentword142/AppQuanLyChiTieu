@@ -879,6 +879,8 @@
 
     .pt-safe { padding-top: var(--safe-top); }
     .pb-safe { padding-bottom: calc(var(--safe-bottom) + 6px); }
+    .pb-dock { padding-bottom: calc(11rem + var(--safe-bottom)); }
+    @media (min-width: 768px) { .pb-dock { padding-bottom: 2rem; } }
 
 
     /* ======================= THÂN TV PASTEL + KHUNG PIXEL NHIỀU LỚP BÓNG ======================= */
@@ -5669,7 +5671,7 @@
           </aside>
 
           {/* MAIN CONTENT AREA */}
-          <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-44 md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
+          <main ref={mainScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar px-4 pt-4 pb-dock md:p-8 bg-theme-background relative" style={{ "--dx": `${tabDirRef.current.dx}px` }}>
 
             {/* TAB: MÀN HÌNH CHÍNH – 1 màn hình CRT liền mạch */}
             {activeTab === "overview" && (
