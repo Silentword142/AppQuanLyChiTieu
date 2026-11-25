@@ -50,6 +50,8 @@ for (const f of ["mai.js", "icons.js", "pixelkit.js", "gemini.js", "icon-512.png
 }
 // Logo gốc ngân hàng / ví điện tử (offline)
 fs.mkdirSync(path.join(OUT, "logos"), { recursive: true });
+fs.mkdirSync(path.join(OUT, "icons-hd"), { recursive: true });
+for (const f of fs.readdirSync(path.join(ROOT, "web", "icons-hd"))) fs.copyFileSync(path.join(ROOT, "web", "icons-hd", f), path.join(OUT, "icons-hd", f));
 for (const f of fs.readdirSync(path.join(ROOT, "web", "logos"))) fs.copyFileSync(path.join(ROOT, "web", "logos", f), path.join(OUT, "logos", f));
 
 let html = fs.readFileSync(path.join(ROOT, "web", "index.html"), "utf8");
