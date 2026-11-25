@@ -846,6 +846,22 @@
     .log-ctrl { gap: 6px; }
     .ed-fold { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; font-weight: 800; font-size: 15px; color: var(--text-primary); background: var(--background); border: 3px solid var(--ink); box-shadow: inset 0 -3px 0 rgba(74,51,80,.18); }
     .ed-fold.on { background: var(--accent); color: var(--on-accent, #3B2A3F); }
+    /* Hộp chọn hạng mục mới: màn CRT tối, nhóm lớn xếp dọc, mục con thụt vào */
+    .ctree { margin-top: 6px; background: #2A2140; border: 3px solid var(--ink); box-shadow: 0 4px 0 rgba(59,42,63,.35), inset 0 0 0 3px #3D3060; color: #FFF2E2; animation: ctreeIn .16s steps(3) both; }
+    @keyframes ctreeIn { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+    .ctree-head { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; font: 700 14px/1 'Handjet', sans-serif; letter-spacing: .1em; color: #9DF5C2; border-bottom: 3px dashed rgba(157,245,194,.25); }
+    .ctree-list { max-height: 340px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .ctree-list::-webkit-scrollbar { display: none; }
+    .ctree-p { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; font-weight: 800; font-size: 15px; color: #FFF2E2; background: #3A2D58; border: 2px solid #5E4A84; }
+    .ctree-p.cur { border-color: #FFE08A; }
+    .ctree-grp.open .ctree-p { background: #FFE08A; color: #2A2140; border-color: #FFE08A; }
+    .ctree-n { min-width: 22px; padding: 1px 5px; text-align: center; font: 700 13px/1.2 'Handjet', sans-serif; background: rgba(0,0,0,.25); }
+    .ctree-chev { width: 14px; text-align: center; font-weight: 900; }
+    .ctree-kids { margin: 4px 0 2px 14px; padding-left: 10px; border-left: 3px solid #9DF5C2; display: flex; flex-direction: column; gap: 4px; }
+    .ctree-c { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px; text-align: left; font-weight: 700; font-size: 14px; color: #FFF2E2; background: #31264B; border: 2px solid transparent; }
+    .ctree-c .dot { width: 10px; height: 10px; flex: none; border: 2px solid #9DF5C2; }
+    .ctree-c.on { background: #9DF5C2; color: #1B1430; }
+    .ctree-c.on .dot { background: #1B1430; border-color: #1B1430; }
     .log-cal { display: flex !important; align-items: center; gap: 4px; padding: 0 6px !important; }
     .log-cal-ico { width: 20px; height: 20px; display: block; }
     .log-cal-ico > * { width: 100% !important; height: 100% !important; }
@@ -2242,6 +2258,49 @@
       });
       new MutationObserver(() => { if (document.documentElement.classList.contains("kb-open")) setTimeout(scrollFocus, 120); }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     })();
+
+    // Hộp chọn hạng mục 2 tầng: nhóm lớn xếp dọc, bấm nhóm mới mở danh mục con ngay bên dưới
+    const CategoryTree = ({ parents, childrenOf, valueId, onPick }) => {
+      const curParent = React.useMemo(() => {
+        for (const p of parents) { if (p.id === valueId) return p.name; if (childrenOf(p.name).some(c => c.id === valueId)) return p.name; }
+        return null;
+      }, [parents, valueId]);
+      const [openP, setOpenP] = useState(curParent);
+      return (
+        <div className="ctree" role="listbox" aria-label="Chọn hạng mục">
+          <div className="ctree-head"><span>CHỌN NHÓM LỚN</span><span className="opacity-70">rồi chọn mục con</span></div>
+          <div className="ctree-list">
+            {parents.map(p => {
+              const kids = childrenOf(p.name);
+              const open = openP === p.name;
+              const isCur = curParent === p.name;
+              return (
+                <div key={p.id} className={`ctree-grp ${open ? "open" : ""}`}>
+                  <button type="button" className={`ctree-p ${isCur ? "cur" : ""}`} onClick={() => { buzz(8); if (!kids.length) onPick(p.id); else setOpenP(open ? null : p.name); }}>
+                    <Icon name={p.icon || "tag"} className="w-7 h-7 shrink-0" />
+                    <span className="flex-1 min-w-0 truncate">{p.name}</span>
+                    {kids.length > 0 && <span className="ctree-n">{kids.length}</span>}
+                    <span className="ctree-chev" aria-hidden="true">{kids.length ? (open ? "▾" : "▸") : ""}</span>
+                  </button>
+                  {open && kids.length > 0 && (
+                    <div className="ctree-kids">
+                      <button type="button" className={`ctree-c ${valueId === p.id ? "on" : ""}`} onClick={() => onPick(p.id)}>
+                        <i className="dot" /><span className="flex-1 min-w-0 truncate">Cả nhóm {p.name}</span>
+                      </button>
+                      {kids.map(c => (
+                        <button key={c.id} type="button" className={`ctree-c ${valueId === c.id ? "on" : ""}`} onClick={() => onPick(c.id)}>
+                          <i className="dot" /><Icon name={c.icon || "tag"} className="w-6 h-6 shrink-0" /><span className="flex-1 min-w-0 truncate">{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
 
     // Bộ chọn kiểu pixel (thay hộp chọn gốc của Android cho đồng bộ giao diện). Dùng như <select>.
     const PxSelect = ({ value, onChange, className = "", title, children }) => {
@@ -7865,31 +7924,16 @@
                         <span className="font-pixel shrink-0" aria-hidden="true">{edPick.open === "cat" ? "▲" : "▼"}</span>
                       </button>
                     ); })()}
-                    <div className={edPick.open === "cat" ? "space-y-1.5" : "hidden"}>
-                    <CategoryParentFilterBar
-                      parentCategories={parentCategories}
-                      selectedParent={txParentFilter}
-                      onSelectParent={setTxParentFilter}
-                    />
-                    <div onChange={(e) => { if (e.target.name === "category") setEdPick(p => ({ ...p, cat: e.target.value, open: null })); }} className="grid grid-cols-2 gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
-                      {filteredCategoriesForTx.length > 0 ? (
-                        filteredCategoriesForTx.map((c, i) => (
-                          <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
-                            <input type="radio" name="category" value={c.id} className="peer sr-only" defaultChecked={editingTx.categoryId ? (editingTx.categoryId === c.id || c.id === `p_choice_${editingTx.categoryId}`) : editingTx.category === c.name} />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{catLabel(c)}</span>
-                            </div>
-                          </label>
-                        ))
-                      ) : (
-                        <div className="col-span-full py-3 text-center">
-                          <p className="text-xs text-theme-textSecondary italic mb-1">Chưa có danh mục trong nhóm này.</p>
-                          <button type="button" onClick={()=>setTxParentFilter("Tất cả")} className="text-xs text-theme-primary font-bold underline">Xem tất cả</button>
-                        </div>
-                      )}
-                    </div>
-                    </div>
+                    {(() => {
+                      const curId = edPick.cat ? catFromPick(edPick.cat).categoryId : (editingTx.categoryId || resolveCatId(editingTx.category, categories));
+                      return (<>
+                        <input type="hidden" name="category" value={curId || ""} />
+                        {edPick.open === "cat" && (
+                          <CategoryTree parents={parentCategories} childrenOf={(pn) => categories.filter(c => c && !c.isParent && (c.parent ? c.parent === pn : categoryParentMap[c.name] === pn))}
+                            valueId={curId} onPick={(id) => { buzz(10); setEdPick(p => ({ ...p, cat: id, open: null })); }} />
+                        )}
+                      </>);
+                    })()}
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
