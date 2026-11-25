@@ -1074,49 +1074,19 @@
     html:not(.dark) .wallet-card [class*="border-[#9DF5C2]"], html:not(.dark) .wallet-card [class*="border-[#6A5594]"] { border-color: var(--ink) !important; }
     html:not(.dark) .wallet-card .crt-glow { text-shadow: none !important; }
   
-    /* ---- Cần gạt xèng (nút Hạng mục) ---- */
-    .slot-lever-wrap { position: relative; display: block; width: 40px; height: 40px; perspective: 120px; cursor: pointer; }
-    .slot-lever { background: linear-gradient(180deg, #4A3F66, #2E2744) !important; }
-    .slot-lever.is-active { background: linear-gradient(180deg, #6A4E2A, #3E2C16) !important; }
-    .slot-lever .lv-glyph { width: 20px; height: 20px; display: block; animation: lvGlow 1.4s steps(2, jump-none) infinite; }
-    .slot-lever .lv-glyph svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 2px #FFE27A) drop-shadow(0 0 5px rgba(255,214,90,.85)); }
-    @keyframes lvGlow { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,226,122,.9)); } 50% { opacity: .55; filter: none; } }
-    .slot-lever-wrap .lv-slot { pointer-events: none; position: absolute; right: -9px; top: 13px; width: 8px; height: 16px; background: #2B2640; border: 2px solid var(--ink); border-left: 0; border-radius: 0 4px 4px 0; box-shadow: inset -2px 0 0 rgba(255,255,255,.18); }
-    .slot-lever-wrap .lv-arm { pointer-events: none; position: absolute; right: -7px; top: -4px; width: 6px; height: 27px; transform-origin: 50% 100%; transform-style: preserve-3d; transition: transform .35s var(--ease-spring); }
-    .slot-lever-wrap .lv-stick { position: absolute; left: 1px; top: 8px; width: 4px; bottom: 0; background: linear-gradient(90deg, #8E8AA6, #F4F1FA 45%, #8E8AA6); border: 1px solid var(--ink); border-radius: 2px; }
-    .slot-lever-wrap .lv-ball { position: absolute; left: -5px; top: -4px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink);
-      background: radial-gradient(circle at 35% 30%, #FFFFFF 0 2px, #FF8A80 3px, #E5484D 6px, #A72A35 9px); box-shadow: 0 0 6px rgba(255,120,120,.55); animation: lvBall 1.4s steps(2, jump-none) infinite; }
-    @keyframes lvBall { 50% { box-shadow: 0 0 10px rgba(255,214,90,.95); } }
-    .slot-lever-wrap.is-pulled .lv-arm { animation: lvPull .7s cubic-bezier(.3,.7,.3,1.2) both; }
-    @keyframes lvPull { 0% { transform: rotateX(0) } 35% { transform: rotateX(155deg) scale(1.08) } 60% { transform: rotateX(150deg) } 100% { transform: rotateX(0) } }
-    .slot-lever-wrap.is-pulled .slot-lever { transform: translateY(2px); }
-    /* màn hình quay như cuộn xèng rồi giật xuống */
-    html.reel-out .tv-screen-full .crt-body { animation: reelOut .43s cubic-bezier(.55,0,.9,.4) both; }
-    html.reel-in .tv-screen-full .crt-body { animation: reelIn .62s steps(12, end) both; }
-    html.reel-out .crt-stage, html.reel-in .crt-stage { animation: reelShake .3s steps(3) 2; }
-    @keyframes reelOut { 0% { transform: translateY(0); filter: none; } 18% { transform: translateY(-14px); } 100% { transform: translateY(115%); filter: blur(4px) brightness(1.2); } }
-    @keyframes reelIn { 0% { transform: translateY(-115%); filter: blur(4px); } 45% { transform: translateY(14%); filter: blur(2px); } 62% { transform: translateY(-7%); filter: blur(1px); } 78% { transform: translateY(3%); filter: none; } 90% { transform: translateY(-1%); } 100% { transform: translateY(0); } }
-    @keyframes reelShake { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-2px, 2px); } 66% { transform: translate(2px, -1px); } }
-    @media (prefers-reduced-motion: reduce) { html.reel-out .tv-screen-full .crt-body, html.reel-in .tv-screen-full .crt-body, .slot-lever .lv-glyph, .slot-lever-wrap .lv-ball { animation: none !important; } }
-
-    /* ---- Nút danh mục dạng joystick ---- */
-    .joy { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 5px; border: 2px solid transparent; border-radius: 10px; transition: background .2s; }
-    .joy-stage { position: relative; width: 56px; height: 70px; display: block; }
-    .joy-base { position: absolute; left: 3px; bottom: 0; width: 50px; height: 32px; display: block; }
-    .joy-base svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .joy-arm { position: absolute; left: 50%; bottom: 20px; width: 34px; margin-left: -17px; height: 48px; display: block; transition: height .32s cubic-bezier(.3,1.6,.5,1); }
-    .joy-stick { position: absolute; left: 50%; bottom: 0; width: 8px; margin-left: -4px; top: 22px; background: linear-gradient(90deg, #2A2370 0 2px, #4C46B8 2px 5px, #2A2370 5px); border: 2px solid #1B1446; border-top: 0; }
-    .joy-ball { position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #1B1446; display: grid; place-items: center;
-      background: radial-gradient(circle at 34% 28%, #FFB7C9 0 3px, #F0416C 4px 9px, #D62A57 10px 13px, #A61D44 14px); box-shadow: inset -2px -3px 0 rgba(0,0,0,.18); }
-    .joy-ball .vi { filter: drop-shadow(1px 1px 0 rgba(27,20,70,.55)); }
-    .joy-name { font-size: 12px; font-weight: 700; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(var(--text-primary-rgb, 59,51,85)); }
-    .peer:checked + .joy { background: var(--accent); border-color: var(--ink); }
-    .peer:checked + .joy .joy-arm { height: 30px; }
-    .peer:checked + .joy .joy-ball { transform: scale(.94); box-shadow: inset -2px -3px 0 rgba(0,0,0,.18), 0 0 8px rgba(240,65,108,.6); }
-    .peer:checked + .joy .joy-led { fill: #FF4D6D; }
-    .peer:focus-visible + .joy { outline: 3px solid var(--ink); outline-offset: 1px; }
-    .joy-grid { align-items: start; }
-    @media (prefers-reduced-motion: reduce) { .joy-arm { transition: none; } }
+    /* ---- Dock: nút arcade ---- */
+    .arc { position: relative; display: block; width: 60px; height: 60px; }
+    .arc-art, .arc-art svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .arc-glyph { position: absolute; left: 50%; top: 16px; width: 22px; height: 22px; margin: -11px 0 0 -11px; transform: scaleY(.74); transition: top .12s steps(2);
+      filter: drop-shadow(1px 0 0 #3A2440) drop-shadow(-1px 0 0 #3A2440) drop-shadow(0 1px 0 #3A2440) drop-shadow(0 -1px 0 #3A2440) drop-shadow(0 0 3px rgba(255,228,140,.9)); animation: arcGlow 1.6s steps(2, jump-none) infinite; }
+    .arc-glyph svg { width: 100%; height: 100%; display: block; }
+    .arc.is-down .arc-glyph { top: 29px; animation-duration: .8s; filter: drop-shadow(1px 0 0 #3A2440) drop-shadow(-1px 0 0 #3A2440) drop-shadow(0 1px 0 #3A2440) drop-shadow(0 -1px 0 #3A2440) drop-shadow(0 0 4px #FFE68A) drop-shadow(0 0 9px rgba(255,214,90,.95)); }
+    @keyframes arcGlow { 50% { opacity: .72; } }
+    .dk:active .arc .arc-glyph { top: 24px; }
+    .dk.on .cap, .dk.on::before { display: none; }
+    .ghi-arc { display: block; transform: scale(1.3); transform-origin: 50% 100%; margin-top: -14px; }
+    .ghi:active .ghi-arc .arc-glyph { top: 29px; }
+    @media (prefers-reduced-motion: reduce) { .arc-glyph { animation: none !important; } }
 </style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
@@ -2027,6 +1997,30 @@
     const DOCK_KEYCAPS = PK ? { overview: PK.keycap("#FBC2C8", "#E7798F"), report: PK.keycap("#BDEBC9", "#55B27F"), mai: PK.keycap("#E1CFF6", "#9C7BD3"), wallet_ai: PK.keycap("#C4E4FA", "#6E9FDE") } : {};
     const DOCK_ICONS = PK ? { overview: PK.icon("home"), report: PK.icon("chart"), mai: PK.icon("mai"), wallet_ai: PK.icon("wallet") } : {};
     // Nút GHI: đồng xu pixel có vệt sáng quét + lấp lánh
+    // Nút dock kiểu nút arcade (mẫu anh Hoàng 11:19): mỗi mục một màu, mặt nút có icon đơn sắc vàng trắng phát sáng; mục đang chọn bị nhấn xuống
+    const ARC_UP = [".........oooooooooo.........", ".......ooTTTTTTTTTToo.......", "......oTTTLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTTWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTTLLLLLLLLTTTTTTTTo...", "...osTTTTLLLLLLLTTTTTTTSo...", "...osTTTTTTLLLLLTTTTTTTSo...", "...osTTTTTTTTTTTTTTTTTTSo...", "...ossTTTTTTTTTTTTTTTTSSo...", "...osssTTTTTTTTTTTTTTSSSo...", "...osssssTTTTTTTTTTSSSSSo...", "...osssssssSSSSSSSSSSSSSo...", "..oosssssssSSSSSSSSSSSSSoo..", ".oBosssssssSSSSSSSSSSSSSoBo.", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBosssssSSSSSSSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
+    const ARC_DN = ["............................", "............................", "............................", "............................", "............................", "............................", ".........oooooooooo.........", ".......ooTTTTTTTTTToo.......", "......oTTTLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTTWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTTLLLLLLLLTTTTTTTTo...", "...osTTTTLLLLLLLTTTTTTTSo...", "..oosTTTTTTLLLLLTTTTTTTSoo..", ".oBosTTTTTTTTTTTTTTTTTTSoBo.", "oBBossTTTTTTTTTTTTTTTTSSoBBo", "oBBosssTTTTTTTTTTTTTTSSSoBBo", "oBBBossssTTTTTTTTTTSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBosssssSSSSSSSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
+    const ARC_GLYPH = {"home": [".....Y.....", "....YYY....", "...YYYYY...", "..YYYYYYY..", ".YYYYYYYYY.", "YYYYYYYYYYY", ".YYYYYYYYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY."], "chart": [".........YY", ".........YY", ".....YY..YY", ".....YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", "...........", "YYYYYYYYYYY"], "tv": ["..Y.....Y..", "...Y...Y...", "....Y.Y....", "YYYYYYYYYYY", "Y.........Y", "Y..Y...Y..Y", "Y..Y...Y..Y", "Y.........Y", "Y...YYY...Y", "Y.........Y", "YYYYYYYYYYY"], "wallet": ["..YYYYYYY..", ".Y.......Y.", "YYYYYYYYYYY", "Y.........Y", "Y.........Y", "Y......YYYY", "Y......Y.YY", "Y......YYYY", "Y.........Y", "Y.........Y", "YYYYYYYYYYY"], "plus": ["....YYY....", "....YYY....", "....YYY....", "YYYYYYYYYYY", "YYYYYYYYYYY", "YYYYYYYYYYY", "....YYY....", "....YYY....", "....YYY...."]};
+    const ARC_COL = {
+      overview: { T: "#F26D8F", L: "#FF9DB4", S: "#B83A5E", s: "#D9506F" },
+      report: { T: "#4FC07F", L: "#8BE3AE", S: "#2A8255", s: "#38A068" },
+      mai: { T: "#9A78EE", L: "#C4ADFF", S: "#5E43B5", s: "#7A5CD6" },
+      wallet_ai: { T: "#4C9EEB", L: "#8CC6FF", S: "#2A62B0", s: "#3A80CF" },
+      add: { T: "#FFC22E", L: "#FFE07A", S: "#C47F12", s: "#E0A01C" },
+    };
+    const ARC_GLYPH_OF = { overview: "home", report: "chart", mai: "tv", wallet_ai: "wallet", add: "plus" };
+    const arcSvgCache = {};
+    const arcSvg = (id, down) => {
+      const k = id + (down ? "_d" : "_u");
+      if (!arcSvgCache[k]) arcSvgCache[k] = pixelSvg(down ? ARC_DN : ARC_UP, { ...ARC_COL[id], W: "#FFFFFF", o: "#1B1430", B: "#E4E4EE", b: "#9A9AB5", h: "#2A2440" });
+      return arcSvgCache[k];
+    };
+    const ArcadeButton = ({ id, down }) => (
+      <span className={`arc ${down ? "is-down" : ""}`}>
+        <span className="arc-art" dangerouslySetInnerHTML={{ __html: arcSvg(id, down) }} />
+        <span className="arc-glyph" dangerouslySetInnerHTML={{ __html: pixelSvg(ARC_GLYPH[ARC_GLYPH_OF[id]], { Y: "#FFF6CF" }) }} />
+      </span>
+    );
     const PixelCoin = React.memo(() => {
       const coin = useRef(null), spk = useRef(null);
       useEffect(() => {
@@ -2476,44 +2470,6 @@
             </div>
           </div></PixelTV>
         </section>
-      );
-    };
-
-
-
-    // Nút chọn danh mục dạng cần joystick (mẫu anh Hoàng 11:13): icon nằm trong quả cầu đỏ,
-    // chọn mục nào thì cần mục đó gạt xuống, mục vừa bỏ chọn bật lên lại (radio + :checked)
-    const JOY_BASE = '<svg viewBox="0 0 34 22" shape-rendering="crispEdges" aria-hidden="true"><path d="M17 1 33 8 17 15 1 8Z" fill="#A43BC8" stroke="#1B1446"/><path d="M1 8 17 15v6L1 14Z" fill="#8A2BB0" stroke="#1B1446"/><path d="M17 15 33 8v6l-16 7Z" fill="#4A2C9E" stroke="#1B1446"/><path d="M3 10h1v3H3zM5 11h1v3H5zM7 12h.8v2.5H7z" fill="#D58BEA"/><path d="M18 16l14-6v1l-14 6z" fill="#5E3DB8"/><ellipse cx="17" cy="8" rx="4" ry="2" fill="#2A1F5E" stroke="#1B1446" stroke-width=".8"/><rect class="joy-led" x="8" y="7" width="2" height="1.6" fill="#7A1D3A"/></svg>';
-    const JoyTile = ({ icon, name }) => (
-      <div className="joy">
-        <span className="joy-stage">
-          <span className="joy-base" dangerouslySetInnerHTML={{ __html: JOY_BASE }} />
-          <span className="joy-arm"><i className="joy-stick" /><span className="joy-ball"><Icon name={icon} className="w-[18px] h-[18px]" /></span></span>
-        </span>
-        <span className="joy-name">{name}</span>
-      </div>
-    );
-
-    // Cần gạt kiểu máy quay xèng: bấm thì cần gạt kéo xuống, màn hình TV quay như cuộn xèng rồi giật xuống màn Hạng mục
-    const SlotLever = ({ active, onPull }) => {
-      const [pulled, setPulled] = useState(false);
-      const pull = () => {
-        if (pulled) return;
-        buzz(14); setPulled(true);
-        const root = document.documentElement;
-        root.classList.remove("reel-in"); root.classList.add("reel-out");
-        setTimeout(() => { buzz(20); onPull(); root.classList.remove("reel-out"); root.classList.add("reel-in"); }, 430);
-        setTimeout(() => { root.classList.remove("reel-in"); }, 1100);
-        setTimeout(() => setPulled(false), 700);
-      };
-      return (
-        <span className={`slot-lever-wrap ${pulled ? "is-pulled" : ""}`} onClick={pull}>
-          <button type="button" aria-label="Hạng mục" className={`hud-btn slot-lever ${active ? "is-active" : ""}`}>
-            <span className="lv-glyph"><svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#FFF4C2" d="M1 1h4v4H1zM7 1h4v4H7zM1 7h4v4H1zM7 7h4v4H7z"/><path fill="#FFD24D" d="M1 4h4v1H1zM7 4h4v1H7zM1 10h4v1H1zM7 10h4v1H7z"/><path fill="#FFFFFF" d="M2 2h1v1H2zM8 2h1v1H8zM2 8h1v1H2zM8 8h1v1H8z"/></svg></span>
-          </button>
-          <span className="lv-slot" aria-hidden="true" />
-          <span className="lv-arm" aria-hidden="true"><i className="lv-stick" /><i className="lv-ball" /></span>
-        </span>
       );
     };
 
@@ -6961,17 +6917,13 @@
             <div className="base" aria-hidden="true"><div className="leds">{Array.from({ length: 24 }, (_, i) => <i key={i} style={{ animationDelay: `${-((i % 12) * 0.14)}s` }} />)}</div><i className="rv l" /><i className="rv r" /></div>
             {DOCK.map(item => item.id === "__add" ? (
               <button key="add" type="button" className="ghi" onClick={() => { buzz(14); openAddTx("EXPENSE"); }} aria-label="Ghi giao dịch mới">
-                <PixelCoin />
+                <span className="ghi-arc"><ArcadeButton id="add" down={false} /></span>
                 <span className="lab">Ghi</span>
               </button>
             ) : (
               <button key={item.id} type="button" className={`dk ${activeTab === item.id ? "on" : ""}`} aria-current={activeTab === item.id ? "page" : undefined} aria-label={item.label}
                 onClick={() => { buzz(); if (item.id === "wallet_ai" && activeTab !== "wallet_ai") setSubTab("wallet"); setActiveTab(item.id); }}>
-                <span className="cap">
-                  <img className="kc" alt="" src={DOCK_KEYCAPS[item.id]} />
-                  <img className="ico" alt="" src={DOCK_ICONS[item.id]} />
-                  <i className="led" />
-                </span>
+                <ArcadeButton id={item.id} down={activeTab === item.id} />
                 <span className="lab">{item.label}</span>
                 {item.id === "mai" && maiBadge > 0 && <span className="ekey-badge" style={{ left: "auto", right: 2, top: 0 }}>{maiBadge}</span>}
               </button>
@@ -7164,12 +7116,15 @@
                       <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">{maiDraft.category}</span>
                     </div>
                     <CategoryParentFilterBar parentCategories={parentCategories} selectedParent={txParentFilter} onSelectParent={setTxParentFilter} />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[116px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.map((c, i) => (
                         <label key={c.id || `md_cat_${c.name}_${i}`} className="cursor-pointer">
                           <input type="radio" name="category" value={c.name} defaultChecked={maiDraft.category === c.name}
                             onChange={() => setMaiDraft(prev => prev ? { ...prev, category: c.name } : prev)} className="peer sr-only" />
-                          <JoyTile icon={c.icon || "tag"} name={c.name} />
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                            <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
+                            <span className="text-[13px] font-bold truncate">{c.name}</span>
+                          </div>
                         </label>
                       ))}
                     </div>
@@ -7461,12 +7416,15 @@
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} required className="peer sr-only" />
-                            <JoyTile icon={c.icon || "tag"} name={c.name} />
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
+                              <span className="text-[13px] font-bold truncate">{c.name}</span>
+                            </div>
                           </label>
                         ))
                       ) : (
@@ -7560,12 +7518,15 @@
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} className="peer sr-only" defaultChecked={editingTx.category === c.name} />
-                            <JoyTile icon={c.icon || "tag"} name={c.name} />
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
+                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
+                              <span className="text-[13px] font-bold truncate">{c.name}</span>
+                            </div>
                           </label>
                         ))
                       ) : (
