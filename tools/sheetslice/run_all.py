@@ -1,7 +1,7 @@
 """Cắt 5 sheet Banana Pro (art/banana/g1..g5.jpg) -> art/banana/32/*.png, rồi --apply nạp vào web/icons.js IMG32."""
 import sys, json, re, base64, subprocess, shutil
 from pathlib import Path
-HERE = Path(__file__).parent; ROOT = HERE.parent.parent; SRC = ROOT / 'art' / 'banana'; OUT = SRC / '32'
+HERE = Path(__file__).parent; ROOT = HERE.parent.parent; SRC = ROOT / 'art' / 'banana'; OUT = SRC / '128'
 G = json.load(open(HERE / 'groups.json'))
 for i, g in enumerate(G, 1):
     subprocess.run([sys.executable, str(HERE / 'slice.py'), str(SRC / f'g{i}.jpg'), g, str(OUT)], check=True)

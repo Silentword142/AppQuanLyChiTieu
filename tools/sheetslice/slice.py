@@ -4,7 +4,7 @@ python3 slice.py SHEET.jpg "name1 name2 ..." OUTDIR [--size 32]
 - dò kích thước + pha lưới pixel của ảnh AI, lấy trung vị mỗi khối -> pixel sạch
 - lượng tử màu mỗi icon, căn giữa vào khung SIZE x SIZE"""
 import sys, os, numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 from scipy import ndimage as ndi
 
 def bg_mask(a, tol=34, holes=True):
@@ -47,6 +47,7 @@ def blockify(rgb, alpha, s, oy, ox):
     A = (ab.mean(2) > 0.5)
     return col, A
 
+HIRES = int(sys.argv[sys.argv.index('--hires') + 1]) if '--hires' in sys.argv else 0
 HOLES = set('basket bag beer coffee lock luggage briefcase guitar bike scissors wifi headphones cart glasses utensils stethoscope lamp plug key compass umbrella wine cup-soda mic trophy sparkles party mai flag syringe tags tag activity heart-pulse more sun bell-ring phone-call trend-up trend-down chart dumbbell'.split())
 
 def main(sheet, names, out, size=32):
@@ -72,6 +73,14 @@ def main(sheet, names, out, size=32):
         m = cells[k] & (~bgm1 if nm in HOLES else True); ys, xs = np.nonzero(m)
         y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
         rgb = a[y0:y1, x0:x1]; al = m[y0:y1, x0:x1].astype(float)
+        if HIRES:  # giữ nguyên nét ảnh gốc: chỉ tách nền, căn vuông, thu về HIRES px
+            mk = ndi.binary_fill_holes(m[y0:y1, x0:x1]) if nm not in HOLES else m[y0:y1, x0:x1]
+            mk = ndi.binary_erosion(mk, iterations=1) | (mk & (np.sqrt(((rgb - bg) ** 2).sum(2)) > 60))
+            soft = np.array(Image.fromarray((mk * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6)))
+            rgba = np.dstack([rgb.astype(np.uint8), soft]); h, w = mk.shape; S = max(h, w) + 8
+            sq = Image.new('RGBA', (S, S), (0, 0, 0, 0)); sq.paste(Image.fromarray(rgba, 'RGBA'), ((S - w) // 2, (S - h) // 2))
+            sq = sq.resize((HIRES, HIRES), Image.LANCZOS)
+            sq.quantize(256, method=Image.Quantize.FASTOCTREE).save(f'{out}/{nm}.png', optimize=True); res[nm] = S; continue
         s, oy, ox = best_grid(rgb, al)
         col, A = blockify(rgb, al, s, oy, ox)
         h, w = A.shape
