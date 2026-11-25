@@ -812,10 +812,14 @@
     .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
     .hkey-led.warn { background: #FF7D95; animation: sideLed 1s steps(2) infinite; }
     .log-ctrl { gap: 6px; }
-    .log-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 260px; }
+    .log-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 440px; }
     .log-it { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 3px dashed rgba(255,242,226,.14); cursor: pointer; }
     .log-it:last-child { border-bottom: 0; }
-    .log-tile { --S: 2px; width: 40px; height: 40px; display: grid; place-items: center; flex: none; padding: 0; text-shadow: none; }
+    .log-tile { width: 40px; height: 40px; display: grid; place-items: center; flex: none; text-shadow: none; }
+    /* icon hạng mục hiển thị trần, không ô nền (Hoang 25/11) */
+    .cat-ico { background: none !important; border: 0 !important; box-shadow: none !important; }
+    .tx-ico, .tv-screen-full .tx-ico, html:not(.dark) .tv-screen-full:not(.tv-dark) .tx-ico { background: none !important; border: 0 !important; box-shadow: none !important; clip-path: none !important; }
+    .tx-ico::after { display: none !important; }
     .log-t { flex: 1; min-width: 0; line-height: 1.1; }
     .log-name { display: block; font: 700 19px/1.1 'Handjet', sans-serif; color: #FFF2E2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .log-t small { display: block; font-size: 14px; color: rgba(255,242,226,.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -5798,7 +5802,7 @@
                   const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? col : "#FFF6E9";
                   return (
                     <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="log-it">
-                      <span className="pxbox log-tile" style={pxFrame(tint)}><Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-6 h-6" /></span>
+                      <span className="log-tile"><Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-9 h-9" /></span>
                       <span className="log-t">
                         <span className="log-name">{tx.note || tx.category}{tx.source === "mai" && <MaiAvatar size={14} className="ml-1 align-[-2px]" />}</span>
                         <small>{tx.category} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</small>
@@ -5891,7 +5895,7 @@
                           return (
                             <div key={item.category} className="bg-theme-background border-2 border-[var(--ink)]/35 p-3 rounded-lg flex items-center justify-between gap-2">
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg border-2 border-[var(--ink)] bg-theme-surface flex items-center justify-center shrink-0">
+                                <div className="w-9 h-9 cat-ico flex items-center justify-center shrink-0">
                                   <Icon name={item.icon} className="w-6 h-6" style={{ color: item.color }} />
                                 </div>
                                 <div className="min-w-0">
@@ -5922,7 +5926,7 @@
                           onClick={() => handleStartEditTx(tx)}
                           className="retro-card-soft bg-theme-surface p-3.5 flex justify-between items-center hover:bg-theme-variant cursor-pointer transition-all group">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-lg border-2 border-[var(--ink)] bg-theme-background flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 cat-ico flex items-center justify-center shrink-0">
                               <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7" style={{ color: getColorForCategoryName(tx.category) }} />
                             </div>
                             <div className="min-w-0">
@@ -6144,7 +6148,7 @@
                             <div key={parent.id} className="bg-theme-background border-2 border-[var(--ink)]/45 p-3 rounded-xl flex flex-col justify-between gap-2 shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-8 h-8 rounded-lg border-2 border-[var(--ink)] bg-theme-surface flex items-center justify-center shrink-0">
+                                  <div className="w-8 h-8 cat-ico flex items-center justify-center shrink-0">
                                     <Icon name={parent.icon} className="w-5 h-5" style={{ color: parent.color }} />
                                   </div>
                                   <div className="min-w-0">
@@ -6207,7 +6211,7 @@
                                    onClick={()=>setDrillDownParent(item.category)}
                                    className="retro-card-soft bg-theme-surface p-3.5 flex justify-between items-center hover:bg-theme-variant cursor-pointer transition-all group gap-2">
                                      <div className="flex items-center gap-3 min-w-0">
-                                         <div className="w-11 h-11 rounded-xl border-2 border-[var(--ink)] bg-theme-background flex items-center justify-center shrink-0">
+                                         <div className="w-11 h-11 cat-ico flex items-center justify-center shrink-0">
                                              <Icon name={item.icon} className="w-8 h-8" style={{ color: item.color }} />
                                          </div>
                                          <div className="min-w-0">
@@ -6235,7 +6239,7 @@
                              return (
                                  <div key={item.category} className="retro-card-soft bg-theme-surface p-3.5 flex justify-between items-center hover:bg-theme-variant transition-colors gap-2">
                                      <div className="flex items-center gap-3 min-w-0">
-                                         <div className="w-10 h-10 rounded-lg border-2 border-[var(--ink)] bg-theme-background flex items-center justify-center shrink-0">
+                                         <div className="w-10 h-10 cat-ico flex items-center justify-center shrink-0">
                                              <Icon name={item.icon} className="w-7 h-7" style={{ color: item.color }} />
                                          </div>
                                          <div className="min-w-0">
@@ -6333,7 +6337,7 @@
 
                           {/* Parent Header: hàng 1 = icon + tên + nhãn; hàng 2 = số mục con + nút thao tác (không chèn lên nhau) */}
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-12 h-12 rounded-xl border-2 border-[var(--ink)] bg-theme-background shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center shrink-0">
+                            <div className="w-12 h-12 cat-ico flex items-center justify-center shrink-0">
                               <Icon name={parent.icon} anim="float" className="w-9 h-9" style={{ color: parent.color }} />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -6414,7 +6418,7 @@
                       return (
                         <div key={sub.id} className="retro-card-soft bg-theme-surface p-3.5 flex justify-between items-center group transition-colors">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-lg border-2 border-[var(--ink)] bg-theme-background flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 cat-ico flex items-center justify-center shrink-0">
                               <Icon name={sub.icon} className="w-7 h-7" style={{ color: sub.color }} />
                             </div>
                             <div className="min-w-0">
