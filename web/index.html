@@ -1762,13 +1762,38 @@
       );
     };
 
+    // (25/11) Giao dịch lưu theo mã hạng mục (categoryId); tên danh mục nhỏ được trùng giữa các nhóm lớn khác nhau.
+    const catKey = (c) => c.isParent ? `P|${String(c.name).trim().toLowerCase()}` : `C|${String(c.parent || "").trim().toLowerCase()}|${String(c.name).trim().toLowerCase()}`;
+    const resolveCatId = (name, cats, parentHint) => {
+      if (!name) return null;
+      const list = (cats || []).filter(c => c && c.name === name);
+      if (!list.length) return null;
+      if (list.length === 1) return list[0].id;
+      const byParent = parentHint && list.find(c => c.parent === parentHint);
+      return (byParent || list.find(c => !c.isParent) || list[0]).id;
+    };
+    // Gắn categoryId cho giao dịch còn thiếu (dữ liệu cũ, Gemini, đồng bộ). Trả về null nếu không có gì đổi.
+    const withCatIds = (txs, cats) => {
+      if (!Array.isArray(txs) || !Array.isArray(cats) || !cats.length) return null;
+      const ids = new Set(cats.map(c => c.id));
+      let changed = false;
+      const out = txs.map(t => {
+        if (!t || (t.categoryId && ids.has(t.categoryId))) return t;
+        const id = resolveCatId(t.category, cats, t.categoryParent);
+        if (!id || id === t.categoryId) return t;
+        changed = true;
+        return { ...t, categoryId: id };
+      });
+      return changed ? out : null;
+    };
+
     const deduplicateCategories = (rawCats) => {
       if (!rawCats || !Array.isArray(rawCats)) return [...DEFAULT_PARENT_CATEGORIES, ...DEFAULT_SUBCATEGORIES];
       const result = [];
       const seen = new Set();
       rawCats.forEach(c => {
         if (!c || !c.name) return;
-        const key = c.name.trim().toLowerCase();
+        const key = catKey({ ...c, isParent: !!c.isParent, parent: c.isParent ? null : (c.parent || null) });
         if (!seen.has(key)) {
           seen.add(key);
           result.push({
@@ -1891,8 +1916,17 @@
         e.preventDefault();
         const nm = name.trim();
         if (!nm) { setFormErr("Nhập tên hạng mục trước đã."); return; }
-        const sameName = allCategories.find(c => c && c.name && c.name.trim().toLowerCase() === nm.toLowerCase() && (!editingCategory || c.id !== editingCategory.id));
-        if (sameName) { setFormErr(`Tên “${sameName.name}” đã có rồi${sameName.parent ? ` (trong nhóm ${sameName.parent})` : ""}. Đặt tên khác nhé.`); return; }
+        const low = nm.toLowerCase();
+        const others = allCategories.filter(c => c && c.name && c.name.trim().toLowerCase() === low && (!editingCategory || c.id !== editingCategory.id));
+        const clash = isChild
+          ? others.find(c => c.isParent || c.parent === parentName)
+          : others[0];
+        if (clash) {
+          setFormErr(isChild && !clash.isParent
+            ? `Nhóm ${parentName} đã có “${clash.name}” rồi. Tên được trùng ở nhóm lớn khác, nhưng trong cùng một nhóm thì không.`
+            : clash.isParent ? `“${clash.name}” đang là tên một nhóm lớn. Đặt tên khác nhé.` : `“${clash.name}” đang là danh mục nhỏ (nhóm ${clash.parent}). Nhóm lớn cần tên riêng.`);
+          return;
+        }
         if (dupIcon) { setFormErr(`Icon này đang dùng cho “${dupIcon}”. Chọn icon khác để dễ phân biệt.`); return; }
         if (isChild && !parentCategories.some(p => p.name === parentName)) { setFormErr("Chọn nhóm lớn cho danh mục nhỏ."); return; }
         setFormErr("");
@@ -3913,7 +3947,7 @@
           if (!c || !c.name) return false;
           const isP = c.isParent || (!c.parent && !categoryParentMap[c.name]);
           if (isP) return false;
-          const key = c.name.trim().toLowerCase();
+          const key = `${c.parent || categoryParentMap[c.name] || ""}|${c.name.trim().toLowerCase()}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
@@ -3975,6 +4009,30 @@
           if (cat && cat.isParent) return cat.name;
           return catName || "Khác";
       };
+      // Tra hạng mục của 1 giao dịch theo mã trước, tên sau
+      const catById = React.useMemo(() => { const m = {}; categories.forEach(c => { if (c && c.id) m[c.id] = c; }); return m; }, [categories]);
+      const dupCatNames = React.useMemo(() => { const n = {}; categories.forEach(c => { if (c && !c.isParent) n[c.name] = (n[c.name] || 0) + 1; }); return new Set(Object.keys(n).filter(k => n[k] > 1)); }, [categories]);
+      const txCat = (t) => (t && t.categoryId && catById[t.categoryId]) || categories.find(c => c.name === (t && t.category)) || null;
+      const txParent = (t) => { const c = txCat(t); if (c) return c.isParent ? c.name : (c.parent || categoryParentMap[c.name] || c.name); return getParentNameForCategory(t && t.category); };
+      const txIcon = (t) => { const c = txCat(t); return (c && c.icon) || getIconForCategoryName(t && t.category); };
+      const txColor = (t) => { const c = txCat(t); return (c && c.color) || (c && c.parent && (categories.find(p => p.isParent && p.name === c.parent) || {}).color) || getColorForCategoryName(t && t.category); };
+      const catLabel = (c) => c ? (!c.isParent && dupCatNames.has(c.name) && c.parent ? `${c.name} · ${c.parent}` : c.name) : "";
+      const txCatLabel = (t) => { const c = txCat(t); return c ? catLabel(c) : (t && t.category) || "Khác"; };
+      // Giá trị radio chọn hạng mục là mã; dữ liệu cũ có thể còn là tên
+      const catFromPick = (v, fallbackTx) => {
+        if (!v) return fallbackTx ? { category: fallbackTx.category, categoryId: fallbackTx.categoryId || resolveCatId(fallbackTx.category, categories) } : { category: "Khác", categoryId: resolveCatId("Khác", categories) };
+        const id = String(v).indexOf("p_choice_") === 0 ? String(v).slice(9) : v;
+        const c = catById[id] || categories.find(x => String(x.id) === String(id));
+        if (c) return { category: c.name, categoryId: c.id };
+        return { category: v, categoryId: resolveCatId(v, categories) };
+      };
+      // Tự gắn mã hạng mục cho giao dịch cũ / từ Gemini / từ thiết bị khác (sao lưu 1 lần trước khi chuyển)
+      useEffect(() => {
+        const fixed = withCatIds(transactions, categories);
+        if (!fixed) return;
+        try { if (!localStorage.getItem("vina_transactions_backup_before_catid")) localStorage.setItem("vina_transactions_backup_before_catid", JSON.stringify(transactions)); } catch (e) {}
+        setTransactions(fixed);
+      }, [transactions, categories]);
 
       useEffect(() => {
         const rootStyle = document.documentElement.style;
@@ -4520,10 +4578,10 @@
 
         // Structured category hierarchy tree with budget and current spending info
         const hierarchyTree = parentCategories.map(parent => {
-          const children = categories.filter(c => !c.isParent && (c.parent === parent.name || categoryParentMap[c.name] === parent.name));
+          const children = categories.filter(c => !c.isParent && (c.parent ? c.parent === parent.name : categoryParentMap[c.name] === parent.name));
           const allocatedBudget = categoryBudgets[parent.name] || 0;
           const currentSpent = transactions
-            .filter(t => t.type === 'EXPENSE' && (getParentNameForCategory(t.category) === parent.name || t.category === parent.name))
+            .filter(t => t.type === 'EXPENSE' && (txParent(t) === parent.name || t.category === parent.name))
             .reduce((s, t) => s + t.amount, 0);
           return {
             id: parent.id,
@@ -5144,7 +5202,7 @@
          const groups = {};
          const counts = {};
          reportTxs.forEach(t => {
-            const pName = getParentNameForCategory(t.category);
+            const pName = txParent(t);
             groups[pName] = (groups[pName] || 0) + t.amount;
             counts[pName] = (counts[pName] || 0) + 1;
          });
@@ -5161,23 +5219,27 @@
       const childBreakdown = React.useMemo(() => {
          const groups = {};
          const counts = {};
+         const rep = {};
          reportTxs.forEach(t => {
-            groups[t.category] = (groups[t.category] || 0) + t.amount;
-            counts[t.category] = (counts[t.category] || 0) + 1;
+            const k = txCatLabel(t);
+            groups[k] = (groups[k] || 0) + t.amount;
+            counts[k] = (counts[k] || 0) + 1;
+            if (!rep[k]) rep[k] = t;
          });
          return Object.entries(groups).map(([category, amount]) => ({
             category,
-            parent: getParentNameForCategory(category),
+            parent: txParent(rep[category]),
             amount,
             txCount: counts[category] || 0,
-            color: getColorForCategoryName(category),
-            icon: getIconForCategoryName(category)
+            color: txColor(rep[category]),
+            icon: txIcon(rep[category])
          })).sort((a,b) => b.amount - a.amount);
       }, [reportTxs, categoryParentMap, categories]);
 
       // Stacked bar chart data (columns = time buckets, colors = categories)
       const reportBarData = React.useMemo(() => {
-         const catOf = (t) => reportHierarchyView === "parent" ? getParentNameForCategory(t.category) : t.category;
+         const catOf = (t) => reportHierarchyView === "parent" ? txParent(t) : txCatLabel(t);
+         const colOf = {};
          const keyOf = (t) => { const d = new Date(t.date); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; };
          let mode = "category";
          let buckets = [];
@@ -5210,8 +5272,8 @@
             }
          }
          const catTotals = {};
-         reportTxs.forEach(t => { const c = catOf(t); catTotals[c] = (catTotals[c] || 0) + t.amount; });
-         const legend = Object.entries(catTotals).sort((a,b) => b[1] - a[1]).map(([name, amount]) => ({ name, amount, color: getColorForCategoryName(name) }));
+         reportTxs.forEach(t => { const c = catOf(t); catTotals[c] = (catTotals[c] || 0) + t.amount; if (!colOf[c]) colOf[c] = reportHierarchyView === "parent" ? getColorForCategoryName(c) : txColor(t); });
+         const legend = Object.entries(catTotals).sort((a,b) => b[1] - a[1]).map(([name, amount]) => ({ name, amount, color: colOf[name] || getColorForCategoryName(name) }));
          if (mode === "category") {
             const columns = legend.map(l => ({ label: l.name, total: l.amount, segments: [{ name: l.name, amount: l.amount, color: l.color }] }));
             return { mode, columns, legend, max: Math.max(0, ...columns.map(c => c.total)) };
@@ -5238,20 +5300,23 @@
       // Drill-down Breakdown for a selected Parent Category
       const drillDownData = React.useMemo(() => {
          if (!drillDownParent) return null;
-         const txs = reportTxs.filter(t => getParentNameForCategory(t.category) === drillDownParent);
+         const txs = reportTxs.filter(t => txParent(t) === drillDownParent);
          const total = txs.reduce((sum, t) => sum + t.amount, 0);
          const groups = {};
          const counts = {};
+         const rep = {};
          txs.forEach(t => {
-            groups[t.category] = (groups[t.category] || 0) + t.amount;
-            counts[t.category] = (counts[t.category] || 0) + 1;
+            const k = txCat(t) ? txCat(t).name : t.category;
+            groups[k] = (groups[k] || 0) + t.amount;
+            counts[k] = (counts[k] || 0) + 1;
+            if (!rep[k]) rep[k] = t;
          });
          const breakdown = Object.entries(groups).map(([subCat, amount]) => ({
             category: subCat,
             amount,
             txCount: counts[subCat] || 0,
-            color: getColorForCategoryName(subCat),
-            icon: getIconForCategoryName(subCat)
+            color: txColor(rep[subCat]),
+            icon: txIcon(rep[subCat])
          })).sort((a,b) => b.amount - a.amount);
 
          return {
@@ -5270,11 +5335,11 @@
          if (txParentFilter === "Tất cả") {
            const subs = categories.filter(c => !c.isParent);
            // Include standalone parent categories that have no subcategories
-           const standaloneParents = categories.filter(c => c.isParent && !categories.some(sub => !sub.isParent && (sub.parent === c.name || categoryParentMap[sub.name] === c.name)));
+           const standaloneParents = categories.filter(c => c.isParent && !categories.some(sub => !sub.isParent && (sub.parent ? sub.parent === c.name : categoryParentMap[sub.name] === c.name)));
            return [...subs, ...standaloneParents];
          }
 
-         const matchedChildren = categories.filter(c => !c.isParent && (c.parent === txParentFilter || categoryParentMap[c.name] === txParentFilter));
+         const matchedChildren = categories.filter(c => !c.isParent && (c.parent ? c.parent === txParentFilter : categoryParentMap[c.name] === txParentFilter));
          const matchedParent = categories.find(c => c.name === txParentFilter);
 
          if (matchedChildren.length > 0) {
@@ -5477,7 +5542,7 @@
           id: Date.now(),
           type: e.target.type.value,
           amount: Number(e.target.amount.value) || 0,
-          category: e.target.category.value,
+          ...catFromPick(e.target.category && e.target.category.value),
           bankName: sel.bankName,
           ...(sel.bankId != null ? { bankId: sel.bankId } : {}),
           note: e.target.note.value,
@@ -5526,7 +5591,8 @@
         const newType = form.type.value;
         const newAmount = Number(form.amount.value) || 0;
         // Không bắt buộc chọn lại hạng mục: nếu hạng mục cũ không nằm trong nhóm đang lọc thì giữ nguyên
-        const newCategory = (form.category && form.category.value) || editingTx.category;
+        const pickedCat = catFromPick(form.category && form.category.value, editingTx);
+        const newCategory = pickedCat.category;
         const sel = parseBankSelection(form.bankSelect ? form.bankSelect.value : (form.bankName && form.bankName.value));
         const newBankName = sel.bankName;
         const newBankId = sel.bankId;
@@ -5548,6 +5614,7 @@
           type: newType,
           amount: newAmount,
           category: newCategory,
+          categoryId: pickedCat.categoryId || null,
           bankName: newBankName,
           note: newNote,
           date: newDate,
@@ -5575,7 +5642,7 @@
 
         const newTx = transactions.map(t => t.id === editingTx.id ? updatedTx : t);
         // Anh sửa hạng mục / thu-chi -> nhớ lại và gửi kèm cho Gemini làm ví dụ ở lần sau
-        const catChanged = newCategory !== editingTx.category, typeChanged = newType !== editingTx.type;
+        const catChanged = (pickedCat.categoryId && editingTx.categoryId ? pickedCat.categoryId !== editingTx.categoryId : newCategory !== editingTx.category), typeChanged = newType !== editingTx.type;
         if (window.MaiAgent && (catChanged || (typeChanged && editingTx.source === "mai")) && (newNote || editingTx.maiKey)) {
           const noteChanged = newNote !== editingTx.note;
           const base = noteChanged ? { ...editingTx, note: newNote, maiText: null, maiKey: editingTx.maiKey && editingTx.maiKey.indexOf("amt:") === 0 ? null : editingTx.maiKey } : editingTx;
@@ -5589,7 +5656,8 @@
 
       const handleStartEditTx = (tx) => {
         setEditingTx(tx);
-        const parent = categoryParentMap[tx.category] || categories.find(c => c.name === tx.category)?.parent;
+        const tc = txCat(tx);
+        const parent = (tc && !tc.isParent && tc.parent) || (tc && tc.isParent ? tc.name : null) || categoryParentMap[tx.category];
         if (parent) {
           setTxParentFilter(parent);
         } else {
@@ -5660,7 +5728,7 @@
             delete newMap[oldName.toLowerCase()];
 
             updatedCategories = categories.map(c => {
-              if (c.id === editingCategory.id || c.name.toLowerCase() === oldName.toLowerCase()) {
+              if (editingCategory.id ? c.id === editingCategory.id : c.name.toLowerCase() === oldName.toLowerCase()) {
                 return { 
                   ...c, 
                   name: catName, 
@@ -5691,7 +5759,7 @@
             showToast(`Đã cập nhật danh mục: ${catName}`);
         } else {
             // Check if category with this name already exists
-            const existingIdx = categories.findIndex(c => c.name.toLowerCase() === normName);
+            const existingIdx = categories.findIndex(c => c.name.toLowerCase() === normName && (isChild ? (!c.isParent && c.parent === parentName) : c.isParent));
             const newCat = { 
               id: `c_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, 
               name: catName, 
@@ -5709,15 +5777,20 @@
             }
 
             if (isChild && parentName) {
-              newMap[catName] = parentName;
-            } else {
+              if (!newMap[catName]) newMap[catName] = parentName; // tên trùng ở nhóm khác: giữ bản đồ cũ, nhóm thật nằm trong c.parent
+            } else if (!categories.some(c => !c.isParent && c.name === catName)) {
               delete newMap[catName];
             }
             showToast(`Đã thêm danh mục: ${catName}`);
         }
 
         const sanitizedList = deduplicateCategories(updatedCategories);
-        updateData(null, null, sanitizedList, null, newMap);
+        // Đổi tên/đổi nhóm hạng mục -> cập nhật tên hiển thị trên các giao dịch dùng mã hạng mục đó
+        let txOut = null;
+        if (editingCategory && editingCategory.id && editingCategory.name !== catName) {
+          txOut = transactions.map(t => (t.categoryId === editingCategory.id || (!t.categoryId && t.category === editingCategory.name)) ? { ...t, category: catName, categoryId: editingCategory.id, updatedAt: Date.now() } : t);
+        }
+        updateData(null, txOut, sanitizedList, null, newMap);
         setIsCategoryModalOpen(false);
         setEditingCategory(null);
         setNewCategoryParent("");
@@ -5728,7 +5801,7 @@
         const normName = cat.name.trim().toLowerCase();
         
         // Filter out by ID and by normalized name to eliminate any duplicates
-        const updated = categories.filter(c => c.id !== cat.id && c.name.trim().toLowerCase() !== normName);
+        const updated = categories.filter(c => c.id !== cat.id && !(c.name.trim().toLowerCase() === normName && !!c.isParent === !!cat.isParent && (c.parent || null) === (cat.parent || null)));
         const newMap = { ...categoryParentMap };
         delete newMap[cat.name];
         delete newMap[normName];
@@ -6066,14 +6139,14 @@
 
                 {/* NHẬT KÝ GẦN ĐÂY – TV riêng thân xanh bạc hà, màn tối, mỗi kênh 1 ngày */}
                 <LogTV groups={recentGroups} marks={logMarks} picked={logDate} onPick={setLogDate} onAll={() => setActiveTab("report")} renderItem={(tx) => {
-                  const col = getColorForCategoryName(tx.category);
+                  const col = txColor(tx);
                   const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? col : "#FFF6E9";
                   return (
                     <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="log-it">
-                      <span className="log-tile"><Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-9 h-9" /></span>
+                      <span className="log-tile"><Icon name={txIcon(tx)} className="w-9 h-9" /></span>
                       <span className="log-t">
-                        <span className="log-name">{tx.note || tx.category}{tx.source === "mai" && <MaiAvatar size={14} className="ml-1 align-[-2px]" />}</span>
-                        <small>{tx.category} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</small>
+                        <span className="log-name">{tx.note || txCatLabel(tx)}{tx.source === "mai" && <MaiAvatar size={14} className="ml-1 align-[-2px]" />}</span>
+                        <small>{txCatLabel(tx)} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</small>
                       </span>
                       <span className={`log-m tabular ${tx.type === "INCOME" ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>{tx.type === "INCOME" ? "+" : "−"}{formatVND(tx.amount)}</span>
                     </div>
@@ -6195,10 +6268,10 @@
                           className="retro-card-soft bg-theme-surface p-3.5 flex justify-between items-center hover:bg-theme-variant cursor-pointer transition-all group">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-10 h-10 cat-ico flex items-center justify-center shrink-0">
-                              <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7" style={{ color: getColorForCategoryName(tx.category) }} />
+                              <Icon name={txIcon(tx)} className="w-7 h-7" style={{ color: txColor(tx) }} />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-bold text-theme-textPrimary text-sm truncate">{tx.category}</p>
+                              <p className="font-bold text-theme-textPrimary text-sm truncate">{txCatLabel(tx)}</p>
                               <p className="text-xs text-theme-textSecondary font-semibold truncate">
                                 {tx.note ? `${tx.note} • ` : ""}{txBankLabel(accounts, tx)} • {new Date(tx.date).toLocaleDateString('vi-VN')}
                               </p>
@@ -6308,7 +6381,7 @@
                         <p className="text-[12px] text-theme-textSecondary font-semibold">Chạm vào cột màu hoặc danh mục để xem giao dịch chi tiết.</p>
                       )}
                       {reportFocusCat && (() => {
-                        const list = reportTxs.filter(t => (reportHierarchyView === "parent" ? getParentNameForCategory(t.category) : t.category) === reportFocusCat).sort((a, b) => new Date(b.date) - new Date(a.date));
+                        const list = reportTxs.filter(t => (reportHierarchyView === "parent" ? txParent(t) : txCatLabel(t)) === reportFocusCat).sort((a, b) => new Date(b.date) - new Date(a.date));
                         const sum = list.reduce((x, t) => x + t.amount, 0);
                         return (
                           <div className="space-y-2 pt-2 border-t-2 border-dashed border-theme-border tab-enter">
@@ -6322,10 +6395,10 @@
                             {list.map(tx => (
                               <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} className="bg-theme-background border-2 border-[var(--ink)]/35 p-2.5 rounded-lg flex items-center justify-between gap-2 cursor-pointer">
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7 shrink-0" />
+                                  <Icon name={txIcon(tx)} className="w-7 h-7 shrink-0" />
                                   <div className="min-w-0">
-                                    <p className="font-bold text-sm text-theme-textPrimary truncate">{tx.note || tx.category}</p>
-                                    <p className="text-[12px] text-theme-textSecondary font-semibold truncate">{tx.category} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleDateString('vi-VN')}</p>
+                                    <p className="font-bold text-sm text-theme-textPrimary truncate">{tx.note || txCatLabel(tx)}</p>
+                                    <p className="text-[12px] text-theme-textSecondary font-semibold truncate">{txCatLabel(tx)} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleDateString('vi-VN')}</p>
                                   </div>
                                 </div>
                                 <span className={`font-display text-lg tabular shrink-0 ${tx.type === "INCOME" ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>{tx.type === "INCOME" ? "+" : "−"}{formatVND(tx.amount)}</span>
@@ -7331,7 +7404,7 @@
                     ...maiDraft,
                     type: f.type.value,
                     amount: Number(f.amount.value) || 0,
-                    category: f.category.value,
+                    ...catFromPick(f.category && f.category.value, maiDraft),
                     bankId: sel.bankId,
                     bankName: sel.bankName || null,
                     isCredit: sel.account ? isCreditAcc(sel.account) : maiDraft.isCredit,
@@ -7394,11 +7467,11 @@
                     <div className="grid grid-cols-3 gap-1.5 max-h-[116px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.map((c, i) => (
                         <label key={c.id || `md_cat_${c.name}_${i}`} className="cursor-pointer">
-                          <input type="radio" name="category" value={c.name} defaultChecked={maiDraft.category === c.name}
-                            onChange={() => setMaiDraft(prev => prev ? { ...prev, category: c.name } : prev)} className="peer sr-only" />
+                          <input type="radio" name="category" value={c.id} defaultChecked={maiDraft.categoryId ? (maiDraft.categoryId === c.id || c.id === `p_choice_${maiDraft.categoryId}`) : maiDraft.category === c.name}
+                            onChange={() => setMaiDraft(prev => prev ? { ...prev, ...catFromPick(c.id) } : prev)} className="peer sr-only" />
                           <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
                             <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                            <span className="text-[13px] font-bold truncate">{c.name}</span>
+                            <span className="text-[13px] font-bold truncate">{catLabel(c)}</span>
                           </div>
                         </label>
                       ))}
@@ -7541,7 +7614,7 @@
                             <button type="button"
                               onClick={() => setBatchPicker(catPickerOpen ? null : { bid: item._bid, kind: "cat" })}
                               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-left transition-all ${catPickerOpen ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-2px_0_rgba(74,51,80,.22)]" : "border-[var(--ink)] bg-theme-surface text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.14)]"}`}>
-                              <Icon name={getIconForCategoryName(item.category) || getCategoryIcon(item.category)} className="w-4 h-4 shrink-0" />
+                              <Icon name={txIcon(item)} className="w-4 h-4 shrink-0" />
                               <span className="text-xs font-bold truncate flex-1">{item.category}</span>
                               <Icon name={catPickerOpen ? "chevron-up" : "chevron-down"} className="w-3.5 h-3.5 shrink-0 opacity-70" />
                             </button>
@@ -7560,13 +7633,13 @@
                               <CategoryParentFilterBar parentCategories={parentCategories} selectedParent={txParentFilter} onSelectParent={setTxParentFilter} />
                               <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1 rounded-lg border-2 border-theme-border bg-theme-background">
                                 {filteredCategoriesForTx.map((c, ci) => {
-                                  const active = item.category === c.name;
+                                  const active = item.categoryId ? (item.categoryId === c.id || c.id === `p_choice_${item.categoryId}`) : item.category === c.name;
                                   return (
                                     <button key={c.id || `bcat_${c.name}_${ci}`} type="button"
-                                      onClick={() => { patchItem(item._bid, { category: c.name, categoryEdited: true }); setBatchPicker(null); }}
+                                      onClick={() => { patchItem(item._bid, { ...catFromPick(c.id), categoryEdited: true }); setBatchPicker(null); }}
                                       className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 text-left transition-all ${active ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-surface text-theme-textPrimary hover:border-[var(--ink)]"}`}>
                                       <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                                      <span className="text-[12px] font-bold truncate">{c.name}</span>
+                                      <span className="text-[12px] font-bold truncate">{catLabel(c)}</span>
                                     </button>
                                   );
                                 })}
@@ -7698,7 +7771,7 @@
                             <input type="radio" name="category" value={c.name} required className="peer sr-only" />
                             <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
                               <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{c.name}</span>
+                              <span className="text-[13px] font-bold truncate">{catLabel(c)}</span>
                             </div>
                           </label>
                         ))
@@ -7778,16 +7851,16 @@
                   <div className="console-lcd px-3 py-1.5 bg-theme-background">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Số tiền (VNĐ)</label>
-                      <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] truncate max-w-[160px]">{editingTx.category}</span>
+                      <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] truncate max-w-[160px]">{txCatLabel(editingTx)}</span>
                     </div>
                     <CurrencyInput name="amount" defaultValue={editingTx.amount} placeholder="0" required={true} className="w-full bg-transparent border-0 p-0 text-theme-textPrimary font-display text-2xl tabular focus:outline-none focus:ring-0 focus:shadow-none" />
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Hạng mục</label>
-                    {(() => { const cn = edPick.cat || editingTx.category; return (
+                    {(() => { const pc = edPick.cat ? catFromPick(edPick.cat) : { category: editingTx.category, categoryId: editingTx.categoryId }; const pcat = (pc.categoryId && catById[pc.categoryId]) || null; const cn = pcat ? catLabel(pcat) : pc.category; return (
                       <button type="button" className={`ed-fold ${edPick.open === "cat" ? "on" : ""}`} onClick={() => { buzz(8); setEdPick(p => ({ ...p, open: p.open === "cat" ? null : "cat" })); }}>
-                        <Icon name={getIconForCategoryName(cn) || getCategoryIcon(cn)} className="w-7 h-7 shrink-0" />
+                        <Icon name={(pcat && pcat.icon) || getIconForCategoryName(pc.category) || getCategoryIcon(pc.category)} className="w-7 h-7 shrink-0" />
                         <span className="flex-1 min-w-0 truncate">{cn}</span>
                         <span className="font-pixel shrink-0" aria-hidden="true">{edPick.open === "cat" ? "▲" : "▼"}</span>
                       </button>
@@ -7802,10 +7875,10 @@
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
-                            <input type="radio" name="category" value={c.name} className="peer sr-only" defaultChecked={editingTx.category === c.name} />
+                            <input type="radio" name="category" value={c.id} className="peer sr-only" defaultChecked={editingTx.categoryId ? (editingTx.categoryId === c.id || c.id === `p_choice_${editingTx.categoryId}`) : editingTx.category === c.name} />
                             <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
                               <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{c.name}</span>
+                              <span className="text-[13px] font-bold truncate">{catLabel(c)}</span>
                             </div>
                           </label>
                         ))
@@ -8271,7 +8344,7 @@
                         {parentCategories.map(parent => {
                           const limit = categoryBudgets[parent.name] || 0;
                           const spent = transactions
-                            .filter(t => t.type === 'EXPENSE' && (getParentNameForCategory(t.category) === parent.name || t.category === parent.name))
+                            .filter(t => t.type === 'EXPENSE' && (txParent(t) === parent.name || t.category === parent.name))
                             .reduce((s, t) => s + t.amount, 0);
                           const percent = limit > 0 ? (spent / limit) * 100 : 0;
                           const filled = limit > 0 && spent > 0 ? Math.min(12, Math.max(1, Math.round((percent / 100) * 12))) : 0;
