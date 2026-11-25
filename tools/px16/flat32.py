@@ -23,9 +23,10 @@ TONE = {k: (h(a), h(b)) for k, (a, b) in {
 }.items()}
 
 class Icon:
-    def __init__(s):
+    def __init__(s, scale=S):
+        s.sc = scale
         s.mat = np.full((N, N), -1, int); s.shapes = []; s.dots = {}
-        yy, xx = np.mgrid[0:N, 0:N]; s.X = (xx + .5) / S; s.Y = (yy + .5) / S
+        yy, xx = np.mgrid[0:N, 0:N]; s.X = (xx + .5) / scale; s.Y = (yy + .5) / scale
     def _add(s, mask, m, kind, ol):
         sid = len(s.shapes); s.shapes.append((m, kind, ol, mask)); s.mat[mask] = sid; return sid
     def ell(s, cx, cy, rx, ry, m, kind='round', ol=True):
@@ -52,7 +53,36 @@ class Icon:
         return s._add(mask, m, kind, ol)
     def hole_ell(s, cx, cy, rx, ry):
         m = ((s.X - cx) / rx) ** 2 + ((s.Y - cy) / ry) ** 2 <= 1; s.mat[m] = -1
-    def dot(s, x, y, col): s.dots[(int(x * S), int(y * S))] = col
+    def dot(s, x, y, col): s.dots[(int(x * s.sc), int(y * s.sc))] = col
+    # ---- công cụ lưới 32 nguyên (sc=1): toạ độ là chỉ số pixel, nét sắc ----
+    def box(s, x0, y0, x1, y1, m, kind='soft', ol=True, r=0):
+        """chữ nhật phủ pixel x0..x1, y0..y1 (gồm cả hai đầu); r = số pixel vạt góc (bậc thang 45°)"""
+        px = s.X - .5; py = s.Y - .5
+        mask = (px >= x0) & (px <= x1) & (py >= y0) & (py <= y1)
+        if r:
+            for cx, cy, sx, sy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
+                mask &= ~(((px - cx) * sx + (py - cy) * sy) < r)
+        return s._add(mask, m, kind, ol)
+    def hole_box(s, x0, y0, x1, y1):
+        px = s.X - .5; py = s.Y - .5; s.mat[(px >= x0) & (px <= x1) & (py >= y0) & (py <= y1)] = -1
+    def mask(s, art, x0, y0, m, kind='soft', ol=True):
+        """khối vẽ bằng ASCII: ký tự khác '.' là có"""
+        mk = np.zeros((N, N), bool)
+        for j, row in enumerate(art.strip('\n').split('\n')):
+            for i, ch in enumerate(row):
+                if ch not in '. ' and 0 <= y0 + j < N and 0 <= x0 + i < N: mk[y0 + j, x0 + i] = True
+        return s._add(mk, m, kind, ol)
+    def seg(s, x0, y0, x1, y1, col):
+        """nét 1px Bresenham, tô màu cố định (không viền), vẽ sau cùng"""
+        dx, dy = abs(x1 - x0), -abs(y1 - y0); sx = 1 if x0 < x1 else -1; sy = 1 if y0 < y1 else -1; e = dx + dy
+        while True:
+            s.dots[(x0, y0)] = col
+            if x0 == x1 and y0 == y1: break
+            e2 = 2 * e
+            if e2 >= dy: e += dy; x0 += sx
+            if e2 <= dx: e += dx; y0 += sy
+    def pts(s, lst, col):
+        for x, y in lst: s.dots[(x, y)] = col
     def dots(s, pts, col):
         for x, y in pts: s.dot(x, y, col)
 
