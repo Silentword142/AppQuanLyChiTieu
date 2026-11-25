@@ -1,13 +1,16 @@
 import sys, os, json
 from PIL import Image, ImageDraw
+import warm16
 from warm16 import render
+warm16.set_style(sys.argv[2] if len(sys.argv) > 2 else 'warm')
 from icons_a import A; from icons_b import B; from icons_c import C; from icons_d import D
-ART = {**A, **B, **C, **D}; ORDER = json.load(open('order.json'))
+from icons_warm_fix import F, SYM
+ART = {**A, **B, **C, **D, **F}; ORDER = json.load(open('order.json'))
 out = sys.argv[1]
 for s in ('16', '64', '128'): os.makedirs(f'{out}/{s}', exist_ok=True)
 items = []
 for i, n in enumerate(ORDER, 1):
-    im = render(ART[n], n); im.save(f'{out}/16/{n}.png')
+    im = render(ART[n], n, sym=n in SYM); im.save(f'{out}/16/{n}.png')
     for s in (64, 128): im.resize((s, s), Image.NEAREST).save(f'{out}/{s}/{n}.png')
     items.append((f'#{i:03d} {n}', im))
 cols, cell, pad = 12, 80, 12
