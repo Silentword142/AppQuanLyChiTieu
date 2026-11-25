@@ -794,13 +794,38 @@
     .grille-v { width: 42px; height: 30px; background: repeating-linear-gradient(180deg, #3B2A3F 0 3px, transparent 3px 6px); opacity: .55; }
     .side-led { width: 9px; height: 9px; background: #7DFFB0; box-shadow: 0 0 0 3px #3B2A3F; animation: sideLed 2.4s steps(4) infinite; }
     @keyframes sideLed { 50% { background: #C9FFE0; } }
-    .pxtv-feet { position: absolute; left: 36px; right: 36px; bottom: -44px; display: flex; justify-content: space-between; pointer-events: none; }
+    .pxtv-feet { position: absolute; left: 36px; right: 36px; bottom: -31px; display: flex; justify-content: space-between; pointer-events: none; }
     .pxtv-feet span { width: 36px; height: 12px; background: #5A3D62; box-shadow: 0 3px 0 #3B2A3F, 3px 0 0 #3B2A3F, -3px 0 0 #3B2A3F; }
     .home-tv { margin-bottom: 22px; }
-    .tv-screen.tv-screen-full.tv-dark.tv-main { min-height: 212px; }
-    .tv-screen.tv-screen-full.tv-dark.tv-main .crt-body { min-height: 206px; }
-    .tv-screen.tv-screen-full.tv-dark.tv-log { min-height: 168px; }
-    .tv-screen.tv-screen-full.tv-dark.tv-log .crt-body { min-height: 162px; }
+    /* Màn TV cố định kích thước; nội dung dài thì vuốt dọc bên trong màn */
+    .tv-screen.tv-screen-full.tv-dark.tv-main { height: 300px !important; min-height: 300px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-main .crt-body { height: 100%; min-height: 0; }
+    .tv-main .crt-hero { flex: 1; min-height: 0 !important; }
+    .tv-main .tv-scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+    .tv-main .tv-scroll::-webkit-scrollbar, .tv-log .log-list::-webkit-scrollbar { display: none; }
+    .tv-screen.tv-screen-full.tv-dark.tv-log { height: 390px !important; min-height: 390px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-log .crt-body { height: 100%; min-height: 0; }
+    .tv-log .log-list { flex: 1; min-height: 0; max-height: none !important; overscroll-behavior: contain; scrollbar-width: none; }
+    .tv-log .log-empty { flex: 1; }
+    /* Chuyển mục: TV đứng yên, chỉ đổi màu khung; màn vẫn nhiễu/giật như cũ */
+    .crt-stage.tab-enter, .crt-stage.tab-enter > * { animation: none !important; }
+    .pxtv { animation: pxFrameIn .32s steps(4) both; }
+    @keyframes pxFrameIn { 0% { filter: brightness(1.5) saturate(.4); } 100% { } }
+    html:not(.dark) .pxtv { animation-name: pxFrameInL; }
+    @keyframes pxFrameInL { 0% { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)) brightness(1.5) saturate(.4); } 100% { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); } }
+    /* Bộ chọn pixel thay select gốc của hệ điều hành */
+    .pxsel-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; min-width: 0; }
+    .pxsel-btn .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pxsel-list { display: flex; flex-direction: column; gap: 6px; }
+    .pxsel-opt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; font-weight: 700; font-size: 15px; background: var(--background); color: var(--text-primary); border: 3px solid var(--ink); box-shadow: inset 0 -3px 0 rgba(74,51,80,.18); }
+    .pxsel-opt.on { background: var(--accent); color: var(--on-accent, #3B2A3F); }
+    .pxsel-opt .dot { width: 12px; height: 12px; flex: none; border: 3px solid var(--ink); background: var(--surface); }
+    .pxsel-opt.on .dot { background: var(--ink); box-shadow: inset 0 0 0 2px var(--accent); }
+    /* Biểu đồ báo cáo: chạm danh mục để xem giao dịch */
+    .rep-seg { cursor: pointer; transition: opacity .15s; }
+    .rep-dim .rep-seg:not(.on) { opacity: .3; }
+    .rep-leg { cursor: pointer; }
+    .rep-leg.on { outline: 3px solid var(--ink); background: var(--accent) !important; }
     .tv-dark .crt-body { text-shadow: 2px 0 0 rgba(255,90,140,.4), -2px 0 0 rgba(90,210,255,.3), 0 0 8px rgba(157,245,194,.3); }
     .home-keys { display: grid; gap: 8px; margin: 4px 0 14px; }
     .hkey { --S: 3px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 92px; padding: 0; color: #3B2A3F; transition: transform .1s; }
@@ -1896,14 +1921,14 @@
                   {isChild && (
                     <div className="pt-2 border-t border-dashed border-theme-border">
                       <label className="text-[13px] font-bold text-theme-textSecondary mb-1 block uppercase">Thuộc Danh mục Lớn</label>
-                      <select 
+                      <PxSelect title="Thuộc danh mục lớn"
                         value={parentName} 
                         onChange={(e) => setParentName(e.target.value)}
                         className="w-full bg-theme-surface border-2 border-theme-border rounded-lg p-2 text-xs font-bold text-theme-textPrimary appearance-none">
                         {parentCategories.map(p => (
                           <option key={p.id} value={p.name}>{p.name}</option>
                         ))}
-                      </select>
+                      </PxSelect>
                     </div>
                   )}
                 </div>
@@ -2118,6 +2143,50 @@
       useEffect(() => (PK ? PK.sky(ref.current) : undefined), []);
       return <canvas ref={ref} className="pxsky" aria-hidden="true" style={{ zIndex: -1 }} />;
     });
+
+    // Bộ chọn kiểu pixel (thay hộp chọn gốc của Android cho đồng bộ giao diện). Dùng như <select>.
+    const PxSelect = ({ value, onChange, className = "", title, children }) => {
+      const [open, setOpen] = useState(false);
+      const opts = [];
+      const walk = (ch) => React.Children.forEach(ch, (c) => {
+        if (!c) return;
+        if (c.type === React.Fragment) return walk(c.props.children);
+        if (c.type === "option") opts.push({ value: String(c.props.value), label: React.Children.toArray(c.props.children).join("") });
+      });
+      walk(children);
+      const cur = opts.find(o => o.value === String(value)) || opts[0];
+      const pick = (v) => { buzz(8); setOpen(false); onChange && onChange({ target: { value: v } }); };
+      useEffect(() => {
+        if (!open) return;
+        const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+      }, [open]);
+      return (
+        <>
+          <button type="button" className={`pxsel-btn ${className.replace(/\bappearance-none\b/, "")}`} onClick={() => { buzz(8); setOpen(true); }}>
+            <span className="lbl">{cur ? cur.label : ""}</span><span aria-hidden="true" className="shrink-0 font-pixel">▼</span>
+          </button>
+          {open && ReactDOM.createPortal(
+            <div className="fixed inset-0 modal-backdrop z-[70] flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={() => setOpen(false)}>
+              <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+                <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
+                  <span className="font-pixel text-[14px] uppercase tracking-wider truncate">{title || "Chọn"}</span>
+                  <button type="button" onClick={() => setOpen(false)} aria-label="Đóng" className="console-key shrink-0">✕</button>
+                </div>
+                <div className="h-1 retro-stripes-h shrink-0" />
+                <div className="p-3 overflow-y-auto no-scrollbar pxsel-list">
+                  {opts.map(o => (
+                    <button key={o.value} type="button" className={`pxsel-opt ${cur && o.value === cur.value ? "on" : ""}`} onClick={() => pick(o.value)}>
+                      <span className="dot" /><span className="min-w-0 break-words">{o.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>, document.body)}
+        </>
+      );
+    };
 
     // Thân TV pastel bọc màn CRT: khung pixel 9-slice nhiều lớp bóng + hàng nút dưới
     const PixelTV = ({ color = "tvRose", brand = "SPENDY", antenna = false, side = null, ctrl = null, feet = false, children }) => {
@@ -2538,7 +2607,7 @@
                     const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
                     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
                   }}>
-                  <div className="flex-1 min-h-0 flex flex-col" onClick={cur.onOpen ? () => { buzz(); cur.onOpen(); } : undefined} role={cur.onOpen ? "button" : undefined}>
+                  <div className="flex-1 min-h-0 flex flex-col tv-scroll" onClick={cur.onOpen ? () => { buzz(); cur.onOpen(); } : undefined} role={cur.onOpen ? "button" : undefined}>
                     {cur.render()}
                   </div>
                   <div className="tv-dots shrink-0 mt-2.5">
@@ -2572,6 +2641,7 @@
       const [noise, setNoise] = useState(false);
       const [bars, setBars] = useState(false);
       const idleRef = useRef(Date.now());
+      const touchRef = useRef(null);
       const nRef = useRef(1);
       const [now, setNow] = useState(() => new Date());
       const n = Math.max(1, groups.length);
@@ -2592,8 +2662,8 @@
           <PixelTV color="tvTeal" ctrl={
             <div className="pxtv-ctrl log-ctrl">
               <i className="led" /><span className="brand">NHẬT KÝ</span><span className="flex-1" />
-              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày sau" onClick={() => go(1)} disabled={groups.length < 2}>◀</button>
-              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày trước" onClick={() => go(-1)} disabled={groups.length < 2}>▶</button>
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày trước" onClick={() => go(-1)} disabled={groups.length < 2}>◀</button>
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày sau" onClick={() => go(1)} disabled={groups.length < 2}>▶</button>
               <button type="button" className="pxbox mini-key wide" style={pxFrame("#FFE08A")} onClick={() => { buzz(); onAll(); }}>TẤT CẢ</button>
             </div>}>
             <div className="tv-bezel tv-bezel-full">
@@ -2602,7 +2672,13 @@
                 <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
                 <div className={`crt-bars ${bars ? "on" : ""}`} aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
                 <div className="crt-pwr late" aria-hidden="true" />
-                <div key={g ? g.key : "empty"} className="crt-body tv-glitch-in" onTouchStart={() => { idleRef.current = Date.now(); }}>
+                <div key={g ? g.key : "empty"} className="crt-body tv-glitch-in"
+                  onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; idleRef.current = Date.now(); }}
+                  onTouchEnd={(e) => {
+                    const st = touchRef.current; touchRef.current = null; if (!st) return;
+                    const t = e.changedTouches[0], dx = t.clientX - st.x, dy = t.clientY - st.y;
+                    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
+                  }}>
                   <div className="osd-bar osd shrink-0">
                     <span className="truncate">CH{pad(idx + 4)} <span className="opacity-85 uppercase">{g ? g.label : "Sổ trống"}</span></span>
                     <span className="shrink-0">{g ? <span className={g.net >= 0 ? "text-[var(--income)]" : "text-[var(--expense)]"}>{g.net >= 0 ? "+" : "−"}{formatVND(Math.abs(g.net))}</span> : <>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</>}</span>
@@ -2682,6 +2758,8 @@
       const [categoryBudgets, setCategoryBudgets] = useState(() => safeJsonParse("vina_category_budgets", {}));
       const [monthlyBudget, setMonthlyBudget] = useState(() => safeJsonParse("vina_monthly_budget", 0));
       const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+      const [isBudgetPageOpen, setIsBudgetPageOpen] = useState(false);
+      const [reportFocusCat, setReportFocusCat] = useState(null);
       const [editingBudgetCat, setEditingBudgetCat] = useState(null);
 
       const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -3844,6 +3922,7 @@
           if (editingBudgetCat) { setEditingBudgetCat(null); return true; }
           setIsBudgetModalOpen(false); return true;
         }
+        if (isBudgetPageOpen) { setIsBudgetPageOpen(false); return true; }
         if (isAddBankModalOpen) { setIsAddBankModalOpen(false); setEditingBank(null); return true; }
         if (isAddTxModalOpen) { setIsAddTxModalOpen(false); return true; }
         if (editingTx) { setEditingTx(null); return true; }
@@ -5009,6 +5088,8 @@
          return { mode, columns, legend, max: Math.max(0, ...columns.map(c => c.total)) };
       }, [reportTxs, reportPeriod, reportMonth, reportYear, reportFrom, reportTo, reportHierarchyView, categoryParentMap, categories]);
 
+      useEffect(() => { setReportFocusCat(null); }, [reportType, reportPeriod, reportMonth, reportYear, reportFrom, reportTo, reportHierarchyView, reportAccount]);
+
       // Drill-down Breakdown for a selected Parent Category
       const drillDownData = React.useMemo(() => {
          if (!drillDownParent) return null;
@@ -5600,7 +5681,7 @@
       const budgetPace = monthlyBudget > 0 ? (monthStats.exp > monthlyBudget ? "over" : budgetPct > timePct + 10 ? "warn" : "") : "";
       const nwStr = formatVND(netWorth);
       const goWallets = () => { setActiveTab("wallet_ai"); setSubTab("wallet"); };
-      const openBudget = () => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); };
+      const openBudget = () => { setEditingBudgetCat(null); setIsBudgetPageOpen(true); };
       const PH = { mint: "var(--crt-mint)", pink: "var(--crt-pink)", butter: "var(--crt-butter)", cream: "var(--crt-cream)" };
       const tvChannels = [
         { id: "assets", title: "TÀI SẢN", onOpen: goWallets, render: () => (
@@ -6029,9 +6110,9 @@
                           <input type="month" value={reportMonth} onChange={e=>e.target.value && setReportMonth(e.target.value)} className="bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-1.5 px-2.5 text-sm font-bold text-theme-textPrimary" />
                         )}
                         {reportPeriod === "Năm" && (
-                          <select value={reportYear} onChange={e=>setReportYear(Number(e.target.value))} className="bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-1.5 px-2.5 text-sm font-bold text-theme-textPrimary">
-                            {Array.from({length: 11}, (_, i) => new Date().getFullYear() - 8 + i).map(y => <option key={y} value={y}>Năm {y}</option>)}
-                          </select>
+                          <PxSelect title="Chọn năm" value={reportYear} onChange={e=>setReportYear(Number(e.target.value))} className="bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-1.5 px-2.5 text-sm font-bold text-theme-textPrimary">
+                            {Array.from({length: 11}, (_, i) => new Date().getFullYear() - 8 + i).map(y => <option key={y} value={y}>{`Năm ${y}`}</option>)}
+                          </PxSelect>
                         )}
                         {reportPeriod === "Ngày" && (
                           <>
@@ -6047,13 +6128,13 @@
                           <p className="text-sm font-bold text-theme-textSecondary">Chưa có dữ liệu trong khoảng thời gian này</p>
                         </div>
                       ) : (
-                        <div className="console-lcd bg-theme-background p-3 overflow-x-auto no-scrollbar">
+                        <div className={`console-lcd bg-theme-background p-3 overflow-x-auto no-scrollbar ${reportFocusCat ? "rep-dim" : ""}`}>
                           <div className={`flex items-end h-44 pt-2 border-b-[3px] border-[var(--ink)] ${reportBarData.columns.length > 16 ? "gap-[3px]" : "gap-1.5"}`} style={{ minWidth: `${Math.max(100, reportBarData.columns.length * (reportBarData.columns.length > 16 ? 9 : 22))}px` }}>
                             {reportBarData.columns.map((col, i) => (
                               <div key={i} className="flex-1 min-w-0 h-full flex flex-col justify-end" title={`${col.label}: ${formatVND(col.total)}`}>
                                 <div className="rep-bar w-full flex flex-col-reverse rounded-t-[3px] overflow-hidden border-2 border-[var(--ink)]/50" style={{ height: `${(col.total / reportBarData.max) * 100}%`, animationDelay: `${i * 18}ms`, borderBottom: 0 }}>
                                   {col.segments.map(seg => (
-                                    <div key={seg.name} title={`${seg.name}: ${formatVND(seg.amount)}`} style={{ height: `${(seg.amount / col.total) * 100}%`, backgroundColor: seg.color }} />
+                                    <div key={seg.name} role="button" title={`${seg.name}: ${formatVND(seg.amount)}`} className={`rep-seg ${reportFocusCat === seg.name ? "on" : ""}`} onClick={() => { buzz(8); setReportFocusCat(f => f === seg.name ? null : seg.name); }} style={{ height: `${(seg.amount / col.total) * 100}%`, backgroundColor: seg.color }} />
                                   ))}
                                 </div>
                               </div>
@@ -6070,14 +6151,44 @@
                       {reportBarData.legend.length > 0 && (
                         <div className="flex flex-wrap gap-x-3 gap-y-2 pt-2 border-t-2 border-dashed border-theme-border">
                           {reportBarData.legend.map(l => (
-                            <div key={l.name} className="flex items-center gap-1.5 text-xs text-theme-textPrimary bg-theme-background border border-[var(--ink)]/30 px-2 py-0.5 rounded-md">
+                            <button type="button" key={l.name} onClick={() => { buzz(8); setReportFocusCat(f => f === l.name ? null : l.name); }} className={`rep-leg flex items-center gap-1.5 text-xs text-theme-textPrimary bg-theme-background border border-[var(--ink)]/30 px-2 py-0.5 rounded-md ${reportFocusCat === l.name ? "on" : ""}`}>
                               <span className="w-3 h-3 rounded-sm border border-[var(--ink)] shrink-0" style={{ backgroundColor: l.color }}></span>
                               <span className="font-bold">{l.name}</span>
                               <span className="text-theme-textSecondary font-semibold tabular">{formatVND(l.amount)}</span>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       )}
+                      {reportBarData.legend.length > 0 && !reportFocusCat && (
+                        <p className="text-[12px] text-theme-textSecondary font-semibold">Chạm vào cột màu hoặc danh mục để xem giao dịch chi tiết.</p>
+                      )}
+                      {reportFocusCat && (() => {
+                        const list = reportTxs.filter(t => (reportHierarchyView === "parent" ? getParentNameForCategory(t.category) : t.category) === reportFocusCat).sort((a, b) => new Date(b.date) - new Date(a.date));
+                        const sum = list.reduce((x, t) => x + t.amount, 0);
+                        return (
+                          <div className="space-y-2 pt-2 border-t-2 border-dashed border-theme-border tab-enter">
+                            <div className="flex items-center gap-2">
+                              <Icon name={getIconForCategoryName(reportFocusCat) || getCategoryIcon(reportFocusCat)} className="w-7 h-7 shrink-0" />
+                              <p className="font-bold text-sm text-theme-textPrimary flex-1 min-w-0 truncate">{reportFocusCat} · {list.length} giao dịch</p>
+                              <span className={`font-display text-xl tabular ${reportType === "Chi tiêu" ? "text-[var(--expense)]" : "text-[var(--income)]"}`}>{formatVND(sum)}</span>
+                              <button type="button" onClick={() => setReportFocusCat(null)} aria-label="Đóng chi tiết" className="console-key shrink-0">✕</button>
+                            </div>
+                            {list.length === 0 && <p className="text-xs text-theme-textSecondary font-semibold">Không có giao dịch.</p>}
+                            {list.map(tx => (
+                              <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} className="bg-theme-background border-2 border-[var(--ink)]/35 p-2.5 rounded-lg flex items-center justify-between gap-2 cursor-pointer">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7 shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-sm text-theme-textPrimary truncate">{tx.note || tx.category}</p>
+                                    <p className="text-[12px] text-theme-textSecondary font-semibold truncate">{tx.category} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleDateString('vi-VN')}</p>
+                                  </div>
+                                </div>
+                                <span className={`font-display text-lg tabular shrink-0 ${tx.type === "INCOME" ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>{tx.type === "INCOME" ? "+" : "−"}{formatVND(tx.amount)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
 
 
@@ -6091,7 +6202,7 @@
                        </div>
                        <div className="flex gap-2 items-center">
                           <span className="font-pixel text-[14px] text-theme-textSecondary uppercase whitespace-nowrap">Bộ lọc ví:</span>
-                          <select
+                          <PxSelect title="Bộ lọc ví"
                             value={(() => {
                               if (reportAccount === "Tất cả") return "Tất cả";
                               if (accounts.some(a => String(a.id) === String(reportAccount))) return String(reportAccount);
@@ -6099,10 +6210,10 @@
                               return byName ? String(byName.id) : "Tất cả";
                             })()}
                             onChange={e=>setReportAccount(e.target.value)}
-                            className="flex-1 bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-2 px-3 text-sm font-bold text-theme-textPrimary appearance-none">
+                            className="flex-1 min-w-0 bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-2 px-3 text-sm font-bold text-theme-textPrimary appearance-none">
                               <option value="Tất cả">Tất cả ví tài khoản</option>
                               {accounts.map(a => <option key={a.id} value={String(a.id)}>{formatAccountLabel(a)}</option>)}
-                          </select>
+                          </PxSelect>
                        </div>
                     </div>
 
@@ -6125,106 +6236,17 @@
                         </div>
                     </div>
 
-                    {/* 5. CATEGORY BUDGET & GOAL PROGRESS (Đồng bộ Firebase) */}
-                    <div className="retro-card bg-theme-surface p-4 md:p-5 space-y-4">
-                      <div className="flex justify-between items-center gap-2">
-                        <div>
-                          <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2 leading-none">
-                            <Icon name="btn-budget" anim="pulse" className="w-5 h-5 text-theme-primary" /> Hạn mức Ngân sách (HP)
-                          </h3>
-                          <p className="text-[13px] text-theme-textSecondary mt-1">
-                            Thiết lập mục tiêu chi tiêu theo nhóm (tự động đồng bộ Cloud).
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); }}
-                          className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0">
-                          <span className="console-key">B</span>
-                          <Icon name="btn-filter" className="w-3.5 h-3.5" /> Thiết lập
-                        </button>
-                      </div>
-
-                      {/* Overall monthly budget HP bar */}
-                      <div className="console-lcd bg-theme-background p-3.5 space-y-2">
-                        <div className="flex justify-between items-center text-xs font-bold gap-2">
-                          <span className="text-theme-textPrimary flex items-center gap-1.5">
-                            <Icon name="btn-calendar" className="w-3.5 h-3.5 text-theme-primary" /> Tổng ngân sách tháng
-                          </span>
-                          <span className="text-theme-textSecondary font-semibold tabular text-right">
-                            {monthlyBudget > 0 ? `${formatVND(reportSummary.expense)} / ${formatVND(monthlyBudget)}` : "Chưa đặt ngân sách tổng"}
-                          </span>
-                        </div>
-                        {monthlyBudget > 0 && (() => {
-                          const pct = (reportSummary.expense / monthlyBudget) * 100;
-                          const filled = reportSummary.expense > 0 ? Math.min(12, Math.max(1, Math.round((pct / 100) * 12))) : 0;
-                          const cellColor = reportSummary.expense > monthlyBudget ? "var(--expense)" : (pct > 80 ? "var(--accent)" : "var(--income)");
-                          return (
-                            <>
-                              <div className="hp-seg" aria-label={`Đã dùng ${pct.toFixed(1)}% ngân sách tháng`}>
-                                {Array.from({ length: 12 }, (_, idx) => (
-                                  <span key={idx} className="hp-cell" style={idx < filled ? { backgroundColor: cellColor } : undefined} />
-                                ))}
-                              </div>
-                              <div className="flex justify-between items-center text-[13px] text-theme-textSecondary font-semibold">
-                                <span>HP đã dùng {pct.toFixed(1)}%</span>
-                                <span className={monthlyBudget >= reportSummary.expense ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
-                                  {monthlyBudget >= reportSummary.expense ? `Còn lại: ${formatVND(monthlyBudget - reportSummary.expense)}` : `Vượt hạn mức: ${formatVND(reportSummary.expense - monthlyBudget)}`}
-                                </span>
-                              </div>
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Individual Category Budgets */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        {parentCategories.map(parent => {
-                          const limit = categoryBudgets[parent.name] || 0;
-                          const spent = transactions
-                            .filter(t => t.type === 'EXPENSE' && (getParentNameForCategory(t.category) === parent.name || t.category === parent.name))
-                            .reduce((s, t) => s + t.amount, 0);
-                          const percent = limit > 0 ? (spent / limit) * 100 : 0;
-                          const filled = limit > 0 && spent > 0 ? Math.min(12, Math.max(1, Math.round((percent / 100) * 12))) : 0;
-                          const hpCol = spent > limit ? "var(--expense)" : (percent > 80 ? "var(--accent)" : "var(--income)");
-                          return (
-                            <div key={parent.id} className="bg-theme-background border-2 border-[var(--ink)]/45 p-3 rounded-xl flex flex-col justify-between gap-2 shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-8 h-8 cat-ico flex items-center justify-center shrink-0">
-                                    <Icon name={parent.icon} className="w-5 h-5" style={{ color: parent.color }} />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-bold text-xs text-theme-textPrimary truncate">{parent.name}</p>
-                                    <p className="text-[13px] text-theme-textSecondary font-semibold truncate">Đã tiêu: {formatVND(spent)}</p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => { setEditingBudgetCat(parent.name); setIsBudgetModalOpen(true); }}
-                                  className="game-btn-sm game-btn-neutral text-[13px] bg-theme-surface text-theme-textPrimary px-2 py-1 font-bold shrink-0">
-                                  {limit > 0 ? formatVND(limit) : "+ Đặt"}
-                                </button>
-                              </div>
-
-                              {limit > 0 && (
-                                <div className="space-y-1">
-                                  <div className="hp-seg">
-                                    {Array.from({ length: 12 }, (_, idx) => (
-                                      <span key={idx} className="hp-cell" style={idx < filled ? { backgroundColor: hpCol } : undefined} />
-                                    ))}
-                                  </div>
-                                  <div className="flex justify-between items-center text-[12px]">
-                                    <span className="text-theme-textSecondary font-bold">{percent.toFixed(0)}%</span>
-                                    <span className={spent <= limit ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
-                                      {spent <= limit ? `Còn: ${formatVND(limit - spent)}` : `Vượt: ${formatVND(spent - limit)}`}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    {/* 5. Hạn mức: thu gọn thành 1 nút, bấm mở toàn màn hình */}
+                    <button type="button" onClick={() => { buzz(); setIsBudgetPageOpen(true); }} className="retro-card bg-theme-surface w-full p-3.5 flex items-center gap-3 text-left">
+                      <Icon name="btn-budget" anim="pulse" className="w-9 h-9 shrink-0" />
+                      <span className="flex-1 min-w-0">
+                        <span className="font-display text-xl text-theme-textPrimary block leading-none">Hạn mức ngân sách</span>
+                        <span className="text-[13px] text-theme-textSecondary font-semibold block mt-1 truncate">
+                          {monthlyBudget > 0 ? `Đã dùng ${formatVND(reportSummary.expense)} / ${formatVND(monthlyBudget)}` : `${Object.values(categoryBudgets || {}).filter(v => v > 0).length} nhóm đã đặt hạn mức · chạm để xem`}
+                        </span>
+                      </span>
+                      <Icon name="btn-next" className="w-5 h-5 shrink-0" />
+                    </button>
 
                     {/* 6. Breakdown List by Hierarchy */}
                     <div className="space-y-2.5">
@@ -8014,6 +8036,124 @@
                       Huỷ
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}</Presence>
+
+          {/* TRANG HẠN MỨC TOÀN MÀN HÌNH */}
+          <Presence show={isBudgetPageOpen}>{isBudgetPageOpen && (
+            <div className="fixed inset-0 z-40 bg-theme-background flex flex-col" style={{ paddingTop: "var(--safe-top, 0px)", paddingBottom: "var(--safe-bottom, 0px)" }}>
+              <div className="console-top-strip px-3.5 py-2 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <button type="button" onClick={() => setIsBudgetPageOpen(false)} className="console-key shrink-0" aria-label="Quay lại">◄</button>
+                  <span className="font-pixel text-[15px] uppercase tracking-wider truncate">HẠN MỨC NGÂN SÁCH</span>
+                </div>
+                <button type="button" onClick={() => setIsBudgetPageOpen(false)} aria-label="Đóng" className="console-key shrink-0">✕</button>
+              </div>
+              <div className="h-1 retro-stripes-h shrink-0" />
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+                <div className="max-w-3xl mx-auto">
+                                        <div className="retro-card bg-theme-surface p-4 md:p-5 space-y-4">
+                      <div className="flex justify-between items-center gap-2">
+                        <div>
+                          <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2 leading-none">
+                            <Icon name="btn-budget" anim="pulse" className="w-5 h-5 text-theme-primary" /> Hạn mức Ngân sách (HP)
+                          </h3>
+                          <p className="text-[13px] text-theme-textSecondary mt-1">
+                            Thiết lập mục tiêu chi tiêu theo nhóm (tự động đồng bộ Cloud).
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); }}
+                          className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0">
+                          <span className="console-key">B</span>
+                          <Icon name="btn-filter" className="w-3.5 h-3.5" /> Thiết lập
+                        </button>
+                      </div>
+
+                      {/* Overall monthly budget HP bar */}
+                      <div className="console-lcd bg-theme-background p-3.5 space-y-2">
+                        <div className="flex justify-between items-center text-xs font-bold gap-2">
+                          <span className="text-theme-textPrimary flex items-center gap-1.5">
+                            <Icon name="btn-calendar" className="w-3.5 h-3.5 text-theme-primary" /> Tổng ngân sách tháng
+                          </span>
+                          <span className="text-theme-textSecondary font-semibold tabular text-right">
+                            {monthlyBudget > 0 ? `${formatVND(reportSummary.expense)} / ${formatVND(monthlyBudget)}` : "Chưa đặt ngân sách tổng"}
+                          </span>
+                        </div>
+                        {monthlyBudget > 0 && (() => {
+                          const pct = (reportSummary.expense / monthlyBudget) * 100;
+                          const filled = reportSummary.expense > 0 ? Math.min(12, Math.max(1, Math.round((pct / 100) * 12))) : 0;
+                          const cellColor = reportSummary.expense > monthlyBudget ? "var(--expense)" : (pct > 80 ? "var(--accent)" : "var(--income)");
+                          return (
+                            <>
+                              <div className="hp-seg" aria-label={`Đã dùng ${pct.toFixed(1)}% ngân sách tháng`}>
+                                {Array.from({ length: 12 }, (_, idx) => (
+                                  <span key={idx} className="hp-cell" style={idx < filled ? { backgroundColor: cellColor } : undefined} />
+                                ))}
+                              </div>
+                              <div className="flex justify-between items-center text-[13px] text-theme-textSecondary font-semibold">
+                                <span>HP đã dùng {pct.toFixed(1)}%</span>
+                                <span className={monthlyBudget >= reportSummary.expense ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
+                                  {monthlyBudget >= reportSummary.expense ? `Còn lại: ${formatVND(monthlyBudget - reportSummary.expense)}` : `Vượt hạn mức: ${formatVND(reportSummary.expense - monthlyBudget)}`}
+                                </span>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Individual Category Budgets */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        {parentCategories.map(parent => {
+                          const limit = categoryBudgets[parent.name] || 0;
+                          const spent = transactions
+                            .filter(t => t.type === 'EXPENSE' && (getParentNameForCategory(t.category) === parent.name || t.category === parent.name))
+                            .reduce((s, t) => s + t.amount, 0);
+                          const percent = limit > 0 ? (spent / limit) * 100 : 0;
+                          const filled = limit > 0 && spent > 0 ? Math.min(12, Math.max(1, Math.round((percent / 100) * 12))) : 0;
+                          const hpCol = spent > limit ? "var(--expense)" : (percent > 80 ? "var(--accent)" : "var(--income)");
+                          return (
+                            <div key={parent.id} className="bg-theme-background border-2 border-[var(--ink)]/45 p-3 rounded-xl flex flex-col justify-between gap-2 shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="w-8 h-8 cat-ico flex items-center justify-center shrink-0">
+                                    <Icon name={parent.icon} className="w-5 h-5" style={{ color: parent.color }} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-xs text-theme-textPrimary truncate">{parent.name}</p>
+                                    <p className="text-[13px] text-theme-textSecondary font-semibold truncate">Đã tiêu: {formatVND(spent)}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => { setEditingBudgetCat(parent.name); setIsBudgetModalOpen(true); }}
+                                  className="game-btn-sm game-btn-neutral text-[13px] bg-theme-surface text-theme-textPrimary px-2 py-1 font-bold shrink-0">
+                                  {limit > 0 ? formatVND(limit) : "+ Đặt"}
+                                </button>
+                              </div>
+
+                              {limit > 0 && (
+                                <div className="space-y-1">
+                                  <div className="hp-seg">
+                                    {Array.from({ length: 12 }, (_, idx) => (
+                                      <span key={idx} className="hp-cell" style={idx < filled ? { backgroundColor: hpCol } : undefined} />
+                                    ))}
+                                  </div>
+                                  <div className="flex justify-between items-center text-[12px]">
+                                    <span className="text-theme-textSecondary font-bold">{percent.toFixed(0)}%</span>
+                                    <span className={spent <= limit ? "text-[var(--income)] font-bold" : "text-[var(--expense)] font-bold"}>
+                                      {spent <= limit ? `Còn: ${formatVND(limit - spent)}` : `Vượt: ${formatVND(spent - limit)}`}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                 </div>
               </div>
             </div>
