@@ -933,6 +933,146 @@
     @keyframes pxCoin { 50% { transform: translateY(-4px); } }
     @media (prefers-reduced-motion: reduce) { .pxdock *, .pxdock *::before, .pxdock *::after, .pxdock .base::before, .pxdock .base::after { animation: none !important; } }
     .pxsky { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; image-rendering: pixelated; }
+
+    /* =====================================================================
+       Spendy · "Pastel Pixel Day" (2026-11-25) – hợp với bộ icon pixel mới
+       Mực #3B3355 · kem #FFF6E9 · pastel 2 tông · bóng đổ cứng #BAB1B5
+       Màn TV chuyển sang nền sáng, chữ mực, không phát sáng (dễ đọc, tương phản ≥ 4.5:1).
+       Chỉ áp cho chế độ sáng; chế độ tối giữ nguyên.
+       ===================================================================== */
+    html:not(.dark) {
+      --ink: #3B3355; --ink-rgb: 59 51 85; --icon-ink: #3B3355;
+      --text-primary: #3B3355; --text-primary-rgb: 59 51 85;
+      --text-secondary: #6E6488; --text-secondary-rgb: 110 100 136;
+      --background: #FFF6E9; --background-rgb: 255 246 233;
+      --surface: #FFFFFF; --surface-rgb: 255 255 255;
+      --variant: #F4EEFB; --variant-rgb: 244 238 251;
+      --border: #D9D0EA; --border-rgb: 217 208 234;
+      --primary: #FF8FAB; --primary-rgb: 255 143 171; --on-primary: #3B3355;
+      --accent: #FFE08A; --accent-rgb: 255 224 138; --on-accent: #3B3355;
+      --expense: #D4506A; --expense-light: #FFE3EA; --on-expense: #FFFFFF;
+      --income: #2F8A5E; --income-light: #DDF5EA; --on-income: #FFFFFF;
+      --hud: #3B3355; --on-hud: #FFF6E9;
+      --wood: #CDB8F6; --wood-light: #E6DBFF; --wood-dark: #9F86E0;
+      --sky1: #A9D8FF; --sky2: #DDF0FF; --ground: #C9EBD9;
+      --tv-trim: #FFF6E9; --screen: #FFFDF7; --screen2: #FFFFFF;
+      --shadow-hard: #BAB1B5;
+    }
+    html:not(.dark) body { background-color: var(--background); }
+    html:not(.dark)[data-retro="1"] body { background-image: linear-gradient(180deg, #BFE2FF 0px, #E4F3FF 360px, #FFF6E9 820px); }
+
+    /* --- màn hình TV: sáng, sạch, chữ mực --- */
+    html:not(.dark) .tv-screen.tv-screen-full {
+      background: #FFFDF7 !important;
+      color: var(--ink);
+      --surface: #FFFFFF; --surface-rgb: 255 255 255;
+      --background: #FFF8EC; --background-rgb: 255 248 236;
+      --variant: #F4EEFB; --variant-rgb: 244 238 251;
+      --text-primary: #3B3355; --text-primary-rgb: 59 51 85;
+      --text-secondary: #6E6488; --text-secondary-rgb: 110 100 136;
+      --border: #3B3355; --border-rgb: 59 51 85;
+      --income: #2F8A5E; --income-light: #DDF5EA; --on-income: #FFFFFF;
+      --expense: #D4506A; --expense-light: #FFE3EA; --on-expense: #FFFFFF;
+      --accent: #FFE08A; --accent-rgb: 255 224 138; --on-accent: #3B3355;
+      --primary: #FF8FAB; --primary-rgb: 255 143 171; --on-primary: #3B3355;
+      box-shadow: inset 0 0 0 2px #FFFFFF, inset 0 -6px 0 rgba(59,51,85,.06) !important;
+    }
+    html:not(.dark) .tv-screen.tv-screen-full::before { background: repeating-linear-gradient(180deg, rgba(59,51,85,.035) 0 1px, transparent 1px 4px); }
+    html:not(.dark) .tv-screen.tv-screen-full::after { background: radial-gradient(80% 50% at 15% 0%, rgba(255,255,255,.7), transparent 60%); }
+    html:not(.dark) .tv-screen-full .crt-body { animation: none; }
+    html:not(.dark) .tv-screen-full .crt-roll { display: none; }
+    html:not(.dark) .tv-screen-full .font-display,
+    html:not(.dark) .tv-screen-full .crt-glow,
+    html:not(.dark) .tv-screen-full .ekey-label { text-shadow: none !important; }
+    html:not(.dark) .tv-screen-full .crt-sep,
+    html:not(.dark) .tv-screen-full .osd-bar { border-color: rgba(59,51,85,.18) !important; }
+    html:not(.dark) .tv-screen-full .tv-ch-btn { background: #FFFFFF; color: var(--ink); border-color: var(--ink); text-shadow: none; box-shadow: 2px 2px 0 var(--shadow-hard); }
+    html:not(.dark) .tv-screen-full .tv-ch-btn:active { background: var(--accent); box-shadow: none; }
+
+    /* thẻ trong màn hình: trắng, viền mực, bóng cứng */
+    html:not(.dark) .tv-screen-full .console-bezel,
+    html:not(.dark) .tv-screen-full .retro-card,
+    html:not(.dark) .tv-screen-full .retro-card-soft,
+    html:not(.dark) .tv-screen-full .console-lcd,
+    html:not(.dark) .tv-screen-full .day-card,
+    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-2xl,
+    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-3xl {
+      --pc: #3B3355 !important;
+      background: #FFFFFF !important;
+      box-shadow: inset 0 -3px 0 rgba(59,51,85,.07) !important;
+      filter: drop-shadow(3px 3px 0 var(--shadow-hard));
+    }
+    html:not(.dark) .tv-screen-full .console-top-strip,
+    html:not(.dark) .tv-screen-full .panel-head {
+      background: #F4EEFB !important; color: var(--ink) !important; text-shadow: none !important;
+      border-bottom: 2px solid var(--ink) !important;
+    }
+    html:not(.dark) .tv-screen-full .panel-head { background: #FFF1C2 !important; }
+    html:not(.dark) .tv-screen-full .tx-ico { --pc: #3B3355 !important; background: #F4EEFB !important; box-shadow: inset 0 -3px 0 rgba(59,51,85,.12) !important; }
+
+    /* phím chức năng trong TV: nền pastel theo màu phím, chữ mực */
+    html:not(.dark) .tv-screen-full .tv-keys .ekey {
+      --pc: #3B3355 !important;
+      background: color-mix(in srgb, var(--c) 38%, #FFFFFF) !important;
+      color: var(--ink) !important;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.7), inset 0 -4px 0 color-mix(in srgb, var(--c) 55%, #3B3355 10%) !important;
+      filter: drop-shadow(2px 2px 0 var(--shadow-hard));
+    }
+    html:not(.dark) .tv-screen-full .tv-keys .ekey .ekey-ico { filter: none; }
+
+    /* ô nhập trong TV */
+    html:not(.dark) .tv-screen-full input:not(.border-0),
+    html:not(.dark) .tv-screen-full select,
+    html:not(.dark) .tv-screen-full textarea { background-color: #FFFFFF !important; color: var(--ink) !important; border-color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full input::placeholder,
+    html:not(.dark) .tv-screen-full textarea::placeholder { color: #8C83A6 !important; }
+    html:not(.dark) .tv-screen-full .console-key { --pc: #3B3355 !important; background: #FFFFFF !important; color: var(--ink) !important; }
+
+    /* --- khung, thẻ, nút ngoài TV: thống nhất mực + bóng cứng --- */
+    html:not(.dark) .panel-head { background: #FFF1C2; color: var(--ink); text-shadow: none; }
+    html:not(.dark) .hud-btn, html:not(.dark) .game-btn, html:not(.dark) .game-btn-sm { filter: drop-shadow(2px 2px 0 var(--shadow-hard)); }
+    html:not(.dark) .hud { filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
+    html:not(.dark) .pxtv { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); }
+    html:not(.dark) .pxtv-ctrl .brand { background: #FFFFFF; color: var(--ink); box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 2px var(--shadow-hard); }
+    html:not(.dark) .pxtv-ctrl .led { background: #FFE08A; box-shadow: 0 0 0 2px var(--ink); }
+    html:not(.dark) .pxtv-ctrl .grille { background: repeating-linear-gradient(90deg, rgba(59,51,85,.45) 0 3px, transparent 3px 7px); }
+
+    /* trạng thái focus rõ (bàn phím) */
+    html:not(.dark) :is(button, a, input, select, textarea):focus-visible { outline: 3px solid #6AA8F0; outline-offset: 2px; }
+
+    /* màu chữ trên màn TV (biến để đổi theo nền sáng/tối) */
+    :root { --crt-mint: #9DF5C2; --crt-pink: #FFA5BC; --crt-butter: #FFE08A; --crt-cream: rgba(255,242,226,.9); --crt-big: #FFE7A8; --crt-text: #FFF2E2; }
+    html:not(.dark) { --crt-mint: #2F8A5E; --crt-pink: #D4506A; --crt-butter: #9A5B0C; --crt-cream: #3B3355; --crt-big: #3B3355; --crt-text: #3B3355; }
+    html:not(.dark) .tv-screen-full .crt-glow { text-shadow: none !important; }
+    html:not(.dark) .tv-screen-full .osd, html:not(.dark) .tv-screen-full .tv-more { color: var(--ink); text-shadow: none; }
+    html:not(.dark) .tv-screen-full .tv-lbl { opacity: 1; }
+    html:not(.dark) .tv-screen-full .tv-dots button { background: rgba(59,51,85,.16); }
+    html:not(.dark) .tv-screen-full .tv-dots button.on { background: #6FCF9F; box-shadow: 0 0 0 2px var(--ink); }
+    html:not(.dark) .tv-screen-full .tv-bars i { background: #FF8FAB; box-shadow: none; }
+    html:not(.dark) .tv-screen-full .tv-bars i.today { background: #F5C451; box-shadow: none; }
+    html:not(.dark) .tv-screen-full .tv-bars i.zero { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full .tv-hp i { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full .tv-sb { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full .tv-sb i { background: #9F86E0; box-shadow: none; }
+    /* lớp màu viết cứng kiểu neon trong mã giao diện -> đổi sang mực/pastel khi nền sáng */
+    html:not(.dark) .tv-screen-full [class*="text-[#FFF2E2]"], html:not(.dark) .tv-screen-full [class*="text-[#FFF9EC]"] { color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
+    html:not(.dark) .tv-screen-full [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
+    html:not(.dark) .tv-screen-full [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
+    html:not(.dark) .tv-screen-full [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
+    html:not(.dark) .tv-screen-full [class*="bg-[#140D20]"], html:not(.dark) .tv-screen-full [class*="bg-[#2A1F42]"], html:not(.dark) .tv-screen-full [class*="bg-[#2C2144]"] { background-color: #F4EEFB !important; }
+    html:not(.dark) .tv-screen-full [class*="border-[#9DF5C2]"], html:not(.dark) .tv-screen-full [class*="border-[#6A5594]"], html:not(.dark) .tv-screen-full [class*="border-[#5E4A84]"], html:not(.dark) .tv-screen-full [class*="border-[#FFE08A]"] { border-color: var(--ink) !important; }
+
+    /* thẻ ví: nền sáng theo màu ngân hàng, chữ mực */
+    html:not(.dark) .wallet-card { background: radial-gradient(rgba(59,51,85,.07) 1px, transparent 1.2px) 0 0 / 10px 10px, linear-gradient(155deg, color-mix(in srgb, var(--pc) 55%, #FFFFFF) 0%, #FFFFFF 100%) !important; box-shadow: inset 0 -4px 0 rgba(59,51,85,.08) !important; filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
+    html:not(.dark) .wallet-card [class*="text-[#FFF2E2]"] { color: var(--ink) !important; }
+    html:not(.dark) .wallet-card [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
+    html:not(.dark) .wallet-card [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
+    html:not(.dark) .wallet-card [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
+    html:not(.dark) .wallet-card [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
+    html:not(.dark) .wallet-card [class*="bg-[#140D20]"], html:not(.dark) .wallet-card [class*="bg-[#2A1F42]"] { background-color: #FFFFFF !important; }
+    html:not(.dark) .wallet-card [class*="border-[#9DF5C2]"], html:not(.dark) .wallet-card [class*="border-[#6A5594]"] { border-color: var(--ink) !important; }
+    html:not(.dark) .wallet-card .crt-glow { text-shadow: none !important; }
   </style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
@@ -957,6 +1097,10 @@
     // Bảng màu "Pastel Dusk Pixel": trời hoàng hôn pastel · viền mận · giấy kem · TV CRT
     const KEY_COLORS = { keyHome: "#F59AA6", keyReport: "#B9D18F", keyMai: "#C3A3E2", keyWallet: "#8DB4EA", keyAdd: "#FFD87E" };
     const THEMES = {
+      pastel_day: {
+        name: "Pastel Pixel", desc: "Kem sữa · trời xanh · mực tím (hợp bộ icon mới)", retro: true,
+        colors: { primary: "#FF8FAB", onPrimary: "#3B3355", background: "#FFF6E9", surface: "#FFFFFF", textPrimary: "#3B3355", textSecondary: "#6E6488", variant: "#F4EEFB", border: "#D9D0EA", ink: "#3B3355", wood: "#CDB8F6", woodLight: "#E6DBFF", woodDark: "#9F86E0", accent: "#FFE08A", onAccent: "#3B3355", expense: "#D4506A", expenseLight: "#FFE3EA", income: "#2F8A5E", incomeLight: "#DDF5EA", hud: "#3B3355", onHud: "#FFF6E9", sky1: "#A9D8FF", sky2: "#E4F3FF", ground: "#C9EBD9", tvBody: "#FFB7C9", tvTrim: "#FFF6E9", screen: "#FFFDF7", screen2: "#FFFFFF", keyHome: "#FFB7C9", keyReport: "#B5EAD7", keyMai: "#CDB8F6", keyWallet: "#A9D8FF", keyAdd: "#FFE08A" }
+      },
       dusk_rose: {
         name: "Hoàng Hôn Hồng", desc: "Hồng phấn · mận chín · kem sữa", retro: true,
         colors: { primary: "#F49CA6", onPrimary: "#4A2F4E", background: "#F5C4BC", surface: "#FCEEDD", textPrimary: "#4A3350", textSecondary: "#85586A", variant: "#F5DFCB", border: "#DDAE9E", ink: "#4A3350", wood: "#B76E7B", woodLight: "#D9959D", woodDark: "#8C4C5E", accent: "#FFD87E", onAccent: "#5E3A28", expense: "#D4506A", expenseLight: "#FDE1E3", income: "#378F67", incomeLight: "#DDF3E4", hud: "#4E3651", onHud: "#FFF2E2", sky1: "#F0A3A2", sky2: "#F8D3C6", ground: "#E9C3B6", tvBody: "#EE9AA3", tvTrim: "#FCE6D2", screen: "#2A2140", screen2: "#41325C", ...KEY_COLORS }
@@ -988,7 +1132,7 @@
       retro70: "peach_butter", retro70_avocado: "mint_soda", retro70_rose: "dusk_rose", retro70_teal: "sky_candy",
       retro70_night: "plum_night", retro70_plum: "plum_night"
     };
-    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "dusk_rose";
+    const normalizeThemeKey = (k) => (k && k in THEMES) ? k : (k && LEGACY_THEME_MAP[k]) ? LEGACY_THEME_MAP[k] : "pastel_day";
 
     // Ngân hàng & ví: tem chữ tự vẽ (không tải logo từ internet). code = chữ trên tem, color = màu tem.
     // Logo gốc của ngân hàng / ví (đóng gói sẵn trong web/logos, dùng được offline)
@@ -2356,10 +2500,10 @@
       const [expandedDebtPerson, setExpandedDebtPerson] = useState(null);
       const [theme, setTheme] = useState(() => {
         const saved = localStorage.getItem("vina_theme");
-        // Lần đầu lên bản Pastel Dusk (TV retro): áp dụng bảng màu Hoàng Hôn Hồng, giữ theme tối nếu anh đang dùng
-        if (!localStorage.getItem("vina_theme_v5")) {
-          localStorage.setItem("vina_theme_v5", "1");
-          return /night|plum/.test(saved || "") ? "plum_night" : "dusk_rose";
+        // Lần đầu lên bản Pastel Pixel (icon pixel mới): áp dụng bảng màu Pastel Pixel, giữ theme tối nếu anh đang dùng
+        if (!localStorage.getItem("vina_theme_v6")) {
+          localStorage.setItem("vina_theme_v6", "1"); localStorage.setItem("vina_theme_v5", "1");
+          return /night|plum/.test(saved || "") ? "plum_night" : "pastel_day";
         }
         return normalizeThemeKey(saved);
       });
@@ -5263,12 +5407,12 @@
       const nwStr = formatVND(netWorth);
       const goWallets = () => { setActiveTab("wallet_ai"); setSubTab("wallet"); };
       const openBudget = () => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); };
-      const PH = { mint: "#9DF5C2", pink: "#FFA5BC", butter: "#FFE08A", cream: "rgba(255,242,226,.9)" };
+      const PH = { mint: "var(--crt-mint)", pink: "var(--crt-pink)", butter: "var(--crt-butter)", cream: "var(--crt-cream)" };
       const tvChannels = [
         { id: "assets", title: "TÀI SẢN", onOpen: goWallets, render: () => (
           <div className="flex-1 flex flex-col justify-center min-w-0">
             <p className="tv-lbl" style={{ color: PH.butter }}>Tài sản ròng</p>
-            <p className="tv-big crt-glow tabular mt-1" style={{ color: "#FFE7A8", fontSize: Math.min(44, Math.floor(420 / Math.max(8, nwStr.length))) }}><CountUp value={netWorth} format={formatVND} from0 /></p>
+            <p className="tv-big crt-glow tabular mt-1" style={{ color: "var(--crt-big)", fontSize: Math.min(44, Math.floor(420 / Math.max(8, nwStr.length))) }}><CountUp value={netWorth} format={formatVND} from0 /></p>
             <div className="mt-2.5 space-y-0.5" style={{ color: PH.cream }}>
               <div className="tv-row"><span>+ Trong {accounts.filter(a => !isCreditAcc(a)).length} ví</span><span className="tabular">{formatVND(totalCash)}</span></div>
               {totalDebtLent > 0 && <div className="tv-row"><span>+ Cho vay</span><span className="tabular">{formatVND(totalDebtLent)}</span></div>}
@@ -5321,7 +5465,7 @@
                 </div>
                 <div className="text-right">
                   <p className="tv-lbl">Hạn mức</p>
-                  <p className="tv-mid tabular" style={{ color: "#FFF2E2" }}>{formatShortVND(monthlyBudget)}</p>
+                  <p className="tv-mid tabular" style={{ color: "var(--crt-text)" }}>{formatShortVND(monthlyBudget)}</p>
                 </div>
               </div>
               <div className="tv-hp mt-2">{Array.from({ length: 14 }, (_, i) => <i key={i} className={i < cells ? "on" : ""} style={i < cells ? { background: col, boxShadow: `0 0 6px ${col}`, animationDelay: `${i * 40}ms` } : undefined} />)}</div>
