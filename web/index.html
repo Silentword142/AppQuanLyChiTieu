@@ -1098,6 +1098,25 @@
     @keyframes reelIn { 0% { transform: translateY(-115%); filter: blur(4px); } 45% { transform: translateY(14%); filter: blur(2px); } 62% { transform: translateY(-7%); filter: blur(1px); } 78% { transform: translateY(3%); filter: none; } 90% { transform: translateY(-1%); } 100% { transform: translateY(0); } }
     @keyframes reelShake { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-2px, 2px); } 66% { transform: translate(2px, -1px); } }
     @media (prefers-reduced-motion: reduce) { html.reel-out .tv-screen-full .crt-body, html.reel-in .tv-screen-full .crt-body, .slot-lever .lv-glyph, .slot-lever-wrap .lv-ball { animation: none !important; } }
+
+    /* ---- Nút danh mục dạng joystick ---- */
+    .joy { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 5px; border: 2px solid transparent; border-radius: 10px; transition: background .2s; }
+    .joy-stage { position: relative; width: 56px; height: 70px; display: block; }
+    .joy-base { position: absolute; left: 3px; bottom: 0; width: 50px; height: 32px; display: block; }
+    .joy-base svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .joy-arm { position: absolute; left: 50%; bottom: 20px; width: 34px; margin-left: -17px; height: 48px; display: block; transition: height .32s cubic-bezier(.3,1.6,.5,1); }
+    .joy-stick { position: absolute; left: 50%; bottom: 0; width: 8px; margin-left: -4px; top: 22px; background: linear-gradient(90deg, #2A2370 0 2px, #4C46B8 2px 5px, #2A2370 5px); border: 2px solid #1B1446; border-top: 0; }
+    .joy-ball { position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #1B1446; display: grid; place-items: center;
+      background: radial-gradient(circle at 34% 28%, #FFB7C9 0 3px, #F0416C 4px 9px, #D62A57 10px 13px, #A61D44 14px); box-shadow: inset -2px -3px 0 rgba(0,0,0,.18); }
+    .joy-ball .vi { filter: drop-shadow(1px 1px 0 rgba(27,20,70,.55)); }
+    .joy-name { font-size: 12px; font-weight: 700; line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgb(var(--text-primary-rgb, 59,51,85)); }
+    .peer:checked + .joy { background: var(--accent); border-color: var(--ink); }
+    .peer:checked + .joy .joy-arm { height: 30px; }
+    .peer:checked + .joy .joy-ball { transform: scale(.94); box-shadow: inset -2px -3px 0 rgba(0,0,0,.18), 0 0 8px rgba(240,65,108,.6); }
+    .peer:checked + .joy .joy-led { fill: #FF4D6D; }
+    .peer:focus-visible + .joy { outline: 3px solid var(--ink); outline-offset: 1px; }
+    .joy-grid { align-items: start; }
+    @media (prefers-reduced-motion: reduce) { .joy-arm { transition: none; } }
 </style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
@@ -2460,6 +2479,20 @@
       );
     };
 
+
+
+    // Nút chọn danh mục dạng cần joystick (mẫu anh Hoàng 11:13): icon nằm trong quả cầu đỏ,
+    // chọn mục nào thì cần mục đó gạt xuống, mục vừa bỏ chọn bật lên lại (radio + :checked)
+    const JOY_BASE = '<svg viewBox="0 0 34 22" shape-rendering="crispEdges" aria-hidden="true"><path d="M17 1 33 8 17 15 1 8Z" fill="#A43BC8" stroke="#1B1446"/><path d="M1 8 17 15v6L1 14Z" fill="#8A2BB0" stroke="#1B1446"/><path d="M17 15 33 8v6l-16 7Z" fill="#4A2C9E" stroke="#1B1446"/><path d="M3 10h1v3H3zM5 11h1v3H5zM7 12h.8v2.5H7z" fill="#D58BEA"/><path d="M18 16l14-6v1l-14 6z" fill="#5E3DB8"/><ellipse cx="17" cy="8" rx="4" ry="2" fill="#2A1F5E" stroke="#1B1446" stroke-width=".8"/><rect class="joy-led" x="8" y="7" width="2" height="1.6" fill="#7A1D3A"/></svg>';
+    const JoyTile = ({ icon, name }) => (
+      <div className="joy">
+        <span className="joy-stage">
+          <span className="joy-base" dangerouslySetInnerHTML={{ __html: JOY_BASE }} />
+          <span className="joy-arm"><i className="joy-stick" /><span className="joy-ball"><Icon name={icon} className="w-[18px] h-[18px]" /></span></span>
+        </span>
+        <span className="joy-name">{name}</span>
+      </div>
+    );
 
     // Cần gạt kiểu máy quay xèng: bấm thì cần gạt kéo xuống, màn hình TV quay như cuộn xèng rồi giật xuống màn Hạng mục
     const SlotLever = ({ active, onPull }) => {
@@ -5616,7 +5649,7 @@
               </div>
               <div className="flex flex-col gap-2 shrink-0">
                 <button type="button" onClick={() => { buzz(); setShowSettingsDialog(true); }} aria-label="Cài đặt" className="hud-btn"><Icon name="settings" className="w-6 h-6" /></button>
-                <SlotLever active={activeTab === "category"} onPull={() => setActiveTab("category")} />
+                <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Hạng mục" className={`hud-btn ${activeTab === "category" ? "!bg-[var(--accent)]" : ""}`}><Icon name="tags" className="w-6 h-6" /></button>
               </div>
             </div>
           </header>
@@ -7131,15 +7164,12 @@
                       <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">{maiDraft.category}</span>
                     </div>
                     <CategoryParentFilterBar parentCategories={parentCategories} selectedParent={txParentFilter} onSelectParent={setTxParentFilter} />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[116px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.map((c, i) => (
                         <label key={c.id || `md_cat_${c.name}_${i}`} className="cursor-pointer">
                           <input type="radio" name="category" value={c.name} defaultChecked={maiDraft.category === c.name}
                             onChange={() => setMaiDraft(prev => prev ? { ...prev, category: c.name } : prev)} className="peer sr-only" />
-                          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                            <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                            <span className="text-[13px] font-bold truncate">{c.name}</span>
-                          </div>
+                          <JoyTile icon={c.icon || "tag"} name={c.name} />
                         </label>
                       ))}
                     </div>
@@ -7431,15 +7461,12 @@
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} required className="peer sr-only" />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{c.name}</span>
-                            </div>
+                            <JoyTile icon={c.icon || "tag"} name={c.name} />
                           </label>
                         ))
                       ) : (
@@ -7533,15 +7560,12 @@
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-3 gap-1.5 max-h-[212px] overflow-y-auto no-scrollbar p-1.5 joy-grid border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
                             <input type="radio" name="category" value={c.name} className="peer sr-only" defaultChecked={editingTx.category === c.name} />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{c.name}</span>
-                            </div>
+                            <JoyTile icon={c.icon || "tag"} name={c.name} />
                           </label>
                         ))
                       ) : (
