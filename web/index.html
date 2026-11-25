@@ -1352,8 +1352,8 @@
               <BankBadge name={acc.name} size={30} />
               <div className="flex items-center gap-1.5">
                 <span className="font-pixel text-[14px] uppercase tracking-wider px-2 py-0.5 rounded border border-[#9DF5C2]/40 bg-[#140D20]/80 text-[#9DF5C2]">{credit ? "CREDIT" : (acc.accountNo === "CASH" || /tien mat/i.test((window.MaiAgent ? window.MaiAgent.fold(acc.name) : acc.name))) ? "CASH" : "BANK"}</span>
-                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFE08A] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="edit-2" className="w-4 h-4" /></button>}
-                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFA5BC] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="trash-2" className="w-4 h-4" /></button>}
+                {onEdit && <button type="button" aria-label="Sửa ví" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFE08A] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="btn-edit" className="w-4 h-4" /></button>}
+                {onDelete && <button type="button" aria-label="Xóa ví" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-8 h-8 rounded-lg bg-[#2A1F42] text-[#FFA5BC] border-2 border-[#6A5594] active:scale-90 transition flex items-center justify-center"><Icon name="btn-trash" className="w-4 h-4" /></button>}
               </div>
             </div>
             <p className="mt-2 font-display text-[23px] leading-tight truncate text-[#FFF2E2] crt-glow">{acc.name}</p>
@@ -1589,7 +1589,7 @@
             onClick={() => handleScroll('left')} 
             title="Cuộn sang trái"
             className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-theme-surface border-2 border-[var(--ink)] text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.22)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
-            <Icon name="chevron-left" className="w-4 h-4" />
+            <Icon name="btn-back" className="w-4 h-4" />
           </button>
 
           {/* Dải danh mục lớn cuộn ngang */}
@@ -1621,7 +1621,7 @@
             onClick={() => handleScroll('right')} 
             title="Cuộn sang phải"
             className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-theme-surface border-2 border-[var(--ink)] text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.22)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
-            <Icon name="chevron-right" className="w-4 h-4" />
+            <Icon name="btn-next" className="w-4 h-4" />
           </button>
         </div>
       );
@@ -1669,7 +1669,7 @@
             onClick={() => handleScroll('left')} 
             title="Cuộn sang trái"
             className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-theme-surface border-2 border-[var(--ink)] text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.22)] active:translate-x-[1px] active:translate-y-[1px] transition-all">
-            <Icon name="chevron-left" className="w-3.5 h-3.5" />
+            <Icon name="btn-back" className="w-3.5 h-3.5" />
           </button>
 
           <div ref={scrollRef} className="flex-1 flex gap-1.5 overflow-x-auto no-scrollbar py-0.5 scroll-smooth">
@@ -1693,7 +1693,7 @@
             onClick={() => handleScroll('right')} 
             title="Cuộn sang phải"
             className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg bg-theme-surface border-2 border-[var(--ink)] text-theme-textPrimary shadow-[inset_0_-2px_0_rgba(74,51,80,.22)] active:translate-x-[1px] active:translate-y-[1px] transition-all">
-            <Icon name="chevron-right" className="w-3.5 h-3.5" />
+            <Icon name="btn-next" className="w-3.5 h-3.5" />
           </button>
         </div>
       );
@@ -1839,7 +1839,7 @@
                   </div>
 
                   <div className="relative">
-                    <Icon name="search" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-theme-textSecondary pointer-events-none" />
+                    <Icon name="btn-search" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-theme-textSecondary pointer-events-none" />
                     <input 
                       type="text" 
                       value={iconSearch}
@@ -5536,11 +5536,11 @@
         } }
       ];
       const tvKeys = [
-        { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "arrow-up-right", color: "#FFB3BE", onClick: () => openAddTx("EXPENSE") },
-        { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "arrow-down-left", color: "#A8E6BF", onClick: () => openAddTx("INCOME") },
-        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Mai", icon: "mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
-        { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "camera", color: "#A9D5F5", onClick: () => openAddTx("EXPENSE", true) },
-        { id: "budget", label: "Hạn mức", small: true, aria: "Ngân sách tháng", icon: "piggy", color: "#FFE08A", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
+        { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "btn-expense", color: "#FFB3BE", onClick: () => openAddTx("EXPENSE") },
+        { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "btn-income", color: "#A8E6BF", onClick: () => openAddTx("INCOME") },
+        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Mai", icon: "btn-mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
+        { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "btn-scan", color: "#A9D5F5", onClick: () => openAddTx("EXPENSE", true) },
+        { id: "budget", label: "Hạn mức", small: true, aria: "Ngân sách tháng", icon: "btn-budget", color: "#FFE08A", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
       ].filter(Boolean);
 
       // Móc kiểm thử giao diện (chỉ bật khi mở với ?shot=1)
@@ -5584,16 +5584,16 @@
               <div className="flex-1 min-w-0 space-y-2">
                 <div className="hud">
                   <button type="button" className="hud-cell flex-1 min-w-0" onClick={() => { buzz(); goWallets(); }} aria-label={`Tài sản ròng ${formatVND(netWorth)} – xem ví`}>
-                    <Icon name="coins" className="w-6 h-6 shrink-0" />
+                    <Icon name="btn-balance" className="w-6 h-6 shrink-0" />
                     <span className="hud-num truncate tabular"><CountUp value={netWorth} format={formatShortVND} /></span>
-                    <span role="button" tabIndex={0} aria-label="Ghi giao dịch" className="hud-plus ml-auto" onClick={(e) => { e.stopPropagation(); buzz(); openAddTx("EXPENSE"); }}><Icon name="plus" className="w-3 h-3" /></span>
+                    <span role="button" tabIndex={0} aria-label="Ghi giao dịch" className="hud-plus ml-auto" onClick={(e) => { e.stopPropagation(); buzz(); openAddTx("EXPENSE"); }}><Icon name="btn-plus" className="w-3 h-3" /></span>
                   </button>
                   <button type="button" className="hud-cell relative shrink-0" onClick={() => { buzz(); setActiveTab("mai"); }} aria-label={`Tự động – ${maiBadge} khoản chờ duyệt`}>
-                    <MaiAvatar size={24} animated={maiBadge > 0} />
+                    <Icon name="btn-auto" anim={maiBadge > 0 ? "float" : ""} className="w-6 h-6" />
                     <span className="hud-num tabular">{maiBadge}</span>
                   </button>
                   <button type="button" className="hud-cell hud-cell-light shrink-0" onClick={() => setShowSettingsDialog(true)} aria-label="Đồng bộ dữ liệu">
-                    <Icon name={isSyncing ? "refresh-cw" : googleUser ? (isRealtimeLive ? "zap" : "cloud") : "cloud-off"} anim={isSyncing ? "spin" : ""} className="w-5 h-5" />
+                    <Icon name={isSyncing ? "btn-refresh" : googleUser ? "btn-cloud" : "btn-local"} anim={isSyncing ? "spin" : ""} className="w-5 h-5" />
                     <span className="font-pixel text-[14px]">{googleUser ? (isRealtimeLive ? "LIVE" : "CLOUD") : "LOCAL"}</span>
                   </button>
                 </div>
@@ -5604,8 +5604,8 @@
                 </button>
               </div>
               <div className="flex flex-col gap-2 shrink-0">
-                <button type="button" onClick={() => { buzz(); setShowSettingsDialog(true); }} aria-label="Cài đặt" className="hud-btn"><Icon name="settings" className="w-6 h-6" /></button>
-                <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Hạng mục" className={`hud-btn ${activeTab === "category" ? "!bg-[var(--accent)]" : ""}`}><Icon name="tags" className="w-6 h-6" /></button>
+                <button type="button" onClick={() => { buzz(); setShowSettingsDialog(true); }} aria-label="Cài đặt" className="hud-btn"><Icon name="btn-settings" className="w-6 h-6" /></button>
+                <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Hạng mục" className={`hud-btn ${activeTab === "category" ? "!bg-[var(--accent)]" : ""}`}><Icon name="btn-tag" className="w-6 h-6" /></button>
               </div>
             </div>
           </header>
@@ -5616,7 +5616,7 @@
              <div className="flex items-center justify-between mb-4 px-1.5">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 rounded-lg bg-[var(--accent)] border-2 border-[var(--ink)] flex items-center justify-center shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] text-[var(--on-accent,#4A2B18)]">
-                    <Icon name="tv" anim="float" className="w-6 h-6" />
+                    <Icon name="btn-auto" anim="float" className="w-6 h-6" />
                   </div>
                   <div>
                     <h1 className="font-display font-bold text-3xl text-theme-textPrimary leading-none">Spendy</h1>
@@ -5624,7 +5624,7 @@
                   </div>
                 </div>
                 <button onClick={()=>setShowSettingsDialog(true)} aria-label="Cài đặt" className="game-btn-sm game-btn-neutral w-8 h-8 bg-theme-background flex items-center justify-center text-theme-textPrimary">
-                  <Icon name="settings" className="w-4 h-4" />
+                  <Icon name="btn-settings" className="w-4 h-4" />
                 </button>
             </div>
 
@@ -5660,7 +5660,7 @@
               })}
             </nav>
             <button type="button" onClick={() => { buzz(); openAddTx("EXPENSE"); }} className="game-btn w-full py-3 mt-4 bg-[var(--accent)] text-[var(--on-accent)] font-bold flex items-center justify-center gap-2">
-              <Icon name="plus" className="w-5 h-5" /> Ghi giao dịch
+              <Icon name="btn-plus" className="w-5 h-5" /> Ghi giao dịch
             </button>
           </aside>
 
@@ -5678,7 +5678,7 @@
                       <p className="font-bold text-[17px] text-[#FFE08A]">Cho phép đọc thông báo ngân hàng</p>
                       <p className="text-xs font-semibold mt-0.5 text-[#C8B6DE]">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
                     </div>
-                    <Icon name="chevron-right" anim="wiggle" className="w-5 h-5 shrink-0" />
+                    <Icon name="btn-next" anim="wiggle" className="w-5 h-5 shrink-0" />
                   </button>
                 )}
 
@@ -5689,11 +5689,11 @@
                       <span className="w-2.5 h-2.5 bg-[#7DFFB0] px-led shrink-0" style={{ boxShadow: "0 0 6px #7DFFB0" }} />
                       <span className="osd text-[16px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
                     </span>
-                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[15px] text-[#FFE08A] crt-glow flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="chevron-right" className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[15px] text-[#FFE08A] crt-glow flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="btn-next" className="w-3.5 h-3.5" /></button>
                   </div>
                   {recentGroups.length === 0 ? (
                     <div className="console-lcd text-center px-6 py-8">
-                      <span className="block w-16 h-16 mx-auto mb-3"><Icon name="book-open" anim="float" className="w-16 h-16" /></span>
+                      <span className="block w-16 h-16 mx-auto mb-3"><Icon name="btn-journal" anim="float" className="w-16 h-16" /></span>
                       <p className="font-display text-[30px] leading-none text-theme-textPrimary">Sổ còn trống</p>
                       <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
                     </div>
@@ -5759,7 +5759,7 @@
                       <button
                         onClick={()=>setDrillDownParent(null)}
                         className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent)] w-full px-3 py-2 text-sm font-bold flex items-center justify-center gap-1.5">
-                        <Icon name="arrow-left" className="w-4 h-4" /> Quay lại tổng quan báo cáo
+                        <Icon name="btn-back" className="w-4 h-4" /> Quay lại tổng quan báo cáo
                       </button>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -5772,7 +5772,7 @@
                             </button>
                           ))}
                         </div>
-                        <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Quản lý hạng mục" className="game-btn-sm w-9 h-9 shrink-0 bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center"><Icon name="tags" className="w-5 h-5" /></button>
+                        <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Quản lý hạng mục" className="game-btn-sm w-9 h-9 shrink-0 bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center"><Icon name="btn-tag" className="w-5 h-5" /></button>
                       </div>
                     )}
                   </div>
@@ -5808,7 +5808,7 @@
                     {/* Subcategories Breakdown Chart & List */}
                     <div className="retro-card bg-theme-surface p-4 md:p-5">
                       <h4 className="font-pixel text-[15px] font-bold text-theme-textSecondary uppercase tracking-wider mb-3.5 flex items-center gap-2">
-                        <Icon name="pie-chart" anim="pulse" className="w-4 h-4 text-theme-primary" /> Cơ cấu danh mục con trong “{drillDownData.parentName}”
+                        <Icon name="btn-stats" anim="pulse" className="w-4 h-4 text-theme-primary" /> Cơ cấu danh mục con trong “{drillDownData.parentName}”
                       </h4>
 
                       <div className="space-y-2">
@@ -5838,7 +5838,7 @@
                     <div className="space-y-2.5">
                       <div className="flex justify-between items-center px-1">
                         <h4 className="font-pixel text-[15px] font-bold text-theme-textSecondary uppercase tracking-wider flex items-center gap-2">
-                          <Icon name="list" className="w-4 h-4 text-theme-primary" /> Lịch sử nhóm “{drillDownData.parentName}” ({drillDownData.txs.length})
+                          <Icon name="btn-list" className="w-4 h-4 text-theme-primary" /> Lịch sử nhóm “{drillDownData.parentName}” ({drillDownData.txs.length})
                         </h4>
                         <span className="text-[13px] text-theme-textSecondary font-semibold">Chạm để sửa</span>
                       </div>
@@ -5868,14 +5868,14 @@
                                 onClick={() => handleStartEditTx(tx)}
                                 title="Chỉnh sửa giao dịch"
                                 className="game-btn-sm game-btn-neutral p-1.5 bg-theme-background text-theme-textPrimary">
-                                <Icon name="edit-3" className="w-3.5 h-3.5" />
+                                <Icon name="btn-edit" className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleDeleteTx(tx.id)}
                                 title="Xóa giao dịch"
                                 className="game-btn-sm game-btn-neutral p-1.5 bg-theme-background text-[var(--expense)]">
-                                <Icon name="trash-2" className="w-3.5 h-3.5" />
+                                <Icon name="btn-trash" className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -5891,7 +5891,7 @@
                     {/* 2c. Stacked bar chart with category legend */}
                     <div className="retro-card bg-theme-surface p-4 md:p-5 space-y-4">
                       <h3 className="font-bold text-theme-textPrimary text-sm md:text-base flex items-center gap-2">
-                        <Icon name="bar-chart-2" anim="pulse" className="w-4 h-4 text-theme-primary" />
+                        <Icon name="btn-report" anim="pulse" className="w-4 h-4 text-theme-primary" />
                         <span>{reportBarData.mode === "category" ? `${reportType} theo danh mục` : `${reportType} theo ${reportBarData.mode === "month" ? "tháng" : "ngày"}`}</span>
                         <span className={`ml-auto font-display text-2xl tabular ${reportType === "Chi tiêu" ? "text-[var(--expense)]" : "text-[var(--income)]"}`}>{formatVND(reportTotal)}</span>
                       </h3>
@@ -5903,7 +5903,7 @@
                         </div>
 
                         <span className="text-xs font-bold text-theme-textSecondary whitespace-nowrap flex items-center gap-1.5">
-                          <Icon name="calendar" className="w-4 h-4 text-theme-primary" /> Xem theo:
+                          <Icon name="btn-calendar" className="w-4 h-4 text-theme-primary" /> Xem theo:
                         </span>
                         {reportPeriod === "Tháng" && (
                           <input type="month" value={reportMonth} onChange={e=>e.target.value && setReportMonth(e.target.value)} className="bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg py-1.5 px-2.5 text-sm font-bold text-theme-textPrimary" />
@@ -5965,7 +5965,7 @@
                     <div className="retro-card bg-theme-surface p-3.5 space-y-2.5">
                        <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                             <Icon name="search" className="w-4 h-4 text-theme-textSecondary" />
+                             <Icon name="btn-search" className="w-4 h-4 text-theme-textSecondary" />
                           </div>
                           <input type="text" value={reportSearch} onChange={e=>setReportSearch(e.target.value)} placeholder="Tìm ghi chú, ví, lĩnh vực..." className="w-full pl-9 pr-4 py-2 bg-theme-background border-2 border-[var(--ink)]/50 rounded-lg text-sm font-semibold text-theme-textPrimary" />
                        </div>
@@ -6010,7 +6010,7 @@
                       <div className="flex justify-between items-center gap-2">
                         <div>
                           <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2 leading-none">
-                            <Icon name="target" anim="pulse" className="w-5 h-5 text-theme-primary" /> Hạn mức Ngân sách (HP)
+                            <Icon name="btn-budget" anim="pulse" className="w-5 h-5 text-theme-primary" /> Hạn mức Ngân sách (HP)
                           </h3>
                           <p className="text-[13px] text-theme-textSecondary mt-1">
                             Thiết lập mục tiêu chi tiêu theo nhóm (tự động đồng bộ Cloud).
@@ -6020,7 +6020,7 @@
                           onClick={() => { setEditingBudgetCat(null); setIsBudgetModalOpen(true); }}
                           className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0">
                           <span className="console-key">B</span>
-                          <Icon name="sliders" className="w-3.5 h-3.5" /> Thiết lập
+                          <Icon name="btn-filter" className="w-3.5 h-3.5" /> Thiết lập
                         </button>
                       </div>
 
@@ -6028,7 +6028,7 @@
                       <div className="console-lcd bg-theme-background p-3.5 space-y-2">
                         <div className="flex justify-between items-center text-xs font-bold gap-2">
                           <span className="text-theme-textPrimary flex items-center gap-1.5">
-                            <Icon name="calendar" className="w-3.5 h-3.5 text-theme-primary" /> Tổng ngân sách tháng
+                            <Icon name="btn-calendar" className="w-3.5 h-3.5 text-theme-primary" /> Tổng ngân sách tháng
                           </span>
                           <span className="text-theme-textSecondary font-semibold tabular text-right">
                             {monthlyBudget > 0 ? `${formatVND(reportSummary.expense)} / ${formatVND(monthlyBudget)}` : "Chưa đặt ngân sách tổng"}
@@ -6119,7 +6119,7 @@
 
                        {(reportHierarchyView === "parent" ? parentBreakdown : childBreakdown).length === 0 && (
                            <div className="text-center py-8 retro-card-soft bg-theme-surface">
-                               <Icon name="inbox" anim="float" className="w-8 h-8 text-theme-textSecondary mx-auto mb-2" />
+                               <Icon name="btn-inbox" anim="float" className="w-8 h-8 text-theme-textSecondary mx-auto mb-2" />
                                <p className="text-theme-textSecondary text-sm font-bold">Chưa có giao dịch phát sinh trong kỳ</p>
                            </div>
                        )}
@@ -6149,7 +6149,7 @@
                                              <p className="font-display text-2xl text-theme-textPrimary tabular leading-none">{formatVND(item.amount)}</p>
                                          </div>
                                          <div className="w-8 h-8 rounded-lg bg-theme-background border-2 border-[var(--ink)] flex items-center justify-center text-theme-textPrimary group-hover:bg-[var(--accent)] transition-colors">
-                                           <Icon name="chevron-right" className="w-4 h-4" />
+                                           <Icon name="btn-next" className="w-4 h-4" />
                                          </div>
                                      </div>
                                  </div>
@@ -6191,7 +6191,7 @@
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <span className="w-11 h-11 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center shrink-0 text-[var(--on-accent,#4A2B18)]">
-                        <Icon name="tags" anim="float" className="w-6 h-6" />
+                        <Icon name="btn-tag" anim="float" className="w-6 h-6" />
                       </span>
                       <div>
                         <h2 className="font-display text-3xl text-theme-textPrimary leading-none">Phân cấp Hạng mục</h2>
@@ -6206,13 +6206,13 @@
                         onClick={handleResetCategories}
                         className="game-btn-sm game-btn-neutral text-xs bg-theme-background text-theme-textPrimary px-3 py-2 font-bold flex items-center gap-1.5"
                         title="Khôi phục danh mục chuẩn">
-                        <Icon name="rotate-ccw" anim="wiggle" className="w-3.5 h-3.5 text-theme-textPrimary" /> Khôi phục chuẩn
+                        <Icon name="btn-refresh" anim="wiggle" className="w-3.5 h-3.5 text-theme-textPrimary" /> Khôi phục chuẩn
                       </button>
                       <button
                         onClick={()=>{ setEditingCategory(null); setNewCategoryParent(""); setIsCategoryModalOpen(true); }}
                         className="game-btn text-xs bg-theme-primary text-[var(--on-primary)] px-3.5 py-2 font-bold flex items-center gap-1.5">
                         <span className="console-key">A</span>
-                        <Icon name="plus" anim="hop" className="w-4 h-4" /> Thêm danh mục
+                        <Icon name="btn-plus" anim="hop" className="w-4 h-4" /> Thêm danh mục
                       </button>
                     </div>
                   </div>
@@ -6283,19 +6283,19 @@
                                 }}
                                 className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                                 title="Thêm danh mục con">
-                                <Icon name="plus" className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Thêm con</span>
+                                <Icon name="btn-plus" className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Thêm con</span>
                               </button>
                               <button
                                 onClick={()=>{ setEditingCategory(parent); setIsCategoryModalOpen(true); }}
                                 className="game-btn-sm game-btn-neutral p-2 bg-theme-background text-theme-textPrimary"
                                 title="Sửa danh mục lớn">
-                                <Icon name="edit-2" className="w-3.5 h-3.5" />
+                                <Icon name="btn-edit" className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={()=>handleDeleteCategory(parent)}
                                 className="game-btn-sm game-btn-neutral p-2 bg-theme-background text-[var(--expense)]"
                                 title="Xóa danh mục lớn">
-                                <Icon name="trash-2" className="w-3.5 h-3.5" />
+                                <Icon name="btn-trash" className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
@@ -6316,13 +6316,13 @@
                                           onClick={()=>{ setEditingCategory(child); setIsCategoryModalOpen(true); }}
                                           className="text-theme-textSecondary hover:text-theme-primary p-1 rounded"
                                           title="Sửa danh mục con">
-                                          <Icon name="edit-2" className="w-3.5 h-3.5" />
+                                          <Icon name="btn-edit" className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                           onClick={()=>handleDeleteCategory(child)}
                                           className="text-theme-textSecondary hover:text-[var(--expense)] p-1 rounded"
                                           title="Xóa danh mục con">
-                                          <Icon name="trash-2" className="w-3.5 h-3.5" />
+                                          <Icon name="btn-trash" className="w-3.5 h-3.5" />
                                         </button>
                                       </div>
                                     </div>
@@ -6355,10 +6355,10 @@
                           </div>
                           <div className="flex gap-1.5 opacity-95 md:opacity-75 md:group-hover:opacity-100 transition-opacity shrink-0">
                             <button className="game-btn-sm game-btn-neutral text-theme-textPrimary p-2 bg-theme-background" title="Sửa" onClick={()=>{ setEditingCategory(sub); setIsCategoryModalOpen(true); }}>
-                              <Icon name="edit-2" className="w-3.5 h-3.5" />
+                              <Icon name="btn-edit" className="w-3.5 h-3.5" />
                             </button>
                             <button className="game-btn-sm game-btn-neutral text-[var(--expense)] p-2 bg-theme-background" title="Xóa" onClick={()=>handleDeleteCategory(sub)}>
-                              <Icon name="trash-2" className="w-3.5 h-3.5" />
+                              <Icon name="btn-trash" className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -6458,7 +6458,7 @@
                   <div className="console-lcd p-3.5 bg-theme-background space-y-3">
                     <div className="flex items-center gap-3">
                       <span className="w-11 h-11 rounded-xl border-2 border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center shrink-0">
-                        <Icon name="sparkles" anim="sparkle" className="w-6 h-6" />
+                        <Icon name="btn-sparkles" anim="sparkle" className="w-6 h-6" />
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
@@ -6475,7 +6475,7 @@
                         <button onClick={() => { try { window.MaiBridge.openAssistSettings(); } catch (e) {} }}
                           className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] text-sm font-bold flex items-center justify-center gap-2">
                           <span className="console-key">A</span>
-                          <Icon name="settings" className="w-4 h-4" /> Đặt Mai làm Trợ lý mặc định
+                          <Icon name="btn-settings" className="w-4 h-4" /> Đặt Mai làm Trợ lý mặc định
                         </button>
                       )}
                       <button onClick={() => { try { if (window.MaiBridge && window.MaiBridge.testAssist) window.MaiBridge.testAssist(); else if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command"); } catch (e) {} }}
@@ -6553,7 +6553,7 @@
                   <button disabled={gemImgBusy} onClick={() => gemImgInputRef.current && gemImgInputRef.current.click()}
                     className="game-btn game-btn-accent w-full py-3 bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
                     <span className="console-key">X</span>
-                    {gemImgBusy ? <><Icon name="loader-2" anim="spin" className="w-5 h-5" /> Gemini đang đọc ảnh…</> : <><Icon name="image" anim="scan" className="w-5 h-5" /> Chọn nhiều ảnh để ghi hàng loạt</>}
+                    {gemImgBusy ? <><Icon name="btn-loader" anim="spin" className="w-5 h-5" /> Gemini đang đọc ảnh…</> : <><Icon name="btn-image" anim="scan" className="w-5 h-5" /> Chọn nhiều ảnh để ghi hàng loạt</>}
                   </button>
                 </section>
 
@@ -6652,7 +6652,7 @@
                           <div className="flex gap-2 mt-3">
                             <button onClick={openDraft} className="game-btn-sm flex-1 py-2 text-sm font-bold text-theme-textPrimary bg-theme-background">Xem & sửa</button>
                             <button onClick={() => maiApproveInbox(item)} className="game-btn flex-1 py-2 bg-theme-primary text-[var(--on-primary)] text-sm font-bold">[A] Ghi luôn</button>
-                            <button onClick={() => maiDismissInbox(item)} aria-label="Bỏ qua" className="game-btn-sm w-10 text-theme-textSecondary bg-theme-background flex items-center justify-center"><Icon name="x" className="w-4 h-4" /></button>
+                            <button onClick={() => maiDismissInbox(item)} aria-label="Bỏ qua" className="game-btn-sm w-10 text-theme-textSecondary bg-theme-background flex items-center justify-center"><Icon name="btn-x" className="w-4 h-4" /></button>
                           </div>
                         </div>
                       );
@@ -6685,7 +6685,7 @@
                 {/* Cài đặt Gemini */}
                 <section className="retro-card bg-theme-surface rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Icon name="sparkles" anim="sparkle" className="w-5 h-5" />
+                    <Icon name="btn-sparkles" anim="sparkle" className="w-5 h-5" />
                     <h3 className="font-display text-2xl text-theme-textPrimary flex-1">Cài đặt Gemini</h3>
                     <span className="font-pixel text-[14px] px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)]">FREE TIER</span>
                   </div>
@@ -6729,7 +6729,7 @@
                       <div key={i} className="flex items-center gap-2 py-1.5 border-t border-theme-border">
                         <p className="flex-1 min-w-0 text-xs text-theme-textSecondary truncate">“{x.text}”</p>
                         <span className="text-xs font-bold text-theme-textPrimary shrink-0">{x.ignore ? "Bỏ qua" : x.category}</span>
-                        <button onClick={() => setGemExamples(prev => prev.filter((_, k) => k !== i))} aria-label="Xoá" className="w-7 h-7 rounded-lg border-2 border-theme-border flex items-center justify-center shrink-0"><Icon name="x" className="w-3 h-3" /></button>
+                        <button onClick={() => setGemExamples(prev => prev.filter((_, k) => k !== i))} aria-label="Xoá" className="w-7 h-7 rounded-lg border-2 border-theme-border flex items-center justify-center shrink-0"><Icon name="btn-x" className="w-3 h-3" /></button>
                       </div>
                     ))}
                   </div>
@@ -6744,10 +6744,10 @@
                 {/* Segmented Control */}
                 <div className="flex bg-theme-surface border-2 border-[var(--ink)] p-1 rounded-xl shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] gap-1">
                   <button onClick={()=>setSubTab("wallet")} className={`flex-1 py-2.5 text-sm font-bold rounded-lg flex items-center justify-center gap-2 border-2 transition-all ${subTab==="wallet" ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                    <Icon name="wallet" anim={subTab==="wallet" ? "hop" : ""} className="w-4 h-4" /> Ví & tài khoản
+                    <Icon name="btn-wallet" anim={subTab==="wallet" ? "hop" : ""} className="w-4 h-4" /> Ví & tài khoản
                   </button>
                   <button onClick={()=>setSubTab("debts")} className={`flex-1 py-2.5 text-sm font-bold rounded-lg flex items-center justify-center gap-2 border-2 transition-all ${subTab==="debts" ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]' : 'border-transparent text-theme-textSecondary hover:text-theme-textPrimary'}`}>
-                    <Icon name="contact" anim={subTab==="debts" ? "hop" : ""} className="w-4 h-4" /> Sổ vay nợ cá nhân
+                    <Icon name="btn-debt" anim={subTab==="debts" ? "hop" : ""} className="w-4 h-4" /> Sổ vay nợ cá nhân
                   </button>
                 </div>
 
@@ -6755,7 +6755,7 @@
                 {subTab === "wallet" && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center mt-1">
-                      <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2"><Icon name="landmark" anim="float" className="w-5 h-5" /> Thẻ & tài khoản ({accounts.length})</h3>
+                      <h3 className="font-display text-2xl text-theme-textPrimary flex items-center gap-2"><Icon name="btn-bank" anim="float" className="w-5 h-5" /> Thẻ & tài khoản ({accounts.length})</h3>
                       <button onClick={()=>{ setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }} className="game-btn-sm bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"><span className="console-key">+</span> Liên kết ví</button>
                     </div>
                     <div className="wallet-stack flex flex-col gap-4">
@@ -6767,7 +6767,7 @@
                       ))}
                       <button type="button" onClick={() => { setEditingBank(null); setBankNameType("preset"); setIsAddBankModalOpen(true); }}
                         className="wallet-row w-full py-3.5 rounded-xl border-2 border-dashed border-[var(--ink)]/50 bg-theme-surface text-theme-textPrimary font-bold text-sm flex items-center justify-center gap-2 hover:bg-theme-variant">
-                        <Icon name="plus" anim="hop" className="w-5 h-5" /> Thêm ví / thẻ tín dụng
+                        <Icon name="btn-plus" anim="hop" className="w-5 h-5" /> Thêm ví / thẻ tín dụng
                       </button>
                     </div>
                     <button onClick={() => setActiveTab("mai")} className="retro-card w-full text-left bg-theme-surface rounded-xl p-4 flex items-center gap-3">
@@ -6776,7 +6776,7 @@
                         <p className="font-bold text-theme-textPrimary">Tự cập nhật số dư</p>
                         <p className="text-xs text-theme-textSecondary">App lọc thông báo ngân hàng, Gemini phân tích và ghi vào đúng ví.</p>
                       </div>
-                      <Icon name="chevron-right" className="w-5 h-5 text-theme-textSecondary shrink-0" />
+                      <Icon name="btn-next" className="w-5 h-5 text-theme-textSecondary shrink-0" />
                     </button>
                   </div>
                 )}
@@ -6794,13 +6794,13 @@
                           <label className="cursor-pointer">
                             <input type="radio" name="type" value="VAY" defaultChecked className="peer sr-only" />
                             <span className="flex justify-center items-center gap-1.5 py-2.5 rounded-lg border-2 border-theme-border bg-theme-background text-theme-textSecondary font-bold text-sm peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name="arrow-down-left" className="w-4 h-4" /> Tôi đi vay
+                              <Icon name="btn-income" className="w-4 h-4" /> Tôi đi vay
                             </span>
                           </label>
                           <label className="cursor-pointer">
                             <input type="radio" name="type" value="CHO_VAY" className="peer sr-only" />
                             <span className="flex justify-center items-center gap-1.5 py-2.5 rounded-lg border-2 border-theme-border bg-theme-background text-theme-textSecondary font-bold text-sm peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name="arrow-up-right" className="w-4 h-4" /> Tôi cho vay
+                              <Icon name="btn-expense" className="w-4 h-4" /> Tôi cho vay
                             </span>
                           </label>
                         </div>
@@ -6810,7 +6810,7 @@
                         </div>
                         <input name="note" type="text" placeholder="Ghi chú thêm..." className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-sm" />
                         <button type="submit" className="game-btn w-full py-3 bg-theme-primary text-[var(--on-primary)] font-bold flex items-center justify-center gap-2">
-                          <span className="console-key">A</span><Icon name="save" className="w-4 h-4" /> GHI SỔ
+                          <span className="console-key">A</span><Icon name="btn-save" className="w-4 h-4" /> GHI SỔ
                         </button>
                       </div>
                     </form>
@@ -6873,8 +6873,8 @@
                                       </div>
                                       <div className="flex items-center gap-2 shrink-0">
                                         <p className="font-display text-lg text-theme-textPrimary tabular">{formatVND(d.amount)}</p>
-                                        <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-lg border-2 ${d.isPaid ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'bg-theme-surface text-theme-primary border-theme-border'}`}><Icon name="check" className="w-3.5 h-3.5" /></button>
-                                        <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-surface p-2 rounded-lg text-theme-textSecondary border-2 border-theme-border hover:text-[var(--expense)]"><Icon name="trash-2" className="w-3.5 h-3.5" /></button>
+                                        <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-lg border-2 ${d.isPaid ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'bg-theme-surface text-theme-primary border-theme-border'}`}><Icon name="btn-check" className="w-3.5 h-3.5" /></button>
+                                        <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-surface p-2 rounded-lg text-theme-textSecondary border-2 border-theme-border hover:text-[var(--expense)]"><Icon name="btn-trash" className="w-3.5 h-3.5" /></button>
                                       </div>
                                     </div>
                                   ))}
@@ -6898,8 +6898,8 @@
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <p className="font-display text-lg text-theme-textPrimary tabular">{formatVND(d.amount)}</p>
-                              <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-lg border-2 ${d.isPaid ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'bg-theme-background text-theme-primary border-theme-border'}`}><Icon name="check" className="w-4 h-4" /></button>
-                              <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2 rounded-lg text-theme-textSecondary border-2 border-theme-border hover:text-[var(--expense)]"><Icon name="trash-2" className="w-4 h-4" /></button>
+                              <button onClick={()=>handleToggleDebt(d.id)} className={`p-2 rounded-lg border-2 ${d.isPaid ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)]' : 'bg-theme-background text-theme-primary border-theme-border'}`}><Icon name="btn-check" className="w-4 h-4" /></button>
+                              <button onClick={()=>handleDeleteDebt(d.id)} className="bg-theme-background p-2 rounded-lg text-theme-textSecondary border-2 border-theme-border hover:text-[var(--expense)]"><Icon name="btn-trash" className="w-4 h-4" /></button>
                             </div>
                           </div>
                         ))}
@@ -6946,7 +6946,7 @@
                 }}
                 aria-label="Nói với Mai"
                 className={`w-28 h-28 rounded-2xl border-[3px] border-[var(--ink)] flex items-center justify-center shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-transform active:translate-x-[2px] active:translate-y-[2px] ${voice.state === "listening" ? "bg-[var(--expense)] text-[var(--on-expense)] mai-pulse" : voice.state === "done" ? "bg-[var(--income)] text-[var(--on-income)]" : "bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]"}`}>
-                {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="check" anim="hop" className="w-14 h-14" /> : <MicIcon anim={voice.state === "listening" ? "pulse" : "float"} className="w-14 h-14" />}
+                {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="btn-check" anim="hop" className="w-14 h-14" /> : <MicIcon anim={voice.state === "listening" ? "pulse" : "float"} className="w-14 h-14" />}
               </button>
               <h2 className="font-display text-4xl text-theme-textPrimary mt-5 leading-tight">
                 {voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang ghi…" : voice.state === "done" ? "Mai ghi rồi ạ" : voice.error ? "Mai chưa ghi được" : "Mai sẵn sàng"}
@@ -7142,7 +7142,7 @@
                             <label className="cursor-pointer shrink-0">
                               <input type="radio" name="bankSelect" value="" defaultChecked={defaultVal === ""} className="peer sr-only" />
                               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
-                                <Icon name="plus" className="w-4 h-4 shrink-0" />
+                                <Icon name="btn-plus" className="w-4 h-4 shrink-0" />
                                 <span className="text-xs font-bold whitespace-nowrap">Tạo ví “{maiDraft.bank}”</span>
                               </div>
                             </label>
@@ -7165,7 +7165,7 @@
                     <label className="font-pixel text-[14px] text-theme-textSecondary mb-1 block uppercase">Ghi chú</label>
                     <input name="note" defaultValue={maiDraft.note || ""} placeholder="Ghi chú..." className="w-full bg-theme-background border-2 border-theme-border rounded-lg py-2 px-2.5 text-xs font-semibold text-theme-textPrimary" />
                   </div>
-                  <button type="submit" className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2"><span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Đúng rồi, ghi sổ</button>
+                  <button type="submit" className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2"><span className="console-key">A</span><Icon name="btn-check" className="w-4 h-4" /> Đúng rồi, ghi sổ</button>
                 </div>
               </form>
             </div>
@@ -7306,7 +7306,7 @@
                                 <button type="button"
                                   onClick={() => { patchItem(item._bid, { bankId: null, bankName: null }); setBatchPicker(null); }}
                                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-xs font-bold ${!item.bankId ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-background text-theme-textPrimary"}`}>
-                                  <Icon name="plus" className="w-4 h-4 shrink-0" />
+                                  <Icon name="btn-plus" className="w-4 h-4 shrink-0" />
                                   <span>+ Tạo ví “{item.bank}”</span>
                                 </button>
                               )}
@@ -7348,7 +7348,7 @@
                       const committed = maiCommitBatch(picked);
                       if (committed.length) closeBatch();
                     }} className="game-btn flex-1 py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2 disabled:opacity-50">
-                      <span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Ghi tất cả ({picked.length})
+                      <span className="console-key">A</span><Icon name="btn-check" className="w-4 h-4" /> Ghi tất cả ({picked.length})
                     </button>
                   </div>
                 </div>
@@ -7374,11 +7374,11 @@
                   <div className="grid grid-cols-[1fr_1fr] gap-1.5 items-center">
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="EXPENSE" defaultChecked={addTxType !== "INCOME"} className="sr-only peer" />
-                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Chi tiền</span>
+                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="btn-expense" className="w-3.5 h-3.5" /> Chi tiền</span>
                     </label>
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="INCOME" defaultChecked={addTxType === "INCOME"} className="sr-only peer" />
-                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-down-left" className="w-3.5 h-3.5" /> Thu tiền</span>
+                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="btn-income" className="w-3.5 h-3.5" /> Thu tiền</span>
                     </label>
                   </div>
                   <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
@@ -7396,9 +7396,9 @@
                         title="Chọn 1 hoặc nhiều ảnh biên lai / chuyển khoản để phân tích cùng lúc"
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border-[1.5px] border-[var(--ink)] shadow-[inset_0_-2px_0_rgba(74,51,80,.22)] text-[13px] font-bold active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-60">
                         {isOcrScanning ? (
-                          <><Icon name="loader-2" anim="spin" className="w-3.5 h-3.5" /> {gemImgBusy ? "Đọc ảnh…" : "Đang quét…"}</>
+                          <><Icon name="btn-loader" anim="spin" className="w-3.5 h-3.5" /> {gemImgBusy ? "Đọc ảnh…" : "Đang quét…"}</>
                         ) : (
-                          <><Icon name="scan-text" className="w-3.5 h-3.5" /> Quét nhiều ảnh</>
+                          <><Icon name="btn-scan" className="w-3.5 h-3.5" /> Quét nhiều ảnh</>
                         )}
                       </button>
                     </div>
@@ -7465,7 +7465,7 @@
                   </div>
 
                   <button type="submit" className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2">
-                    <span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Hoàn Thành
+                    <span className="console-key">A</span><Icon name="btn-check" className="w-4 h-4" /> Hoàn Thành
                   </button>
                 </form>
               </div>
@@ -7488,11 +7488,11 @@
                   <div className="grid grid-cols-[1fr_1fr] gap-1.5 items-center">
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="EXPENSE" defaultChecked={editingTx.type === "EXPENSE"} className="sr-only peer" />
-                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-up-right" className="w-3.5 h-3.5" /> Chi tiền</span>
+                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--expense)] peer-checked:text-[var(--on-expense)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="btn-expense" className="w-3.5 h-3.5" /> Chi tiền</span>
                     </label>
                     <label className="cursor-pointer">
                       <input type="radio" name="type" value="INCOME" defaultChecked={editingTx.type === "INCOME"} className="sr-only peer" />
-                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="arrow-down-left" className="w-3.5 h-3.5" /> Thu tiền</span>
+                      <span className="flex items-center justify-center gap-1 py-2 px-2 rounded-lg border-2 border-theme-border bg-theme-background font-bold text-xs text-theme-textSecondary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--income)] peer-checked:text-[var(--on-income)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all whitespace-nowrap"><Icon name="btn-income" className="w-3.5 h-3.5" /> Thu tiền</span>
                     </label>
                   </div>
                   <div className="grid grid-cols-[1fr_auto] gap-1.5 items-center">
@@ -7583,10 +7583,10 @@
                         handleDeleteTx(idToDelete);
                       }}
                       className="game-btn-sm px-3.5 py-2.5 bg-[var(--expense)] text-[var(--on-expense)] font-bold text-xs flex items-center justify-center gap-1.5 shrink-0">
-                      <Icon name="trash-2" className="w-4 h-4" /> Xóa
+                      <Icon name="btn-trash" className="w-4 h-4" /> Xóa
                     </button>
                     <button type="submit" className="game-btn flex-1 py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2">
-                      <span className="console-key">A</span><Icon name="check" className="w-4 h-4" /> Lưu Thay Đổi
+                      <span className="console-key">A</span><Icon name="btn-check" className="w-4 h-4" /> Lưu Thay Đổi
                     </button>
                   </div>
                 </form>
@@ -7688,7 +7688,7 @@
                   <button type="submit" className="game-btn w-full py-3 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex justify-center items-center gap-2"><span className="console-key">A</span><Icon name={editingBank ? "save" : "link"} className="w-4 h-4" /> {editingBank ? "Lưu thay đổi" : "Liên kết ngay"}</button>
                   {editingBank && (
                     <button type="button" onClick={() => { if (confirm("Xóa ví/tài khoản này?")) { updateData(accounts.filter(a => a.id !== editingBank.id), null, null, null); setIsAddBankModalOpen(false); setEditingBank(null); } }}
-                      className="game-btn-sm w-full py-2.5 bg-[var(--expense-light)] text-[var(--expense)] font-bold text-xs flex justify-center items-center gap-1.5"><Icon name="trash-2" className="w-4 h-4" /> Xóa ví này</button>
+                      className="game-btn-sm w-full py-2.5 bg-[var(--expense-light)] text-[var(--expense)] font-bold text-xs flex justify-center items-center gap-1.5"><Icon name="btn-trash" className="w-4 h-4" /> Xóa ví này</button>
                   )}
                 </form>
               </div>
@@ -7711,7 +7711,7 @@
 
                   {/* Giao diện TV Pastel */}
                   <section className="space-y-2.5">
-                    <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="palette" anim="wiggle" className="w-4 h-4" /> Giao diện TV Pastel</p>
+                    <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="btn-theme" anim="wiggle" className="w-4 h-4" /> Giao diện TV Pastel</p>
                     <div className="grid grid-cols-2 gap-2.5">
                       {Object.entries(THEMES).map(([key, t]) => {
                         const active = theme === key;
@@ -7734,7 +7734,7 @@
                       })}
                     </div>
                     <a href="studio.html" className="game-btn-sm w-full py-2.5 px-3 bg-[var(--accent)] text-[var(--on-accent)] font-bold text-xs flex items-center justify-center gap-2 mt-2">
-                      <Icon name="palette" className="w-4 h-4" />
+                      <Icon name="btn-theme" className="w-4 h-4" />
                       <span>Mở Xưởng Vẽ & Kéo Thả Icon / Element 32×32</span>
                     </a>
                   </section>
@@ -7744,7 +7744,7 @@
                   {/* Đồng bộ Firebase bằng Google & Email */}
                   <section className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="cloud" anim="float" className="w-4 h-4" /> Sao lưu Cloud Firebase</p>
+                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="btn-cloud" anim="float" className="w-4 h-4" /> Sao lưu Cloud Firebase</p>
                       {googleUser && <span className="font-pixel text-[14px] px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)]">{isRealtimeLive ? "LIVE" : "CONNECTED"}</span>}
                     </div>
 
@@ -7755,14 +7755,14 @@
                         <button type="button" onClick={handleGoogleOAuthLogin} disabled={authBusy}
                           className="game-btn w-full py-3 bg-theme-primary text-[var(--on-primary)] font-bold text-sm flex items-center justify-center gap-2.5 disabled:opacity-60">
                           <span className="console-key">G</span>
-                          {authBusy ? <Icon name="loader" anim="spin" className="w-5 h-5" /> : <Icon name="google" className="w-5 h-5" />}
+                          {authBusy ? <Icon name="btn-loader" anim="spin" className="w-5 h-5" /> : <Icon name="google" className="w-5 h-5" />}
                           <span>{authBusy ? "Đang xác thực Google…" : "Đăng nhập & Sao lưu bằng Google"}</span>
                         </button>
 
                         <details className="rounded-xl border-2 border-theme-border bg-theme-background p-3">
                           <summary className="text-xs font-bold text-theme-textPrimary cursor-pointer select-none flex items-center justify-between">
                             <span>Hoặc dùng Email & Mật khẩu</span>
-                            <Icon name="chevron-down" className="w-4 h-4 text-theme-textSecondary" />
+                            <Icon name="btn-down" className="w-4 h-4 text-theme-textSecondary" />
                           </summary>
                           <form className="space-y-2.5 pt-3 mt-2.5 border-t border-dashed border-theme-border" onSubmit={e => { e.preventDefault(); handleEmailAuth(authMode, authEmail, authPass); }}>
                             <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-theme-surface border-2 border-[var(--ink)]">
@@ -7814,14 +7814,14 @@
 
                         <div className="grid grid-cols-2 gap-2">
                           <button onClick={() => handleBackupToGoogle(false)} disabled={isSyncing} className="game-btn py-2.5 bg-theme-primary text-[var(--on-primary)] font-bold flex items-center justify-center gap-1.5 text-xs disabled:opacity-60">
-                            <span className="console-key">A</span><Icon name="refresh" anim={isSyncing ? "spin" : ""} className="w-4 h-4" /> Sao lưu ngay
+                            <span className="console-key">A</span><Icon name="btn-refresh" anim={isSyncing ? "spin" : ""} className="w-4 h-4" /> Sao lưu ngay
                           </button>
                           <button onClick={() => handleRestoreFromGoogle(false)} disabled={isSyncing} className="game-btn-sm py-2.5 bg-theme-background text-theme-textPrimary font-bold flex items-center justify-center gap-1.5 text-xs disabled:opacity-60">
-                            <Icon name="download" className="w-4 h-4" /> Khôi phục Cloud
+                            <Icon name="btn-export" className="w-4 h-4" /> Khôi phục Cloud
                           </button>
                         </div>
                         <button onClick={handleGoogleLogout} className="game-btn-sm w-full py-2.5 bg-theme-background text-theme-textSecondary font-bold flex items-center justify-center gap-2 text-xs">
-                          <Icon name="log-out" className="w-4 h-4" /> Đăng xuất tài khoản ({googleUser.email})
+                          <Icon name="btn-logout" className="w-4 h-4" /> Đăng xuất tài khoản ({googleUser.email})
                         </button>
 
                         {googleUser.hasGoogle && !googleUser.hasPassword && (
@@ -7843,14 +7843,14 @@
                   {/* Sao lưu thủ công */}
                   <section className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="file" className="w-4 h-4" /> Sao lưu tệp .JSON</p>
+                      <p className="font-pixel text-[15px] uppercase tracking-wider text-theme-textSecondary flex items-center gap-2"><Icon name="btn-file" className="w-4 h-4" /> Sao lưu tệp .JSON</p>
                       <span className="font-pixel text-[14px] text-[var(--on-accent,#4A2B18)] bg-[var(--accent)] px-2 py-0.5 rounded border border-[var(--ink)]">{transactions.length} GD · {accounts.length} VÍ</span>
                     </div>
                     <p className="text-xs text-theme-textSecondary">Xuất toàn bộ dữ liệu ra file .json để cất giữ hoặc nhập lại (Gộp / Thay thế).</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <button onClick={handleExportJson} className="game-btn-sm py-2.5 bg-theme-background text-theme-textPrimary font-bold text-xs flex items-center justify-center gap-1.5"><Icon name="download" className="w-4 h-4" /> Xuất file</button>
+                      <button onClick={handleExportJson} className="game-btn-sm py-2.5 bg-theme-background text-theme-textPrimary font-bold text-xs flex items-center justify-center gap-1.5"><Icon name="btn-export" className="w-4 h-4" /> Xuất file</button>
                       <label className="game-btn-sm py-2.5 bg-theme-background text-theme-textPrimary font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer">
-                        <Icon name="upload" className="w-4 h-4" /> Nhập file
+                        <Icon name="btn-import" className="w-4 h-4" /> Nhập file
                         <input type="file" accept=".json,application/json" className="hidden" onChange={e => { handleImportJson(e); e.target.value = ""; }} />
                       </label>
                     </div>
@@ -7860,8 +7860,8 @@
                     <React.Fragment>
                       <div className="retro-dash" />
                       <section className="space-y-2">
-                        <p className="font-pixel text-[14px] uppercase tracking-wider text-[var(--expense)] flex items-center gap-2"><Icon name="alert" className="w-4 h-4" /> Vùng nguy hiểm</p>
-                        <button onClick={handleWipeCloudData} className="game-btn-sm w-full py-2.5 bg-[var(--expense-light)] text-[var(--expense)] font-bold text-xs flex items-center justify-center gap-2"><Icon name="trash" className="w-4 h-4" /> Xoá toàn bộ dữ liệu của tài khoản này</button>
+                        <p className="font-pixel text-[14px] uppercase tracking-wider text-[var(--expense)] flex items-center gap-2"><Icon name="btn-alert" className="w-4 h-4" /> Vùng nguy hiểm</p>
+                        <button onClick={handleWipeCloudData} className="game-btn-sm w-full py-2.5 bg-[var(--expense-light)] text-[var(--expense)] font-bold text-xs flex items-center justify-center gap-2"><Icon name="btn-trash" className="w-4 h-4" /> Xoá toàn bộ dữ liệu của tài khoản này</button>
                       </section>
                     </React.Fragment>
                   )}
