@@ -9,11 +9,12 @@
     { id: "gemini-3.5-flash-lite", label: "3.5 Flash-Lite", thinking: { thinkingLevel: "low" }, timeout: 60000 },
     { id: "gemini-3.8-flash", label: "3.8 Flash", thinking: { thinkingLevel: "medium" }, timeout: 240000 },
   ];
-  // Ảnh hoá đơn/biên lai cần đọc số chính xác: ưu tiên model mạnh nhất, cho suy nghĩ nhiều hơn, rồi mới tới model nhẹ.
+  // Ảnh hoá đơn/biên lai: thử thật 25/11/2026 với hoá đơn quán, biên lai CK và lịch sử GD – 3.5 Flash-Lite (thinking medium)
+  // đọc đúng hết số tiền, ngày giờ, chiều thu/chi trong 1–6 giây; 3.8 Flash hay quá tải (503) nên để dự phòng, chờ tối đa 90 giây.
   var IMAGE_MODELS = [
-    { id: "gemini-3.8-flash", label: "3.8 Flash", thinking: { thinkingLevel: "medium" }, timeout: 240000 },
-    { id: "gemini-3.5-flash-lite", label: "3.5 Flash-Lite", thinking: { thinkingLevel: "medium" }, timeout: 120000 },
-    { id: "gemini-3.1-flash-lite", label: "3.1 Flash-Lite", thinking: { thinkingLevel: "low" }, timeout: 120000 },
+    { id: "gemini-3.5-flash-lite", label: "3.5 Flash-Lite", thinking: { thinkingLevel: "medium" }, timeout: 90000 },
+    { id: "gemini-3.8-flash", label: "3.8 Flash", thinking: { thinkingLevel: "medium" }, timeout: 90000 },
+    { id: "gemini-3.1-flash-lite", label: "3.1 Flash-Lite", thinking: { thinkingLevel: "low" }, timeout: 90000 },
   ];
   var MODEL = MODELS[0].id;
   var BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
