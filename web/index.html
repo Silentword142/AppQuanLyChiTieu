@@ -1073,7 +1073,32 @@
     html:not(.dark) .wallet-card [class*="bg-[#140D20]"], html:not(.dark) .wallet-card [class*="bg-[#2A1F42]"] { background-color: #FFFFFF !important; }
     html:not(.dark) .wallet-card [class*="border-[#9DF5C2]"], html:not(.dark) .wallet-card [class*="border-[#6A5594]"] { border-color: var(--ink) !important; }
     html:not(.dark) .wallet-card .crt-glow { text-shadow: none !important; }
-  </style>
+  
+    /* ---- Cần gạt xèng (nút Hạng mục) ---- */
+    .slot-lever-wrap { position: relative; display: block; width: 40px; height: 40px; perspective: 120px; cursor: pointer; }
+    .slot-lever { background: linear-gradient(180deg, #4A3F66, #2E2744) !important; }
+    .slot-lever.is-active { background: linear-gradient(180deg, #6A4E2A, #3E2C16) !important; }
+    .slot-lever .lv-glyph { width: 20px; height: 20px; display: block; animation: lvGlow 1.4s steps(2, jump-none) infinite; }
+    .slot-lever .lv-glyph svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 2px #FFE27A) drop-shadow(0 0 5px rgba(255,214,90,.85)); }
+    @keyframes lvGlow { 0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,226,122,.9)); } 50% { opacity: .55; filter: none; } }
+    .slot-lever-wrap .lv-slot { pointer-events: none; position: absolute; right: -9px; top: 13px; width: 8px; height: 16px; background: #2B2640; border: 2px solid var(--ink); border-left: 0; border-radius: 0 4px 4px 0; box-shadow: inset -2px 0 0 rgba(255,255,255,.18); }
+    .slot-lever-wrap .lv-arm { pointer-events: none; position: absolute; right: -7px; top: -4px; width: 6px; height: 27px; transform-origin: 50% 100%; transform-style: preserve-3d; transition: transform .35s var(--ease-spring); }
+    .slot-lever-wrap .lv-stick { position: absolute; left: 1px; top: 8px; width: 4px; bottom: 0; background: linear-gradient(90deg, #8E8AA6, #F4F1FA 45%, #8E8AA6); border: 1px solid var(--ink); border-radius: 2px; }
+    .slot-lever-wrap .lv-ball { position: absolute; left: -5px; top: -4px; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink);
+      background: radial-gradient(circle at 35% 30%, #FFFFFF 0 2px, #FF8A80 3px, #E5484D 6px, #A72A35 9px); box-shadow: 0 0 6px rgba(255,120,120,.55); animation: lvBall 1.4s steps(2, jump-none) infinite; }
+    @keyframes lvBall { 50% { box-shadow: 0 0 10px rgba(255,214,90,.95); } }
+    .slot-lever-wrap.is-pulled .lv-arm { animation: lvPull .7s cubic-bezier(.3,.7,.3,1.2) both; }
+    @keyframes lvPull { 0% { transform: rotateX(0) } 35% { transform: rotateX(155deg) scale(1.08) } 60% { transform: rotateX(150deg) } 100% { transform: rotateX(0) } }
+    .slot-lever-wrap.is-pulled .slot-lever { transform: translateY(2px); }
+    /* màn hình quay như cuộn xèng rồi giật xuống */
+    html.reel-out .tv-screen-full .crt-body { animation: reelOut .43s cubic-bezier(.55,0,.9,.4) both; }
+    html.reel-in .tv-screen-full .crt-body { animation: reelIn .62s steps(12, end) both; }
+    html.reel-out .crt-stage, html.reel-in .crt-stage { animation: reelShake .3s steps(3) 2; }
+    @keyframes reelOut { 0% { transform: translateY(0); filter: none; } 18% { transform: translateY(-14px); } 100% { transform: translateY(115%); filter: blur(4px) brightness(1.2); } }
+    @keyframes reelIn { 0% { transform: translateY(-115%); filter: blur(4px); } 45% { transform: translateY(14%); filter: blur(2px); } 62% { transform: translateY(-7%); filter: blur(1px); } 78% { transform: translateY(3%); filter: none; } 90% { transform: translateY(-1%); } 100% { transform: translateY(0); } }
+    @keyframes reelShake { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-2px, 2px); } 66% { transform: translate(2px, -1px); } }
+    @media (prefers-reduced-motion: reduce) { html.reel-out .tv-screen-full .crt-body, html.reel-in .tv-screen-full .crt-body, .slot-lever .lv-glyph, .slot-lever-wrap .lv-ball { animation: none !important; } }
+</style>
 </head>
 <body class="bg-theme-background text-theme-textPrimary min-h-screen overscroll-none">
   <div id="root"></div>
@@ -2432,6 +2457,30 @@
             </div>
           </div></PixelTV>
         </section>
+      );
+    };
+
+
+    // Cần gạt kiểu máy quay xèng: bấm thì cần gạt kéo xuống, màn hình TV quay như cuộn xèng rồi giật xuống màn Hạng mục
+    const SlotLever = ({ active, onPull }) => {
+      const [pulled, setPulled] = useState(false);
+      const pull = () => {
+        if (pulled) return;
+        buzz(14); setPulled(true);
+        const root = document.documentElement;
+        root.classList.remove("reel-in"); root.classList.add("reel-out");
+        setTimeout(() => { buzz(20); onPull(); root.classList.remove("reel-out"); root.classList.add("reel-in"); }, 430);
+        setTimeout(() => { root.classList.remove("reel-in"); }, 1100);
+        setTimeout(() => setPulled(false), 700);
+      };
+      return (
+        <span className={`slot-lever-wrap ${pulled ? "is-pulled" : ""}`} onClick={pull}>
+          <button type="button" aria-label="Hạng mục" className={`hud-btn slot-lever ${active ? "is-active" : ""}`}>
+            <span className="lv-glyph"><svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><path fill="#FFF4C2" d="M1 1h4v4H1zM7 1h4v4H7zM1 7h4v4H1zM7 7h4v4H7z"/><path fill="#FFD24D" d="M1 4h4v1H1zM7 4h4v1H7zM1 10h4v1H1zM7 10h4v1H7z"/><path fill="#FFFFFF" d="M2 2h1v1H2zM8 2h1v1H8zM2 8h1v1H2zM8 8h1v1H8z"/></svg></span>
+          </button>
+          <span className="lv-slot" aria-hidden="true" />
+          <span className="lv-arm" aria-hidden="true"><i className="lv-stick" /><i className="lv-ball" /></span>
+        </span>
       );
     };
 
@@ -5567,7 +5616,7 @@
               </div>
               <div className="flex flex-col gap-2 shrink-0">
                 <button type="button" onClick={() => { buzz(); setShowSettingsDialog(true); }} aria-label="Cài đặt" className="hud-btn"><Icon name="settings" className="w-6 h-6" /></button>
-                <button type="button" onClick={() => { buzz(); setActiveTab("category"); }} aria-label="Hạng mục" className={`hud-btn ${activeTab === "category" ? "!bg-[var(--accent)]" : ""}`}><Icon name="tags" className="w-6 h-6" /></button>
+                <SlotLever active={activeTab === "category"} onPull={() => setActiveTab("category")} />
               </div>
             </div>
           </header>
@@ -5655,7 +5704,7 @@
                   </div>
                   {recentGroups.length === 0 ? (
                     <div className="console-lcd text-center px-6 py-8">
-                      <MaiAvatar size={64} animated className="mx-auto mb-3" />
+                      <span className="block w-16 h-16 mx-auto mb-3"><Icon name="book-open" anim="float" className="w-16 h-16" /></span>
                       <p className="font-display text-[30px] leading-none text-theme-textPrimary">Sổ còn trống</p>
                       <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
                     </div>
