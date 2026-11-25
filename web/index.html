@@ -616,7 +616,7 @@
       55% { transform: scale(1, 1); filter: brightness(1.6); }
       100% { transform: none; filter: none; }
     }
-    @keyframes crtSwitch { 0% { opacity: 0; transform: translateY(6px) skewX(-4deg); filter: blur(1.5px) brightness(1.8); } 60% { opacity: 1; filter: none; } 100% { transform: none; } }
+    @keyframes crtSwitch { 0% { opacity: 0; transform: translateY(6px) skewX(-4deg); } 60% { opacity: 1; } 100% { transform: none; } }
     .crt-body.crt-switch-in { animation: crtSwitch .48s var(--ease-out) both !important; }
     @keyframes noiseBurst { 0% { opacity: .9; } 70% { opacity: .55; } 100% { opacity: 0; } }
     @keyframes noiseJitter { 0% { transform: translate(0, 0); } 33% { transform: translate(-13px, 7px); } 66% { transform: translate(9px, -11px); } 100% { transform: translate(-5px, 12px); } }
@@ -809,10 +809,11 @@
     .tv-log .log-empty { flex: 1; }
     /* Chuyển mục: TV đứng yên, chỉ đổi màu khung; màn vẫn nhiễu/giật như cũ */
     .crt-stage.tab-enter, .crt-stage.tab-enter > * { animation: none !important; }
-    .pxtv { animation: pxFrameIn .32s steps(4) both; }
-    @keyframes pxFrameIn { 0% { filter: brightness(1.5) saturate(.4); } 100% { } }
-    html:not(.dark) .pxtv { animation-name: pxFrameInL; }
-    @keyframes pxFrameInL { 0% { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)) brightness(1.5) saturate(.4); } 100% { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); } }
+    /* Tối ưu mượt (Hoang 25/11): không dùng filter trên khối lớn có nội dung chuyển động; tách lớp cho các phần chạy liên tục */
+    .pxsky { will-change: transform; transform: translateZ(0); }
+    .crt-roll, .crt-noise, .pxtv-ant, .knob-big, .side-led { will-change: transform; }
+    .tv-screen.tv-screen-full { contain: paint; transform: translateZ(0); }
+    .modal-backdrop { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background: rgba(36, 20, 40, .62) !important; }
     /* Bộ chọn pixel thay select gốc của hệ điều hành */
     .pxsel-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; min-width: 0; }
     .pxsel-btn .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -841,6 +842,14 @@
     .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
     .hkey-led.warn { background: #FF7D95; animation: sideLed 1s steps(2) infinite; }
     .log-ctrl { gap: 6px; }
+    .log-cal { display: flex !important; align-items: center; gap: 4px; padding: 0 6px !important; }
+    .log-cal-ico { width: 20px; height: 20px; display: block; }
+    .log-cal-ico > * { width: 100% !important; height: 100% !important; }
+    .pxcal-d { position: relative; height: 42px; display: grid; place-items: center; font: 800 18px/1 'Handjet', sans-serif; color: var(--text-primary); background: var(--background); border: 2px solid rgb(var(--border-rgb) / .6); }
+    .pxcal-d.has { border-color: var(--ink); }
+    .pxcal-d.today { box-shadow: inset 0 0 0 2px var(--accent); }
+    .pxcal-d.on { background: var(--accent); color: var(--on-accent, #3B2A3F); border-color: var(--ink); box-shadow: inset 0 -3px 0 rgba(74,51,80,.22); }
+    .pxcal-d i { position: absolute; bottom: 4px; left: 50%; width: 6px; height: 6px; margin-left: -3px; box-shadow: 0 0 0 1px var(--ink); }
     /* Hiệu ứng TV theo mẫu GIF: sọc màu, giật hình, bật nguồn, con trỏ nhấp nháy */
     .crt-bars { position: absolute; inset: 0; z-index: 4; display: flex; opacity: 0; pointer-events: none; }
     .crt-bars.on { opacity: 1; }
@@ -995,7 +1004,7 @@
     .pxtv-ctrl .knob { width: 16px; height: 16px; background: radial-gradient(circle at 40% 35%, #FFFFFF 0 30%, #FCE6D2 31% 100%); box-shadow: 0 0 0 2px #3B2A3F, 2px 2px 0 2px rgba(59,42,63,.35); position: relative; }
     .pxtv-ctrl .knob::after { content: ""; position: absolute; left: 7px; top: 2px; width: 2px; height: 6px; background: #3B2A3F; }
     @keyframes pxLedBlink { 85% { background: #5A4632; box-shadow: 0 0 0 2px #3B2A3F; } }
-    html.dark .pxtv { filter: brightness(.82) saturate(.9); }
+    html.dark .pxtv { filter: none; }
     @media (prefers-reduced-motion: reduce) { .pxtv-ctrl .led { animation: none; } }
     /* ======================= DOCK CRT MỚI (nền tối, LED vàng, keycap pixel, đồng xu GHI) ======================= */
     .pxdock { height: calc(132px + var(--safe-bottom)); padding: 0 6px calc(var(--safe-bottom) + 22px) !important; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)) 88px repeat(2, minmax(0,1fr)); align-items: end; gap: 4px; background: transparent; }
@@ -1135,8 +1144,8 @@
     /* --- khung, thẻ, nút ngoài TV: thống nhất mực + bóng cứng --- */
     html:not(.dark) .panel-head:not(.tv-dark .panel-head) { background: #FFF1C2; color: var(--ink); text-shadow: none; }
     html:not(.dark) .hud-btn, html:not(.dark) .game-btn, html:not(.dark) .game-btn-sm { filter: drop-shadow(2px 2px 0 var(--shadow-hard)); }
-    html:not(.dark) .hud { filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
-    html:not(.dark) .pxtv { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); }
+    html:not(.dark) .hud { box-shadow: inset 0 3px 0 rgba(255,255,255,.12), inset 0 -3px 0 rgba(0,0,0,.18), 3px 3px 0 var(--shadow-hard); }
+    html:not(.dark) .pxtv { filter: none; }
     html:not(.dark) .pxtv-ctrl .brand { background: #FFFFFF; color: var(--ink); box-shadow: 0 0 0 2px var(--ink), 2px 2px 0 2px var(--shadow-hard); }
     html:not(.dark) .pxtv-ctrl .led { background: #FFE08A; box-shadow: 0 0 0 2px var(--ink); }
     html:not(.dark) .pxtv-ctrl .grille { background: repeating-linear-gradient(90deg, rgba(59,51,85,.45) 0 3px, transparent 3px 7px); }
@@ -1680,8 +1689,22 @@
       }
     };
 
-    const CategoryParentFilterBar = ({ parentCategories, selectedParent, onSelectParent }) => {
+    const CategoryParentFilterBar = ({ parentCategories, selectedParent, onSelectParent, wrap = true }) => {
       const scrollRef = React.useRef(null);
+      if (wrap) {
+        // Dạng xếp dòng (không vuốt ngang): mọi nhóm lớn hiện hết, tự xuống hàng
+        const chip = (on) => `px-2 py-1 text-xs font-bold rounded-lg flex items-center gap-1 border-2 transition-all ${on ? 'bg-theme-primary text-[var(--on-primary)] border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]' : 'bg-theme-background text-theme-textSecondary border-theme-border'}`;
+        return (
+          <div className="flex flex-wrap gap-1.5 py-0.5">
+            <button type="button" onClick={() => onSelectParent("Tất cả")} className={chip(selectedParent === "Tất cả")}>Tất cả</button>
+            {parentCategories.map(p => (
+              <button key={p.id} type="button" onClick={() => onSelectParent(p.name)} className={chip(selectedParent === p.name)}>
+                <Icon name={p.icon || "tag"} className="w-4 h-4 shrink-0" /><span className="whitespace-nowrap">{p.name}</span>
+              </button>
+            ))}
+          </div>
+        );
+      }
 
       const handleScroll = (direction) => {
         if (scrollRef.current) {
@@ -1807,11 +1830,16 @@
       );
     };
 
-    const CategoryModal = ({ isOpen, onClose, editingCategory, newCategoryParent, parentCategories, categoryParentMap, onSave }) => {
-      if (!isOpen) return null;
-
+    const CategoryModal = ({ isOpen, onClose, editingCategory, newCategoryParent, parentCategories, categoryParentMap, allCategories = [], onSave }) => {
+      // Icon đã dùng bởi hạng mục khác (trừ chính hạng mục đang sửa) -> báo để chọn icon khác
+      const iconUsedBy = React.useMemo(() => {
+        const m = {};
+        allCategories.forEach(c => { if (!c || !c.icon) return; if (editingCategory && (c.id === editingCategory.id || c.name === editingCategory.name)) return; if (!m[c.icon]) m[c.icon] = c.name; });
+        return m;
+      }, [allCategories, editingCategory]);
       const [name, setName] = React.useState(editingCategory?.name || "");
-      const [selectedIcon, setSelectedIcon] = React.useState(editingCategory?.icon || "tag");
+      const [selectedIcon, setSelectedIcon] = React.useState(() => editingCategory?.icon || ALL_AVAILABLE_ICONS.find(ic => !iconUsedBy[ic]) || "tag");
+      const [formErr, setFormErr] = React.useState("");
       const [selectedColorState] = React.useState(editingCategory?.color || null);
       const [isChild, setIsChild] = React.useState(() => {
         if (editingCategory) {
@@ -1854,9 +1882,16 @@
 
       const badgeInk = contrastInk(selectedColor || "#FF8674");
 
+      const dupIcon = iconUsedBy[selectedIcon];
       const handleSubmit = (e) => {
         e.preventDefault();
-        if (!name.trim()) return;
+        const nm = name.trim();
+        if (!nm) { setFormErr("Nhập tên hạng mục trước đã."); return; }
+        const sameName = allCategories.find(c => c && c.name && c.name.trim().toLowerCase() === nm.toLowerCase() && (!editingCategory || c.id !== editingCategory.id));
+        if (sameName) { setFormErr(`Tên “${sameName.name}” đã có rồi${sameName.parent ? ` (trong nhóm ${sameName.parent})` : ""}. Đặt tên khác nhé.`); return; }
+        if (dupIcon) { setFormErr(`Icon này đang dùng cho “${dupIcon}”. Chọn icon khác để dễ phân biệt.`); return; }
+        if (isChild && !parentCategories.some(p => p.name === parentName)) { setFormErr("Chọn nhóm lớn cho danh mục nhỏ."); return; }
+        setFormErr("");
         onSave({
           name: name.trim(),
           icon: selectedIcon,
@@ -1866,6 +1901,7 @@
         });
       };
 
+      if (!isOpen) return null;
       return (
         <div className="fixed inset-0 modal-backdrop z-50 flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
           <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md overflow-hidden flex flex-col max-h-[92vh]">
@@ -1905,7 +1941,6 @@
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ví dụ: Ăn phở sáng, Quỹ nhà, Tiền thưởng..." 
-                    required 
                     className="w-full bg-theme-background border-2 border-theme-border rounded-lg p-2.5 text-theme-textPrimary text-sm font-bold" 
                   />
                 </div>
@@ -1945,6 +1980,11 @@
                     </label>
                     <span className="text-xs font-semibold text-theme-textSecondary">Chọn: <b className="text-theme-textPrimary font-mono">{selectedIcon}</b></span>
                   </div>
+                  {dupIcon ? (
+                    <p className="text-xs font-bold text-[var(--expense)] bg-[var(--expense-light)] border-2 border-[var(--expense)] px-2.5 py-1.5">⚠ Icon này đang dùng cho “{dupIcon}”. Chọn icon khác (icon mờ có chấm đỏ là đã dùng).</p>
+                  ) : (
+                    <p className="text-[12px] font-semibold text-theme-textSecondary">Icon mờ có chấm đỏ là đã dùng cho hạng mục khác.</p>
+                  )}
 
                   <div className="relative">
                     <Icon name="btn-search" className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-theme-textSecondary pointer-events-none" />
@@ -1971,14 +2011,16 @@
                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5 max-h-[180px] overflow-y-auto no-scrollbar p-2 border-2 border-theme-border rounded-lg bg-theme-background">
                     {filteredIcons.map(iconName => {
                       const isSelected = selectedIcon === iconName;
+                      const usedBy = iconUsedBy[iconName];
                       return (
                         <button
                           key={iconName}
                           type="button"
-                          onClick={() => setSelectedIcon(iconName)}
-                          title={iconName}
-                          className={`p-1 rounded-lg flex items-center justify-center h-11 transition-all border-2 ${isSelected ? 'bg-[var(--accent)] border-[var(--ink)] scale-105 shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]' : 'border-transparent hover:bg-theme-surface'}`}>
+                          onClick={() => { setSelectedIcon(iconName); setFormErr(""); }}
+                          title={usedBy ? `${iconName} · đã dùng cho ${usedBy}` : iconName}
+                          className={`relative p-1 rounded-lg flex items-center justify-center h-11 transition-all border-2 ${isSelected ? (usedBy ? 'bg-[var(--expense-light)] border-[var(--expense)]' : 'bg-[var(--accent)] border-[var(--ink)] scale-105 shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]') : 'border-transparent hover:bg-theme-surface'} ${usedBy && !isSelected ? 'opacity-40' : ''}`}>
                           <Icon name={iconName} anim={isSelected ? "hop" : ""} className="w-8 h-8" />
+                          {usedBy && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[var(--expense)] border-2 border-[var(--ink)]" aria-hidden="true" />}
                         </button>
                       );
                     })}
@@ -1990,6 +2032,7 @@
                   </div>
                 </div>
 
+                {formErr && <p role="alert" className="text-xs font-bold text-[var(--expense)] bg-[var(--expense-light)] border-2 border-[var(--expense)] px-2.5 py-2">{formErr}</p>}
                 <div className="pt-1">
                   <button 
                     type="submit" 
@@ -2648,9 +2691,66 @@
       );
     };
 
+    // Lịch pixel chọn 1 ngày; ngày có giao dịch có chấm xanh (thu > chi) hoặc hồng (chi > thu)
+    const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const PxCalendar = ({ value, marks, onPick, onClose }) => {
+      const init = value ? new Date(value + "T00:00:00") : new Date();
+      const [ym, setYm] = useState({ y: init.getFullYear(), m: init.getMonth() });
+      const first = new Date(ym.y, ym.m, 1);
+      const lead = (first.getDay() + 6) % 7; // T2 đầu tuần
+      const days = new Date(ym.y, ym.m + 1, 0).getDate();
+      const today = isoDay(new Date());
+      const cells = [];
+      for (let i = 0; i < lead; i++) cells.push(null);
+      for (let d = 1; d <= days; d++) cells.push(isoDay(new Date(ym.y, ym.m, d)));
+      const shift = (k) => { buzz(8); setYm(({ y, m }) => { const d = new Date(y, m + k, 1); return { y: d.getFullYear(), m: d.getMonth() }; }); };
+      const sw = useRef(null);
+      return ReactDOM.createPortal(
+        <div className="fixed inset-0 modal-backdrop z-[70] flex items-end sm:items-center justify-center p-2 sm:p-4" onClick={onClose}>
+          <div onClick={e => e.stopPropagation()} className="console-bezel modal-sheet w-full max-w-md overflow-hidden flex flex-col"
+            onTouchStart={(e) => { const t = e.touches[0]; sw.current = { x: t.clientX, y: t.clientY }; }}
+            onTouchEnd={(e) => { const st = sw.current; sw.current = null; if (!st) return; const t = e.changedTouches[0], dx = t.clientX - st.x, dy = t.clientY - st.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) shift(dx < 0 ? 1 : -1); }}>
+            <div className="console-top-strip px-3.5 py-1.5 flex items-center justify-between shrink-0">
+              <span className="font-pixel text-[14px] uppercase tracking-wider">CHỌN NGÀY XEM NHẬT KÝ</span>
+              <button type="button" onClick={onClose} aria-label="Đóng" className="console-key shrink-0">✕</button>
+            </div>
+            <div className="h-1 retro-stripes-h shrink-0" />
+            <div className="p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" className="console-key" aria-label="Tháng trước" onClick={() => shift(-1)}>◄</button>
+                <span className="font-display text-2xl text-theme-textPrimary">Tháng {ym.m + 1}/{ym.y}</span>
+                <button type="button" className="console-key" aria-label="Tháng sau" onClick={() => shift(1)}>►</button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center font-pixel text-[13px] text-theme-textSecondary">
+                {["T2", "T3", "T4", "T5", "T6", "T7", "CN"].map(d => <span key={d}>{d}</span>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {cells.map((k, i) => {
+                  if (!k) return <span key={"e" + i} />;
+                  const mk = marks[k];
+                  const on = k === value;
+                  return (
+                    <button key={k} type="button" onClick={() => { buzz(10); onPick(k); }}
+                      className={`pxcal-d ${on ? "on" : ""} ${k === today ? "today" : ""} ${mk ? "has" : ""}`}>
+                      <span>{Number(k.slice(8))}</span>
+                      {mk ? <i style={{ background: mk.net >= 0 ? "var(--income)" : "var(--expense)" }} /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button type="button" className="game-btn-sm flex-1 py-2 text-xs font-bold bg-[var(--accent)] text-[var(--on-accent,#3B2A3F)]" onClick={() => { buzz(); onPick(today); }}>Hôm nay</button>
+                <button type="button" className="game-btn-sm game-btn-neutral flex-1 py-2 text-xs font-bold bg-theme-background text-theme-textPrimary" onClick={() => { buzz(); onPick(null); }}>Xem gần đây</button>
+              </div>
+            </div>
+          </div>
+        </div>, document.body);
+    };
+
     // TV nhật ký (mục Nhà): thân xanh bạc hà, màn tối, mỗi kênh là 1 ngày; ◀ ▶ đổi ngày, TẤT CẢ mở Báo cáo
-    const LogTV = ({ groups, onAll, renderItem }) => {
+    const LogTV = ({ groups, onAll, renderItem, marks = {}, picked = null, onPick }) => {
       const [pg, setPg] = useState(0);
+      const [calOpen, setCalOpen] = useState(false);
       const [noise, setNoise] = useState(false);
       const [bars, setBars] = useState(false);
       const idleRef = useRef(Date.now());
@@ -2662,16 +2762,27 @@
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
       nRef.current = n;
       const flip = (fn) => { setNoise(true); setTimeout(() => { setNoise(false); setBars(true); fn(); }, 240); setTimeout(() => setBars(false), 330); };
-      const go = (d) => { if (groups.length < 2) return; buzz(10); idleRef.current = Date.now(); flip(() => setPg(p => (Math.min(p, nRef.current - 1) + d + nRef.current) % nRef.current)); };
+      const go = (d) => {
+        if (picked) { // đang xem 1 ngày chọn từ lịch: ◀ ▶ lùi/tiến 1 ngày
+          buzz(10); const t = new Date(picked + "T00:00:00"); t.setDate(t.getDate() + d); flip(() => onPick(isoDay(t))); return;
+        }
+        if (groups.length < 2) return; buzz(10); idleRef.current = Date.now(); flip(() => setPg(p => (Math.min(p, nRef.current - 1) + d + nRef.current) % nRef.current));
+      };
+      const pickDay = (k) => { setCalOpen(false); flip(() => { setPg(0); onPick && onPick(k); }); };
       const pad = (v) => String(v).padStart(2, "0");
       const g = groups[idx];
       return (
         <section className="crt-stage tab-enter" aria-label="Nhật ký gần đây">
           <PixelTV color="tvTeal" ctrl={
             <div className="pxtv-ctrl log-ctrl">
-              <i className="led" /><span className="brand">NHẬT KÝ</span><span className="flex-1" />
-              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày trước" onClick={() => go(-1)} disabled={groups.length < 2}>◀</button>
-              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày sau" onClick={() => go(1)} disabled={groups.length < 2}>▶</button>
+              <i className="led" />
+              <button type="button" className="pxbox mini-key wide log-cal" style={pxFrame(picked ? "#FFE08A" : "#FFF6E9")} aria-label="Chọn ngày trên lịch" onClick={() => { buzz(); setCalOpen(true); }}>
+                <span className="log-cal-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("btn-calendar") : "" }} />
+                <span>{picked ? `${picked.slice(8)}/${picked.slice(5, 7)}` : "LỊCH"}</span>
+              </button>
+              <span className="flex-1" />
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày trước" onClick={() => go(-1)} disabled={!picked && groups.length < 2}>◀</button>
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày sau" onClick={() => go(1)} disabled={!picked && groups.length < 2}>▶</button>
               <button type="button" className="pxbox mini-key wide" style={pxFrame("#FFE08A")} onClick={() => { buzz(); onAll(); }}>TẤT CẢ</button>
             </div>}>
             <div className="tv-bezel tv-bezel-full">
@@ -2691,8 +2802,14 @@
                     <span className="truncate">CH{pad(idx + 4)} <span className="opacity-85 uppercase">{g ? g.label : "Sổ trống"}</span></span>
                     <span className="shrink-0">{g ? <span className={g.net >= 0 ? "text-[var(--income)]" : "text-[var(--expense)]"}>{g.net >= 0 ? "+" : "−"}{formatVND(Math.abs(g.net))}</span> : <>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</>}</span>
                   </div>
-                  {g ? (
+                  {g && g.items.length ? (
                     <div className="log-list">{g.items.map(renderItem)}</div>
+                  ) : g ? (
+                    <div className="log-empty">
+                      <Icon name="btn-calendar" anim="float" className="w-12 h-12" />
+                      <p className="tv-mid">NGÀY NÀY TRỐNG</p>
+                      <p className="log-hint">Không có giao dịch nào. Bấm ◀ ▶ để xem ngày khác hoặc LỊCH để chọn lại.</p>
+                    </div>
                   ) : (
                     <div className="log-empty">
                       <Icon name="btn-journal" anim="float" className="w-12 h-12" />
@@ -2705,6 +2822,7 @@
               </div>
             </div>
           </PixelTV>
+          {calOpen && <PxCalendar value={picked} marks={marks} onPick={pickDay} onClose={() => setCalOpen(false)} />}
         </section>
       );
     };
@@ -4935,7 +5053,19 @@
       }, [transactions]);
 
       // Giao dịch gần đây, nhóm theo ngày
+      const [logDate, setLogDate] = useState(null); // 'YYYY-MM-DD' khi chọn ngày trên lịch
+      const logMarks = React.useMemo(() => {
+        const m = {};
+        transactions.forEach(t => { const k = isoDay(new Date(t.date)); if (!m[k]) m[k] = { net: 0, n: 0 }; m[k].n++; m[k].net += t.type === "INCOME" ? t.amount : -t.amount; });
+        return m;
+      }, [transactions]);
       const recentGroups = React.useMemo(() => {
+        if (logDate) {
+          const items = transactions.filter(t => isoDay(new Date(t.date)) === logDate).sort((a, b) => new Date(b.date) - new Date(a.date));
+          const d = new Date(logDate + "T00:00:00");
+          const label = logDate === isoDay(new Date()) ? "Hôm nay" : d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+          return [{ key: "pick-" + logDate, label, items, net: items.reduce((x, t) => x + (t.type === "INCOME" ? t.amount : -t.amount), 0) }];
+        }
         const sorted = transactions.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
         const groups = [];
         const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -4953,7 +5083,7 @@
           g.net += t.type === "INCOME" ? t.amount : -t.amount;
         });
         return groups;
-      }, [transactions]);
+      }, [transactions, logDate]);
 
       const baseReportTxs = React.useMemo(() => {
         const selectedById = reportAccount !== "Tất cả" ? accounts.find(a => String(a.id) === String(reportAccount)) : null;
@@ -5928,7 +6058,7 @@
                 )}
 
                 {/* NHẬT KÝ GẦN ĐÂY – TV riêng thân xanh bạc hà, màn tối, mỗi kênh 1 ngày */}
-                <LogTV groups={recentGroups} onAll={() => setActiveTab("report")} renderItem={(tx) => {
+                <LogTV groups={recentGroups} marks={logMarks} picked={logDate} onPick={setLogDate} onAll={() => setActiveTab("report")} renderItem={(tx) => {
                   const col = getColorForCategoryName(tx.category);
                   const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? col : "#FFF6E9";
                   return (
@@ -6449,7 +6579,7 @@
                           {categoryFilterTab === "all" && (
                             <div className="pt-3 border-t-2 border-dashed border-theme-border">
                               {children.length > 0 ? (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {children.map(child => (
                                     <div key={child.id} className="bg-theme-background border-2 border-[var(--ink)]/35 hover:border-[var(--ink)] px-2.5 py-2 rounded-lg flex items-center justify-between gap-1.5 group transition-colors shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]">
                                       <div className="flex items-center gap-2 overflow-hidden min-w-0">
@@ -7656,7 +7786,7 @@
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div className="grid grid-cols-2 gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
@@ -7683,22 +7813,22 @@
                         const matched = resolveAccount(accounts, editingTx);
                         const defaultVal = matched ? String(matched.id) : (editingTx.bankName ? `legacy:${editingTx.bankName}` : (accounts[0] ? String(accounts[0].id) : ""));
                         return (
-                          <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 border-2 border-theme-border rounded-lg bg-theme-background">
+                          <div className="flex flex-col gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                             {!matched && editingTx.bankName && (
-                              <label className="cursor-pointer shrink-0">
+                              <label className="cursor-pointer block">
                                 <input type="radio" name="bankSelect" value={`legacy:${editingTx.bankName}`} defaultChecked={defaultVal === `legacy:${editingTx.bankName}`} className="peer sr-only" />
                                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
                                   <BankBadge name={editingTx.bankName} size={18} />
-                                  <span className="text-xs font-bold whitespace-nowrap">{editingTx.bankName} (ví cũ)</span>
+                                  <span className="text-[13px] font-bold min-w-0 truncate">{editingTx.bankName} (ví cũ)</span>
                                 </div>
                               </label>
                             )}
                             {accounts.map(a => (
-                              <label key={a.id} className="cursor-pointer shrink-0">
+                              <label key={a.id} className="cursor-pointer block">
                                 <input type="radio" name="bankSelect" value={String(a.id)} defaultChecked={defaultVal === String(a.id)} className="peer sr-only" />
                                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
                                   <BankBadge name={a.name} size={18} />
-                                  <span className="text-xs font-bold whitespace-nowrap">{formatAccountLabel(a)}</span>
+                                  <span className="text-[13px] font-bold min-w-0 truncate">{formatAccountLabel(a)}</span>
                                 </div>
                               </label>
                             ))}
@@ -7744,6 +7874,7 @@
             newCategoryParent={newCategoryParent}
             parentCategories={parentCategories}
             categoryParentMap={categoryParentMap}
+            allCategories={categories}
             onSave={handleAddCategory}
           /></Presence>
 

@@ -71,8 +71,9 @@ function sky(cv,opt){opt=opt||{};var g=cv.getContext("2d"),W,H,base,b,clouds,sta
   birds.forEach(function(bd){var f=Math.floor(tick/3)%2,x=Math.round(bd.x)%(W+10)-5,c="#8C5A70";
    if(f){P(g,x,bd.y,c);P(g,x+1,bd.y+1,c);P(g,x+2,bd.y,c)}else{P(g,x,bd.y+1,c);P(g,x+1,bd.y,c);P(g,x+2,bd.y+1,c)}bd.x+=bd.sp});
   tick++}
- build();draw();var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,iv=reduce?0:setInterval(draw,160);
- var onR=function(){build();draw()};addEventListener("resize",onR);
+ build();draw();var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,iv=reduce?0:setInterval(function(){if(!document.hidden)draw()},180);
+ var skyKey=function(){var cs=getComputedStyle(document.documentElement);return [innerWidth,innerHeight,cs.getPropertyValue("--sky1"),cs.getPropertyValue("--sky2"),cs.getPropertyValue("--ground"),document.documentElement.classList.contains("dark")].join("|")},lastKey=skyKey(),rt=0;
+ var onR=function(){clearTimeout(rt);rt=setTimeout(function(){var k=skyKey();if(k===lastKey)return;lastKey=k;build();draw()},120)};addEventListener("resize",onR);
  var mo=new MutationObserver(onR);mo.observe(document.documentElement,{attributes:true,attributeFilter:["class","data-theme","style"]});
  return function(){clearInterval(iv);removeEventListener("resize",onR);mo.disconnect()}}
 
