@@ -957,14 +957,14 @@
       --hud: #3B3355; --on-hud: #FFF6E9;
       --wood: #CDB8F6; --wood-light: #E6DBFF; --wood-dark: #9F86E0;
       --sky1: #A9D8FF; --sky2: #DDF0FF; --ground: #C9EBD9;
-      --tv-trim: #FFF6E9; --screen: #FFFDF7; --screen2: #FFFFFF;
+      --tv-trim: #FFF6E9; --screen: #2A2140; --screen2: #41325C; /* màn TV luôn tối kiểu CRT (Hoang 25/11) */
       --shadow-hard: #BAB1B5;
     }
     html:not(.dark) body { background-color: var(--background); }
     html:not(.dark)[data-retro="1"] body { background-image: linear-gradient(180deg, #BFE2FF 0px, #E4F3FF 360px, #FFF6E9 820px); }
 
     /* --- màn hình TV: sáng, sạch, chữ mực --- */
-    html:not(.dark) .tv-screen.tv-screen-full {
+    html.light-screen .tv-screen.tv-screen-full {
       background: #FFFDF7 !important;
       color: var(--ink);
       --surface: #FFFFFF; --surface-rgb: 255 255 255;
@@ -979,59 +979,59 @@
       --primary: #FF8FAB; --primary-rgb: 255 143 171; --on-primary: #3B3355;
       box-shadow: inset 0 0 0 2px #FFFFFF, inset 0 -6px 0 rgba(59,51,85,.06) !important;
     }
-    html:not(.dark) .tv-screen.tv-screen-full::before { background: repeating-linear-gradient(180deg, rgba(59,51,85,.035) 0 1px, transparent 1px 4px); }
-    html:not(.dark) .tv-screen.tv-screen-full::after { background: radial-gradient(80% 50% at 15% 0%, rgba(255,255,255,.7), transparent 60%); }
-    html:not(.dark) .tv-screen-full .crt-body { animation: none; }
-    html:not(.dark) .tv-screen-full .crt-roll { display: none; }
-    html:not(.dark) .tv-screen-full .font-display,
-    html:not(.dark) .tv-screen-full .crt-glow,
-    html:not(.dark) .tv-screen-full .ekey-label { text-shadow: none !important; }
-    html:not(.dark) .tv-screen-full .crt-sep,
-    html:not(.dark) .tv-screen-full .osd-bar { border-color: rgba(59,51,85,.18) !important; }
-    html:not(.dark) .tv-screen-full .tv-ch-btn { background: #FFFFFF; color: var(--ink); border-color: var(--ink); text-shadow: none; box-shadow: 2px 2px 0 var(--shadow-hard); }
-    html:not(.dark) .tv-screen-full .tv-ch-btn:active { background: var(--accent); box-shadow: none; }
+    html.light-screen .tv-screen.tv-screen-full::before { background: repeating-linear-gradient(180deg, rgba(59,51,85,.035) 0 1px, transparent 1px 4px); }
+    html.light-screen .tv-screen.tv-screen-full::after { background: radial-gradient(80% 50% at 15% 0%, rgba(255,255,255,.7), transparent 60%); }
+    html.light-screen .tv-screen-full .crt-body { animation: none; }
+    html.light-screen .tv-screen-full .crt-roll { display: none; }
+    html.light-screen .tv-screen-full .font-display,
+    html.light-screen .tv-screen-full .crt-glow,
+    html.light-screen .tv-screen-full .ekey-label { text-shadow: none !important; }
+    html.light-screen .tv-screen-full .crt-sep,
+    html.light-screen .tv-screen-full .osd-bar { border-color: rgba(59,51,85,.18) !important; }
+    html.light-screen .tv-screen-full .tv-ch-btn { background: #FFFFFF; color: var(--ink); border-color: var(--ink); text-shadow: none; box-shadow: 2px 2px 0 var(--shadow-hard); }
+    html.light-screen .tv-screen-full .tv-ch-btn:active { background: var(--accent); box-shadow: none; }
 
     /* thẻ trong màn hình: trắng, viền mực, bóng cứng */
-    html:not(.dark) .tv-screen-full .console-bezel,
-    html:not(.dark) .tv-screen-full .retro-card,
-    html:not(.dark) .tv-screen-full .retro-card-soft,
-    html:not(.dark) .tv-screen-full .console-lcd,
-    html:not(.dark) .tv-screen-full .day-card,
-    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-2xl,
-    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-3xl {
+    html.light-screen .tv-screen-full .console-bezel,
+    html.light-screen .tv-screen-full .retro-card,
+    html.light-screen .tv-screen-full .retro-card-soft,
+    html.light-screen .tv-screen-full .console-lcd,
+    html.light-screen .tv-screen-full .day-card,
+    html.light-screen .tv-screen-full .bg-theme-surface.border.rounded-2xl,
+    html.light-screen .tv-screen-full .bg-theme-surface.border.rounded-3xl {
       --pc: #3B3355 !important;
       background: #FFFFFF !important;
       box-shadow: inset 0 -3px 0 rgba(59,51,85,.07) !important;
       filter: drop-shadow(3px 3px 0 var(--shadow-hard));
     }
-    html:not(.dark) .tv-screen-full .console-top-strip,
-    html:not(.dark) .tv-screen-full .panel-head {
+    html.light-screen .tv-screen-full .console-top-strip,
+    html.light-screen .tv-screen-full .panel-head {
       background: #F4EEFB !important; color: var(--ink) !important; text-shadow: none !important;
       border-bottom: 2px solid var(--ink) !important;
     }
-    html:not(.dark) .tv-screen-full .panel-head { background: #FFF1C2 !important; }
-    html:not(.dark) .tv-screen-full .tx-ico { --pc: #3B3355 !important; background: #F4EEFB !important; box-shadow: inset 0 -3px 0 rgba(59,51,85,.12) !important; }
+    html.light-screen .tv-screen-full .panel-head { background: #FFF1C2 !important; }
+    html.light-screen .tv-screen-full .tx-ico { --pc: #3B3355 !important; background: #F4EEFB !important; box-shadow: inset 0 -3px 0 rgba(59,51,85,.12) !important; }
 
     /* phím chức năng trong TV: nền pastel theo màu phím, chữ mực */
-    html:not(.dark) .tv-screen-full .tv-keys .ekey {
+    html.light-screen .tv-screen-full .tv-keys .ekey {
       --pc: #3B3355 !important;
       background: color-mix(in srgb, var(--c) 38%, #FFFFFF) !important;
       color: var(--ink) !important;
       box-shadow: inset 0 3px 0 rgba(255,255,255,.7), inset 0 -4px 0 color-mix(in srgb, var(--c) 55%, #3B3355 10%) !important;
       filter: drop-shadow(2px 2px 0 var(--shadow-hard));
     }
-    html:not(.dark) .tv-screen-full .tv-keys .ekey .ekey-ico { filter: none; }
+    html.light-screen .tv-screen-full .tv-keys .ekey .ekey-ico { filter: none; }
 
     /* ô nhập trong TV */
-    html:not(.dark) .tv-screen-full input:not(.border-0),
-    html:not(.dark) .tv-screen-full select,
-    html:not(.dark) .tv-screen-full textarea { background-color: #FFFFFF !important; color: var(--ink) !important; border-color: var(--ink) !important; }
-    html:not(.dark) .tv-screen-full input::placeholder,
-    html:not(.dark) .tv-screen-full textarea::placeholder { color: #8C83A6 !important; }
-    html:not(.dark) .tv-screen-full .console-key { --pc: #3B3355 !important; background: #FFFFFF !important; color: var(--ink) !important; }
+    html.light-screen .tv-screen-full input:not(.border-0),
+    html.light-screen .tv-screen-full select,
+    html.light-screen .tv-screen-full textarea { background-color: #FFFFFF !important; color: var(--ink) !important; border-color: var(--ink) !important; }
+    html.light-screen .tv-screen-full input::placeholder,
+    html.light-screen .tv-screen-full textarea::placeholder { color: #8C83A6 !important; }
+    html.light-screen .tv-screen-full .console-key { --pc: #3B3355 !important; background: #FFFFFF !important; color: var(--ink) !important; }
 
     /* --- khung, thẻ, nút ngoài TV: thống nhất mực + bóng cứng --- */
-    html:not(.dark) .panel-head { background: #FFF1C2; color: var(--ink); text-shadow: none; }
+    html:not(.dark) .panel-head:not(.tv-screen-full .panel-head) { background: #FFF1C2; color: var(--ink); text-shadow: none; }
     html:not(.dark) .hud-btn, html:not(.dark) .game-btn, html:not(.dark) .game-btn-sm { filter: drop-shadow(2px 2px 0 var(--shadow-hard)); }
     html:not(.dark) .hud { filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
     html:not(.dark) .pxtv { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); }
@@ -1044,37 +1044,37 @@
 
     /* màu chữ trên màn TV (biến để đổi theo nền sáng/tối) */
     :root { --crt-mint: #9DF5C2; --crt-pink: #FFA5BC; --crt-butter: #FFE08A; --crt-cream: rgba(255,242,226,.9); --crt-big: #FFE7A8; --crt-text: #FFF2E2; }
-    html:not(.dark) { --crt-mint: #2F8A5E; --crt-pink: #D4506A; --crt-butter: #9A5B0C; --crt-cream: #3B3355; --crt-big: #3B3355; --crt-text: #3B3355; }
-    html:not(.dark) .tv-screen-full .crt-glow { text-shadow: none !important; }
-    html:not(.dark) .tv-screen-full .osd, html:not(.dark) .tv-screen-full .tv-more { color: var(--ink); text-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-lbl { opacity: 1; }
-    html:not(.dark) .tv-screen-full .tv-dots button { background: rgba(59,51,85,.16); }
-    html:not(.dark) .tv-screen-full .tv-dots button.on { background: #6FCF9F; box-shadow: 0 0 0 2px var(--ink); }
-    html:not(.dark) .tv-screen-full .tv-bars i { background: #FF8FAB; box-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-bars i.today { background: #F5C451; box-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-bars i.zero { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-hp i { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-sb { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-sb i { background: #9F86E0; box-shadow: none; }
+    html.light-screen { --crt-mint: #2F8A5E; --crt-pink: #D4506A; --crt-butter: #9A5B0C; --crt-cream: #3B3355; --crt-big: #3B3355; --crt-text: #3B3355; }
+    html.light-screen .tv-screen-full .crt-glow { text-shadow: none !important; }
+    html.light-screen .tv-screen-full .osd, html.light-screen .tv-screen-full .tv-more { color: var(--ink); text-shadow: none; }
+    html.light-screen .tv-screen-full .tv-lbl { opacity: 1; }
+    html.light-screen .tv-screen-full .tv-dots button { background: rgba(59,51,85,.16); }
+    html.light-screen .tv-screen-full .tv-dots button.on { background: #6FCF9F; box-shadow: 0 0 0 2px var(--ink); }
+    html.light-screen .tv-screen-full .tv-bars i { background: #FF8FAB; box-shadow: none; }
+    html.light-screen .tv-screen-full .tv-bars i.today { background: #F5C451; box-shadow: none; }
+    html.light-screen .tv-screen-full .tv-bars i.zero { background: rgba(59,51,85,.1); }
+    html.light-screen .tv-screen-full .tv-hp i { background: rgba(59,51,85,.1); }
+    html.light-screen .tv-screen-full .tv-sb { background: rgba(59,51,85,.1); }
+    html.light-screen .tv-screen-full .tv-sb i { background: #9F86E0; box-shadow: none; }
     /* lớp màu viết cứng kiểu neon trong mã giao diện -> đổi sang mực/pastel khi nền sáng */
-    html:not(.dark) .tv-screen-full [class*="text-[#FFF2E2]"], html:not(.dark) .tv-screen-full [class*="text-[#FFF9EC]"] { color: var(--ink) !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
-    html:not(.dark) .tv-screen-full [class*="bg-[#140D20]"], html:not(.dark) .tv-screen-full [class*="bg-[#2A1F42]"], html:not(.dark) .tv-screen-full [class*="bg-[#2C2144]"] { background-color: #F4EEFB !important; }
-    html:not(.dark) .tv-screen-full [class*="border-[#9DF5C2]"], html:not(.dark) .tv-screen-full [class*="border-[#6A5594]"], html:not(.dark) .tv-screen-full [class*="border-[#5E4A84]"], html:not(.dark) .tv-screen-full [class*="border-[#FFE08A]"] { border-color: var(--ink) !important; }
+    html.light-screen .tv-screen-full [class*="text-[#FFF2E2]"], html.light-screen .tv-screen-full [class*="text-[#FFF9EC]"] { color: var(--ink) !important; }
+    html.light-screen .tv-screen-full [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
+    html.light-screen .tv-screen-full [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
+    html.light-screen .tv-screen-full [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
+    html.light-screen .tv-screen-full [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
+    html.light-screen .tv-screen-full [class*="bg-[#140D20]"], html.light-screen .tv-screen-full [class*="bg-[#2A1F42]"], html.light-screen .tv-screen-full [class*="bg-[#2C2144]"] { background-color: #F4EEFB !important; }
+    html.light-screen .tv-screen-full [class*="border-[#9DF5C2]"], html.light-screen .tv-screen-full [class*="border-[#6A5594]"], html.light-screen .tv-screen-full [class*="border-[#5E4A84]"], html.light-screen .tv-screen-full [class*="border-[#FFE08A]"] { border-color: var(--ink) !important; }
 
     /* thẻ ví: nền sáng theo màu ngân hàng, chữ mực */
-    html:not(.dark) .wallet-card { background: radial-gradient(rgba(59,51,85,.07) 1px, transparent 1.2px) 0 0 / 10px 10px, linear-gradient(155deg, color-mix(in srgb, var(--pc) 55%, #FFFFFF) 0%, #FFFFFF 100%) !important; box-shadow: inset 0 -4px 0 rgba(59,51,85,.08) !important; filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
-    html:not(.dark) .wallet-card [class*="text-[#FFF2E2]"] { color: var(--ink) !important; }
-    html:not(.dark) .wallet-card [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
-    html:not(.dark) .wallet-card [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
-    html:not(.dark) .wallet-card [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
-    html:not(.dark) .wallet-card [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
-    html:not(.dark) .wallet-card [class*="bg-[#140D20]"], html:not(.dark) .wallet-card [class*="bg-[#2A1F42]"] { background-color: #FFFFFF !important; }
-    html:not(.dark) .wallet-card [class*="border-[#9DF5C2]"], html:not(.dark) .wallet-card [class*="border-[#6A5594]"] { border-color: var(--ink) !important; }
-    html:not(.dark) .wallet-card .crt-glow { text-shadow: none !important; }
+    html.light-screen .wallet-card { background: radial-gradient(rgba(59,51,85,.07) 1px, transparent 1.2px) 0 0 / 10px 10px, linear-gradient(155deg, color-mix(in srgb, var(--pc) 55%, #FFFFFF) 0%, #FFFFFF 100%) !important; box-shadow: inset 0 -4px 0 rgba(59,51,85,.08) !important; filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
+    html.light-screen .wallet-card [class*="text-[#FFF2E2]"] { color: var(--ink) !important; }
+    html.light-screen .wallet-card [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
+    html.light-screen .wallet-card [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
+    html.light-screen .wallet-card [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
+    html.light-screen .wallet-card [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
+    html.light-screen .wallet-card [class*="bg-[#140D20]"], html.light-screen .wallet-card [class*="bg-[#2A1F42]"] { background-color: #FFFFFF !important; }
+    html.light-screen .wallet-card [class*="border-[#9DF5C2]"], html.light-screen .wallet-card [class*="border-[#6A5594]"] { border-color: var(--ink) !important; }
+    html.light-screen .wallet-card .crt-glow { text-shadow: none !important; }
   
     /* ---- Dock: nút arcade ---- */
     .arc { position: relative; display: block; width: 60px; height: 51px; }
@@ -1119,7 +1119,7 @@
     const THEMES = {
       pastel_day: {
         name: "Pastel Pixel", desc: "Kem sữa · trời xanh · mực tím (hợp bộ icon mới)", retro: true,
-        colors: { primary: "#FF8FAB", onPrimary: "#3B3355", background: "#FFF6E9", surface: "#FFFFFF", textPrimary: "#3B3355", textSecondary: "#6E6488", variant: "#F4EEFB", border: "#D9D0EA", ink: "#3B3355", wood: "#CDB8F6", woodLight: "#E6DBFF", woodDark: "#9F86E0", accent: "#FFE08A", onAccent: "#3B3355", expense: "#D4506A", expenseLight: "#FFE3EA", income: "#2F8A5E", incomeLight: "#DDF5EA", hud: "#3B3355", onHud: "#FFF6E9", sky1: "#A9D8FF", sky2: "#E4F3FF", ground: "#C9EBD9", tvBody: "#FFB7C9", tvTrim: "#FFF6E9", screen: "#FFFDF7", screen2: "#FFFFFF", keyHome: "#FFB7C9", keyReport: "#B5EAD7", keyMai: "#CDB8F6", keyWallet: "#A9D8FF", keyAdd: "#FFE08A" }
+        colors: { primary: "#FF8FAB", onPrimary: "#3B3355", background: "#FFF6E9", surface: "#FFFFFF", textPrimary: "#3B3355", textSecondary: "#6E6488", variant: "#F4EEFB", border: "#D9D0EA", ink: "#3B3355", wood: "#CDB8F6", woodLight: "#E6DBFF", woodDark: "#9F86E0", accent: "#FFE08A", onAccent: "#3B3355", expense: "#D4506A", expenseLight: "#FFE3EA", income: "#2F8A5E", incomeLight: "#DDF5EA", hud: "#3B3355", onHud: "#FFF6E9", sky1: "#A9D8FF", sky2: "#E4F3FF", ground: "#C9EBD9", tvBody: "#FFB7C9", tvTrim: "#FFF6E9", screen: "#2A2140", screen2: "#41325C", keyHome: "#FFB7C9", keyReport: "#B5EAD7", keyMai: "#CDB8F6", keyWallet: "#A9D8FF", keyAdd: "#FFE08A" }
       },
       dusk_rose: {
         name: "Hoàng Hôn Hồng", desc: "Hồng phấn · mận chín · kem sữa", retro: true,
