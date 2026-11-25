@@ -617,6 +617,7 @@
       100% { transform: none; filter: none; }
     }
     @keyframes crtSwitch { 0% { opacity: 0; transform: translateY(6px) skewX(-4deg); filter: blur(1.5px) brightness(1.8); } 60% { opacity: 1; filter: none; } 100% { transform: none; } }
+    .crt-body.crt-switch-in { animation: crtSwitch .48s var(--ease-out) both !important; }
     @keyframes noiseBurst { 0% { opacity: .9; } 70% { opacity: .55; } 100% { opacity: 0; } }
     @keyframes noiseJitter { 0% { transform: translate(0, 0); } 33% { transform: translate(-13px, 7px); } 66% { transform: translate(9px, -11px); } 100% { transform: translate(-5px, 12px); } }
     @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
@@ -769,6 +770,12 @@
     html.dark .panel-head:not(.dark) { background: var(--variant); color: var(--text-primary); text-shadow: none; }
     /* ======================= MÀN HÌNH CRT LIỀN MẠCH CHO MỌI MỤC ======================= */
     .crt-stage { position: relative; max-width: 768px; margin: 0 auto; }
+    .crt-stage + .crt-stage { margin-top: 14px; }
+    /* TV chính (mục Nhà): màn CRT tối riêng, to khoảng nửa màn hình, ở cả chế độ sáng */
+    .tv-screen.tv-screen-full.tv-dark { min-height: 48vh; --screen: #2A2140; --screen2: #41325C;
+      --crt-mint: #9DF5C2; --crt-pink: #FFA5BC; --crt-butter: #FFE08A; --crt-cream: rgba(255,242,226,.9); --crt-big: #FFE7A8; --crt-text: #FFF2E2; }
+    .tv-screen.tv-screen-full.tv-dark .crt-body { min-height: calc(48vh - 6px); }
+    .tv-screen.tv-screen-full.tv-auto { min-height: 0; }
     .tv-bezel-full {
       background: var(--tv-trim);
       padding: 7px;
@@ -964,7 +971,7 @@
     html:not(.dark)[data-retro="1"] body { background-image: linear-gradient(180deg, #BFE2FF 0px, #E4F3FF 360px, #FFF6E9 820px); }
 
     /* --- màn hình TV: sáng, sạch, chữ mực --- */
-    html:not(.dark) .tv-screen.tv-screen-full {
+    html:not(.dark) .tv-screen.tv-screen-full:not(.tv-dark) {
       background: #FFFDF7 !important;
       color: var(--ink);
       --surface: #FFFFFF; --surface-rgb: 255 255 255;
@@ -979,59 +986,59 @@
       --primary: #FF8FAB; --primary-rgb: 255 143 171; --on-primary: #3B3355;
       box-shadow: inset 0 0 0 2px #FFFFFF, inset 0 -6px 0 rgba(59,51,85,.06) !important;
     }
-    html:not(.dark) .tv-screen.tv-screen-full::before { background: repeating-linear-gradient(180deg, rgba(59,51,85,.035) 0 1px, transparent 1px 4px); }
-    html:not(.dark) .tv-screen.tv-screen-full::after { background: radial-gradient(80% 50% at 15% 0%, rgba(255,255,255,.7), transparent 60%); }
-    html:not(.dark) .tv-screen-full .crt-body { animation: none; }
-    html:not(.dark) .tv-screen-full .crt-roll { display: none; }
-    html:not(.dark) .tv-screen-full .font-display,
-    html:not(.dark) .tv-screen-full .crt-glow,
-    html:not(.dark) .tv-screen-full .ekey-label { text-shadow: none !important; }
-    html:not(.dark) .tv-screen-full .crt-sep,
-    html:not(.dark) .tv-screen-full .osd-bar { border-color: rgba(59,51,85,.18) !important; }
-    html:not(.dark) .tv-screen-full .tv-ch-btn { background: #FFFFFF; color: var(--ink); border-color: var(--ink); text-shadow: none; box-shadow: 2px 2px 0 var(--shadow-hard); }
-    html:not(.dark) .tv-screen-full .tv-ch-btn:active { background: var(--accent); box-shadow: none; }
+    html:not(.dark) .tv-screen.tv-screen-full:not(.tv-dark)::before { background: repeating-linear-gradient(180deg, rgba(59,51,85,.035) 0 1px, transparent 1px 4px); }
+    html:not(.dark) .tv-screen.tv-screen-full:not(.tv-dark)::after { background: radial-gradient(80% 50% at 15% 0%, rgba(255,255,255,.7), transparent 60%); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .crt-body { animation: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .crt-roll { display: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .font-display,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .crt-glow,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .ekey-label { text-shadow: none !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .crt-sep,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .osd-bar { border-color: rgba(59,51,85,.18) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-ch-btn { background: #FFFFFF; color: var(--ink); border-color: var(--ink); text-shadow: none; box-shadow: 2px 2px 0 var(--shadow-hard); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-ch-btn:active { background: var(--accent); box-shadow: none; }
 
     /* thẻ trong màn hình: trắng, viền mực, bóng cứng */
-    html:not(.dark) .tv-screen-full .console-bezel,
-    html:not(.dark) .tv-screen-full .retro-card,
-    html:not(.dark) .tv-screen-full .retro-card-soft,
-    html:not(.dark) .tv-screen-full .console-lcd,
-    html:not(.dark) .tv-screen-full .day-card,
-    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-2xl,
-    html:not(.dark) .tv-screen-full .bg-theme-surface.border.rounded-3xl {
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .console-bezel,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .retro-card,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .retro-card-soft,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .console-lcd,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .day-card,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .bg-theme-surface.border.rounded-2xl,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .bg-theme-surface.border.rounded-3xl {
       --pc: #3B3355 !important;
       background: #FFFFFF !important;
       box-shadow: inset 0 -3px 0 rgba(59,51,85,.07) !important;
       filter: drop-shadow(3px 3px 0 var(--shadow-hard));
     }
-    html:not(.dark) .tv-screen-full .console-top-strip,
-    html:not(.dark) .tv-screen-full .panel-head {
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .console-top-strip,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .panel-head {
       background: #F4EEFB !important; color: var(--ink) !important; text-shadow: none !important;
       border-bottom: 2px solid var(--ink) !important;
     }
-    html:not(.dark) .tv-screen-full .panel-head { background: #FFF1C2 !important; }
-    html:not(.dark) .tv-screen-full .tx-ico { --pc: #3B3355 !important; background: #F4EEFB !important; box-shadow: inset 0 -3px 0 rgba(59,51,85,.12) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .panel-head { background: #FFF1C2 !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tx-ico { --pc: #3B3355 !important; background: #F4EEFB !important; box-shadow: inset 0 -3px 0 rgba(59,51,85,.12) !important; }
 
     /* phím chức năng trong TV: nền pastel theo màu phím, chữ mực */
-    html:not(.dark) .tv-screen-full .tv-keys .ekey {
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-keys .ekey {
       --pc: #3B3355 !important;
       background: color-mix(in srgb, var(--c) 38%, #FFFFFF) !important;
       color: var(--ink) !important;
       box-shadow: inset 0 3px 0 rgba(255,255,255,.7), inset 0 -4px 0 color-mix(in srgb, var(--c) 55%, #3B3355 10%) !important;
       filter: drop-shadow(2px 2px 0 var(--shadow-hard));
     }
-    html:not(.dark) .tv-screen-full .tv-keys .ekey .ekey-ico { filter: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-keys .ekey .ekey-ico { filter: none; }
 
     /* ô nhập trong TV */
-    html:not(.dark) .tv-screen-full input:not(.border-0),
-    html:not(.dark) .tv-screen-full select,
-    html:not(.dark) .tv-screen-full textarea { background-color: #FFFFFF !important; color: var(--ink) !important; border-color: var(--ink) !important; }
-    html:not(.dark) .tv-screen-full input::placeholder,
-    html:not(.dark) .tv-screen-full textarea::placeholder { color: #8C83A6 !important; }
-    html:not(.dark) .tv-screen-full .console-key { --pc: #3B3355 !important; background: #FFFFFF !important; color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) input:not(.border-0),
+    html:not(.dark) .tv-screen-full:not(.tv-dark) select,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) textarea { background-color: #FFFFFF !important; color: var(--ink) !important; border-color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) input::placeholder,
+    html:not(.dark) .tv-screen-full:not(.tv-dark) textarea::placeholder { color: #8C83A6 !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .console-key { --pc: #3B3355 !important; background: #FFFFFF !important; color: var(--ink) !important; }
 
     /* --- khung, thẻ, nút ngoài TV: thống nhất mực + bóng cứng --- */
-    html:not(.dark) .panel-head { background: #FFF1C2; color: var(--ink); text-shadow: none; }
+    html:not(.dark) .panel-head:not(.tv-dark .panel-head) { background: #FFF1C2; color: var(--ink); text-shadow: none; }
     html:not(.dark) .hud-btn, html:not(.dark) .game-btn, html:not(.dark) .game-btn-sm { filter: drop-shadow(2px 2px 0 var(--shadow-hard)); }
     html:not(.dark) .hud { filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
     html:not(.dark) .pxtv { filter: drop-shadow(4px 4px 0 rgba(186,177,181,.85)); }
@@ -1045,25 +1052,25 @@
     /* màu chữ trên màn TV (biến để đổi theo nền sáng/tối) */
     :root { --crt-mint: #9DF5C2; --crt-pink: #FFA5BC; --crt-butter: #FFE08A; --crt-cream: rgba(255,242,226,.9); --crt-big: #FFE7A8; --crt-text: #FFF2E2; }
     html:not(.dark) { --crt-mint: #2F8A5E; --crt-pink: #D4506A; --crt-butter: #9A5B0C; --crt-cream: #3B3355; --crt-big: #3B3355; --crt-text: #3B3355; }
-    html:not(.dark) .tv-screen-full .crt-glow { text-shadow: none !important; }
-    html:not(.dark) .tv-screen-full .osd, html:not(.dark) .tv-screen-full .tv-more { color: var(--ink); text-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-lbl { opacity: 1; }
-    html:not(.dark) .tv-screen-full .tv-dots button { background: rgba(59,51,85,.16); }
-    html:not(.dark) .tv-screen-full .tv-dots button.on { background: #6FCF9F; box-shadow: 0 0 0 2px var(--ink); }
-    html:not(.dark) .tv-screen-full .tv-bars i { background: #FF8FAB; box-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-bars i.today { background: #F5C451; box-shadow: none; }
-    html:not(.dark) .tv-screen-full .tv-bars i.zero { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-hp i { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-sb { background: rgba(59,51,85,.1); }
-    html:not(.dark) .tv-screen-full .tv-sb i { background: #9F86E0; box-shadow: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .crt-glow { text-shadow: none !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .osd, html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-more { color: var(--ink); text-shadow: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-lbl { opacity: 1; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-dots button { background: rgba(59,51,85,.16); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-dots button.on { background: #6FCF9F; box-shadow: 0 0 0 2px var(--ink); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-bars i { background: #FF8FAB; box-shadow: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-bars i.today { background: #F5C451; box-shadow: none; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-bars i.zero { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-hp i { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-sb { background: rgba(59,51,85,.1); }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) .tv-sb i { background: #9F86E0; box-shadow: none; }
     /* lớp màu viết cứng kiểu neon trong mã giao diện -> đổi sang mực/pastel khi nền sáng */
-    html:not(.dark) .tv-screen-full [class*="text-[#FFF2E2]"], html:not(.dark) .tv-screen-full [class*="text-[#FFF9EC]"] { color: var(--ink) !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
-    html:not(.dark) .tv-screen-full [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
-    html:not(.dark) .tv-screen-full [class*="bg-[#140D20]"], html:not(.dark) .tv-screen-full [class*="bg-[#2A1F42]"], html:not(.dark) .tv-screen-full [class*="bg-[#2C2144]"] { background-color: #F4EEFB !important; }
-    html:not(.dark) .tv-screen-full [class*="border-[#9DF5C2]"], html:not(.dark) .tv-screen-full [class*="border-[#6A5594]"], html:not(.dark) .tv-screen-full [class*="border-[#5E4A84]"], html:not(.dark) .tv-screen-full [class*="border-[#FFE08A]"] { border-color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#FFF2E2]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#FFF9EC]"] { color: var(--ink) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#C8B6DE]"] { color: var(--text-secondary) !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#9DF5C2]"] { color: #2F8A5E !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#FFE08A]"] { color: #9A5B0C !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="text-[#FFA5BC]"] { color: #D4506A !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="bg-[#140D20]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="bg-[#2A1F42]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="bg-[#2C2144]"] { background-color: #F4EEFB !important; }
+    html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="border-[#9DF5C2]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="border-[#6A5594]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="border-[#5E4A84]"], html:not(.dark) .tv-screen-full:not(.tv-dark) [class*="border-[#FFE08A]"] { border-color: var(--ink) !important; }
 
     /* thẻ ví: nền sáng theo màu ngân hàng, chữ mực */
     html:not(.dark) .wallet-card { background: radial-gradient(rgba(59,51,85,.07) 1px, transparent 1.2px) 0 0 / 10px 10px, linear-gradient(155deg, color-mix(in srgb, var(--pc) 55%, #FFFFFF) 0%, #FFFFFF 100%) !important; box-shadow: inset 0 -4px 0 rgba(59,51,85,.08) !important; filter: drop-shadow(3px 3px 0 var(--shadow-hard)); }
@@ -1512,10 +1519,10 @@
       <span className={`inline-flex items-center justify-center shrink-0 ${anim && ICON_ANIM_CLS[anim] ? ICON_ANIM_CLS[anim] : ""} ${className}`}
         dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("mic") : "" }} />
     );
-    // Linh vật Mai: chiếc TV nhỏ mặt cười (icon "mai" trong web/icons.js)
+    // Linh vật Gemini: chiếc TV nhỏ mặt cười (icon "mai" trong web/icons.js)
     const MaiAvatar = ({ size = 44, className = "", animated = false }) => (
       <span role="img" aria-label="Tự động" className={`inline-block shrink-0 ${className} ${animated ? "px-anim-float" : ""}`} style={{ width: size, height: size }}
-        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("mai") : "" }} />
+        dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg("btn-sparkles") : "" }} />
     );
 
     // Bảng màu hạng mục: tông Pastel Retro tương phản cao
@@ -2422,9 +2429,10 @@
       const go = (d) => { buzz(10); onChange((idx + d + n) % n); };
       const pad = (v) => String(v).padStart(2, "0");
       return (
+        <>
         <section className="crt-stage tab-enter" aria-label="Màn hình TV tổng quan">
           <PixelTV color="tvRose" brand="SPENDY"><div className="tv-bezel tv-bezel-full">
-            <div className="tv-screen tv-screen-full">
+            <div className="tv-screen tv-screen-full tv-dark">
               <div className="crt-roll" />
               <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
               <div className="crt-body">
@@ -2466,30 +2474,30 @@
                     </div>
                   </>
                 )}
-                {children && (
-                  <>
-                    <div className="crt-sep" />
-                    {children}
-                  </>
-                )}
               </div>
             </div>
           </div></PixelTV>
         </section>
+        {children && <CrtSectionScreen chCode="CH06" color="tvTeal" brand="NHẬT KÝ" title="NHẬT KÝ GẦN ĐÂY" screenClass="tv-auto">{children}</CrtSectionScreen>}
+        </>
       );
     };
 
     // Màn hình CRT liền mạch cho các mục khác (Báo cáo, Tự động, Ví & Nợ, Hạng mục)
-    const CrtSectionScreen = ({ chCode = "CH02", title, badge, color, brand, children }) => {
+    const CrtSectionScreen = ({ chCode = "CH02", title, badge, color, brand, screenClass = "", children }) => {
       const [now, setNow] = useState(() => new Date());
+      // nhiễu "ruồi" như TV cũ mỗi lần chuyển sang kênh (mục) này
+      const [noise, setNoise] = useState(true);
+      useEffect(() => { const t = setTimeout(() => setNoise(false), 480); return () => clearTimeout(t); }, []);
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
       const pad = (v) => String(v).padStart(2, "0");
       return (
         <section className="crt-stage tab-enter" aria-label={title}>
           <PixelTV color={color || "tvRose"} brand={brand || "SPENDY"}><div className="tv-bezel tv-bezel-full">
-            <div className="tv-screen tv-screen-full">
+            <div className={`tv-screen tv-screen-full ${screenClass}`}>
               <div className="crt-roll" />
-              <div className="crt-body">
+              <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
+              <div className={`crt-body ${noise ? "crt-switch-in" : ""}`}>
                 <div className="osd-bar osd shrink-0">
                   <span className="truncate">{chCode} <span className="opacity-85">{title}</span></span>
                   <div className="flex items-center gap-2 shrink-0">
@@ -2725,7 +2733,7 @@
         return has(fallback) ? fallback : (cats.find(c => c && c.isParent)?.name || name || "Khác");
       };
 
-      // Ghi 1 kết quả của Mai vào sổ. Dùng setState dạng hàm để nhiều thông báo đến cùng lúc không đè nhau.
+      // Ghi 1 kết quả của Gemini vào sổ. Dùng setState dạng hàm để nhiều thông báo đến cùng lúc không đè nhau.
       const maiCommit = (draft, opts = {}) => {
         const { accounts: accs, categories: cats } = stateRef.current;
         const amount = Math.round(Number(draft.amount) || 0);
@@ -2801,7 +2809,7 @@
           });
         });
         setTransactions(prev => [tx, ...prev]);
-        // Học: anh sửa (chấn chỉnh) -> nhớ mạnh; anh duyệt nguyên -> củng cố nhẹ. Mai tự ghi thì không tự học (tránh tự tin sai).
+        // Học: anh sửa (chấn chỉnh) -> nhớ mạnh; anh duyệt nguyên -> củng cố nhẹ. Gemini tự ghi thì không tự học (tránh tự tin sai).
         if (!opts.auto) maiTeach([{ text: draft.learnText != null && !draft.noteEdited ? draft.learnText : [draft.rawNote, draft.counterparty, draft.note].filter(Boolean).join(" "), key: draft.memoryKey, label: maiKeyLabel(draft), category, type,
           weight: (draft.categoryEdited || draft.typeEdited) ? 3 : 1, typeFix: draft.typeEdited ? type : null }]);
         setMaiLog(prev => [{ id: tx.id, at: Date.now(), amount, type, category, bankName, bankId, note: tx.note, auto: !!opts.auto }, ...prev].slice(0, 60));
@@ -2882,13 +2890,13 @@
       };
 
       // Nhận 1 thông báo thô (từ Android hoặc dán tay) -> phân tích -> chống trùng -> ghi / chờ duyệt
-      // Tên dễ hiểu cho điều Mai học (khoản không có nội dung thì nhớ theo ngân hàng + số tiền)
+      // Tên dễ hiểu cho điều Gemini học (khoản không có nội dung thì nhớ theo ngân hàng + số tiền)
       const maiKeyLabel = (d) => {
         const k = d.memoryKey || d.maiKey || "";
         if (k.indexOf("amt:") === 0) return `${d.bank || d.bankName || "Ngân hàng"} ${new Intl.NumberFormat("vi-VN").format(d.amount)}đ`;
         return d.note || d.rawNote || k;
       };
-      // Anh sửa 1 giao dịch đã ghi -> Mai nhớ mạnh để lần sau đúng ngay
+      // Anh sửa 1 giao dịch đã ghi -> Gemini nhớ mạnh để lần sau đúng ngay
       const maiLearnFix = (tx, category, typeFix) => {
         if (!window.MaiAgent) return;
         const key = tx.maiKey || window.MaiAgent.memoryKey(null, tx.note);
@@ -3090,8 +3098,8 @@
             // đang ở màn hình khoá: không mở phiếu được -> để vào "Chờ anh duyệt"
             const d = { ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), raw: `Giọng nói: “${spoken}”`, source: "voice", confidence: 0.5, certain: false, categorySource: "failed", inboxId: `mi_v${Date.now().toString(36)}` };
             setMaiInbox(prev => [d, ...prev].slice(0, 100));
-            setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Mai chưa kết nối được Gemini. Khoản này Mai để ở “Chờ anh duyệt”." }));
-            sayNow("Mai chưa kết nối được, Mai để khoản này ở mục chờ duyệt nhé");
+            setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Gemini chưa kết nối được Gemini. Khoản này Gemini để ở “Chờ anh duyệt”." }));
+            sayNow("Gemini chưa kết nối được, Gemini để khoản này ở mục chờ duyệt nhé");
             lockFinish(5000);
             return;
           }
@@ -3100,27 +3108,27 @@
               || (/tien mat|tiền mặt/i.test(text) ? stateRef.current.accounts.find(isCashAcc) : null);
             const fallbackAcc = acc || stateRef.current.accounts[0] || null;
             setMaiDraft({ ...q, category: maiResolveCategory(q.category, q.type, stateRef.current.categories), bankId: fallbackAcc ? fallbackAcc.id : null, bankName: fallbackAcc ? fallbackAcc.name : null, isCredit: fallbackAcc ? isCreditAcc(fallbackAcc) : false, inboxId: null, raw: `Giọng nói: “${spoken}”`, source: "voice" });
-            setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: (window.VinaGemini ? window.VinaGemini.explain(err) : "") + " Mai mở phiếu để anh xác nhận." }));
-            sayNow("Mai chưa kết nối được, anh xem phiếu rồi bấm lưu giúp Mai nhé");
+            setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: (window.VinaGemini ? window.VinaGemini.explain(err) : "") + " Gemini mở phiếu để anh xác nhận." }));
+            sayNow("Gemini chưa kết nối được, anh xem phiếu rồi bấm lưu giúp Gemini nhé");
             return;
           }
-          setVoice(v => ({ ...v, state: "idle", mode: null, error: window.VinaGemini ? window.VinaGemini.explain(err) : "Mai chưa hiểu." }));
-          sayNow("Mai chưa hiểu, anh nói lại giúp Mai nhé");
+          setVoice(v => ({ ...v, state: "idle", mode: null, error: window.VinaGemini ? window.VinaGemini.explain(err) : "Gemini chưa hiểu." }));
+          sayNow("Gemini chưa hiểu, anh nói lại giúp Gemini nhé");
           if (lock) lockFinish(4500); else wakeResume(2500);
           return;
         }
         if (!drafts.length) {
-          setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Mai chưa nghe thấy số tiền. Anh thử: “nãy anh chi 45k tiền mặt ăn trưa”." }));
-          sayNow("Mai chưa nghe thấy số tiền, anh gọi Mai nói lại nhé");
+          setVoice(v => ({ ...v, state: "idle", mode: null, result: null, error: "Gemini chưa nghe thấy số tiền. Anh thử: “nãy anh chi 45k tiền mặt ăn trưa”." }));
+          sayNow("Gemini chưa nghe thấy số tiền, anh gọi Gemini nói lại nhé");
           if (lock) lockFinish(5000); else wakeResume(2500);
           return;
         }
         const saved = drafts.map(d => maiCommit({ ...d, certain: true }, { auto: true, silent: true })).filter(Boolean);
         const vnNum = (n) => n >= 1000000 && n % 100000 === 0 ? `${n / 1000000} triệu`.replace(".", " phẩy ") : n >= 1000 && n % 1000 === 0 ? `${n / 1000} nghìn` : `${n} đồng`;
         const line = saved.map(t => `${t.type === "INCOME" ? "thu" : "chi"} ${vnNum(t.amount)}${t.bankName ? `, ${t.bankName}` : ""}, mục ${t.category}`).join("; ");
-        sayNow(`Dạ, Mai ghi rồi: ${line}`);
+        sayNow(`Dạ, Gemini ghi rồi: ${line}`);
         setVoice(v => ({ ...v, state: "done", mode: null, result: saved }));
-        showToast(`Mai đã ghi ${saved.length} giao dịch từ giọng nói`, "success");
+        showToast(`Gemini đã ghi ${saved.length} giao dịch từ giọng nói`, "success");
         clearTimeout(voiceRef.current.restartT);
         if (lock) { lockFinish(7000); return; }
         voiceRef.current.restartT = setTimeout(() => { setVoice(v => v.state === "done" ? { ...v, state: "idle", result: null } : v); wakeResume(300); }, 7000);
@@ -3140,8 +3148,8 @@
         if (ev.type === "lock_partial") { setVoice(v => v.lock ? { ...v, state: "listening", mode: "lock", text: ev.text || "" } : v); return; }
         if (ev.type === "lock_thinking") { setVoice(v => v.lock ? { ...v, state: "thinking", text: ev.text || v.text } : v); return; }
         if (ev.type === "lock_cancel") {
-          setVoice(v => ({ ...v, state: "idle", mode: null, lock: true, error: `${ev.text || "Mai chưa nghe rõ"}. Anh gọi “Mai ơi” rồi nói lại nhé.` }));
-          sayNow("Mai chưa nghe rõ, anh gọi Mai nói lại nhé");
+          setVoice(v => ({ ...v, state: "idle", mode: null, lock: true, error: `${ev.text || "Gemini chưa nghe rõ"}. Anh gọi “Mai ơi” rồi nói lại nhé.` }));
+          sayNow("Gemini chưa nghe rõ, anh gọi Gemini nói lại nhé");
           lockFinish(3500);
           return;
         }
@@ -3159,7 +3167,7 @@
           const isAssist = !!voiceRef.current.isAssist;
           voiceRef.current.mode = null;
           if (!t) {
-            setVoice(v => ({ ...v, state: "idle", mode: null, error: "Mai chưa nghe rõ." }));
+            setVoice(v => ({ ...v, state: "idle", mode: null, error: "Gemini chưa nghe rõ." }));
             if (isAssist || voice.lock) lockFinish(3000); else wakeResume(1500);
             return;
           }
@@ -3169,7 +3177,7 @@
         if (ev.type === "perm_denied") {
           const isAssist = !!voiceRef.current.isAssist;
           voiceRef.current.mode = null;
-          setVoice(v => ({ ...v, state: "idle", mode: null, error: "Anh cần cho phép Mai dùng micro (Cài đặt → Ứng dụng → Mai → Quyền → Micro)." }));
+          setVoice(v => ({ ...v, state: "idle", mode: null, error: "Anh cần cho phép Gemini dùng micro (Cài đặt → Ứng dụng → Gemini → Quyền → Micro)." }));
           if (isAssist || voice.lock) lockFinish(4000);
           return;
         }
@@ -3178,14 +3186,14 @@
           if (mode === "wake" && ev.code !== 9) { wakeResume(ev.code === 7 || ev.code === 6 ? 150 : 1500); return; }
           const isAssist = !!voiceRef.current.isAssist;
           voiceRef.current.mode = null;
-          const msg = ev.code === 9 ? "Anh cần cho phép Mai dùng micro." : ev.code === -1 ? "Máy chưa có dịch vụ nhận giọng nói của Google." : ev.code === 2 || ev.code === 1 ? "Nhận giọng nói cần có mạng." : "Mai chưa nghe rõ, anh bấm micro nói lại nhé.";
+          const msg = ev.code === 9 ? "Anh cần cho phép Gemini dùng micro." : ev.code === -1 ? "Máy chưa có dịch vụ nhận giọng nói của Google." : ev.code === 2 || ev.code === 1 ? "Nhận giọng nói cần có mạng." : "Gemini chưa nghe rõ, anh bấm micro nói lại nhé.";
           setVoice(v => ({ ...v, state: "idle", mode: null, error: msg }));
           if (isAssist || voice.lock) lockFinish(3500); else wakeResume(2500);
         }
       };
       useEffect(() => {
         window.onMaiVoice = (ev) => { try { onVoiceEvent(typeof ev === "string" ? JSON.parse(ev) : ev); } catch (e) { console.warn(e); } };
-        // "Hey Google, mở Mai" -> app mở lên -> Mai nghe luôn (nếu bật)
+        // "Hey Google, mở Gemini" -> app mở lên -> Gemini nghe luôn (nếu bật)
         window.onMaiAppOpen = () => {
           const now = Date.now();
           if (now - voiceRef.current.lastOpen < 1500) return;
@@ -3195,7 +3203,7 @@
           if (st.voiceOnOpen) setTimeout(() => voiceListen("command"), 600);
           else if (st.voiceWake) wakeResume(800);
         };
-        // Kích hoạt Trợ lý ảo Mai trên Android (giữ nút nguồn / vuốt góc / phím Home / Quick Settings tile)
+        // Kích hoạt Trợ lý Gemini trên Android (giữ nút nguồn / vuốt góc / phím Home / Quick Settings tile)
         window.onMaiAssist = (ev) => {
           clearTimeout(voiceRef.current.restartT);
           clearTimeout(voiceRef.current.lockT);
@@ -3228,7 +3236,7 @@
       const setVoiceLock = (on) => {
         setMaiSettings(prev => ({ ...prev, voiceLock: on, ...(on ? { voiceWake: false } : {}) }));
         try { on ? window.MaiBridge.startLockVoice() : window.MaiBridge.stopLockVoice(); } catch (e) {}
-        if (on) { voiceStop(); showToast("Mai sẽ nghe “Mai ơi” cả khi khoá màn hình. Có thông báo “Mai đang nghe” để anh tắt nhanh.", "info"); }
+        if (on) { voiceStop(); showToast("Gemini sẽ nghe “Mai ơi” cả khi khoá màn hình. Có thông báo “Gemini đang nghe” để anh tắt nhanh.", "info"); }
       };
       const voiceUndo = () => {
         // huỷ cùng lúc mọi khoản vừa ghi bằng giọng nói (gọi maiUndo từng khoản sẽ ghi đè lẫn nhau)
@@ -3253,7 +3261,7 @@
           setMaiLog(prev => prev.filter(x => !ids.has(x.id)));
         }
         setVoice(v => ({ ...v, state: "idle", result: null }));
-        sayNow("Dạ, Mai bỏ rồi ạ");
+        sayNow("Dạ, Gemini bỏ rồi ạ");
       };
 
       // Ảnh chụp màn hình (biên lai, lịch sử giao dịch, hoá đơn) -> Gemini đọc 1 hoặc nhiều ảnh -> phiếu xác nhận / ghi hàng loạt
@@ -3461,7 +3469,7 @@
           try {
             const parsed = typeof data === "string" ? JSON.parse(data) : data;
             if (applyNativeGoogleAuthRef.current) applyNativeGoogleAuthRef.current(parsed);
-          } catch (e) { console.warn("Mai Google auth parse error", e); }
+          } catch (e) { console.warn("Gemini Google auth parse error", e); }
         };
         if (!window.MaiBridge) return () => { window.onMaiGoogleToken = null; };
         const drain = () => {
@@ -3470,13 +3478,13 @@
               const gRaw = window.MaiBridge.consumePendingGoogleAuth();
               if (gRaw && window.onMaiGoogleToken) window.onMaiGoogleToken(gRaw);
             }
-          } catch (e) { console.warn("Mai consume Google auth err", e); }
+          } catch (e) { console.warn("Gemini consume Google auth err", e); }
           try {
             const raw = window.MaiBridge.drainQueue();
             const list = raw ? JSON.parse(raw) : [];
             // câu nói nhận được khi khoá màn hình ("Mai ơi, ...") -> Gemini hiểu rồi ghi; còn lại là thông báo ngân hàng
             list.forEach(n => { if (n && n.packageName === "voice") { if (voiceRef.current.enqueue) voiceRef.current.enqueue(n.text, n.alts); } else maiIngest(n, "notification"); });
-          } catch(e) { console.warn("Mai drain error", e); }
+          } catch(e) { console.warn("Gemini drain error", e); }
           try { setMaiAccess(!!window.MaiBridge.hasNotificationAccess()); } catch(e) {}
         };
         window.onMaiNotification = (json) => { try { maiIngest(typeof json === "string" ? JSON.parse(json) : json, "notification"); } catch(e) { console.warn(e); } };
@@ -5124,7 +5132,7 @@
         setAddTxHint(null);
       };
 
-      // Gợi ý hạng mục khi gõ ghi chú (dựa trên thói quen Mai đã học)
+      // Gợi ý hạng mục khi gõ ghi chú (dựa trên thói quen Gemini đã học)
       const [addTxHint, setAddTxHint] = useState(null);
       useEffect(() => { if (!isAddTxModalOpen) setAddTxHint(null); }, [isAddTxModalOpen]);
       const suggestFromNote = (note) => {
@@ -5544,7 +5552,7 @@
       const tvKeys = [
         { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "btn-expense", color: "#FFB3BE", onClick: () => openAddTx("EXPENSE") },
         { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "btn-income", color: "#A8E6BF", onClick: () => openAddTx("INCOME") },
-        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Mai", icon: "btn-mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
+        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Gemini", icon: "btn-mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
         { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "btn-scan", color: "#A9D5F5", onClick: () => openAddTx("EXPENSE", true) },
         { id: "budget", label: "Hạn mức", small: true, aria: "Ngân sách tháng", icon: "btn-budget", color: "#FFE08A", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
       ].filter(Boolean);
@@ -5701,7 +5709,7 @@
                     <div className="console-lcd text-center px-6 py-8">
                       <span className="block w-16 h-16 mx-auto mb-3"><Icon name="btn-journal" anim="float" className="w-16 h-16" /></span>
                       <p className="font-display text-[30px] leading-none text-theme-textPrimary">Sổ còn trống</p>
-                      <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Mai tự ghi từ thông báo ngân hàng.</p>
+                      <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Gemini tự ghi từ thông báo ngân hàng.</p>
                     </div>
                   ) : (
                     <div className="space-y-2.5 stagger">
@@ -5723,7 +5731,7 @@
                                   <div className="flex-1 min-w-0">
                                     <p className="font-bold text-theme-textPrimary text-[17px] truncate flex items-center gap-1.5">
                                       <span className="truncate">{tx.category}</span>
-                                      {tx.source === "mai" && <span title="Mai tự ghi" className="inline-flex shrink-0"><MaiAvatar size={16} /></span>}
+                                      {tx.source === "mai" && <span title="Gemini tự ghi" className="inline-flex shrink-0"><MaiAvatar size={16} /></span>}
                                     </p>
                                     <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
                                   </div>
@@ -6372,14 +6380,11 @@
 
             {/* TAB: TỰ ĐỘNG (Gemini đọc thông báo) */}
             {activeTab === "mai" && (
-              <CrtSectionScreen chCode="CH03" color="tvIndigo" brand="MAI" title="TRỢ LÝ MAI · TỰ ĐỘNG" badge="GEMINI FLASH-LITE">
+              <CrtSectionScreen chCode="CH03" color="tvIndigo" brand="GEMINI" title="GEMINI · TỰ ĐỘNG" badge="GEMINI FLASH-LITE">
                 <section className="console-bezel overflow-hidden">
                   <div className="p-4 flex gap-3.5 items-start">
-                    <span className="w-14 h-14 shrink-0 rounded-xl bg-[var(--accent)] border-2 border-[var(--ink)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center">
-                      <MaiAvatar size={40} animated />
-                    </span>
                     <div className="flex-1 min-w-0">
-                      <h2 className="font-display text-3xl text-theme-textPrimary leading-none">Ghi tự động & Trợ lý Mai</h2>
+                      <h2 className="font-display text-3xl text-theme-textPrimary leading-none">Ghi tự động & Gemini</h2>
                       <p className="text-xs sm:text-sm text-theme-textSecondary mt-1.5 leading-relaxed">Thông báo biến động số dư của ngân hàng & ví điện tử được lọc rồi gửi <b>Gemini Flash-Lite</b> (miễn phí) phân tích và tự ghi vào sổ.</p>
                     </div>
                   </div>
@@ -6454,20 +6459,16 @@
                   ))}
                 </section>
 
-                {/* Trợ lý ảo Mai trên điện thoại (Chuẩn Android, như Gemini) */}
+                {/* Trợ lý Gemini trên điện thoại (Chuẩn Android, như Gemini) */}
                 <section className="console-bezel p-4 space-y-3.5">
                   <div className="console-lcd p-3.5 bg-theme-background space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-11 h-11 rounded-xl border-2 border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] flex items-center justify-center shrink-0">
-                        <Icon name="btn-sparkles" anim="sparkle" className="w-6 h-6" />
-                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <p className="font-display text-2xl text-theme-textPrimary leading-none">Trợ lý ảo Mai</p>
+                          <p className="font-display text-2xl text-theme-textPrimary leading-none">Trợ lý Gemini</p>
                           <span className="font-pixel px-2 py-0.5 rounded bg-[var(--income)] text-[var(--on-income)] border border-[var(--ink)] text-[14px]">0% PIN CHỜ</span>
-                          <span className="font-pixel px-2 py-0.5 rounded bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] border border-[var(--ink)] text-[14px]">NHƯ GEMINI</span>
                         </div>
-                        <p className="text-xs text-theme-textSecondary mt-1">Gọi Mai bất cứ lúc nào bằng nút nguồn hoặc cử chỉ như Gemini trên Android. Không chạy ngầm, không mở mic khi chờ.</p>
+                        <p className="text-xs text-theme-textSecondary mt-1">Gọi Gemini bất cứ lúc nào bằng nút nguồn hoặc cử chỉ, như trợ lý Google trên Android. Không chạy ngầm, không mở mic khi chờ.</p>
                       </div>
                     </div>
 
@@ -6476,21 +6477,21 @@
                         <button onClick={() => { try { window.MaiBridge.openAssistSettings(); } catch (e) {} }}
                           className="game-btn w-full py-2.5 bg-theme-primary text-[var(--on-primary)] text-sm font-bold flex items-center justify-center gap-2">
                           <span className="console-key">A</span>
-                          <Icon name="btn-settings" className="w-4 h-4" /> Đặt Mai làm Trợ lý mặc định
+                          <Icon name="btn-settings" className="w-4 h-4" /> Đặt Gemini làm Trợ lý mặc định
                         </button>
                       )}
                       <button onClick={() => { try { if (window.MaiBridge && window.MaiBridge.testAssist) window.MaiBridge.testAssist(); else if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command"); } catch (e) {} }}
                         className="game-btn-sm game-btn-neutral w-full py-2.5 bg-theme-surface text-theme-textPrimary text-sm font-bold flex items-center justify-center gap-2">
                         <span className="console-key">B</span>
-                        <MicIcon anim="pulse" className="w-4 h-4 text-theme-primary" /> Thử gọi Trợ lý Mai ngay
+                        <MicIcon anim="pulse" className="w-4 h-4 text-theme-primary" /> Thử gọi Gemini ngay
                       </button>
                     </div>
 
                     <div className="border-t-2 border-dashed border-theme-border pt-2.5 space-y-1.5 text-xs text-theme-textSecondary">
                       <p className="font-pixel text-[14px] text-theme-textPrimary uppercase tracking-wider">3 cách gọi nhanh tiết kiệm pin:</p>
-                      <p>⚡ <b>Giữ nút nguồn / vuốt góc</b>: Mai hiện ngay để nghe hoặc nhận text.</p>
-                      <p>📲 <b>Ô Cài đặt nhanh</b>: Vuốt thanh thông báo → bấm <b>“Gọi Mai”</b>.</p>
-                      <p>🔘 <b>Lối tắt</b>: Nhấn giữ icon app → chọn <b>“Nói với Mai”</b>.</p>
+                      <p>⚡ <b>Giữ nút nguồn / vuốt góc</b>: Gemini hiện ngay để nghe hoặc nhận text.</p>
+                      <p>📲 <b>Ô Cài đặt nhanh</b>: Vuốt thanh thông báo → bấm <b>“Gọi Gemini”</b>.</p>
+                      <p>🔘 <b>Lối tắt</b>: Nhấn giữ icon app → chọn <b>“Nói với Gemini”</b>.</p>
                     </div>
                   </div>
 
@@ -6499,7 +6500,7 @@
                     <p className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Hoặc nói ngay trong app:</p>
                     <button disabled={!voiceAvailable} onClick={() => voice.state === "listening" ? voiceStop() : voiceListen("command")} className="game-btn w-full py-3 bg-theme-primary text-[var(--on-primary)] text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50">
                       <span className="console-key">START</span>
-                      <MicIcon anim="pulse" className="w-5 h-5" /> {voiceAvailable ? (voice.state === "listening" ? "Đang nghe… (bấm dừng)" : "Bấm và nói với Mai") : "Máy chưa hỗ trợ mic"}
+                      <MicIcon anim="pulse" className="w-5 h-5" /> {voiceAvailable ? (voice.state === "listening" ? "Đang nghe… (bấm dừng)" : "Bấm và nói với Gemini") : "Máy chưa hỗ trợ mic"}
                     </button>
                     <p className="text-[13px] text-theme-textSecondary text-center">Ví dụ: “nãy anh chi hết 45k tiền mặt ăn trưa”, “đổ xăng 80k VIB”.</p>
                   </div>
@@ -6507,8 +6508,8 @@
                   {/* Các tuỳ chọn phản hồi */}
                   <div className="space-y-2 pt-2 border-t-2 border-dashed border-theme-border">
                     {[
-                      { k: "voiceReply", t: "Mai đọc to khi ghi xong", d: "Ví dụ: “Dạ, Mai ghi rồi: chi 45 nghìn, Tiền mặt, Cơm trưa”." },
-                      { k: "voiceOnOpen", t: "Mở app là Mai nghe luôn", d: "Nói “Hey Google, mở Mai” rồi kể khoản chi, không cần chạm." }
+                      { k: "voiceReply", t: "Gemini đọc to khi ghi xong", d: "Ví dụ: “Dạ, Gemini ghi rồi: chi 45 nghìn, Tiền mặt, Cơm trưa”." },
+                      { k: "voiceOnOpen", t: "Mở app là Gemini nghe luôn", d: "Nói “Hey Google, mở Spendy” rồi kể khoản chi, không cần chạm." }
                     ].map(o => (
                       <label key={o.k} className="flex items-center gap-3 cursor-pointer py-1">
                         <div className="flex-1">
@@ -6638,7 +6639,7 @@
                             <p className="text-xs font-bold text-theme-textSecondary mb-1.5">
                               {src === "failed" ? "Gemini gặp sự cố, bộ lọc trên máy đọc tạm. Anh chọn hạng mục để ghi:"
                                 : (src === "local" || src === "offline")
-                                  ? (sure ? <>Mai đoán: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : <>Mai chưa chắc mục này{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng:</>)
+                                  ? (sure ? <>Gemini đoán: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”, sai thì chọn mục đúng:</> : <>Gemini chưa chắc mục này{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng:</>)
                                   : sure ? <>Gemini đoán: <span className="text-theme-textPrimary">{cur}</span>. Đúng thì bấm “Ghi luôn”:</> : <>Gemini chưa chắc{cur && cur !== "Khác" ? <> (đoán <span className="text-theme-textPrimary">{cur}</span>)</> : ""}. Anh chọn mục đúng:</>}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -6935,7 +6936,7 @@
           {voice.lock && (
             <div className="fixed inset-0 z-[80] bg-theme-background flex flex-col items-center justify-center px-5 text-center overflow-y-auto py-8">
               <div className="console-top-strip fixed top-0 inset-x-0 px-4 py-1.5 flex items-center justify-between pt-safe">
-                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[15px] uppercase">MAI · TRỢ LÝ TỰ ĐỘNG</span></div>
+                <div className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm bg-[#72E6BA] px-led" /><span className="font-pixel text-[15px] uppercase">GEMINI · TỰ ĐỘNG</span></div>
                 <button onClick={() => { setAssistInput(""); lockFinish(0); }} className="console-key">ESC</button>
               </div>
               <div className="fixed top-8 inset-x-0 h-1.5 retro-stripes-h" />
@@ -6945,12 +6946,12 @@
                   setAssistInput("");
                   if (window.onMaiAssist) window.onMaiAssist({}); else voiceListen("command");
                 }}
-                aria-label="Nói với Mai"
+                aria-label="Nói với Gemini"
                 className={`w-28 h-28 rounded-2xl border-[3px] border-[var(--ink)] flex items-center justify-center shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-transform active:translate-x-[2px] active:translate-y-[2px] ${voice.state === "listening" ? "bg-[var(--expense)] text-[var(--on-expense)] mai-pulse" : voice.state === "done" ? "bg-[var(--income)] text-[var(--on-income)]" : "bg-[var(--accent)] text-[var(--on-accent,#4A2B18)]"}`}>
                 {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-2 scale-150"><i /><i /><i /></span> : voice.state === "done" ? <Icon name="btn-check" anim="hop" className="w-14 h-14" /> : <MicIcon anim={voice.state === "listening" ? "pulse" : "float"} className="w-14 h-14" />}
               </button>
               <h2 className="font-display text-4xl text-theme-textPrimary mt-5 leading-tight">
-                {voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang ghi…" : voice.state === "done" ? "Mai ghi rồi ạ" : voice.error ? "Mai chưa ghi được" : "Mai sẵn sàng"}
+                {voice.state === "listening" ? "Gemini đang nghe…" : voice.state === "thinking" ? "Gemini đang ghi…" : voice.state === "done" ? "Gemini ghi rồi ạ" : voice.error ? "Gemini chưa ghi được" : "Gemini sẵn sàng"}
               </h2>
               {voice.state === "listening" && !voice.text && <p className="text-sm text-theme-textSecondary mt-1.5">Anh nói hoặc gõ bên dưới, ví dụ:<br /><b>“nãy anh chi hết 45k tiền mặt ăn trưa”</b></p>}
               {voice.text && voice.state !== "done" && <p className="text-lg font-semibold text-theme-textPrimary mt-3 italic max-w-sm">“{voice.text}”</p>}
@@ -7018,7 +7019,7 @@
                     {voice.state === "thinking" ? <span className="mai-typing inline-flex gap-1"><i /><i /><i /></span> : <MicIcon anim={voice.state === "listening" ? "pulse" : ""} className="w-6 h-6" />}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-theme-textPrimary">{voice.state === "listening" ? "Mai đang nghe…" : voice.state === "thinking" ? "Mai đang hiểu câu…" : voice.state === "done" ? "Mai đã ghi" : "Mai"}</p>
+                    <p className="font-bold text-theme-textPrimary">{voice.state === "listening" ? "Gemini đang nghe…" : voice.state === "thinking" ? "Gemini đang hiểu câu…" : voice.state === "done" ? "Gemini đã ghi" : "Gemini"}</p>
                     {voice.text && voice.state !== "done" && <p className="text-sm text-theme-textSecondary italic truncate">“{voice.text}”</p>}
                     {voice.state === "listening" && !voice.text && <p className="text-xs text-theme-textSecondary">Ví dụ: “nãy anh chi hết 45k tiền mặt ăn trưa”</p>}
                   </div>

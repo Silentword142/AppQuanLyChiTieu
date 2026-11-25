@@ -98,7 +98,7 @@
         <!-- Trợ lý kỹ thuật số chuẩn Android (hiển thị trong Cài đặt Trợ lý mặc định trên mọi máy) -->
         <service
             android:name=".MaiAssistService"
-            android:label="Mai"
+            android:label="Spendy"
             android:permission="android.permission.BIND_VOICE_INTERACTION"
             android:exported="true">
             <meta-data
