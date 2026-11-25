@@ -75,6 +75,7 @@
   <script src="mai.js"></script>
   <script src="config.js" onerror="void 0"></script>
   <script src="gemini.js"></script>
+  <script src="ocr.js"></script>
   <script src="icons.js"></script>
   <script src="pixelkit.js"></script>
   <script>
@@ -5511,75 +5512,92 @@
             };
           };
 
-          if (files.length > 1) {
-            const batch = [];
-            for (let i = 0; i < files.length; i++) {
-              showToast(`Đang đọc ảnh ${i + 1}/${files.length} trên máy…`, "info");
-              const result = await window.Tesseract.recognize(files[i], 'vie+eng', ocrOpts);
-              const parsed = parseOcrTextFallback(result.data.text || "", files[i].name, i, files.length);
-              if (parsed) batch.push(parsed);
-            }
-            if (batch.length) {
-              setIsAddTxModalOpen(false);
-              setBatchImageDrafts(prepareBatchDrafts(batch));
-              showToast(`Đã đọc xong ${batch.length}/${files.length} ảnh – bấm Ghi tất cả để lưu!`, "success");
-            } else {
-              showToast("Không trích xuất được số tiền hợp lệ từ các ảnh đã chọn", "error");
-            }
-            return;
-          }
-
-          const file = files[0];
-          const result = await window.Tesseract.recognize(file, 'vie+eng', ocrOpts);
-          const text = result.data.text;
-          const maiR = window.MaiAgent ? window.MaiAgent.parse(text, maiOpts()) : null;
-          if (maiR && maiR.ok) {
-            setIsAddTxModalOpen(false);
-            const m = maiMatchAccount(maiR, accounts);
-            const defAcc = m || (!maiR.bank ? accounts[0] : null);
-            setMaiDraft({
-              ...maiR,
-              category: maiResolveCategory(maiR.category, maiR.type, categories),
+          // Đọc trên máy: làm sạch ảnh + đọc theo bố cục (web/ocr.js), Mai đoán hạng mục/ngân hàng từ chữ đọc được
+          const readOne = async (file) => window.VinaOCR
+            ? window.VinaOCR.read(file, window.Tesseract, window.VINA_OFFLINE_OCR || {})
+            : { text: ((await window.Tesseract.recognize(file, 'vie+eng', ocrOpts)).data || {}).text || "" };
+          const finish = (r, imgName, idx, total, rawText) => {
+            const m = maiMatchAccount(r, accounts);
+            const defAcc = m || (!r.bank ? accounts[0] : null);
+            return {
+              ...r,
+              ok: true,
+              raw: r.raw || rawText,
+              category: maiResolveCategory(r.category, r.type, categories),
               bankId: defAcc ? defAcc.id : null,
               bankName: defAcc ? defAcc.name : null,
-              isCredit: defAcc ? isCreditAcc(defAcc) : !!maiR.isCredit,
+              isCredit: defAcc ? isCreditAcc(defAcc) : !!r.isCredit,
+              imgLabel: total > 1 ? `Ảnh ${idx + 1}/${total}` : (imgName || "Ảnh chụp"),
               inboxId: null
-            });
-            showToast("Đã đọc xong ảnh, anh kiểm tra lại nhé", "info");
-            return;
+            };
+          };
+          // Mai đoán hạng mục cho 1 khoản đọc theo bố cục (chỉ lấy hạng mục, số tiền giữ theo bố cục)
+          const guessCat = (it) => {
+            if (!window.MaiAgent) return null;
+            const g = window.MaiAgent.parse(`${it.type === "INCOME" ? "Nhận tiền" : "Thanh toán"} ${it.amount}đ. ND: ${[it.note, it.who].filter(Boolean).join(" ")}`, maiOpts());
+            return g && g.ok ? g.category : null;
+          };
+          const fromItem = (it, rawText) => ({
+            amount: it.amount,
+            type: it.type || "EXPENSE",
+            category: guessCat(it) || ((it.type || "EXPENSE") === "INCOME" ? "Thu nhập khác" : "Khác"),
+            note: [it.note, it.who].filter(Boolean).join(" · "),
+            date: it.date || new Date().toISOString(),
+            raw: rawText
+          });
+          const draftsFrom = (rd, imgName, idx, total) => {
+            const text = rd.text || "";
+            const an = window.VinaOCR ? window.VinaOCR.analyze(rd) : null;
+            const items = an ? an.items : [];
+            // ảnh chụp nhiều thông báo / tin nhắn ngân hàng: tách từng thẻ, Mai đọc từng thẻ một
+            if (window.VinaOCR && window.MaiAgent && !(an && an.mode === "single" && an.hero)) {
+              const hits = window.VinaOCR.blocks(rd).map(b => {
+                const f = window.MaiAgent.fold(b.text);
+                const strong = /[+\-−]\s?\d{1,3}([.,]\d{3})+|\b(sd|so du|gd|giao dich|tk|ps|so tien|da nhan|vua nhan|thanh toan|chuyen tien|nhan tien)\b/.test(f);
+                // khối chỉ có số dư (đầu trang lịch sử, ví) không phải giao dịch
+                const onlyBalance = /\b(so du|kha dung|balance)\b/.test(f) && !/[+\-−]\s?\d|\b(gd|ps|giao dich|thanh toan|chuyen|nhan|so tien)\b/.test(f);
+                const r = strong && !onlyBalance ? window.MaiAgent.parse(b.text, maiOpts()) : null;
+                return r && r.ok && r.amount > 0 ? { r, b } : null;
+              }).filter(Boolean);
+              if (hits.length >= 2) return hits.map(({ r, b }) => {
+                const lay = window.VinaOCR.analyze(b.rows).items[0];
+                const x = { ...r };
+                if (lay && lay.date) x.date = lay.date;
+                return finish(x, imgName, idx, total, b.text);
+              });
+            }
+            // ảnh lịch sử giao dịch: nhiều khoản +/- trong 1 ảnh
+            if (an && an.mode === "list" && items.length >= 2) return items.map(it => finish(fromItem(it, text), imgName, idx, total, text));
+            const it = items[0];
+            const maiR = window.MaiAgent ? window.MaiAgent.parse(text, maiOpts()) : null;
+            if (maiR && maiR.ok) {
+              const r = { ...maiR };
+              // số tiền theo bố cục (chữ to / cạnh nhãn "Số tiền") đáng tin hơn khi 2 bên lệch nhau
+              if (it && it.amount !== r.amount && it.confidence >= 0.75) { r.amount = it.amount; if (it.type) r.type = it.type; }
+              if (it && !r.note && (it.note || it.who)) r.note = [it.note, it.who].filter(Boolean).join(" · ");
+              if (it && it.date) r.date = it.date; // ngày giờ in trên ảnh, không phải lúc quét
+              return [finish(r, imgName, idx, total, text)];
+            }
+            if (it) return [finish(fromItem(it, text), imgName, idx, total, text)];
+            const old = parseOcrTextFallback(text, imgName, idx, total);
+            return old ? [{ ...old, raw: text }] : [];
+          };
+
+          const all = [];
+          for (let i = 0; i < files.length; i++) {
+            if (files.length > 1) showToast(`Đang đọc ảnh ${i + 1}/${files.length} trên máy…`, "info");
+            const rd = await readOne(files[i]);
+            draftsFrom(rd, files[i].name, i, files.length).forEach(d => all.push(d));
           }
-          const single = parseOcrTextFallback(text, file.name, 0, 1);
-          const amount = single ? single.amount : 0;
-          const type = single ? single.type : "EXPENSE";
-          const note = single ? single.note : "";
-          const form = document.getElementById("addTxForm");
-          if (form) {
-            if (form.type) form.type.value = type;
-            const radios = form.querySelectorAll('input[name="type"]');
-            radios.forEach(r => r.checked = (r.value === type));
-            if (single && single.date) {
-              const sd = new Date(single.date);
-              if (form.date) form.date.value = `${sd.getFullYear()}-${pad2(sd.getMonth()+1)}-${pad2(sd.getDate())}`;
-              if (form.time) form.time.value = `${pad2(sd.getHours())}:${pad2(sd.getMinutes())}`;
-            }
-            if (form.amount) {
-              form.amount.value = amount ? amount.toString() : "";
-              const visibleAmountInput = document.getElementById("amountVisibleInput");
-              if (visibleAmountInput) {
-                visibleAmountInput.value = amount ? new Intl.NumberFormat('en-US').format(amount) : "";
-                const tracker = visibleAmountInput._valueTracker;
-                if (tracker) tracker.setValue("");
-                visibleAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
-              }
-            }
-            if (form.note) {
-              form.note.value = note || "Quét từ ảnh chụp";
-              const tracker = form.note._valueTracker;
-              if (tracker) tracker.setValue("");
-              form.note.dispatchEvent(new Event('input', { bubbles: true }));
-            }
+          if (!all.length) { showToast(files.length > 1 ? "Không tìm thấy số tiền trong các ảnh đã chọn" : "Không tìm thấy số tiền trong ảnh. Anh thử chụp rõ phần số tiền nhé", "error"); return; }
+          setIsAddTxModalOpen(false);
+          if (all.length === 1) {
+            setMaiDraft(all[0]);
+            showToast("Đã đọc xong ảnh, anh kiểm tra lại rồi lưu nhé", "info");
+          } else {
+            setBatchImageDrafts(prepareBatchDrafts(all));
+            showToast(`Tìm thấy ${all.length} giao dịch – kiểm tra rồi bấm Ghi tất cả nhé!`, "success");
           }
-          showToast("Đã trích xuất dữ liệu từ ảnh!", "success");
         } catch (err) {
           console.error(err);
           showToast("Lỗi phân tích: " + err.message, "error");

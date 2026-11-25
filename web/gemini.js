@@ -135,6 +135,7 @@
     lines.push("");
     lines.push("ẢNH ĐÍNH KÈM là ảnh chụp màn hình điện thoại hoặc ảnh chụp hoá đơn/biên lai.");
     lines.push("Liệt kê TỪNG giao dịch tiền nhìn thấy trong ảnh (ảnh lịch sử giao dịch có thể có nhiều dòng; biên lai/hoá đơn thường chỉ 1 giao dịch – lấy TỔNG TIỀN phải trả, không lấy từng món).");
+    lines.push("Ảnh chụp THANH THÔNG BÁO, danh sách thông báo hoặc tin nhắn SMS ngân hàng: MỖI thông báo biến động số dư là MỘT giao dịch riêng. Liệt kê ĐỦ TẤT CẢ, kể cả các thông báo cùng số tiền hoặc bị che một phần; mỗi thông báo lấy ngày giờ của chính nó (giờ trong nội dung, hoặc '5 phút trước'/'08:12' bên cạnh tên app).");
     lines.push("Đặt id lần lượt img1, img2, ... Đọc kỹ dấu +/-, chữ 'nhận', 'chuyển', 'thanh toán' để biết thu hay chi. Số dư, hạn mức, mã giao dịch, số tài khoản, số điện thoại KHÔNG phải số tiền giao dịch.");
     lines.push("Cách đọc số tiền Việt Nam: dấu chấm hoặc dấu phẩy giữa các nhóm 3 chữ số là dấu NGĂN CÁCH HÀNG NGHÌN ('1.250.000' = '1,250,000' = 1250000; '85.000đ' = 85000). Không có số lẻ xu với VND. Đếm đủ số chữ số, đừng bỏ sót số 0.");
     lines.push("Hoá đơn/bill nhà hàng, siêu thị: lấy dòng TỔNG CỘNG / THÀNH TIỀN / TỔNG THANH TOÁN / KHÁCH PHẢI TRẢ cuối cùng (đã gồm VAT, phí phục vụ, trừ giảm giá). KHÔNG lấy 'Tiền khách đưa' hay 'Tiền thối lại'.");
