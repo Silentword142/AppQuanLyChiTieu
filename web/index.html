@@ -1075,17 +1075,17 @@
     html:not(.dark) .wallet-card .crt-glow { text-shadow: none !important; }
   
     /* ---- Dock: nút arcade ---- */
-    .arc { position: relative; display: block; width: 60px; height: 60px; }
+    .arc { position: relative; display: block; width: 60px; height: 56px; }
     .arc-art, .arc-art svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-    .arc-glyph { position: absolute; left: 50%; top: 16px; width: 22px; height: 22px; margin: -11px 0 0 -11px; transform: scaleY(.74); transition: top .12s steps(2);
+    .arc-glyph { position: absolute; left: 50%; top: 18px; width: 22px; height: 22px; margin: -11px 0 0 -11px; transform: scaleY(.74); transition: top .12s steps(2); filter: drop-shadow(0 1px 0 rgba(255,255,255,.45)); }
       filter: drop-shadow(1px 0 0 #3A2440) drop-shadow(-1px 0 0 #3A2440) drop-shadow(0 1px 0 #3A2440) drop-shadow(0 -1px 0 #3A2440) drop-shadow(0 0 3px rgba(255,228,140,.9)); animation: arcGlow 1.6s steps(2, jump-none) infinite; }
     .arc-glyph svg { width: 100%; height: 100%; display: block; }
-    .arc.is-down .arc-glyph { top: 29px; animation-duration: .8s; filter: drop-shadow(1px 0 0 #3A2440) drop-shadow(-1px 0 0 #3A2440) drop-shadow(0 1px 0 #3A2440) drop-shadow(0 -1px 0 #3A2440) drop-shadow(0 0 4px #FFE68A) drop-shadow(0 0 9px rgba(255,214,90,.95)); }
+    .arc.is-down .arc-glyph { top: 28px; }
     @keyframes arcGlow { 50% { opacity: .72; } }
     .dk:active .arc .arc-glyph { top: 24px; }
     .dk.on .cap, .dk.on::before { display: none; }
     .ghi-arc { display: block; transform: scale(1.3); transform-origin: 50% 100%; margin-top: -14px; }
-    .ghi:active .ghi-arc .arc-glyph { top: 29px; }
+    .ghi:active .ghi-arc .arc-glyph { top: 28px; }
     @media (prefers-reduced-motion: reduce) { .arc-glyph { animation: none !important; } }
 </style>
 </head>
@@ -1998,15 +1998,15 @@
     const DOCK_ICONS = PK ? { overview: PK.icon("home"), report: PK.icon("chart"), mai: PK.icon("mai"), wallet_ai: PK.icon("wallet") } : {};
     // Nút GHI: đồng xu pixel có vệt sáng quét + lấp lánh
     // Nút dock kiểu nút arcade (mẫu anh Hoàng 11:19): mỗi mục một màu, mặt nút có icon đơn sắc vàng trắng phát sáng; mục đang chọn bị nhấn xuống
-    const ARC_UP = [".........oooooooooo.........", ".......ooTTTTTTTTTToo.......", "......oTTTLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTTWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTTLLLLLLLLTTTTTTTTo...", "...osTTTTLLLLLLLTTTTTTTSo...", "...osTTTTTTLLLLLTTTTTTTSo...", "...osTTTTTTTTTTTTTTTTTTSo...", "...ossTTTTTTTTTTTTTTTTSSo...", "...osssTTTTTTTTTTTTTTSSSo...", "...osssssTTTTTTTTTTSSSSSo...", "...osssssssSSSSSSSSSSSSSo...", "..oosssssssSSSSSSSSSSSSSoo..", ".oBosssssssSSSSSSSSSSSSSoBo.", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBosssssSSSSSSSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
-    const ARC_DN = ["............................", "............................", "............................", "............................", "............................", "............................", ".........oooooooooo.........", ".......ooTTTTTTTTTToo.......", "......oTTTLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTTWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTTLLLLLLLLTTTTTTTTo...", "...osTTTTLLLLLLLTTTTTTTSo...", "..oosTTTTTTLLLLLTTTTTTTSoo..", ".oBosTTTTTTTTTTTTTTTTTTSoBo.", "oBBossTTTTTTTTTTTTTTTTSSoBBo", "oBBosssTTTTTTTTTTTTTTSSSoBBo", "oBBBossssTTTTTTTTTTSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBosssssSSSSSSSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
+    const ARC_UP = ["............................", ".........oooooooooo.........", ".......ooTTTTTTTTTToo.......", "......oTTTLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTTWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTTLLLLLLLLTTTTTTTTo...", "...osTTTTLLLLLLLTTTTTTTSo...", "...osTTTTTTLLLLLTTTTTTTSo...", "...osTTTTTTTTTTTTTTTTTTSo...", "...ossTTTTTTTTTTTTTTTTSSo...", "..oosssTTTTTTTTTTTTTTSSSoo..", ".oBosssssTTTTTTTTTTSSSSSoBo.", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBosssssSSSSSSSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
+    const ARC_DN = ["............................", "............................", "............................", "............................", "............................", "...........oooooo...........", "........oooTTTTTTooo........", ".......oTTTTLLLLTTTTo.......", "......oTTLLLLLLLTTTTTo......", ".....oTTLWWLLLLLTTTTTTo.....", "....oTTLWWLLLLLLTTTTTTTo....", "....oTTLLLLLLLLLTTTTTTTo....", "...oTTTLLLLLLLLLTTTTTTTTo...", "..ooTTTTLLLLLLLLTTTTTTTToo..", ".oBosTTTTTLLLLLLTTTTTTTSoBo.", "oBBosTTTTTTTTTTTTTTTTTTSoBBo", "oBBossTTTTTTTTTTTTTTTTSSoBBo", "oBBBossTTTTTTTTTTTTTTSSoBBBo", "oBBBosssTTTTTTTTTTTTSSSoBBBo", "obBBBosssssTTTTTTSSSSSoBBBbo", "obbBBBooossSSSSSSSSoooBBBbbo", ".obbBBBBBooooooooooBBBBBbbo.", ".obbbbBBBBBBBBBBBBBBBBbbbbo.", "..obbbbbbbBBBBBBBBbbbbbbbo..", "...oobbbbbbbbbbbbbbbbbboo...", ".....ooobbbbbbbbbbbbooo....."];
     const ARC_GLYPH = {"home": [".....Y.....", "....YYY....", "...YYYYY...", "..YYYYYYY..", ".YYYYYYYYY.", "YYYYYYYYYYY", ".YYYYYYYYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY."], "chart": [".........YY", ".........YY", ".....YY..YY", ".....YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", "...........", "YYYYYYYYYYY"], "tv": ["..Y.....Y..", "...Y...Y...", "....Y.Y....", "YYYYYYYYYYY", "Y.........Y", "Y..Y...Y..Y", "Y..Y...Y..Y", "Y.........Y", "Y...YYY...Y", "Y.........Y", "YYYYYYYYYYY"], "wallet": ["..YYYYYYY..", ".Y.......Y.", "YYYYYYYYYYY", "Y.........Y", "Y.........Y", "Y......YYYY", "Y......Y.YY", "Y......YYYY", "Y.........Y", "Y.........Y", "YYYYYYYYYYY"], "plus": ["....YYY....", "....YYY....", "....YYY....", "YYYYYYYYYYY", "YYYYYYYYYYY", "YYYYYYYYYYY", "....YYY....", "....YYY....", "....YYY...."]};
     const ARC_COL = {
-      overview: { T: "#F26D8F", L: "#FF9DB4", S: "#B83A5E", s: "#D9506F" },
-      report: { T: "#4FC07F", L: "#8BE3AE", S: "#2A8255", s: "#38A068" },
-      mai: { T: "#9A78EE", L: "#C4ADFF", S: "#5E43B5", s: "#7A5CD6" },
-      wallet_ai: { T: "#4C9EEB", L: "#8CC6FF", S: "#2A62B0", s: "#3A80CF" },
-      add: { T: "#FFC22E", L: "#FFE07A", S: "#C47F12", s: "#E0A01C" },
+      overview: { T: "#F26D8F", L: "#FF9DB4", S: "#B83A5E", s: "#D9506F", G: "#9E2C4E" },
+      report: { T: "#4FC07F", L: "#8BE3AE", S: "#2A8255", s: "#38A068", G: "#1F6B45" },
+      mai: { T: "#9A78EE", L: "#C4ADFF", S: "#5E43B5", s: "#7A5CD6", G: "#4A3399" },
+      wallet_ai: { T: "#4C9EEB", L: "#8CC6FF", S: "#2A62B0", s: "#3A80CF", G: "#1F4F94" },
+      add: { T: "#FFC22E", L: "#FFE07A", S: "#C47F12", s: "#E0A01C", G: "#A0630A" },
     };
     const ARC_GLYPH_OF = { overview: "home", report: "chart", mai: "tv", wallet_ai: "wallet", add: "plus" };
     const arcSvgCache = {};
@@ -2018,7 +2018,7 @@
     const ArcadeButton = ({ id, down }) => (
       <span className={`arc ${down ? "is-down" : ""}`}>
         <span className="arc-art" dangerouslySetInnerHTML={{ __html: arcSvg(id, down) }} />
-        <span className="arc-glyph" dangerouslySetInnerHTML={{ __html: pixelSvg(ARC_GLYPH[ARC_GLYPH_OF[id]], { Y: "#FFF6CF" }) }} />
+        <span className="arc-glyph" dangerouslySetInnerHTML={{ __html: pixelSvg(ARC_GLYPH[ARC_GLYPH_OF[id]], { Y: ARC_COL[id].G }) }} />
       </span>
     );
     const PixelCoin = React.memo(() => {
