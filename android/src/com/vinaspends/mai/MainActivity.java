@@ -551,7 +551,7 @@ public class MainActivity extends Activity {
 
     // Vẽ giao diện tràn cả vùng thanh trạng thái và thanh điều hướng; độ cao 2 thanh này
     // được truyền vào CSS (--safe-top / --safe-bottom) để HUD và dock tự chừa chỗ.
-    private int insetTopCss = 0, insetBottomCss = 0;
+    private int insetTopCss = 0, insetBottomCss = 0, imeCss = 0;
     private void enableEdgeToEdge() {
         try {
             Window w = getWindow();
@@ -569,10 +569,18 @@ public class MainActivity extends Activity {
             web.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
                 @Override public android.view.WindowInsets onApplyWindowInsets(View v, android.view.WindowInsets in) {
                     float dp = getResources().getDisplayMetrics().density;
-                    int top = in.getSystemWindowInsetTop(), bottom = in.getSystemWindowInsetBottom();
+                    int top = in.getSystemWindowInsetTop(), bottom, kb;
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        bottom = in.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom;
+                        kb = Math.max(0, in.getInsets(android.view.WindowInsets.Type.ime()).bottom - bottom);
+                    } else {
+                        bottom = in.getStableInsetBottom();
+                        kb = Math.max(0, in.getSystemWindowInsetBottom() - bottom);
+                    }
                     if (Build.VERSION.SDK_INT >= 28 && in.getDisplayCutout() != null) top = Math.max(top, in.getDisplayCutout().getSafeInsetTop());
                     insetTopCss = Math.round(top / dp);
                     insetBottomCss = Math.round(bottom / dp);
+                    imeCss = Math.round(kb / dp);
                     pushInsets();
                     return in;
                 }
@@ -582,7 +590,7 @@ public class MainActivity extends Activity {
         }
     }
     private void pushInsets() {
-        callJs("(function(){var r=document.documentElement.style;r.setProperty('--safe-top','" + insetTopCss + "px');r.setProperty('--safe-bottom','" + insetBottomCss + "px');})()");
+        callJs("(function(){var r=document.documentElement.style;r.setProperty('--safe-top','" + insetTopCss + "px');r.setProperty('--safe-bottom','" + insetBottomCss + "px');r.setProperty('--kb','" + imeCss + "px');document.documentElement.classList.toggle('kb-open'," + (imeCss > 0) + ");})()");
     }
 
     private void callJs(final String js) {

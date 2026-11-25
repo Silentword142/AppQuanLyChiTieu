@@ -825,6 +825,10 @@
     .rep-seg { cursor: pointer; transition: opacity .15s; }
     .rep-dim .rep-seg:not(.on) { opacity: .3; }
     .rep-leg { cursor: pointer; }
+    /* Bàn phím bật lên: đẩy bảng (sửa giao dịch…) lên trên bàn phím */
+    .modal-backdrop { bottom: var(--kb, 0px) !important; transition: bottom .18s ease-out; }
+    .modal-backdrop > .modal-sheet { max-height: calc(100vh - var(--kb, 0px) - var(--safe-top, 0px) - 12px) !important; }
+    html.kb-open .modal-backdrop { padding-top: calc(var(--safe-top, 0px) + 4px); }
     .rep-leg.on { outline: 3px solid var(--ink); background: var(--accent) !important; }
     .tv-dark .crt-body { text-shadow: 2px 0 0 rgba(255,90,140,.4), -2px 0 0 rgba(90,210,255,.3), 0 0 8px rgba(157,245,194,.3); }
     .home-keys { display: grid; gap: 8px; margin: 4px 0 14px; }
@@ -2144,6 +2148,20 @@
       return <canvas ref={ref} className="pxsky" aria-hidden="true" style={{ zIndex: -1 }} />;
     });
 
+    // Khi gõ trong bảng: cuộn ô đang nhập ra giữa vùng còn thấy; trên trình duyệt thì tự tính --kb từ visualViewport
+    (() => {
+      const scrollFocus = () => { const el = document.activeElement; if (el && el.closest && el.closest(".modal-sheet") && /INPUT|TEXTAREA/.test(el.tagName)) { try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {} } };
+      document.addEventListener("focusin", () => setTimeout(scrollFocus, 320));
+      const vv = window.visualViewport;
+      if (vv && !window.MaiBridge) vv.addEventListener("resize", () => {
+        const kb = Math.max(0, Math.round(window.innerHeight - vv.height));
+        document.documentElement.style.setProperty("--kb", (kb > 80 ? kb : 0) + "px");
+        document.documentElement.classList.toggle("kb-open", kb > 80);
+        if (kb > 80) setTimeout(scrollFocus, 120);
+      });
+      new MutationObserver(() => { if (document.documentElement.classList.contains("kb-open")) setTimeout(scrollFocus, 120); }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    })();
+
     // Bộ chọn kiểu pixel (thay hộp chọn gốc của Android cho đồng bộ giao diện). Dùng như <select>.
     const PxSelect = ({ value, onChange, className = "", title, children }) => {
       const [open, setOpen] = useState(false);
@@ -2571,12 +2589,7 @@
         return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
       }, [idx]);
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
-      // Tự chuyển kênh mỗi 6 giây; dừng 15 giây sau khi anh tự bấm/vuốt
-      useEffect(() => {
-        if (n < 2 || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        const t = setInterval(() => { if (Date.now() - idleRef.current > 15000 && !document.hidden) onChange((idxRef.current + 1) % n); }, 6000);
-        return () => clearInterval(t);
-      }, [n]);
+      // (Hoang 25/11) Không tự chuyển kênh: chỉ đổi khi bấm CH▲/CH▼ hoặc vuốt
       const go = (d) => { buzz(10); idleRef.current = Date.now(); onChange((idx + d + n) % n); };
       const pad = (v) => String(v).padStart(2, "0");
       return (
@@ -2650,11 +2663,6 @@
       nRef.current = n;
       const flip = (fn) => { setNoise(true); setTimeout(() => { setNoise(false); setBars(true); fn(); }, 240); setTimeout(() => setBars(false), 330); };
       const go = (d) => { if (groups.length < 2) return; buzz(10); idleRef.current = Date.now(); flip(() => setPg(p => (Math.min(p, nRef.current - 1) + d + nRef.current) % nRef.current)); };
-      useEffect(() => {
-        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-        let iv; const t0 = setTimeout(() => { iv = setInterval(() => { if (nRef.current > 1 && Date.now() - idleRef.current > 15000 && !document.hidden) flip(() => setPg(p => (p + 1) % nRef.current)); }, 6000); }, 3000);
-        return () => { clearTimeout(t0); clearInterval(iv); };
-      }, []);
       const pad = (v) => String(v).padStart(2, "0");
       const g = groups[idx];
       return (
@@ -5649,7 +5657,7 @@
         { id: "category", icon: "tags", label: "Hạng mục" }
       ];
       const DOCK = [
-        { id: "overview", shape: "triangle", icon: "home", label: "Nhà", c: "var(--key-home)" },
+        { id: "overview", shape: "triangle", icon: "home", label: "Tổng quan", c: "var(--key-home)" },
         { id: "report", shape: "circle", icon: "chart", label: "Báo cáo", c: "var(--key-report)" },
         { id: "__add" },
         { id: "mai", shape: "square", icon: "mai", label: "Tự động", c: "var(--key-mai)" },
