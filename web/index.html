@@ -808,7 +808,9 @@
     .tv-log .log-list { flex: 1; min-height: 0; max-height: none !important; overscroll-behavior: contain; scrollbar-width: none; }
     .tv-log .log-empty { flex: 1; }
     /* Chuyển mục: TV đứng yên, chỉ đổi màu khung; màn vẫn nhiễu/giật như cũ */
-    .crt-stage.tab-enter, .crt-stage.tab-enter > * { animation: none !important; }
+    /* (Hoang 25/11) Chuyển mục hiện ngay, không nhiễu, không bật nguồn, không trượt/nảy từng khối */
+    .tab-enter, .tab-enter > *, .stagger > * { animation: none !important; }
+    .crt-pwr { display: none !important; }
     /* Tối ưu mượt (Hoang 25/11): không dùng filter trên khối lớn có nội dung chuyển động; tách lớp cho các phần chạy liên tục */
     .pxsky { will-change: transform; transform: translateZ(0); }
     .crt-roll, .crt-noise, .pxtv-ant, .knob-big, .side-led { will-change: transform; }
@@ -842,6 +844,8 @@
     .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
     .hkey-led.warn { background: #FF7D95; animation: sideLed 1s steps(2) infinite; }
     .log-ctrl { gap: 6px; }
+    .ed-fold { width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 12px; text-align: left; font-weight: 800; font-size: 15px; color: var(--text-primary); background: var(--background); border: 3px solid var(--ink); box-shadow: inset 0 -3px 0 rgba(74,51,80,.18); }
+    .ed-fold.on { background: var(--accent); color: var(--on-accent, #3B2A3F); }
     .log-cal { display: flex !important; align-items: center; gap: 4px; padding: 0 6px !important; }
     .log-cal-ico { width: 20px; height: 20px; display: block; }
     .log-cal-ico > * { width: 100% !important; height: 100% !important; }
@@ -2610,7 +2614,7 @@
       const n = channels.length;
       const idx = ((ch % n) + n) % n;
       const cur = channels[idx];
-      const [phase, setPhase] = useState("power-on");
+      const [phase, setPhase] = useState("");
       const [noise, setNoise] = useState(false);
       const [bars, setBars] = useState(false);
       const [now, setNow] = useState(() => new Date());
@@ -2761,7 +2765,8 @@
       const idx = Math.min(pg, n - 1);
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
       nRef.current = n;
-      const flip = (fn) => { setNoise(true); setTimeout(() => { setNoise(false); setBars(true); fn(); }, 240); setTimeout(() => setBars(false), 330); };
+      const [glitch, setGlitch] = useState(false);
+      const flip = (fn) => { setGlitch(true); setNoise(true); setTimeout(() => { setNoise(false); setBars(true); fn(); }, 240); setTimeout(() => setBars(false), 330); };
       const go = (d) => {
         if (picked) { // đang xem 1 ngày chọn từ lịch: ◀ ▶ lùi/tiến 1 ngày
           buzz(10); const t = new Date(picked + "T00:00:00"); t.setDate(t.getDate() + d); flip(() => onPick(isoDay(t))); return;
@@ -2791,7 +2796,7 @@
                 <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
                 <div className={`crt-bars ${bars ? "on" : ""}`} aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
                 <div className="crt-pwr late" aria-hidden="true" />
-                <div key={g ? g.key : "empty"} className="crt-body tv-glitch-in"
+                <div key={g ? g.key : "empty"} className={`crt-body ${glitch ? "tv-glitch-in" : ""}`}
                   onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; idleRef.current = Date.now(); }}
                   onTouchEnd={(e) => {
                     const st = touchRef.current; touchRef.current = null; if (!st) return;
@@ -2830,9 +2835,8 @@
     // Màn hình CRT liền mạch cho các mục khác (Báo cáo, Tự động, Ví & Nợ, Hạng mục)
     const CrtSectionScreen = ({ chCode = "CH02", title, badge, color, brand, screenClass = "", children }) => {
       const [now, setNow] = useState(() => new Date());
-      // nhiễu "ruồi" như TV cũ mỗi lần chuyển sang kênh (mục) này
-      const [noise, setNoise] = useState(true);
-      useEffect(() => { const t = setTimeout(() => setNoise(false), 480); return () => clearTimeout(t); }, []);
+      // (Hoang 25/11) bỏ nhiễu khi chuyển mục
+      const noise = false;
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
       const pad = (v) => String(v).padStart(2, "0");
       return (
@@ -2914,6 +2918,9 @@
       const [tvChannel, setTvChannelRaw] = useState(() => { try { return Number(localStorage.getItem("vina_tv_ch")) || 0; } catch (e) { return 0; } });
       const setTvChannel = (v) => { setTvChannelRaw(v); try { localStorage.setItem("vina_tv_ch", String(v)); } catch (e) {} };
       const [editingTx, setEditingTx] = useState(null);
+      // Bảng sửa giao dịch: hạng mục / nguồn tiền gập lại, bấm mới mở danh sách dọc
+      const [edPick, setEdPick] = useState({ open: null, cat: null, bank: null });
+      useEffect(() => { setEdPick({ open: null, cat: null, bank: null }); }, [editingTx && editingTx.id]);
       const [isOcrScanning, setIsOcrScanning] = useState(false);
       const ocrFileInputRef = React.useRef(null);
       const [isOwnedAssetsExpanded, setIsOwnedAssetsExpanded] = useState(false);
@@ -7777,16 +7784,21 @@
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Đổi hạng mục</label>
-                      <span className="text-[12px] text-theme-textSecondary font-semibold">Lọc theo nhóm lớn</span>
-                    </div>
+                    <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Hạng mục</label>
+                    {(() => { const cn = edPick.cat || editingTx.category; return (
+                      <button type="button" className={`ed-fold ${edPick.open === "cat" ? "on" : ""}`} onClick={() => { buzz(8); setEdPick(p => ({ ...p, open: p.open === "cat" ? null : "cat" })); }}>
+                        <Icon name={getIconForCategoryName(cn) || getCategoryIcon(cn)} className="w-7 h-7 shrink-0" />
+                        <span className="flex-1 min-w-0 truncate">{cn}</span>
+                        <span className="font-pixel shrink-0" aria-hidden="true">{edPick.open === "cat" ? "▲" : "▼"}</span>
+                      </button>
+                    ); })()}
+                    <div className={edPick.open === "cat" ? "space-y-1.5" : "hidden"}>
                     <CategoryParentFilterBar
                       parentCategories={parentCategories}
                       selectedParent={txParentFilter}
                       onSelectParent={setTxParentFilter}
                     />
-                    <div className="grid grid-cols-2 gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                    <div onChange={(e) => { if (e.target.name === "category") setEdPick(p => ({ ...p, cat: e.target.value, open: null })); }} className="grid grid-cols-2 gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
                       {filteredCategoriesForTx.length > 0 ? (
                         filteredCategoriesForTx.map((c, i) => (
                           <label key={c.id || `edit_cat_${c.name}_${i}`} className="cursor-pointer">
@@ -7804,6 +7816,7 @@
                         </div>
                       )}
                     </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
@@ -7812,8 +7825,17 @@
                       {(() => {
                         const matched = resolveAccount(accounts, editingTx);
                         const defaultVal = matched ? String(matched.id) : (editingTx.bankName ? `legacy:${editingTx.bankName}` : (accounts[0] ? String(accounts[0].id) : ""));
+                        const curVal = edPick.bank || defaultVal;
+                        const curAcc = accounts.find(a => String(a.id) === curVal);
+                        const curName = curAcc ? formatAccountLabel(curAcc) : (editingTx.bankName ? `${editingTx.bankName} (ví cũ)` : "Chọn ví");
                         return (
-                          <div className="flex flex-col gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                          <>
+                          <button type="button" className={`ed-fold ${edPick.open === "bank" ? "on" : ""}`} onClick={() => { buzz(8); setEdPick(p => ({ ...p, open: p.open === "bank" ? null : "bank" })); }}>
+                            <BankBadge name={curAcc ? curAcc.name : (editingTx.bankName || "Tiền mặt")} size={22} />
+                            <span className="flex-1 min-w-0 truncate">{curName}</span>
+                            <span className="font-pixel shrink-0" aria-hidden="true">{edPick.open === "bank" ? "▲" : "▼"}</span>
+                          </button>
+                          <div onChange={(e) => { if (e.target.name === "bankSelect") setEdPick(p => ({ ...p, bank: e.target.value, open: null })); }} className={`${edPick.open === "bank" ? "flex" : "hidden"} flex-col gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background`}>
                             {!matched && editingTx.bankName && (
                               <label className="cursor-pointer block">
                                 <input type="radio" name="bankSelect" value={`legacy:${editingTx.bankName}`} defaultChecked={defaultVal === `legacy:${editingTx.bankName}`} className="peer sr-only" />
@@ -7833,6 +7855,7 @@
                               </label>
                             ))}
                           </div>
+                          </>
                         );
                       })()}
                     </div>
