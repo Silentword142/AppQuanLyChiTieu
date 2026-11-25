@@ -839,6 +839,7 @@
     .hkey:active { transform: translateY(3px); }
     .hkey-ico { width: 38px; height: 38px; display: block; }
     .hkey-ico > * { width: 100% !important; height: 100% !important; }
+    .hkey-ico svg { display: block; width: 100%; height: 100%; }
     .hkey-label { font: 800 19px/1 'Handjet', sans-serif; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
     .hkey-label.is-small { font-size: 16px; }
     .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
@@ -2206,6 +2207,8 @@
     const ARC_UP = ["............................", "............................", "..........oooooooo..........", ".......oooLLLLLLLLooo.......", ".....ooLLLLLTTTTLLLLLoo.....", "....oLLLTTWWTTTTTTTTLLLo....", "....oLTTTWTTTTTTTTTTTTLo....", "...oLLTTTTTTTTTTTTTTTTLLo...", "...oodTTTTTTTTTTTTTTTTdoo...", "...osddTTTTTTTTTTTTTTddSo...", "...osooddTTTTTTTTTTddooSo...", "..oosssoooddddddddoooSSSoo..", ".oBossssssooooooooSSSSSSoBo.", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBosssssssSSSSSSSSSSSSSoBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "oBBBossssssSSSSSSSSSSSSoBBBo", "obBBBoossssSSSSSSSSSSooBBBbo", "obbBBBBooosSSSSSSSoooBBBBbbo", ".obbbBBBBBooooooooBBBBBbbbo.", "..obbbbbbBBBBBBBBBBbbbbbbo..", "...obbbbbbbbbbbbbbbbbbbbo...", "....ooobbbbbbbbbbbbbbooo....", ".......oooooooooooooo......."];
     const ARC_DN = ["............................", "............................", "............................", "............................", "............................", "............................", "............................", ".........oooooooooo.........", "......oooLLLLLLLLLLooo......", ".....oLLLLWWTTTTTTLLLLo.....", "...ooLLTTWTTTTTTTTTTTLLoo...", "..oBoLTTTTTTTTTTTTTTTTLoBo..", ".oBoLLTTTTTTTTTTTTTTTTLLoBo.", "oBBoodTTTTTTTTTTTTTTTTdooBBo", "oBBosoddTTTTTTTTTTTTddoSoBBo", "oBBBosoodddTTTTTTdddooSoBBBo", "oBBBosssooooddddooooSSSoBBBo", "obBBBoossssSooooSSSSSooBBBbo", "obbBBBBooosSSSSSSSoooBBBBbbo", ".obbbBBBBBooooooooBBBBBbbbo.", "..obbbbbbBBBBBBBBBBbbbbbbo..", "...obbbbbbbbbbbbbbbbbbbbo...", "....ooobbbbbbbbbbbbbbooo....", ".......oooooooooooooo......."];
     const ARC_GLYPH = {"home": [".....Y.....", "....YYY....", "...YYYYY...", "..YYYYYYY..", ".YYYYYYYYY.", "YYYYYYYYYYY", ".YYYYYYYYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY.", ".YYY...YYY."], "chart": [".........YY", ".........YY", ".....YY..YY", ".....YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", ".YY..YY..YY", "...........", "YYYYYYYYYYY"], "tv": ["..Y.....Y..", "...Y...Y...", "....Y.Y....", "YYYYYYYYYYY", "Y.........Y", "Y..Y...Y..Y", "Y..Y...Y..Y", "Y.........Y", "Y...YYY...Y", "Y.........Y", "YYYYYYYYYYY"], "wallet": ["..YYYYYYY..", ".Y.......Y.", "YYYYYYYYYYY", "Y.........Y", "Y.........Y", "Y......YYYY", "Y......Y.YY", "Y......YYYY", "Y.........Y", "Y.........Y", "YYYYYYYYYYY"], "plus": ["....YYY....", "....YYY....", "....YYY....", "YYYYYYYYYYY", "YYYYYYYYYYY", "YYYYYYYYYYY", "....YYY....", "....YYY....", "....YYY...."]};
+    // Icon phím Tổng quan: đơn sắc tự vẽ 16×16, màu đậm hơn nền phím (Hoang 25/11)
+    const KEY_GLYPH = {"exp": ["................", "......YYYYYYYYY.", "......YYYYYYYYY.", "...........YYYY.", "..........YYYYY.", ".........YYYYYY.", "........YYYY.YY.", ".......YYYY..YY.", "......YYYY...YY.", ".....YYYY.....Y.", "....YYYY........", "...YYYY.........", "..YYYY..........", ".YYYY...........", ".YYY............", "................"], "inc": ["................", "............YYY.", "...........YYYY.", "..........YYYY..", ".Y.......YYYY...", ".YY.....YYYY....", ".YY....YYYY.....", ".YY...YYYY......", ".YY.YYYY........", ".YYYYYY.........", ".YYYYY..........", ".YYYY...........", ".YYYYYYYYY......", ".YYYYYYYYY......", "................", "................"], "voice": ["......YYYY......", ".....YYYYYY.....", ".....YY..YY.....", ".....YYYYYY.....", ".....YY..YY.....", ".....YYYYYY.....", ".....YY..YY.....", "..Y..YYYYYY..Y..", "..Y..YYYYYY..Y..", "..YY..YYYY..YY..", "...YY......YY...", "....YYYYYYYY....", "......YYYY......", ".......YY.......", ".....YYYYYY.....", "....YYYYYYYY...."], "scan": ["YYYY........YYYY", "YY............YY", "Y...YYYYYYYY...Y", "Y...Y......Y...Y", "....Y.YYYY.Y....", "....Y......Y....", "....Y.YYYYYY....", "YYYYYYYYYYYYYYYY", "YYYYYYYYYYYYYYYY", "....Y......Y....", "....Y.YYY..Y....", "Y...Y......Y...Y", "Y...Y.Y.Y.YY...Y", "YY..YY.Y.Y.Y..YY", "YYYY........YYYY", "................"], "budget": ["...........Y.Y..", "....YYYYY..YYY..", "..YY.....YYYYYY.", ".Y.......YYY....", ".Y..YYYYYY.Y....", "Y..Y....YY..Y...", "Y..Y..YYY...Y...", "Y..Y..YY.Y..Y...", "Y..Y..Y..Y..Y...", "Y..Y.....Y..Y...", "Y...YYYYY...Y...", ".Y.........Y....", ".Y.........Y....", "..YY.....YY.....", "....YYYYY.......", "................"]};
     const ARC_COL = {
       overview: { T: "#F26D8F", L: "#FF9DB4", S: "#B83A5E", s: "#D9506F", G: "#9E2C4E" },
       report: { T: "#4FC07F", L: "#8BE3AE", S: "#2A8255", s: "#38A068", G: "#1F6B45" },
@@ -2777,7 +2780,7 @@
               <button key={k.id} type="button" className="pxbox hkey" style={pxFrame(k.color)} aria-label={k.aria || k.label}
                 onClick={() => { buzz(12); k.onClick(); }}>
                 {k.led ? <span className={`hkey-led ${k.led}`} /> : null}
-                <span className="hkey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
+                <span className="hkey-ico" dangerouslySetInnerHTML={{ __html: KEY_GLYPH[k.id] ? pixelSvg(KEY_GLYPH[k.id], { Y: k.ink || "#3B2A3F" }) : (window.VinaIcons ? window.VinaIcons.svg(k.icon) : "") }} />
                 <span className={`hkey-label ${k.small ? "is-small" : ""}`}>{k.label}</span>
               </button>
             ))}
@@ -5588,6 +5591,7 @@
 
       const handleAddTx = (e) => {
         e.preventDefault();
+        if (!(e.target.category && e.target.category.value)) { showToast("Chọn hạng mục trước đã", "error"); setAddPick(p => ({ ...p, open: "cat" })); return; }
         let txDate = new Date();
         const dv = e.target.date && e.target.date.value;
         const tv = e.target.time && e.target.time.value;
@@ -5627,6 +5631,9 @@
       // Gợi ý hạng mục khi gõ ghi chú (dựa trên thói quen Gemini đã học)
       const [addTxHint, setAddTxHint] = useState(null);
       useEffect(() => { if (!isAddTxModalOpen) setAddTxHint(null); }, [isAddTxModalOpen]);
+      // Bảng ghi giao dịch: hạng mục / ví gập lại như bảng sửa
+      const [addPick, setAddPick] = useState({ open: null, cat: null, bank: null });
+      useEffect(() => { if (isAddTxModalOpen) setAddPick({ open: null, cat: null, bank: null }); }, [isAddTxModalOpen]);
       const suggestFromNote = (note) => {
         if (!window.MaiAgent || !maiBrain || !note || note.trim().length < 2) { setAddTxHint(null); return; }
         const type = document.querySelector('#addTxForm input[name="type"]:checked')?.value || "EXPENSE";
@@ -5636,11 +5643,8 @@
       };
       const applyAddTxHint = () => {
         if (!addTxHint) return;
-        setTxParentFilter("Tất cả");
-        setTimeout(() => {
-          const el = Array.from(document.querySelectorAll('#addTxForm input[name="category"]')).find(i => i.value === addTxHint);
-          if (el) { el.click(); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
-        }, 50);
+        const id = resolveCatId(addTxHint, categories);
+        if (id) { buzz(8); setAddPick(p => ({ ...p, cat: id, open: null })); }
       };
 
       const handleUpdateTx = (e) => {
@@ -6050,11 +6054,11 @@
         } }
       ];
       const tvKeys = [
-        { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "btn-expense", color: "#FFB3BE", onClick: () => openAddTx("EXPENSE") },
-        { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "btn-income", color: "#A8E6BF", onClick: () => openAddTx("INCOME") },
-        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Gemini", icon: "btn-mic", color: "#D4BDF1", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
-        { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "btn-scan", color: "#A9D5F5", onClick: () => openAddTx("EXPENSE", true) },
-        { id: "budget", label: "Hạn mức", small: true, aria: "Ngân sách tháng", icon: "btn-budget", color: "#FFE08A", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
+        { id: "exp", label: "Chi", aria: "Ghi khoản chi", icon: "btn-expense", color: "#FFB3BE", ink: "#A8344E", onClick: () => openAddTx("EXPENSE") },
+        { id: "inc", label: "Thu", aria: "Ghi khoản thu", icon: "btn-income", color: "#A8E6BF", ink: "#2A7449", onClick: () => openAddTx("INCOME") },
+        voiceAvailable ? { id: "voice", label: voice.state === "listening" ? "Dừng" : "Nói", aria: "Nói với Gemini", icon: "btn-mic", color: "#D4BDF1", ink: "#5A3B98", led: voice.state === "listening" ? "on" : "", onClick: () => (voice.state === "listening" ? voiceStop() : voiceListen("command")) } : null,
+        { id: "scan", label: "Quét", aria: "Quét hoá đơn", icon: "btn-scan", color: "#A9D5F5", ink: "#2A5C8C", onClick: () => openAddTx("EXPENSE", true) },
+        { id: "budget", label: "Hạn mức", small: true, aria: "Ngân sách tháng", icon: "btn-budget", color: "#FFE08A", ink: "#8A5800", led: budgetPace ? "warn" : monthlyBudget > 0 ? "on" : "", onClick: openBudget }
       ].filter(Boolean);
 
       // Móc kiểm thử giao diện (chỉ bật khi mở với ?shot=1)
@@ -7812,51 +7816,52 @@
                     <CurrencyInput id="amountVisibleInput" name="amount" placeholder="0" required={true} className="w-full bg-transparent border-0 p-0 text-theme-textPrimary font-display text-2xl tabular focus:outline-none focus:ring-0 focus:shadow-none" />
                   </div>
 
-                  {/* Category Selection compact grid */}
+                  {/* Hạng mục: nút gập, bấm mở hộp 2 tầng (giống bảng sửa) */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                      <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider">Hạng mục</label>
-                      <span className="text-[12px] text-theme-textSecondary font-semibold">Lọc theo nhóm lớn</span>
-                    </div>
-                    <CategoryParentFilterBar
-                      parentCategories={parentCategories}
-                      selectedParent={txParentFilter}
-                      onSelectParent={setTxParentFilter}
-                    />
-                    <div className="grid grid-cols-3 gap-1.5 max-h-[126px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
-                      {filteredCategoriesForTx.length > 0 ? (
-                        filteredCategoriesForTx.map((c, i) => (
-                          <label key={c.id || `cat_${c.name}_${i}`} className="cursor-pointer">
-                            <input type="radio" name="category" value={c.name} required className="peer sr-only" />
-                            <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <Icon name={c.icon || "tag"} className="w-4 h-4 shrink-0" />
-                              <span className="text-[13px] font-bold truncate">{catLabel(c)}</span>
-                            </div>
-                          </label>
-                        ))
-                      ) : (
-                        <div className="col-span-full py-3 text-center">
-                          <p className="text-xs text-theme-textSecondary italic mb-1">Chưa có danh mục trong nhóm này.</p>
-                          <button type="button" onClick={()=>setTxParentFilter("Tất cả")} className="text-xs text-theme-primary font-bold underline">Xem tất cả</button>
-                        </div>
-                      )}
-                    </div>
+                    <label className="font-pixel text-[14px] text-theme-textSecondary uppercase tracking-wider block">Hạng mục</label>
+                    {(() => {
+                      const pcat = addPick.cat ? catById[addPick.cat] : null;
+                      return (<>
+                        <input type="hidden" name="category" value={addPick.cat || ""} />
+                        <button type="button" className={`ed-fold ${addPick.open === "cat" ? "on" : ""}`} onClick={() => { buzz(8); setAddPick(p => ({ ...p, open: p.open === "cat" ? null : "cat" })); }}>
+                          <Icon name={pcat ? (pcat.icon || "tag") : "btn-tag"} className="w-7 h-7 shrink-0" />
+                          <span className={`flex-1 min-w-0 truncate ${pcat ? "" : "opacity-60"}`}>{pcat ? catLabel(pcat) : "Chọn hạng mục…"}</span>
+                          <span className="font-pixel shrink-0" aria-hidden="true">{addPick.open === "cat" ? "▲" : "▼"}</span>
+                        </button>
+                        {addPick.open === "cat" && (
+                          <CategoryTree parents={parentCategories} childrenOf={(pn) => categories.filter(c => c && !c.isParent && (c.parent ? c.parent === pn : categoryParentMap[c.name] === pn))}
+                            valueId={addPick.cat} onPick={(id) => { buzz(10); setAddPick(p => ({ ...p, cat: id, open: null })); }} />
+                        )}
+                      </>);
+                    })()}
                   </div>
 
                   <div className="grid grid-cols-1 gap-2">
                     <div className="space-y-1">
                       <span className="font-pixel text-[14px] text-theme-textSecondary uppercase block">Ví / TK (Nguồn tiền)</span>
-                      <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1 border-2 border-theme-border rounded-lg bg-theme-background">
-                        {accounts.map((a, idx) => (
-                          <label key={a.id} className="cursor-pointer shrink-0">
-                            <input type="radio" name="bankSelect" value={String(a.id)} defaultChecked={idx === 0} required className="peer sr-only" />
-                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-theme-border bg-theme-surface text-theme-textPrimary peer-checked:border-[var(--ink)] peer-checked:bg-[var(--accent)] peer-checked:text-[var(--on-accent,#4A2B18)] peer-checked:shadow-[inset_0_-3px_0_rgba(74,51,80,.22)] transition-all">
-                              <BankBadge name={a.name} size={18} />
-                              <span className="text-xs font-bold whitespace-nowrap">{formatAccountLabel(a)}</span>
+                      {(() => {
+                        const curVal = addPick.bank || (accounts[0] ? String(accounts[0].id) : "");
+                        const curAcc = accounts.find(a => String(a.id) === curVal);
+                        return (<>
+                          <input type="hidden" name="bankSelect" value={curVal} />
+                          <button type="button" className={`ed-fold ${addPick.open === "bank" ? "on" : ""}`} onClick={() => { buzz(8); setAddPick(p => ({ ...p, open: p.open === "bank" ? null : "bank" })); }}>
+                            <BankBadge name={curAcc ? curAcc.name : "Tiền mặt"} size={22} />
+                            <span className="flex-1 min-w-0 truncate">{curAcc ? formatAccountLabel(curAcc) : "Chọn ví"}</span>
+                            <span className="font-pixel shrink-0" aria-hidden="true">{addPick.open === "bank" ? "▲" : "▼"}</span>
+                          </button>
+                          {addPick.open === "bank" && (
+                            <div className="flex flex-col gap-1.5 max-h-[230px] overflow-y-auto no-scrollbar p-1.5 border-2 border-theme-border rounded-lg bg-theme-background">
+                              {accounts.map(a => (
+                                <button key={a.id} type="button" onClick={() => { buzz(10); setAddPick(p => ({ ...p, bank: String(a.id), open: null })); }}
+                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 text-left transition-all ${String(a.id) === curVal ? "border-[var(--ink)] bg-[var(--accent)] text-[var(--on-accent,#4A2B18)] shadow-[inset_0_-3px_0_rgba(74,51,80,.22)]" : "border-theme-border bg-theme-surface text-theme-textPrimary"}`}>
+                                  <BankBadge name={a.name} size={18} />
+                                  <span className="text-[13px] font-bold min-w-0 truncate">{formatAccountLabel(a)}</span>
+                                </button>
+                              ))}
                             </div>
-                          </label>
-                        ))}
-                      </div>
+                          )}
+                        </>);
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-pixel text-[14px] text-theme-textSecondary uppercase w-14 shrink-0">Ghi chú</span>
