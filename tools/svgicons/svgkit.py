@@ -9,7 +9,7 @@ TONE = {
  'sky': ('#A9D8FF', '#6AA8F0'), 'glass': ('#D6EEFF', '#A9D8FF'), 'blue': ('#8CC0FA', '#6AA8F0'),
  'lilac': ('#CDB8F6', '#9F86E0'), 'purple': ('#B39AEE', '#8C70D6'), 'coffee': ('#A87452', '#82563A'),
  'tan': ('#F2D2B0', '#D9A47A'), 'bread': ('#F7CC8E', '#E3A45E'), 'broth': ('#FFDB8A', '#F2B860'),
- 'wood': ('#D9A47A', '#B98058'), 'grey': ('#E3DDF0', '#A79FC0'), 'dark': ('#3B3355', '#3B3355'),
+ 'wood': ('#D9A47A', '#B98058'), 'grey': ('#E3DDF0', '#A79FC0'), 'steel': ('#CFC8E0', '#A79FC0'), 'teal': ('#A6E6E0', '#6CC9C0'), 'navy': ('#8A8AD0', '#6666AA'), 'chili': ('#FF8A8A', '#E06070'), 'dark': ('#3B3355', '#3B3355'),
  'meat': ('#F2A08A', '#D9826E'), 'skin': ('#FFDCC0', '#F2B896'),
 }
 class SVG:
