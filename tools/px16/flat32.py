@@ -69,12 +69,14 @@ class Icon:
             vis = reg
             dark = vis & ~shifted(vis | (mat > sid), 2, 2) if kind != 'flat' else vis & ~shifted(vis | (mat > sid), 1, 1)
             col = np.where(dark[..., None], dk, lt)
-            if kind == 'round' and vis.sum() > 30:
-                ys, xs = np.nonzero(vis); y0, x0 = ys.min(), xs.min(); hh, ww = np.ptp(ys) + 1, np.ptp(xs) + 1
-                inner = ndi.binary_erosion(vis)
-                hl = inner & ~shifted(inner, -1, -1) & (s.X * S < x0 + ww * .4) & (s.Y * S < y0 + hh * .45)
-                hl &= ~shifted(inner, -1, 0) | ~shifted(inner, 0, -1)
-                col[hl] = WHITE
+            if kind == 'round' and vis.sum() > 60:
+                # chấm sáng nhỏ gọn (2-3 px) ở góc trên-trái, cách mép 2px
+                inner = ndi.binary_erosion(vis, iterations=2)
+                ys, xs = np.nonzero(inner)
+                if len(ys):
+                    k = np.argmin(ys + xs); y, x = ys[k], xs[k]
+                    for dy, dx in ((0, 0), (1, 0), (0, 1)):
+                        if inner[min(y + dy, N - 1), min(x + dx, N - 1)]: col[y + dy, x + dx] = WHITE
             img[vis, :3] = col[vis]; img[vis, 3] = 255
             # nét viền giữa khối này và khối đè lên
             over = np.isin(mat, [k for k in range(sid + 1, len(s.shapes)) if s.shapes[k][2] and s.shapes[k][0] != m])

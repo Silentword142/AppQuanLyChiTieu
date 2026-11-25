@@ -1,9 +1,5 @@
-import sys, importlib, types
-sys.path.insert(0, '../pixeldraw')
-import flat32
-sys.modules['px64'] = flat32          # dùng lại bản vẽ khối của bộ 64 cũ, render kiểu phẳng 32px
-src = importlib.import_module('icons64_a')
-from px16 import sheet, BG
-items = [(k, f().render()) for k, f in src.I.items()]
-import px16; px16.N = 32
-sheet(items, sys.argv[1], scale=4, cols=6)
+import sys, importlib
+import px16
+mod = importlib.import_module(sys.argv[2] if len(sys.argv) > 2 else 'icons32_a')
+items = [(k, f().render()) for k, f in mod.I.items()]
+px16.N = 32; px16.sheet(items, sys.argv[1], scale=4, cols=6)
