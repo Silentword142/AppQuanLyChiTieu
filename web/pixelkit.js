@@ -84,7 +84,17 @@ var frameCache={};
 function frame(name){if(frameCache[name])return frameCache[name];var f=FR[name]||FR.tvRose;
  var m={k:"#3B2A3F",d:"rgba(59,42,63,.42)",e:"rgba(59,42,63,.18)",H:mix(f.b,"#FFFFFF",.55),h:f.h,b:f.b,s:f.s,m:mix(f.b,"#3B2A3F",.55),S:mix(f.b,"#3B2A3F",.28)};
  return frameCache[name]=gridSvg(FRAME,m)}
+// Khung 9-slice từ 1 mã màu bất kỳ (ô phím, nút nhỏ trên thân TV)
+function framec(hex){var key="#"+hex;if(frameCache[key])return frameCache[key];var f={b:hex,h:mix(hex,"#FFFFFF",.5),s:mix(hex,"#3B2A3F",.2)};
+ var m={k:"#3B2A3F",d:"rgba(59,42,63,.42)",e:"rgba(59,42,63,.18)",H:mix(f.b,"#FFFFFF",.6),h:f.h,b:f.b,s:f.s,m:mix(f.b,"#3B2A3F",.5),S:mix(f.b,"#3B2A3F",.25)};
+ return frameCache[key]=gridSvg(FRAME,m)}
+// Ăng-ten TV pixel 40x14
+function antenna(body){var r=[];for(var y=0;y<14;y++)r.push(Array(41).join("."));var set=function(x,y,c){r[y]=r[y].slice(0,x)+c+r[y].slice(x+1)};
+ for(var i=0;i<11;i++){set(8+i,2+i,"k");set(31-i,2+i,"k")}
+ [[7,1],[32,1]].forEach(function(p){for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++)set(p[0]+dx,p[1]+dy,"k");set(p[0],p[1],"y")});
+ for(var x=16;x<24;x++){set(x,11,"k");set(x,12,x>16&&x<23?"b":"k");set(x,13,x>16&&x<23?"b":"k")}
+ return gridSvg(r,{k:"#3B2A3F",y:"#FFD36E",b:body||"#F7A8BC"})}
 function frameColor(name){return (FR[name]||FR.tvRose)}
 
-root.PixelKit={frame:frame,frameColor:frameColor,icon:icon,keycap:keycap,drawCoin:drawCoin,drawSpark:drawSpark,sky:sky,gridSvg:gridSvg,mix:mix};
+root.PixelKit={frame:frame,framec:framec,antenna:antenna,frameColor:frameColor,icon:icon,keycap:keycap,drawCoin:drawCoin,drawSpark:drawSpark,sky:sky,gridSvg:gridSvg,mix:mix};
 })(window);

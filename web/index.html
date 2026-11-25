@@ -776,6 +776,52 @@
       --crt-mint: #9DF5C2; --crt-pink: #FFA5BC; --crt-butter: #FFE08A; --crt-cream: rgba(255,242,226,.9); --crt-big: #FFE7A8; --crt-text: #FFF2E2; }
     .tv-screen.tv-screen-full.tv-dark .crt-body { min-height: calc(48vh - 6px); }
     .tv-screen.tv-screen-full.tv-auto { min-height: 0; }
+    /* ===== Bố cục Nhà kiểu mẫu "TV CRT mới" (Hoang 25/11): TV có ăng-ten + cột núm bên phải, phím rời, TV nhật ký ===== */
+    .pxbox { --S: 3px; border-style: solid; border-color: transparent; border-width: calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5); border-image-slice: 5 6 7 5 fill; border-image-repeat: stretch; image-rendering: pixelated; background: none; }
+    .home-tv { padding-top: 34px; }
+    .pxtv.has-ant { overflow: visible; }
+    .pxtv-ant { position: absolute; left: 50%; top: -52px; width: 120px; height: 42px; transform: translateX(-50%); image-rendering: pixelated; transform-origin: 50% 100%; animation: antSway 3s steps(2) infinite; pointer-events: none; }
+    @keyframes antSway { 0%,100% { transform: translateX(-50%); } 50% { transform: translateX(-50%) rotate(-2deg); } }
+    .pxtv-top { display: grid; grid-template-columns: minmax(0,1fr) 58px; gap: 8px; align-items: start; }
+    .pxtv-side { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 2px; }
+    .pxtv-side .knob-big { width: 48px; height: 48px; display: block; animation: knobTurn 6s steps(1) infinite; }
+    .pxtv-side .knob-big svg { width: 100%; height: 100%; display: block; }
+    @keyframes knobTurn { 50% { transform: rotate(90deg); } }
+    .mini-key { --S: 2px; width: 56px; height: 40px; padding: 0; display: grid; place-items: center; font: 800 16px/1 'Handjet', sans-serif; letter-spacing: .02em; color: #3B2A3F; transition: transform .1s; }
+    .mini-key.wide { width: auto; padding: 0 4px; color: #3B2A3F; }
+    .mini-key:active { transform: translateY(2px); }
+    .mini-key:disabled { opacity: .5; }
+    .grille-v { width: 42px; height: 30px; background: repeating-linear-gradient(180deg, #3B2A3F 0 3px, transparent 3px 6px); opacity: .55; }
+    .side-led { width: 9px; height: 9px; background: #7DFFB0; box-shadow: 0 0 0 3px #3B2A3F; animation: sideLed 2.4s steps(4) infinite; }
+    @keyframes sideLed { 50% { background: #C9FFE0; } }
+    .pxtv-feet { position: absolute; left: 36px; right: 36px; bottom: -44px; display: flex; justify-content: space-between; pointer-events: none; }
+    .pxtv-feet span { width: 36px; height: 12px; background: #5A3D62; box-shadow: 0 3px 0 #3B2A3F, 3px 0 0 #3B2A3F, -3px 0 0 #3B2A3F; }
+    .home-tv { margin-bottom: 22px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-main { min-height: 212px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-main .crt-body { min-height: 206px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-log { min-height: 168px; }
+    .tv-screen.tv-screen-full.tv-dark.tv-log .crt-body { min-height: 162px; }
+    .tv-dark .crt-body { text-shadow: 2px 0 0 rgba(255,90,140,.4), -2px 0 0 rgba(90,210,255,.3), 0 0 8px rgba(157,245,194,.3); }
+    .home-keys { display: grid; gap: 8px; margin: 4px 0 14px; }
+    .hkey { --S: 3px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 92px; padding: 0; color: #3B2A3F; transition: transform .1s; }
+    .hkey:active { transform: translateY(3px); }
+    .hkey-ico { width: 38px; height: 38px; display: block; }
+    .hkey-ico > * { width: 100% !important; height: 100% !important; }
+    .hkey-label { font: 800 19px/1 'Handjet', sans-serif; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+    .hkey-label.is-small { font-size: 16px; }
+    .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
+    .hkey-led.warn { background: #FF7D95; animation: sideLed 1s steps(2) infinite; }
+    .log-ctrl { gap: 6px; }
+    .log-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 260px; }
+    .log-it { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 3px dashed rgba(255,242,226,.14); cursor: pointer; }
+    .log-it:last-child { border-bottom: 0; }
+    .log-tile { --S: 2px; width: 40px; height: 40px; display: grid; place-items: center; flex: none; padding: 0; text-shadow: none; }
+    .log-t { flex: 1; min-width: 0; line-height: 1.1; }
+    .log-name { display: block; font: 700 19px/1.1 'Handjet', sans-serif; color: #FFF2E2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .log-t small { display: block; font-size: 14px; color: rgba(255,242,226,.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .log-m { font: 800 21px/1 'Handjet', sans-serif; white-space: nowrap; }
+    .log-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: 6px 10px; }
+    .log-hint { font-size: 14px; color: rgba(255,242,226,.7); }
     .tv-bezel-full {
       background: var(--tv-trim);
       padding: 7px;
@@ -2054,15 +2100,19 @@
     });
 
     // Thân TV pastel bọc màn CRT: khung pixel 9-slice nhiều lớp bóng + hàng nút dưới
-    const PixelTV = ({ color = "tvRose", brand = "SPENDY", children }) => {
+    const PixelTV = ({ color = "tvRose", brand = "SPENDY", antenna = false, side = null, ctrl = null, feet = false, children }) => {
       if (!PK) return children;
       return (
-        <div className="pxtv" style={{ borderImageSource: `url("${PK.frame(color)}")` }}>
-          {children}
-          <div className="pxtv-ctrl" aria-hidden="true"><i className="led" /><span className="brand">{brand}</span><span className="grille" /><i className="knob" /><i className="knob" /></div>
+        <div className={`pxtv ${antenna ? "has-ant" : ""}`} style={{ borderImageSource: `url("${PK.frame(color)}")` }}>
+          {antenna && <img className="pxtv-ant" alt="" aria-hidden="true" src={PK.antenna ? PK.antenna(PK.frameColor(color).b) : ""} />}
+          {side ? <div className="pxtv-top">{children}{side}</div> : children}
+          {side ? null : ctrl || <div className="pxtv-ctrl" aria-hidden="true"><i className="led" /><span className="brand">{brand}</span><span className="grille" /><i className="knob" /><i className="knob" /></div>}
+          {feet && <div className="pxtv-feet" aria-hidden="true"><span /><span /></div>}
         </div>
       );
     };
+    // Ô/phím khung pixel 9-slice theo màu bất kỳ
+    const pxFrame = (hex) => (PK && PK.framec ? { borderImageSource: `url("${PK.framec(hex)}")` } : {});
     // Bầu trời: mây pixel trôi chậm + sao lấp lánh (theme tối)
     const SkyLayer = React.memo(() => {
       const clouds = [
@@ -2430,19 +2480,22 @@
       const pad = (v) => String(v).padStart(2, "0");
       return (
         <>
-        <section className="crt-stage tab-enter" aria-label="Màn hình TV tổng quan">
-          <PixelTV color="tvRose" brand="SPENDY"><div className="tv-bezel tv-bezel-full">
-            <div className="tv-screen tv-screen-full tv-dark">
+        <section className="crt-stage tab-enter home-tv" aria-label="Màn hình TV tổng quan">
+          <PixelTV color="tvRose" brand="SPENDY" antenna feet side={
+            <div className="pxtv-side">
+              <span className="knob-big" aria-hidden="true" dangerouslySetInnerHTML={{ __html: TV_KNOB_SVG }} />
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Kênh trước" onClick={() => go(-1)}>CH▲</button>
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Kênh sau" onClick={() => go(1)}>CH▼</button>
+              <span className="grille-v" aria-hidden="true" />
+              <i className="side-led" aria-hidden="true" />
+            </div>}><div className="tv-bezel tv-bezel-full">
+            <div className="tv-screen tv-screen-full tv-dark tv-main">
               <div className="crt-roll" />
               <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
               <div className="crt-body">
                 <div className="osd-bar osd shrink-0">
                   <span className="truncate">CH{pad(idx + 1)} <span className="opacity-85">{cur.title}</span></span>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button type="button" className="tv-ch-btn" aria-label="Kênh trước" onClick={() => go(-1)}>CH▲</button>
-                    <button type="button" className="tv-ch-btn" aria-label="Kênh sau" onClick={() => go(1)}>CH▼</button>
-                    <span className="ml-1">{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
-                  </div>
+                  <span className="shrink-0">{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
                 </div>
                 <div key={cur.id} className={`crt-hero ${phase}`}
                   onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; }}
@@ -2458,28 +2511,71 @@
                     {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); if (i !== idx) { buzz(); onChange(i); } }} />)}
                   </div>
                 </div>
-                {keys && keys.length > 0 && (
-                  <>
-                    <div className="crt-sep" />
-                    <div className="tv-keys" style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0, 1fr))` }}>
-                      {keys.map(k => (
-                        <button key={k.id} type="button" className="ekey" style={{ "--c": k.color }} aria-label={k.aria || k.label}
-                          onClick={() => { buzz(12); k.onClick(); }}>
-                          <span className={`led ${k.led || ""}`} />
-                          {k.badge ? <span className="ekey-badge">{k.badge}</span> : null}
-                          <span className="ekey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
-                          <span className={`ekey-label ${k.small ? "is-small" : ""}`}>{k.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div></PixelTV>
         </section>
-        {children && <CrtSectionScreen chCode="CH06" color="tvTeal" brand="NHẬT KÝ" title="NHẬT KÝ GẦN ĐÂY" screenClass="tv-auto">{children}</CrtSectionScreen>}
+        {keys && keys.length > 0 && (
+          <div className="home-keys" style={{ gridTemplateColumns: `repeat(${keys.length}, minmax(0, 1fr))` }}>
+            {keys.map(k => (
+              <button key={k.id} type="button" className="pxbox hkey" style={pxFrame(k.color)} aria-label={k.aria || k.label}
+                onClick={() => { buzz(12); k.onClick(); }}>
+                {k.led ? <span className={`hkey-led ${k.led}`} /> : null}
+                <span className="hkey-ico" dangerouslySetInnerHTML={{ __html: window.VinaIcons ? window.VinaIcons.svg(k.icon) : "" }} />
+                <span className={`hkey-label ${k.small ? "is-small" : ""}`}>{k.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {children}
         </>
+      );
+    };
+
+    // TV nhật ký (mục Nhà): thân xanh bạc hà, màn tối, mỗi kênh là 1 ngày; ◀ ▶ đổi ngày, TẤT CẢ mở Báo cáo
+    const LogTV = ({ groups, onAll, renderItem }) => {
+      const [pg, setPg] = useState(0);
+      const [noise, setNoise] = useState(false);
+      const [now, setNow] = useState(() => new Date());
+      const n = Math.max(1, groups.length);
+      const idx = Math.min(pg, n - 1);
+      useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
+      const go = (d) => { if (groups.length < 2) return; buzz(10); setNoise(true); setTimeout(() => { setPg(p => (Math.min(p, n - 1) + d + n) % n); }, 160); setTimeout(() => setNoise(false), 420); };
+      const pad = (v) => String(v).padStart(2, "0");
+      const g = groups[idx];
+      return (
+        <section className="crt-stage tab-enter" aria-label="Nhật ký gần đây">
+          <PixelTV color="tvTeal" ctrl={
+            <div className="pxtv-ctrl log-ctrl">
+              <i className="led" /><span className="brand">NHẬT KÝ</span><span className="flex-1" />
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày sau" onClick={() => go(1)} disabled={groups.length < 2}>◀</button>
+              <button type="button" className="pxbox mini-key" style={pxFrame("#FFF6E9")} aria-label="Ngày trước" onClick={() => go(-1)} disabled={groups.length < 2}>▶</button>
+              <button type="button" className="pxbox mini-key wide" style={pxFrame("#FFE08A")} onClick={() => { buzz(); onAll(); }}>TẤT CẢ</button>
+            </div>}>
+            <div className="tv-bezel tv-bezel-full">
+              <div className="tv-screen tv-screen-full tv-dark tv-log">
+                <div className="crt-roll" />
+                <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
+                <div key={g ? g.key : "empty"} className={`crt-body ${noise ? "" : "crt-switch-in"}`}>
+                  <div className="osd-bar osd shrink-0">
+                    <span className="truncate">CH{pad(idx + 4)} <span className="opacity-85 uppercase">{g ? g.label : "Sổ trống"}</span></span>
+                    <span className="shrink-0">{g ? <span className={g.net >= 0 ? "text-[var(--income)]" : "text-[var(--expense)]"}>{g.net >= 0 ? "+" : "−"}{formatVND(Math.abs(g.net))}</span> : <>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</>}</span>
+                  </div>
+                  {g ? (
+                    <div className="log-list">{g.items.map(renderItem)}</div>
+                  ) : (
+                    <div className="log-empty">
+                      <Icon name="btn-journal" anim="float" className="w-12 h-12" />
+                      <p className="tv-mid">SỔ CÒN TRỐNG</p>
+                      <p className="log-hint">Bấm nút GHI vàng bên dưới, hoặc để Gemini tự ghi từ thông báo ngân hàng.</p>
+                    </div>
+                  )}
+                  {groups.length > 1 && <div className="tv-dots shrink-0">{groups.map((x, i) => <button key={x.key} type="button" aria-label={x.label} className={i === idx ? "on" : ""} onClick={() => { if (i !== idx) { setNoise(true); setTimeout(() => setPg(i), 160); setTimeout(() => setNoise(false), 420); } }} />)}</div>}
+                </div>
+              </div>
+            </div>
+          </PixelTV>
+        </section>
       );
     };
 
@@ -5686,67 +5782,31 @@
               <RetroTV ch={tvChannel} onChange={setTvChannel} channels={tvChannels} keys={tvKeys}>
                 {/* Nhắc quyền đọc thông báo trên Android */}
                 {canListen && !maiAccess && (
-                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 flex items-center gap-3 text-[#FFE08A]">
+                  <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="retro-card w-full text-left p-3.5 flex items-center gap-3 mt-3">
                     <MaiAvatar size={42} animated />
                     <div className="flex-1">
-                      <p className="font-bold text-[17px] text-[#FFE08A]">Cho phép đọc thông báo ngân hàng</p>
-                      <p className="text-xs font-semibold mt-0.5 text-[#C8B6DE]">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
+                      <p className="font-bold text-[17px] text-theme-textPrimary">Cho phép đọc thông báo ngân hàng</p>
+                      <p className="text-xs font-semibold mt-0.5 text-theme-textSecondary">Bật 1 lần, Gemini tự phân tích và ghi mọi biến động số dư.</p>
                     </div>
                     <Icon name="btn-next" anim="wiggle" className="w-5 h-5 shrink-0" />
                   </button>
                 )}
 
-                {/* NHẬT KÝ GẦN ĐÂY – nằm liền mạch trong cùng màn hình CRT tối */}
-                <section className="space-y-2.5">
-                  <div className="flex items-center justify-between gap-2 px-1">
-                    <span className="flex items-center gap-2 min-w-0">
-                      <span className="w-2.5 h-2.5 bg-[#7DFFB0] px-led shrink-0" style={{ boxShadow: "0 0 6px #7DFFB0" }} />
-                      <span className="osd text-[16px] tracking-wider uppercase truncate">Nhật ký gần đây</span>
-                    </span>
-                    <button type="button" onClick={() => { buzz(); setActiveTab("report"); }} className="font-pixel text-[15px] text-[#FFE08A] crt-glow flex items-center gap-1 shrink-0">TẤT CẢ <Icon name="btn-next" className="w-3.5 h-3.5" /></button>
-                  </div>
-                  {recentGroups.length === 0 ? (
-                    <div className="console-lcd text-center px-6 py-8">
-                      <span className="block w-16 h-16 mx-auto mb-3"><Icon name="btn-journal" anim="float" className="w-16 h-16" /></span>
-                      <p className="font-display text-[30px] leading-none text-theme-textPrimary">Sổ còn trống</p>
-                      <p className="text-sm text-theme-textSecondary mt-2">Bấm nút <b>GHI</b> vàng bên dưới, hoặc để Gemini tự ghi từ thông báo ngân hàng.</p>
+                {/* NHẬT KÝ GẦN ĐÂY – TV riêng thân xanh bạc hà, màn tối, mỗi kênh 1 ngày */}
+                <LogTV groups={recentGroups} onAll={() => setActiveTab("report")} renderItem={(tx) => {
+                  const col = getColorForCategoryName(tx.category);
+                  const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? col : "#FFF6E9";
+                  return (
+                    <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="log-it">
+                      <span className="pxbox log-tile" style={pxFrame(tint)}><Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-6 h-6" /></span>
+                      <span className="log-t">
+                        <span className="log-name">{tx.note || tx.category}{tx.source === "mai" && <MaiAvatar size={14} className="ml-1 align-[-2px]" />}</span>
+                        <small>{tx.category} · {txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</small>
+                      </span>
+                      <span className={`log-m tabular ${tx.type === "INCOME" ? "text-[var(--income)]" : "text-[var(--expense)]"}`}>{tx.type === "INCOME" ? "+" : "−"}{formatVND(tx.amount)}</span>
                     </div>
-                  ) : (
-                    <div className="space-y-2.5 stagger">
-                      {recentGroups.map(g => (
-                        <div key={g.key} className="day-card">
-                          <div className="panel-head">
-                            <span className="truncate">{g.label}</span>
-                            <span className={`font-display text-[20px] leading-none normal-case tracking-normal px-2 py-0.5 bg-[#140D20]/80 border border-[#5E4A84] crt-glow ${g.net >= 0 ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>{g.net >= 0 ? '+' : '−'}{formatVND(Math.abs(g.net))}</span>
-                          </div>
-                          <div className="divide-y-2 divide-dashed divide-theme-border/45">
-                            {g.items.map(tx => {
-                              const col = getColorForCategoryName(tx.category);
-                              const tint = /^#[0-9a-f]{6}$/i.test(String(col || "")) ? `${col}35` : "rgba(255,242,226,.09)";
-                              return (
-                                <div key={tx.id} role="button" tabIndex={0} onClick={() => handleStartEditTx(tx)} onKeyDown={(e) => { if (e.key === "Enter") handleStartEditTx(tx); }} className="tx-row px-3 py-2.5 flex items-center gap-3 cursor-pointer">
-                                  <div className="tx-ico" style={{ background: tint }}>
-                                    <Icon name={getIconForCategoryName(tx.category) || getCategoryIcon(tx.category)} className="w-7 h-7" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-theme-textPrimary text-[17px] truncate flex items-center gap-1.5">
-                                      <span className="truncate">{tx.category}</span>
-                                      {tx.source === "mai" && <span title="Gemini tự ghi" className="inline-flex shrink-0"><MaiAvatar size={16} /></span>}
-                                    </p>
-                                    <p className="text-xs text-theme-textSecondary truncate">{tx.note ? `${tx.note} · ` : ""}{txBankLabel(accounts, tx)} · {new Date(tx.date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</p>
-                                  </div>
-                                  <p className={`font-display text-[22px] leading-none tabular shrink-0 crt-glow ${tx.type==="INCOME" ? 'text-[var(--income)]' : 'text-[var(--expense)]'}`}>
-                                    {tx.type==="INCOME" ? '+' : '−'}{formatVND(tx.amount)}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
+                  );
+                }} />
               </RetroTV>
             )}
 
