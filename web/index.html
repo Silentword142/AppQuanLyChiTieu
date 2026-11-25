@@ -812,6 +812,22 @@
     .hkey-led { position: absolute; top: -6px; right: -6px; width: 8px; height: 8px; background: #7DFFB0; box-shadow: 0 0 0 2px #3B2A3F; }
     .hkey-led.warn { background: #FF7D95; animation: sideLed 1s steps(2) infinite; }
     .log-ctrl { gap: 6px; }
+    /* Hiệu ứng TV theo mẫu GIF: sọc màu, giật hình, bật nguồn, con trỏ nhấp nháy */
+    .crt-bars { position: absolute; inset: 0; z-index: 4; display: flex; opacity: 0; pointer-events: none; }
+    .crt-bars.on { opacity: 1; }
+    .crt-bars i { flex: 1; } .crt-bars i:nth-child(1) { background: #FFF6E9; } .crt-bars i:nth-child(2) { background: #FFD36E; } .crt-bars i:nth-child(3) { background: #7DD3C6; } .crt-bars i:nth-child(4) { background: #9BE0AE; } .crt-bars i:nth-child(5) { background: #F49CA6; } .crt-bars i:nth-child(6) { background: #EE6B6E; } .crt-bars i:nth-child(7) { background: #6E9FDE; }
+    .tv-dark .crt-hero.hold { visibility: hidden; }
+    .tv-dark .crt-hero.switching, .tv-glitch-in { animation: tvGlitch .36s steps(6) both !important; }
+    @keyframes tvGlitch { 0% { transform: translateX(-12px); clip-path: inset(20% 0 50% 0); } 20% { transform: translateX(9px); clip-path: inset(60% 0 10% 0); } 40% { transform: translateX(-6px); clip-path: inset(0 0 70% 0); } 60% { transform: translateX(3px); clip-path: none; } 100% { transform: none; } }
+    .crt-pwr { position: absolute; inset: 0; z-index: 7; background: #2A2140; pointer-events: none; animation: tvPwrOff .9s .15s steps(9) forwards; }
+    .crt-pwr.late { animation-delay: .5s; }
+    .crt-pwr::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1px; background: #FFF6E9; box-shadow: 0 0 0 3px rgba(157,245,194,.5); animation: tvPwrLine .9s .15s steps(9) forwards; transform: scaleX(0); }
+    .crt-pwr.late::before { animation-delay: .5s; }
+    @keyframes tvPwrOff { 0%, 40% { clip-path: inset(0); } 100% { clip-path: inset(50% 0 50% 0); visibility: hidden; } }
+    @keyframes tvPwrLine { 0% { transform: scaleX(0); } 40% { transform: scaleX(1); opacity: 1; } 100% { opacity: 0; } }
+    .tv-main .tv-big::after { content: ""; display: inline-block; width: 12px; height: .72em; margin-left: 4px; vertical-align: -1px; background: #9DF5C2; animation: tvCur 1s steps(1) infinite; }
+    @keyframes tvCur { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .crt-pwr { display: none; } .tv-main .tv-big::after { animation: none; } }
     .log-list { display: flex; flex-direction: column; overflow-y: auto; max-height: 440px; }
     .log-it { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 3px dashed rgba(255,242,226,.14); cursor: pointer; }
     .log-it:last-child { border-bottom: 0; }
@@ -2466,21 +2482,33 @@
       const cur = channels[idx];
       const [phase, setPhase] = useState("power-on");
       const [noise, setNoise] = useState(false);
+      const [bars, setBars] = useState(false);
       const [now, setNow] = useState(() => new Date());
       const firstRef = useRef(true);
       const touchRef = useRef(null);
+      const idleRef = useRef(Date.now());
+      const idxRef = useRef(idx); idxRef.current = idx;
+      // Đổi kênh như TV thật: nhiễu ruồi -> sọc màu -> hình giật vào
       useEffect(() => {
         if (firstRef.current) {
           firstRef.current = false;
           const t = setTimeout(() => setPhase(""), 1000);
           return () => clearTimeout(t);
         }
-        setPhase("switching"); setNoise(true);
-        const t1 = setTimeout(() => setNoise(false), 420), t2 = setTimeout(() => setPhase(""), 460);
-        return () => { clearTimeout(t1); clearTimeout(t2); };
+        setNoise(true); setBars(false); setPhase("hold");
+        const t1 = setTimeout(() => { setNoise(false); setBars(true); }, 240);
+        const t2 = setTimeout(() => { setBars(false); setPhase("switching"); }, 330);
+        const t3 = setTimeout(() => setPhase(""), 720);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
       }, [idx]);
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
-      const go = (d) => { buzz(10); onChange((idx + d + n) % n); };
+      // Tự chuyển kênh mỗi 6 giây; dừng 15 giây sau khi anh tự bấm/vuốt
+      useEffect(() => {
+        if (n < 2 || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const t = setInterval(() => { if (Date.now() - idleRef.current > 15000 && !document.hidden) onChange((idxRef.current + 1) % n); }, 6000);
+        return () => clearInterval(t);
+      }, [n]);
+      const go = (d) => { buzz(10); idleRef.current = Date.now(); onChange((idx + d + n) % n); };
       const pad = (v) => String(v).padStart(2, "0");
       return (
         <>
@@ -2496,13 +2524,15 @@
             <div className="tv-screen tv-screen-full tv-dark tv-main">
               <div className="crt-roll" />
               <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
+              <div className={`crt-bars ${bars ? "on" : ""}`} aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+              <div className="crt-pwr" aria-hidden="true" />
               <div className="crt-body">
                 <div className="osd-bar osd shrink-0">
                   <span className="truncate">CH{pad(idx + 1)} <span className="opacity-85">{cur.title}</span></span>
                   <span className="shrink-0">{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</span>
                 </div>
                 <div key={cur.id} className={`crt-hero ${phase}`}
-                  onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; }}
+                  onTouchStart={(e) => { const t = e.touches[0]; touchRef.current = { x: t.clientX, y: t.clientY }; idleRef.current = Date.now(); }}
                   onTouchEnd={(e) => {
                     const s = touchRef.current; touchRef.current = null; if (!s) return;
                     const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
@@ -2512,7 +2542,7 @@
                     {cur.render()}
                   </div>
                   <div className="tv-dots shrink-0 mt-2.5">
-                    {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); if (i !== idx) { buzz(); onChange(i); } }} />)}
+                    {channels.map((c, i) => <button key={c.id} type="button" aria-label={`Kênh ${i + 1}: ${c.title}`} className={i === idx ? "on" : ""} onClick={(e) => { e.stopPropagation(); idleRef.current = Date.now(); if (i !== idx) { buzz(); onChange(i); } }} />)}
                   </div>
                 </div>
               </div>
@@ -2540,11 +2570,21 @@
     const LogTV = ({ groups, onAll, renderItem }) => {
       const [pg, setPg] = useState(0);
       const [noise, setNoise] = useState(false);
+      const [bars, setBars] = useState(false);
+      const idleRef = useRef(Date.now());
+      const nRef = useRef(1);
       const [now, setNow] = useState(() => new Date());
       const n = Math.max(1, groups.length);
       const idx = Math.min(pg, n - 1);
       useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t); }, []);
-      const go = (d) => { if (groups.length < 2) return; buzz(10); setNoise(true); setTimeout(() => { setPg(p => (Math.min(p, n - 1) + d + n) % n); }, 160); setTimeout(() => setNoise(false), 420); };
+      nRef.current = n;
+      const flip = (fn) => { setNoise(true); setTimeout(() => { setNoise(false); setBars(true); fn(); }, 240); setTimeout(() => setBars(false), 330); };
+      const go = (d) => { if (groups.length < 2) return; buzz(10); idleRef.current = Date.now(); flip(() => setPg(p => (Math.min(p, nRef.current - 1) + d + nRef.current) % nRef.current)); };
+      useEffect(() => {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        let iv; const t0 = setTimeout(() => { iv = setInterval(() => { if (nRef.current > 1 && Date.now() - idleRef.current > 15000 && !document.hidden) flip(() => setPg(p => (p + 1) % nRef.current)); }, 6000); }, 3000);
+        return () => { clearTimeout(t0); clearInterval(iv); };
+      }, []);
       const pad = (v) => String(v).padStart(2, "0");
       const g = groups[idx];
       return (
@@ -2560,7 +2600,9 @@
               <div className="tv-screen tv-screen-full tv-dark tv-log">
                 <div className="crt-roll" />
                 <div className={`crt-noise ${noise ? "on" : ""}`} style={{ backgroundImage: `url(${tvNoise()})` }} />
-                <div key={g ? g.key : "empty"} className={`crt-body ${noise ? "" : "crt-switch-in"}`}>
+                <div className={`crt-bars ${bars ? "on" : ""}`} aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></div>
+                <div className="crt-pwr late" aria-hidden="true" />
+                <div key={g ? g.key : "empty"} className="crt-body tv-glitch-in" onTouchStart={() => { idleRef.current = Date.now(); }}>
                   <div className="osd-bar osd shrink-0">
                     <span className="truncate">CH{pad(idx + 4)} <span className="opacity-85 uppercase">{g ? g.label : "Sổ trống"}</span></span>
                     <span className="shrink-0">{g ? <span className={g.net >= 0 ? "text-[var(--income)]" : "text-[var(--expense)]"}>{g.net >= 0 ? "+" : "−"}{formatVND(Math.abs(g.net))}</span> : <>{pad(now.getHours())}<span className="osd-blink">:</span>{pad(now.getMinutes())}</>}</span>
@@ -2574,7 +2616,7 @@
                       <p className="log-hint">Bấm nút GHI vàng bên dưới, hoặc để Gemini tự ghi từ thông báo ngân hàng.</p>
                     </div>
                   )}
-                  {groups.length > 1 && <div className="tv-dots shrink-0">{groups.map((x, i) => <button key={x.key} type="button" aria-label={x.label} className={i === idx ? "on" : ""} onClick={() => { if (i !== idx) { setNoise(true); setTimeout(() => setPg(i), 160); setTimeout(() => setNoise(false), 420); } }} />)}</div>}
+                  {groups.length > 1 && <div className="tv-dots shrink-0">{groups.map((x, i) => <button key={x.key} type="button" aria-label={x.label} className={i === idx ? "on" : ""} onClick={() => { idleRef.current = Date.now(); if (i !== idx) flip(() => setPg(i)); }} />)}</div>}
                 </div>
               </div>
             </div>
