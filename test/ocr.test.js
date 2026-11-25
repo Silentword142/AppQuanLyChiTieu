@@ -39,5 +39,17 @@ eq("thông báo: khối 2", b[1].text, "Vietcombank • 1 giờ\nSo du TK +2,000
 eq("token: bỏ ngày giờ", O.tokensOf({ text: "12:30 25/11/2026" }).length, 0);
 eq("token: 1.250.000đ", O.tokensOf({ text: "Số tiền: 1.250.000đ" })[0].amount, 1250000);
 
+// ảnh lịch sử có tiêu đề ngày (ShopCash): mỗi dòng lấy ngày của tiêu đề gần nhất phía trên, không lấy hôm nay
+const NOW = Date.UTC(2026, 10, 25, 17, 5);
+a = O.analyze(L([["Lịch sử giao dịch", 40, 300, 30], ["24/11/2026", 40, 440, 24], ["VU THANH THUY", 140, 580, 34], ["- 85,000", 740, 578, 30],
+  ["CAO LE HOANG LONG chuyen", 140, 630, 26], ["22/11/2026", 40, 770, 24], ["HO KINH DOANH HU TIEU", 140, 910, 34], ["- 135,000", 720, 908, 30],
+  ["TRAN THI THIEN LY", 140, 1140, 34], ["- 75,000", 740, 1138, 30], ["CAO LE HOANG LONG chuyen tien", 140, 1190, 26]]), { now: NOW });
+eq("tiêu đề ngày: chế độ", a.mode, "list");
+eq("tiêu đề ngày: ngày", a.items.map(i => i.date && i.date.slice(0, 10)), ["2026-11-24", "2026-11-22", "2026-11-22"]);
+eq("tiêu đề ngày: tên", a.items.map(i => i.note), ["VU THANH THUY", "HO KINH DOANH HU TIEU", "TRAN THI THIEN LY"]);
+eq("tiêu đề: Hôm qua", O.headerDate("Hôm qua", NOW).slice(0, 10), "2026-11-25");
+eq("tiêu đề: không phải dòng có giờ", O.headerDate("24/11/2026 08:12", NOW), null);
+eq("ngày bị xuống dòng", O.parseDate("luc 25- 11-2026 07:30:15", NOW), "2026-11-25T00:30:00.000Z");
+
 console.log(`ocr: ${pass} đạt, ${fail} lỗi`);
 if (fail) process.exit(1);

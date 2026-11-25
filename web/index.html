@@ -5562,7 +5562,15 @@
               if (hits.length >= 2) return hits.map(({ r, b }) => {
                 const lay = window.VinaOCR.analyze(b.rows).items[0];
                 const x = { ...r };
-                if (lay && lay.date) x.date = lay.date;
+                // ngày in trên thẻ, không có thì lấy tiêu đề ngày của nhóm phía trên (ảnh lịch sử)
+                const dt = (lay && lay.date) || b.date || b.relDate;
+                if (dt) x.date = dt;
+                // ảnh lịch sử: nội dung chung chung -> lấy tên người nhận / cửa hàng ở dòng đầu
+                if (b.title && (!x.note || /^(chi tieu|nhan tien|thu nhap|chuyen tien|thanh toan)$/.test(window.MaiAgent.fold(x.note).trim()))) {
+                  x.note = b.title;
+                  const g = guessCat({ amount: x.amount, type: x.type, note: b.text });
+                  if (g && (!x.category || /^khac$/.test(window.MaiAgent.fold(x.category)))) x.category = g;
+                }
                 return finish(x, imgName, idx, total, b.text);
               });
             }

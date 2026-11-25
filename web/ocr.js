@@ -24,7 +24,8 @@
     });
   }
 
-  function prepare(img) {
+  var GAMMA = (function () { var t = new Uint8Array(256); for (var i = 0; i < 256; i++) { var v = Math.round(255 * Math.pow(i / 255, 2.2)); t[i] = v > 160 ? 255 : v; } return t; })();
+  function prepare(img, plain) {
     var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
     // ảnh chụp màn hình điện thoại (dọc, cao) -> bỏ thanh trạng thái (giờ, pin) để không lẫn giờ hệ thống
     var top = h / w > 1.55 ? Math.round(h * 0.035) : 0;
@@ -53,6 +54,7 @@
     for (i = 0; i < d.length; i += 4) {
       y = Math.max(0, Math.min(255, (d[i] - lo) * 255 / span | 0));
       if (dark) y = 255 - y;
+      if (!plain) y = GAMMA[y]; // làm đậm chữ xám nhạt (tiêu đề ngày, dòng phụ); nền xám nhạt của thẻ -> trắng (Tesseract hay bỏ cả khối nền xám)
       d[i] = d[i + 1] = d[i + 2] = y; d[i + 3] = 255;
     }
     g.putImageData(id, 0, 0);
@@ -82,9 +84,7 @@
     idleTimer = setTimeout(function () { var w = worker; worker = null; if (w) w.then(function (x) { x.terminate(); }).catch(function () {}); }, 90000);
   }
 
-  async function read(file, Tesseract, opts) {
-    var img = await loadImage(file);
-    var p = prepare(img);
+  async function readPrepared(p, Tesseract, opts) {
     var data;
     if (Tesseract.createWorker) {
       var w = await getWorker(Tesseract, opts);
@@ -98,7 +98,19 @@
       return { text: (l.text || "").replace(/\s+$/, "").replace(/ {2,}/g, " "), x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1, h: b.y1 - b.y0, conf: l.confidence };
     }).filter(function (l) { return l.text.trim(); });
     if (!lines.length && data.text) lines = linesFromText(data.text);
-    return { text: lines.map(function (l) { return l.text; }).join("\n") || data.text || "", lines: lines, dark: p.dark };
+    return lines;
+  }
+
+  async function read(file, Tesseract, opts) {
+    var img = await loadImage(file);
+    var p = prepare(img);
+    var lines = await readPrepared(p, Tesseract, opts);
+    // ít chữ quá -> đọc lại bản xử lý nhẹ hơn, lấy bản nhiều chữ hơn
+    if (lines.length < 3) {
+      var l2 = await readPrepared(prepare(img, true), Tesseract, opts);
+      if (l2.length > lines.length) lines = l2;
+    }
+    return { text: lines.map(function (l) { return l.text; }).join("\n"), lines: lines, dark: p.dark };
   }
 
   function linesFromText(text) {
@@ -147,6 +159,7 @@
   ];
   function parseDate(text, now) {
     now = now || Date.now();
+    text = String(text || "").replace(/(\d[\/\-.])\s+(?=\d)/g, "$1"); // ngày bị xuống dòng: "25- 11-2026"
     var m, dd, mo, yy, hh = "12", mi = "00";
     if ((m = text.match(DATE_RES[0]))) { dd = m[1]; mo = m[2]; yy = m[3]; hh = m[4]; mi = m[5]; }
     else if ((m = text.match(DATE_RES[1]))) { hh = m[1]; mi = m[2]; dd = m[3]; mo = m[4]; yy = m[5]; }
@@ -195,6 +208,27 @@
     });
   }
 
+  // Tiêu đề ngày của nhóm (ảnh lịch sử: "24/11/2026", "Hôm nay", "Thứ Hai, 24/11") – chỉ có ngày, không có giờ và số tiền
+  function headerDate(text, now) {
+    now = now || Date.now();
+    var f = fold(text).trim();
+    if (/\d{1,2}[:h]\d{2}/.test(f) || tokensOf({ text: text.replace(/\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?/g, " ") }).length) return null;
+    var day = function (k) { var d = new Date(now + 7 * 3600000); d.setUTCHours(12 - 7, 0, 0, 0); return new Date(d.getTime() - k * 86400000).toISOString(); };
+    if (/^(hom nay|today)\b/.test(f)) return day(0);
+    if (/^(hom qua|yesterday)\b/.test(f)) return day(1);
+    if (f.replace(/[^a-z]/g, "").length > 14) return null;
+    var m = f.match(/(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](20\d{2}|\d{2}))?/);
+    if (!m) return null;
+    var yy = m[3] ? (m[3].length === 2 ? "20" + m[3] : m[3]) : String(new Date(now).getFullYear());
+    var d = parseDate(m[1] + "/" + m[2] + "/" + yy, now);
+    return d;
+  }
+  // ngày tiêu đề gần nhất phía trên mỗi hàng (mang xuống cho cả nhóm)
+  function headerDates(rows, now) {
+    var cur = null;
+    return rows.map(function (r) { var h = headerDate(r.text, now); if (h) cur = h; return { date: cur, isHeader: !!h }; });
+  }
+
   // Phân tích 1 ảnh -> { items:[{amount,type,note,date,confidence}], mode:"single"|"list", text }
   function analyze(input, opts) {
     opts = opts || {};
@@ -223,6 +257,7 @@
     });
 
     var dateAll = parseDate(lines.map(function (l) { return l.text; }).join(" "), opts.now);
+    var hd = headerDates(lines, opts.now), anyHeader = hd.some(function (x) { return x.isHeader; });
 
     // Ảnh lịch sử: nhiều dòng có dấu +/- -> nhiều giao dịch
     var signed = cands.filter(function (c) { return c.tok.sign && !c.fee; });
@@ -242,10 +277,11 @@
           // tên giao dịch: ưu tiên dòng ngay trên, rồi dòng ngay dưới
           note = pick(li - 1) || pick(li + 1) || "";
         }
+        // ngày riêng của dòng (có giờ) nằm sát dòng, không vượt qua tiêu đề ngày của nhóm khác
         var date = null;
-        for (var q = li; q <= to && !date; q++) date = parseDate(lines[q].text, opts.now);
-        for (var r = li - 1; r >= from && !date; r--) date = parseDate(lines[r].text, opts.now);
-        return { amount: c.tok.amount, type: c.tok.sign > 0 ? "INCOME" : "EXPENSE", note: note, date: date || dateAll, confidence: 0.7 };
+        for (var q = li; q <= to && !date; q++) { if (q > li && hd[q].isHeader) break; date = parseDate(lines[q].text, opts.now); }
+        for (var r = li - 1; r >= from && !date; r--) { if (hd[r].isHeader) break; date = parseDate(lines[r].text, opts.now); }
+        return { amount: c.tok.amount, type: c.tok.sign > 0 ? "INCOME" : "EXPENSE", note: note, date: date || hd[li].date || (anyHeader ? null : dateAll), confidence: 0.7 };
       });
       return { mode: "list", items: items, text: lines.map(function (l) { return l.text; }).join("\n") };
     }
@@ -279,7 +315,7 @@
   }
 
   // Tách ảnh thành các khối (mỗi thẻ thông báo / mỗi tin nhắn là 1 khối) theo khoảng trống dọc giữa các hàng
-  function blocks(input) {
+  function blocks(input, opts) {
     var rows = toRows(Array.isArray(input) ? input : input && input.lines ? input.lines : linesFromText(input && input.text || input));
     if (!rows.length) return [];
     var hMed = median(rows.map(function (r) { return r.h || 1; }));
@@ -290,10 +326,25 @@
       cur.push(rows[i]);
     }
     out.push(cur);
-    return out.map(function (b) { return { text: b.map(function (r) { return r.text; }).join("\n"), y0: b[0].y0, y1: b[b.length - 1].y1, rows: b }; });
+    var hd = headerDates(rows, opts && opts.now), idx = 0;
+    return out.map(function (b) {
+      var first = idx; idx += b.length;
+      var now = (opts && opts.now) || Date.now();
+      // "MB Bank • 10 phút", "2 giờ trước" cạnh tên app trên thẻ thông báo
+      var rel = fold(b[0].text).match(/\b(\d{1,2})\s*(phut|gio|ngay|min|mins|h|hr|hrs|d)\b/), relDate = null;
+      if (rel) relDate = new Date(now - (+rel[1]) * ({ phut: 60, min: 60, mins: 60, gio: 3600, h: 3600, hr: 3600, hrs: 3600, ngay: 86400, d: 86400 })[rel[2]] * 1000).toISOString();
+      // tên dòng (người nhận / cửa hàng): hàng đầu có chữ, bỏ số tiền và tiêu đề ngày
+      var title = "";
+      for (var k = 0; k < b.length && !title; k++) {
+        if (hd[first + k].isHeader) continue;
+        var t = cleanNote(b[k].text).replace(/^[^A-Za-zÀ-ỹ(]+/, "");
+        if (t.replace(/[^A-Za-zÀ-ỹ]/g, "").length >= 3) title = t;
+      }
+      return { text: b.map(function (r) { return r.text; }).join("\n"), y0: b[0].y0, y1: b[b.length - 1].y1, rows: b, date: hd[first + b.length - 1].date, relDate: relDate, title: title };
+    });
   }
 
-  var api = { blocks: blocks, fold: fold, prepare: prepare, read: read, analyze: analyze, parseDate: parseDate, tokensOf: tokensOf };
+  var api = { headerDate: headerDate, blocks: blocks, fold: fold, prepare: prepare, read: read, analyze: analyze, parseDate: parseDate, tokensOf: tokensOf };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.VinaOCR = api;
 })(typeof window !== "undefined" ? window : this);
