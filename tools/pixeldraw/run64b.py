@@ -1,4 +1,6 @@
-import sys
+import sys, os
+import px64
+px64.TONES = int(os.environ.get('TONES', 5))
 from px64 import sheet
 from icons64_b import I
 out = sys.argv[1]; icons = {k: f().render() for k, f in I.items()}

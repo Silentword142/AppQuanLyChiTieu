@@ -14,6 +14,7 @@ from PIL import Image
 from scipy import ndimage as ndi
 
 N = 64
+TONES = 5          # đặt 3 để mỗi chất liệu chỉ dùng 3 sắc độ (tối / gốc / sáng)
 LIGHT = np.array([-0.55, -0.65, 0.53]); LIGHT /= np.linalg.norm(LIGHT)
 
 def hx(h):
@@ -113,8 +114,12 @@ class Icon:
             occ = ndi.binary_dilation(above, structure=np.ones((3, 3)))
             above_ol = np.isin(mat, [k for k in range(sid + 1, len(s.shapes)) if s.shapes[k][2]])
             occ_shift = np.roll(np.roll(above_ol, 1, 0), 1, 1) & reg
-            idx = np.digitize(lum, [.30, .52, .72, .86])   # 0..4
-            idx = np.where(occ_shift, np.maximum(idx - 1, 0), idx)
+            if TONES == 3:
+                idx = np.array([1, 2, 3])[np.digitize(lum, [.42, .78])]
+                idx = np.where(occ_shift, np.maximum(idx - 1, 1), idx)
+            else:
+                idx = np.digitize(lum, [.30, .52, .72, .86])   # 0..4
+                idx = np.where(occ_shift, np.maximum(idx - 1, 0), idx)
             if kind == 'round': idx = ndi.median_filter(idx, size=3)
             if d.max() <= 1.6: idx = np.full_like(idx, 2)        # nét mảnh: một màu
             col = np.array(tones)[idx]
@@ -127,7 +132,7 @@ class Icon:
             col[edge] = line
             img[reg, :3] = col[reg]; img[reg, 3] = 1
             # đốm sáng trắng ở vùng sáng nhất của khối tròn
-            if kind == 'round' and reg.sum() > 40:
+            if kind == 'round' and reg.sum() > 40 and TONES != 3:
                 sp = (lum > np.percentile(lum[reg], 96)) & reg & ~edge
                 img[sp, :3] = np.minimum(1, tones[4] * .3 + .75)
         # viền ngoài cùng tông: lấy màu viền của khối kề bên
