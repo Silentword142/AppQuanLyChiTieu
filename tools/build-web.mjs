@@ -36,7 +36,7 @@ for (const l of ["vie", "eng"]) {
 for (const f of fs.readdirSync(path.join(ROOT, "assets-src", "fonts"))) {
   fs.copyFileSync(path.join(ROOT, "assets-src", "fonts", f), path.join(OUT, "fonts", f));
 }
-for (const f of ["mai.js", "icons.js", "gemini.js", "icon-512.png", "studio.html"]) {
+for (const f of ["mai.js", "icons.js", "pixelkit.js", "gemini.js", "ocr.js", "icon-512.png", "studio.html"]) {
   if (fs.existsSync(path.join(ROOT, "web", f))) fs.copyFileSync(path.join(ROOT, "web", f), path.join(OUT, f));
 }
 // Gemini API key: chỉ nhúng vào bản đóng gói (APK), lấy từ biến môi trường GEMINI_API_KEY hoặc file .gemini.key
@@ -50,6 +50,8 @@ for (const f of ["mai.js", "icons.js", "gemini.js", "icon-512.png", "studio.html
 }
 // Logo gốc ngân hàng / ví điện tử (offline)
 fs.mkdirSync(path.join(OUT, "logos"), { recursive: true });
+fs.mkdirSync(path.join(OUT, "icons-hd"), { recursive: true });
+for (const f of fs.readdirSync(path.join(ROOT, "web", "icons-hd"))) fs.copyFileSync(path.join(ROOT, "web", "icons-hd", f), path.join(OUT, "icons-hd", f));
 for (const f of fs.readdirSync(path.join(ROOT, "web", "logos"))) fs.copyFileSync(path.join(ROOT, "web", "logos", f), path.join(OUT, "logos", f));
 
 let html = fs.readFileSync(path.join(ROOT, "web", "index.html"), "utf8");

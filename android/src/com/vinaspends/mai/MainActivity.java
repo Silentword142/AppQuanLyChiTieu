@@ -82,6 +82,7 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(Color.parseColor("#DCECC8"));
         setContentView(web);
+        enableEdgeToEdge();
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -548,6 +549,50 @@ public class MainActivity extends Activity {
         if (a != null) a.callJs("window.onMaiResume && window.onMaiResume()");
     }
 
+    // Vẽ giao diện tràn cả vùng thanh trạng thái và thanh điều hướng; độ cao 2 thanh này
+    // được truyền vào CSS (--safe-top / --safe-bottom) để HUD và dock tự chừa chỗ.
+    private int insetTopCss = 0, insetBottomCss = 0, imeCss = 0;
+    private void enableEdgeToEdge() {
+        try {
+            Window w = getWindow();
+            w.setStatusBarColor(Color.TRANSPARENT);
+            w.setNavigationBarColor(Color.TRANSPARENT);
+            if (Build.VERSION.SDK_INT >= 29) { w.setStatusBarContrastEnforced(false); w.setNavigationBarContrastEnforced(false); }
+            if (Build.VERSION.SDK_INT >= 28) {
+                WindowManager.LayoutParams lp = w.getAttributes();
+                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                w.setAttributes(lp);
+            }
+            View d = w.getDecorView();
+            d.setSystemUiVisibility(d.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+            web.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+                @Override public android.view.WindowInsets onApplyWindowInsets(View v, android.view.WindowInsets in) {
+                    float dp = getResources().getDisplayMetrics().density;
+                    int top = in.getSystemWindowInsetTop(), bottom, kb;
+                    if (Build.VERSION.SDK_INT >= 30) {
+                        bottom = in.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom;
+                        kb = Math.max(0, in.getInsets(android.view.WindowInsets.Type.ime()).bottom - bottom);
+                    } else {
+                        bottom = in.getStableInsetBottom();
+                        kb = Math.max(0, in.getSystemWindowInsetBottom() - bottom);
+                    }
+                    if (Build.VERSION.SDK_INT >= 28 && in.getDisplayCutout() != null) top = Math.max(top, in.getDisplayCutout().getSafeInsetTop());
+                    insetTopCss = Math.round(top / dp);
+                    insetBottomCss = Math.round(bottom / dp);
+                    imeCss = Math.round(kb / dp);
+                    pushInsets();
+                    return in;
+                }
+            });
+            web.requestApplyInsets();
+        } catch (Exception ignored) {
+        }
+    }
+    private void pushInsets() {
+        callJs("(function(){var r=document.documentElement.style;r.setProperty('--safe-top','" + insetTopCss + "px');r.setProperty('--safe-bottom','" + insetBottomCss + "px');r.setProperty('--kb','" + imeCss + "px');document.documentElement.classList.toggle('kb-open'," + (imeCss > 0) + ");})()");
+    }
+
     private void callJs(final String js) {
         ui.post(new Runnable() {
             @Override
@@ -619,6 +664,10 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public String drainQueue() { return MaiStore.drain(MainActivity.this); }
         @JavascriptInterface public int queueSize() { return MaiStore.size(MainActivity.this); }
+        @JavascriptInterface public String recentSkipped() { return MaiStore.skipped(MainActivity.this); }
+        @JavascriptInterface public void clearSkipped() { MaiStore.clearSkipped(MainActivity.this); }
+        @JavascriptInterface public String allowedPackages() { return MaiStore.allowed(MainActivity.this); }
+        @JavascriptInterface public void setPackageAllowed(String pkg, boolean on) { if (pkg != null && !pkg.isEmpty()) MaiStore.setAllowed(MainActivity.this, pkg, on); }
 
         @JavascriptInterface public void openNotificationAccessSettings() {
             ui.post(new Runnable() {
@@ -724,8 +773,7 @@ public class MainActivity extends Activity {
                     try {
                         Window w = getWindow();
                         int c = Color.parseColor(hex);
-                        w.setStatusBarColor(c);
-                        w.setNavigationBarColor(c);
+                        // thanh hệ thống trong suốt (giao diện tràn màn hình), chỉ đổi màu nền dự phòng và màu biểu tượng
                         web.setBackgroundColor(c);
                         View d = w.getDecorView();
                         int f = d.getSystemUiVisibility();
@@ -872,6 +920,7 @@ public class MainActivity extends Activity {
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
+            pushInsets();
             if (pendingGoogleAuthJson != null) {
                 final String authJson = pendingGoogleAuthJson;
                 ui.postDelayed(new Runnable() {

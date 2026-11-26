@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spendy Pixel UI mẫu</title>
+<link rel="stylesheet" href="../../assets-src/fonts/fonts.css">
+<style>
+:root{
+  --ink:#3B2A3F; --cream:#FFF6E9; --paper:#FCEBD8; --hl:#FFFFFF; --shade:#E9CDB8;
+  --pink:#F49CA6; --pinkD:#C8607A; --plum:#5A3D62; --plumL:#7A5784;
+  --gold:#FFD36E; --goldD:#E0A23C; --mint:#9BE0AE; --mintD:#3F9A6B; --sky:#A5D8F7; --skyD:#5E8FD0; --lilac:#D3B9F2; --lilacD:#9273C9;
+  --exp:#D4506A; --inc:#378F67;
+  --S:3px; /* 1 điểm ảnh UI = 3px */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#F2BDB4}
+body{font-family:Handjet,system-ui,sans-serif;color:var(--ink);font-size:20px;width:400px;min-height:1300px;position:relative;overflow:hidden;letter-spacing:.02em}
+#sky{position:absolute;left:0;top:0;z-index:0;image-rendering:pixelated}
+.app{position:relative;z-index:1;padding:14px 14px 196px;display:flex;flex-direction:column;gap:22px}
+.px{border-style:solid;border-width:calc(var(--S)*5) calc(var(--S)*6) calc(var(--S)*7) calc(var(--S)*5);border-image-slice:5 6 7 5 fill;border-image-repeat:stretch;image-rendering:pixelated}
+.row{display:flex;align-items:center;gap:8px}
+.ico{width:calc(var(--S)*12);height:calc(var(--S)*12);image-rendering:pixelated;flex:none}
+.ico.sm{width:24px;height:24px}
+/* HUD */
+.hud{display:flex;gap:8px}
+.hud .chip{flex:1;padding:2px 6px;display:flex;align-items:center;gap:8px;color:var(--cream);font-weight:700;font-size:26px}
+.hud .chip small{font-size:13px;opacity:.75;display:block;line-height:1;font-weight:500;letter-spacing:.08em}
+.hud .sq{width:58px;display:grid;place-items:center;padding:0;color:var(--plum)}
+/* cửa sổ */
+.win .bar{display:flex;align-items:center;justify-content:space-between;background:var(--plum);color:var(--cream);margin:-2px -2px 10px;padding:4px 10px;font-weight:700;letter-spacing:.12em;font-size:16px;box-shadow:0 var(--S) 0 var(--ink)}
+.dots{display:flex;gap:var(--S)}.dots i{width:calc(var(--S)*2);height:calc(var(--S)*2);background:var(--pink)}.dots i:nth-child(2){background:var(--gold)}.dots i:nth-child(3){background:var(--mint)}
+.big{font-size:48px;font-weight:800;line-height:1;letter-spacing:.01em}
+.lbl{font-size:16px;letter-spacing:.14em;font-weight:700;color:var(--plumL)}
+.meter{height:calc(var(--S)*6);display:flex;gap:var(--S);padding:var(--S);background:var(--ink);margin-top:6px}
+.meter i{flex:1;background:#6B5670}.meter i.on{background:var(--gold)}.meter i.on.w{background:var(--exp)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.stat{padding:4px 8px}.stat b{font-size:26px;display:block;line-height:1.1}
+/* phím */
+.keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.key{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 2px;font-weight:800;font-size:19px;letter-spacing:.04em;white-space:nowrap}
+/* nhật ký */
+.item{display:flex;align-items:center;gap:10px;padding:6px 2px;border-bottom:var(--S) dashed var(--shade)}
+.item:last-child{border:0}
+.item .t{flex:1;line-height:1.15}.item .t small{display:block;color:var(--plumL);font-size:16px}
+.item .m{font-weight:800;font-size:22px}
+.tile{width:42px;height:42px;display:grid;place-items:center;padding:0}
+/* dock */
+.dock{position:fixed;left:0;width:400px;bottom:0;z-index:2;height:118px;padding:0 8px 8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) 92px repeat(2,minmax(0,1fr));align-items:end;gap:6px}
+.dock .base{position:absolute;inset:30px 0 0;z-index:-1}
+.dk{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:16px;letter-spacing:.04em;color:var(--cream);white-space:nowrap}
+.dk .cap{width:54px;height:50px;display:grid;place-items:center;padding:0}
+.dk.on .lab{color:var(--gold)}
+.ghi{justify-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--gold);font-weight:800;font-size:16px;letter-spacing:.1em;margin-bottom:-2px}
+.ghi canvas{width:84px;height:84px;image-rendering:pixelated}
+
+/* ---------- TV pixel (vẽ mới) ---------- */
+.tv{position:relative;padding-top:36px}.tv.noant{padding-top:0}.tv.wide{margin:0 -14px}.tv.wide .cnt{padding:14px 12px}
+.ctrl{display:flex;align-items:center;gap:8px;margin-top:8px}.ctrl .mini{width:auto;padding:0 6px}.ctrl .brand{flex:1;font-weight:800;letter-spacing:.2em;font-size:14px;color:#3B2A3F;text-shadow:1px 1px 0 rgba(255,255,255,.6)}
+.tvlist .it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:3px dashed rgba(255,242,226,.14)}.tvlist .it:last-child{border:0}.tvlist .tile{width:46px;height:46px}.tvlist .tile .ico.sm{width:30px;height:30px}.tvlist .t{flex:1;line-height:1.1;font-size:22px}.tvlist .t small{display:block;font-size:16px;opacity:.65}.tvlist .m{font-weight:800;font-size:24px}
+.it.new{animation:slidein .5s steps(5) both}@keyframes slidein{from{transform:translateX(40px);opacity:0}}
+.ant{position:absolute;left:50%;top:0;width:120px;height:42px;transform:translateX(-50%);image-rendering:pixelated}
+.tvbody{position:relative}
+.tvtop{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:8px}
+.bezel{padding:0}
+.scr{position:relative;height:var(--h,200px);overflow:hidden;background:#2A2140;color:#FFF2E2;
+ clip-path:polygon(0 9px,3px 9px,3px 6px,6px 6px,6px 3px,9px 3px,9px 0,calc(100% - 9px) 0,calc(100% - 9px) 3px,calc(100% - 6px) 3px,calc(100% - 6px) 6px,calc(100% - 3px) 6px,calc(100% - 3px) 9px,100% 9px,100% calc(100% - 9px),calc(100% - 3px) calc(100% - 9px),calc(100% - 3px) calc(100% - 6px),calc(100% - 6px) calc(100% - 6px),calc(100% - 6px) calc(100% - 3px),calc(100% - 9px) calc(100% - 3px),calc(100% - 9px) 100%,9px 100%,9px calc(100% - 3px),6px calc(100% - 3px),6px calc(100% - 6px),3px calc(100% - 6px),3px calc(100% - 9px),0 calc(100% - 9px))}
+/* nền màn: ô lưới phosphor + vignette bậc thang */
+.scr::before{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;
+ background:repeating-linear-gradient(180deg,rgba(12,6,22,.26) 0 3px,transparent 3px 6px)}
+.scr::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+ background:
+  linear-gradient(135deg,transparent 0 14%,rgba(255,255,255,.10) 14% 20%,transparent 20% 23%,rgba(255,255,255,.07) 23% 26%,transparent 26%),
+  linear-gradient(90deg,rgba(0,0,0,.28) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.28) calc(100% - 6px)),
+  linear-gradient(180deg,rgba(0,0,0,.28) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.28) calc(100% - 6px))}
+.cnt{position:absolute;inset:0;z-index:2;padding:14px 16px;display:flex;flex-direction:column;gap:4px;
+ text-shadow:2px 0 0 rgba(255,90,140,.45),-2px 0 0 rgba(90,210,255,.35),0 0 8px rgba(157,245,194,.35)}
+.cnt.glitch{animation:glitch .36s steps(6) both}
+.osd{display:flex;justify-content:space-between;font-weight:700;letter-spacing:.1em;font-size:17px;color:#9DF5C2}
+.tvlbl{font-size:16px;letter-spacing:.12em;opacity:.8;margin-top:6px}
+.tvbig{font-size:46px;font-weight:800;line-height:1}
+.cur{display:inline-block;width:12px;height:30px;background:#9DF5C2;margin-left:4px;animation:blink 1s steps(1) infinite;vertical-align:-2px}
+.hp{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:6px}.hp i{height:12px;background:rgba(255,242,226,.14)}.hp i.on{background:#FFD36E}.hp i.on.r{background:#FF7D95}
+.cbar{display:flex;align-items:flex-end;gap:3px;height:70px;margin-top:4px}.cbar i{flex:1;background:#FFA5BC;animation:grow .5s steps(5) both}.cbar i.t{background:#FFD36E}
+.chdots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:6px}.chdots i{width:12px;height:6px;background:rgba(255,242,226,.22)}.chdots i.on{width:24px;background:#9DF5C2}
+.noise{position:absolute;inset:0;width:100%;height:100%;z-index:3;image-rendering:pixelated;opacity:0}
+.noise.on{opacity:1}
+.bars{position:absolute;inset:0;z-index:3;display:flex;opacity:0}.bars.on{opacity:1}
+.bars i{flex:1}.bars i:nth-child(1){background:#FFF6E9}.bars i:nth-child(2){background:#FFD36E}.bars i:nth-child(3){background:#7DD3C6}.bars i:nth-child(4){background:#9BE0AE}.bars i:nth-child(5){background:#F49CA6}.bars i:nth-child(6){background:#EE6B6E}.bars i:nth-child(7){background:#6E9FDE}
+.roll{position:absolute;left:0;right:0;height:18px;top:-18px;z-index:4;background:repeating-linear-gradient(180deg,rgba(157,245,194,.10) 0 3px,transparent 3px 6px);animation:roll 6s steps(60) infinite}
+.pwr{position:absolute;inset:0;z-index:7;background:#2A2140;pointer-events:none}
+.pwr.go{animation:pwrOff .9s steps(9) forwards}
+.pwr::before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1px;background:#FFF6E9;box-shadow:0 0 0 3px rgba(157,245,194,.5)}
+.pwr.go::before{animation:pwrLine .9s steps(9) forwards}
+.side{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:2px}
+.knob{width:48px;height:48px;image-rendering:pixelated;animation:knob 6s steps(1) infinite}
+.mini{width:48px;text-align:center;font-weight:800;font-size:15px;padding:0;line-height:16px}
+.grille{width:42px;height:30px;background:repeating-linear-gradient(180deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.5}
+.led{width:9px;height:9px;background:#7DFFB0;box-shadow:0 0 0 3px #3B2A3F;animation:led 2.4s steps(4) infinite}
+.feet{display:flex;justify-content:space-between;padding:0 40px;margin-top:-6px}.feet span{width:36px;height:12px;background:#5A3D62;box-shadow:0 3px 0 #3B2A3F,3px 0 0 #3B2A3F,-3px 0 0 #3B2A3F}
+@keyframes blink{50%{opacity:0}}
+@keyframes roll{to{top:100%}}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.cbar i{transform-origin:bottom}
+@keyframes glitch{0%{transform:translateX(-12px);clip-path:inset(20% 0 50% 0)}20%{transform:translateX(9px);clip-path:inset(60% 0 10% 0)}40%{transform:translateX(-6px);clip-path:inset(0 0 70% 0)}60%{transform:translateX(3px);clip-path:none}100%{transform:none}}
+@keyframes pwrOff{0%,40%{clip-path:inset(0)}100%{clip-path:inset(50% 0 50% 0)}}
+@keyframes pwrLine{0%{transform:scaleX(0)}40%{transform:scaleX(1);opacity:1}100%{opacity:0}}
+@keyframes led{50%{background:#C9FFE0}}
+@keyframes knob{0%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@keyframes sway{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg)}}
+.f-tv{}
+
+.mbar{height:9px;background:rgba(255,242,226,.12);margin-top:4px}.mbar i{display:block;height:100%;animation:mgrow .6s steps(6) both;transform-origin:left}
+@keyframes mgrow{from{transform:scaleX(0)}}
+.pie{display:flex;gap:14px;align-items:center;margin-top:6px}.pie canvas{width:120px;height:120px;image-rendering:pixelated;animation:spinin .6s steps(6) both}
+@keyframes spinin{from{transform:rotate(-90deg) scale(.4);opacity:0}}
+.leg{display:flex;flex-direction:column;gap:6px;font-size:17px}.leg i{display:inline-block;width:12px;height:12px;margin-right:6px;box-shadow:0 0 0 2px #FFF2E2}
+.sw{width:46px;height:24px;background:rgba(255,242,226,.18);position:relative;flex:none;box-shadow:0 0 0 3px #FFF2E2}.sw i{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#FFF2E2;transition:left .25s steps(4)}.sw.on{background:#55B27F}.sw.on i{left:25px}
+.mai{display:flex;gap:12px;align-items:center;margin-top:6px}.mai canvas{width:96px;height:64px;image-rendering:pixelated}
+.say{font-size:20px;line-height:1.15;color:#FFF2E2}.cur.sm{width:8px;height:16px}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:10px;text-align:center;font-size:14px;letter-spacing:.08em;border-top:3px dashed rgba(255,242,226,.18);padding-top:6px}.stat3 b{display:block;font-size:30px;line-height:1}
+.wcard{margin-top:4px}.chipt{color:#2A2140;font-weight:800;padding:0 8px;font-size:15px;letter-spacing:.1em;text-shadow:none}
+.key{justify-content:center;min-height:84px}.key.on{transform:translateY(3px);filter:brightness(.95)}
+.dk{cursor:pointer}
+.tile.px,.mini.px,.chdots .px,.tvlist .px,.dk .cap.px,.sq.px{--S:2px}
+.dk .cap{width:58px!important;height:56px!important}.dk .cap .ico{width:40px;height:40px}.sq .ico{width:40px;height:40px}.leg{font-size:15px!important;gap:4px!important}
+.key,.dk .cap,.sq,.mini{cursor:pointer;transition:transform .08s steps(2)}
+.key:active,.dk .cap:active,.mini:active{transform:translate(0,4px)}
+
+/* ---------- Dock tràn đáy, chi tiết + hiệu ứng ---------- */
+.dock{height:176px!important;padding:0 6px 34px!important}
+.dock .base{position:absolute;left:0;right:0;bottom:0;top:36px!important;z-index:-1;background:
+  radial-gradient(circle at 1.5px 1.5px,rgba(255,255,255,.07) 1.5px,transparent 1.6px) 0 0/9px 9px,
+  linear-gradient(180deg,#8A6694 0 3px,#6A4872 3px 6px,#5A3D62 6px calc(100% - 9px),#4A3150 calc(100% - 9px));
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 rgba(59,42,63,.35),0 -9px 0 rgba(59,42,63,.15)}
+.leds{position:absolute;left:12px;right:12px;top:9px;display:flex;justify-content:space-between}
+.leds i{width:6px;height:3px;background:#4A3150;box-shadow:0 0 0 1px #3B2A3F}
+.leds i.on{background:#FFD36E;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #FFD36E}
+.leds i.on2{background:#F49CA6;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #F49CA6}
+.rv{position:absolute;bottom:12px;width:6px;height:6px;background:#B89AC4;box-shadow:inset -2px -2px 0 #6A4872,0 0 0 2px #3B2A3F}.rv.l{left:8px}.rv.r{right:8px}
+.grl{position:absolute;bottom:10px;width:30px;height:10px;background:repeating-linear-gradient(90deg,#3B2A3F 0 3px,transparent 3px 6px);opacity:.55}.grl.l{left:24px}.grl.r{right:24px}
+.dk{position:relative;padding-bottom:4px}
+.dk .cap{transition:transform .2s steps(3)}
+.dk.on .cap{transform:translateY(-8px)}
+.dk.on .cap .ico{animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.dk.on::before{content:"";position:absolute;left:50%;top:50px;width:50px;height:4px;margin-left:-25px;background:rgba(255,211,110,.55);box-shadow:0 0 10px rgba(255,211,110,.8);animation:glow 1.2s steps(3) infinite}
+@keyframes glow{50%{opacity:.45}}
+.dk .lab{text-shadow:2px 2px 0 #3B2A3F}
+.dk.on .lab{animation:labblink 2s steps(1) infinite}
+@keyframes labblink{90%{color:#FFF6E9}}
+.ghi{position:relative}
+.ghi canvas#coin{animation:coinbob 1.6s steps(4) infinite}
+@keyframes coinbob{50%{transform:translateY(-4px)}}
+.ghi .spk{position:absolute;width:84px;height:84px;top:0;left:50%;margin-left:-42px;pointer-events:none;image-rendering:pixelated}
+.ghi span.lb{text-shadow:2px 2px 0 #3B2A3F}
+
+/* ---------- Dock v3: console kem sọc san hô + bạc hà, phím nằm trong hốc ---------- */
+.dock .base{background:
+  linear-gradient(180deg,#FFFFFF 0 3px,#FFF6E9 3px 6px,transparent 6px),
+  linear-gradient(180deg,transparent 0 calc(100% - 27px),#F49CA6 calc(100% - 27px) calc(100% - 21px),#FFF6E9 calc(100% - 21px) calc(100% - 18px),#7DD3C6 calc(100% - 18px) calc(100% - 12px),#E9D2BE calc(100% - 12px)),
+  radial-gradient(circle at 1.5px 1.5px,rgba(90,61,98,.10) 1.5px,transparent 1.6px) 0 0/9px 9px,
+  #FCE6D2 !important;
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 rgba(59,42,63,.30),0 -9px 0 rgba(59,42,63,.12) !important}
+.leds i{background:#E9D2BE!important;box-shadow:0 0 0 1px #3B2A3F!important}
+.leds i.on{background:#FF7D95!important;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #FF7D95!important}
+.leds i.on2{background:#55D6BE!important;box-shadow:0 0 0 1px #3B2A3F,0 0 6px #55D6BE!important}
+.rv{background:#FFF6E9!important;box-shadow:inset -2px -2px 0 #D9B8A0,0 0 0 2px #3B2A3F!important}
+.grl{background:repeating-linear-gradient(90deg,#5A3D62 0 3px,transparent 3px 6px)!important;opacity:.45!important}
+.dk .cap{position:relative}
+.dk::after{content:"";position:absolute;top:-4px;left:50%;width:66px;height:64px;margin-left:-33px;z-index:-1;
+  background:#5A3D62;box-shadow:inset 0 4px 0 #3B2A3F,inset 3px 0 0 #4A3150,0 3px 0 #FFFFFF,0 0 0 3px #3B2A3F;
+  clip-path:polygon(0 6px,3px 6px,3px 3px,6px 3px,6px 0,calc(100% - 6px) 0,calc(100% - 6px) 3px,calc(100% - 3px) 3px,calc(100% - 3px) 6px,100% 6px,100% calc(100% - 6px),calc(100% - 3px) calc(100% - 6px),calc(100% - 3px) calc(100% - 3px),calc(100% - 6px) calc(100% - 3px),calc(100% - 6px) 100%,6px 100%,6px calc(100% - 3px),3px calc(100% - 3px),3px calc(100% - 6px),0 calc(100% - 6px))}
+.dk .lab{color:#5A3D62!important;text-shadow:2px 2px 0 #FFFFFF!important}
+.dk.on .lab{color:#E7598A!important}
+@keyframes labblink{90%{color:#5A3D62}}
+.dk.on::before{background:rgba(255,125,149,.6)!important;box-shadow:0 0 10px rgba(255,125,149,.9)!important;top:56px!important}
+.ghi .lb{color:#E7598A;text-shadow:2px 2px 0 #FFFFFF!important}
+.ghi::after{content:"";position:absolute;top:-2px;left:50%;width:92px;height:92px;margin-left:-46px;z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,#5A3D62 0 60%,#3B2A3F 60% 64%,transparent 64%)}
+
+/* ---------- Dock v4: bỏ hốc, nút keycap pixel mới ---------- */
+.dk::after,.ghi::after{display:none!important}
+.dk .cap.px{border:0!important;border-image:none!important;width:64px!important;height:60px!important;background:none!important}
+.dk .cap{display:block!important}
+.kc{position:absolute;inset:0;image-rendering:pixelated;width:100%;height:100%}
+.dk .cap .ico{position:absolute;left:50%;top:9px;margin-left:-21px;width:32px;height:32px;z-index:1}
+.dk .cap .led{position:absolute;right:11px;top:10px;width:6px;height:6px;z-index:2;background:#E9D2BE;box-shadow:0 0 0 2px #3B2A3F}
+.dk.on .cap .led{background:#7DFFB0;box-shadow:0 0 0 2px #3B2A3F,0 0 8px #7DFFB0}
+.dk.on .cap{transform:translateY(-6px)}
+.dk:active .cap{transform:translateY(4px)}
+
+/* ---------- Dock v5: nền tối kiểu màn CRT, LED vàng ---------- */
+.dock .base{background:
+  repeating-linear-gradient(180deg,rgba(10,6,18,.35) 0 3px,transparent 3px 6px),
+  linear-gradient(135deg,transparent 0 30%,rgba(255,255,255,.05) 30% 36%,transparent 36% 40%,rgba(255,255,255,.035) 40% 43%,transparent 43%),
+  radial-gradient(120% 90% at 50% 40%,#41325C 0%,#2A2140 62%,#17111F 100%) !important;
+  box-shadow:0 -3px 0 #3B2A3F,0 -6px 0 #FCE6D2,0 -9px 0 #F2A3AC,0 -12px 0 #3B2A3F,0 -15px 0 rgba(59,42,63,.3) !important}
+.dock .base::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.35) 0 6px,transparent 6px calc(100% - 6px),rgba(0,0,0,.35) calc(100% - 6px));animation:flick 5s steps(1) infinite}
+@keyframes flick{97%{opacity:.6}}
+.dock .base::before{content:"";position:absolute;left:0;right:0;height:16px;top:-16px;background:repeating-linear-gradient(180deg,rgba(255,211,110,.07) 0 3px,transparent 3px 6px);animation:droll 5s steps(40) infinite;pointer-events:none}
+@keyframes droll{to{top:100%}}
+.leds i{background:#5A4632!important;box-shadow:0 0 0 1px #17111F!important}
+.leds i.on,.leds i.on2{background:#FFD36E!important;box-shadow:0 0 0 1px #17111F,0 0 8px #FFD36E,0 0 2px #FFF6D0 inset!important}
+.leds i.on2{background:#FFB84A!important}
+.rv{background:#6B5A80!important;box-shadow:inset -2px -2px 0 #3B2A3F,0 0 0 2px #17111F!important}
+.grl{display:none}
+.dk .lab{color:#FFE7A8!important;text-shadow:0 0 6px rgba(255,211,110,.7),2px 0 0 rgba(255,90,140,.35),-2px 0 0 rgba(90,210,255,.3)!important}
+.dk.on .lab{color:#FFD36E!important}
+@keyframes labblink{90%{color:#FFF6E9}}
+.ghi .lb{color:#FFD36E!important;text-shadow:0 0 8px rgba(255,211,110,.8)!important}
+.dk.on::before{background:rgba(255,211,110,.55)!important;box-shadow:0 0 12px rgba(255,211,110,.9)!important}
+.dk .cap .led{background:#5A4632!important;box-shadow:0 0 0 2px #3B2A3F!important}
+.dk.on .cap .led{background:#FFD36E!important;box-shadow:0 0 0 2px #3B2A3F,0 0 8px #FFD36E!important}
+</style></head>
+<body>
+<canvas id="sky" width="100" height="215"></canvas>
+<div class="app" id="app"></div>
+
+<div class="dock">
+  <div class="base"><div class="leds"></div><i class="rv l"></i><i class="rv r"></i><div class="grl l"></div><div class="grl r"></div></div>
+  <div class="dk on"><div class="cap px" data-f="pink"><img class="ico" data-i="homec"></div><span class="lab">NHÀ</span></div>
+  <div class="dk"><div class="cap px" data-f="mint"><img class="ico" data-i="chartc"></div><span class="lab">BÁO CÁO</span></div>
+  <div class="ghi"><canvas id="coin" width="28" height="28"></canvas><canvas class="spk" id="spk" width="28" height="28"></canvas><span class="lb">GHI</span></div>
+  <div class="dk"><div class="cap px" data-f="lilac"><img class="ico" data-i="maic"></div><span class="lab">TỰ ĐỘNG</span></div>
+  <div class="dk"><div class="cap px" data-f="sky"><img class="ico" data-i="walletc"></div><span class="lab">VÍ & NỢ</span></div>
+</div>
+
+<script>
+// ---------- Khung pixel 9-slice (vẽ mới) ----------
+const FRAME = ["..kkkkkk....",".kHHHHHHk...","kHHHHHHHhk..","kHhbbbbbskd.","kHhbbbbbskde","kHhbbbbbskde","kHhbbbbbskde","kmmmmmmmmkde","kSSSSSSSSkde",".kSSSSSSkdde","..kkkkkkddee","...ddddddee.","....eeeeee.."];
+function mix(a,b,k){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=p(a),B=p(b);return "#"+A.map((v,i)=>Math.round(v+(B[i]-v)*k).toString(16).padStart(2,"0")).join("")}
+function fcols(f){return {k:"#3B2A3F",d:"rgba(59,42,63,.42)",e:"rgba(59,42,63,.18)",H:mix(f.b,"#FFFFFF",.55),h:f.h,b:f.b,s:f.s,m:mix(f.b,"#3B2A3F",.55),S:mix(f.b,"#3B2A3F",.28)}}
+// cột/hàng giữa (chỉ số 4) được kéo giãn
+const FR = {
+  paper:{b:"#FFF6E9",h:"#FFFFFF",s:"#EED6C2"},
+  hud:{b:"#5A3D62",h:"#7A5784",s:"#4A3150"},
+  plum:{b:"#6A4872",h:"#8A6694",s:"#523858"},
+  pink:{b:"#FFC2CF",h:"#FFE6EC",s:"#F08FA6"},
+  mint:{b:"#B6EEDC",h:"#E2FBF3",s:"#77CDB2"},
+  sky:{b:"#BFE1FB",h:"#E6F4FF",s:"#84BCEB"},
+  tv:{b:"#F2A3AC",h:"#FBC9CE",s:"#D97F8D"},
+  gold:{b:"#FFE29A",h:"#FFF4CF",s:"#F2BE5C"},
+  lilac:{b:"#D8CBFA",h:"#F1EBFF",s:"#A991E6"},
+  // thân TV tông tối "đêm arcade", hợp dock CRT
+  // thân TV pastel tươi, cùng độ sáng/độ đậm để hài hoà
+  tvRose:{b:"#F7A8BC",h:"#FFD4DF",s:"#DC7F98"},
+  tvTeal:{b:"#8EDBC9",h:"#C6F2E7",s:"#5DB7A3"},
+  tvWood:{b:"#FFC796",h:"#FFE5C9",s:"#E69F66"},
+  tvIndigo:{b:"#BBA7F2",h:"#E0D5FF",s:"#927BD6"},
+  tvBlue:{b:"#9BCDF5",h:"#D0E9FF",s:"#6AA6DB"},
+  tvWine:{b:"#FF9FAE",h:"#FFD0D8",s:"#E3707F"},
+};
+function centerGrid(g){const H=g.length,W=Math.max(...g.map(r=>r.length));let x0=W,x1=-1,y0=H,y1=-1;
+  g.forEach((r,y)=>[...r].forEach((c,x)=>{if(c!=="."&&c!==" "){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}}));
+  if(x1<0)return g;const w=x1-x0+1,h=y1-y0+1,S=Math.max(w,h)+2,px=Math.floor((S-w)/2),py=Math.floor((S-h)/2);
+  const out=[];for(let y=0;y<S;y++){let r="";for(let x=0;x<S;x++){const gy=y-py+y0,gx=x-px+x0;r+=(gy>=y0&&gy<=y1&&gx>=x0&&gx<=x1)?(g[gy][gx]||"."):"."}out.push(r)}return out}
+function gridSvg(rows,cmap){
+  const H=rows.length,W=Math.max(...rows.map(r=>r.length));let s="";
+  rows.forEach((r,y)=>{[...r].forEach((ch,x)=>{const c=cmap[ch];if(c)s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`})});
+  return "data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" shape-rendering="crispEdges">${s}</svg>`);
+}
+document.querySelectorAll("[data-f]").forEach(el=>{
+  const f=FR[el.dataset.f];
+  el.style.borderImageSource=`url("${gridSvg(FRAME,fcols(f))}")`;
+  el.style.borderImageSlice="5 6 7 5 fill";
+});
+// ---------- Icon nét 12x12 (vẽ mới) ----------
+const I={
+home:[".....##.....","....####....","...######...","..########..",".##########.","############",".##########.",".####..####.",".####..####.",".####..####.",".##########.","............"],
+chart:["............",".........##.",".........##.","......##.##.","......##.##.","...##.##.##.","...##.##.##.","##.##.##.##.","##.##.##.##.","##.##.##.##.","############","............"],
+wallet:["............","..########..",".#........#.","############","############","#######...##","#######.#.##","#######...##","############","############","............","............"],
+mai:["..#......#..","...#....#...","############","#..........#","#.##....##.#","#.##....##.#","#..........#","#...####...#","#..........#","############","...#....#...","..##....##.."],
+up:[".....##.....","....####....","...######...","..########..",".##.####.##.","....####....","....####....","....####....","....####....","....####....","............","............"],
+down:["............","............","....####....","....####....","....####....","....####....","....####....",".##.####.##.","..########..","...######...","....####....",".....##....."],
+cam:["............","...####.....","############","#..........#","#...####...#","#..##..##..#","#..##..##..#","#...####...#","#..........#","############","............","............"],
+target:["...######...","..#......#..",".#..####..#.","#..#....#..#","#..#.##.#..#","#..#.##.#..#","#..#....#..#",".#..####..#.","..#......#..","...######...","............","............"],
+gear:["....####....","....#..#....",".###....###.",".#........#.",".#...##...#.","##..#..#..##","##..#..#..##",".#...##...#.",".#........#.",".###....###.","....#..#....","....####...."],
+};
+const C={ // icon màu 12x12 (tạm, sẽ thay bằng icon Pixel Art XL)
+coin:{g:["...kkkkkk...","..kyyyyyyk..",".kyhyyyyyyk.","kyhyykkyyyok","kyyykyyyyyok","kyyyykkyyyok","kyyyyyykyyok","kyyykkkyyyok",".kyyyyyyyok.","..koooooook.","...kkkkkk...","............"],m:{k:"#3B2A3F",y:"#FFD36E",h:"#FFF3CC",o:"#E0A23C"}},
+pho:{g:["...w...w....","....w...w...","...w...w....","kkkkkkkkkkkk","kyyyrgyyyggk","kbbbbbbbbbbk",".kbwbbbbbbk.","..kbbbbbbk..","...kkkkkk...","..kkkkkkkk..","............","............"],m:{k:"#3B2A3F",w:"#FFFFFF",y:"#FFDF85",r:"#EE6B6E",g:"#55B27F",b:"#A5D8F7"}},
+coffee:{g:["....w..w....","...w..w.....","....w..w....",".kkkkkkkk...",".kwwwwwwkkk.",".kccccccck.k",".kccccccck.k",".kccccccckk.",".kccccccck..","..kkkkkkk...","kkkkkkkkkkk.","............"],m:{k:"#3B2A3F",w:"#FFF6E9",c:"#B98058"}},
+bag:{g:["....kkkk....","...k....k...","...k....k...",".kkkkkkkkkk.",".kggggggggk.",".kgggyyggGk.",".kggy..ygGk.",".kgggyyggGk.",".kggggggggk.",".kGGGGGGGGk.",".kkkkkkkkkk.","............"],m:{k:"#3B2A3F",g:"#9BE0AE",G:"#55B27F",y:"#FFD36E"}},
+};
+C.homec={g:[".....kk.....", "....krrk....", "...krrrrk...", "..krrrrrrk..", ".krrrrrrrrk.", "kkkkkkkkkkkk", ".kwwwwwwwwk.", ".kwbbwwddwk.", ".kwbbwwddwk.", ".kwwwwwddwk.", ".kkkkkkkkkk.", "............"],m:{"k": "#3B2A3F", "r": "#EE6B6E", "w": "#FFF6E9", "b": "#A5D8F7", "d": "#B98058"}};
+C.chartc={g:[".........kkk", ".........kyk", "......kkkkyk", "......kgkkyk", "...kkkkgkkyk", "...kpkkgkkyk", "kkkkpkkgkkyk", "kbkkpkkgkkyk", "kbkkpkkgkkyk", "kbkkpkkgkkyk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "b": "#6E9FDE", "p": "#F49CA6", "g": "#55B27F", "y": "#FFD36E"}};
+C.maic={g:["..k......k..", "...k....k...", "kkkkkkkkkkkk", "klllllllllLk", "kldddddddlLk", "kldgdddgdlLk", "kldddddddlLk", "kldgggggdlLk", "kldddddddlLk", "klllllllllLk", "kkkkkkkkkkkk", ".kk......kk."],m:{"k": "#3B2A3F", "l": "#D3B9F2", "L": "#9C7BD3", "d": "#2A2140", "g": "#9DF5C2"}};
+C.walletc={g:["............", "..kkkkkkkk..", ".kggggggggk.", "kkkkkkkkkkkk", "kccccccccCCk", "kcccccckkkkk", "kcccccckyyYk", "kcccccckkkkk", "kccccccccCCk", "kCCCCCCCCCCk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "g": "#9BE0AE", "c": "#C98A5E", "C": "#84553F", "y": "#FFD36E", "Y": "#E0A23C"}};
+C.upc={g:[".....kk.....", "....kppk....", "...kpppPk...", "..kpppppPk..", ".kppppppPPk.", "kkkkppPPkkkk", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kkkkkk...", "............"],m:{"k": "#3B2A3F", "p": "#F49CA6", "P": "#D4506A"}};
+C.camc={g:["............", "..kkkk......", "kkkddkkkkkkk", "kbbbbbbbbrbk", "kbbbkkkkbbbk", "kbbkwwwwkbbk", "kbbkwddwkbbk", "kbbkwddwkbbk", "kbbkwwwwkbbk", "kBBBkkkkBBBk", "kkkkkkkkkkkk", "............"],m:{"k": "#3B2A3F", "b": "#A5D8F7", "B": "#6E9FDE", "d": "#4A6FB0", "w": "#FFFFFF", "r": "#EE6B6E"}};
+C.targetc={g:["...kkkkkk...", "..krrrrrrk..", ".krrwwwwrrk.", "krrwwrrwwrrk", "krwwrrrrwwrk", "krwrryyrrwrk", "krwrryyrrwrk", "krwwrrrrwwrk", "krrwwrrwwrrk", ".krrwwwwrrk.", "..krrrrrrk..", "...kkkkkk..."],m:{"k": "#3B2A3F", "r": "#EE6B6E", "w": "#FFF6E9", "y": "#FFD36E"}};
+C.gearc={g:["....kkkk....", ".kk.kssk.kk.", "kssksssskssk", "ksssssssssSk", ".ksskkkksSk.", "kksskwwksSkk", "kksskwwksSkk", ".ksskkkksSk.", "kssssssssSSk", "ksSksSSkSSSk", ".kk.kSSk.kk.", "....kkkk...."],m:{"k": "#3B2A3F", "s": "#E3D8E0", "S": "#AE9DB0", "w": "#FFD36E"}};
+C.downc={g:["............", "...kkkkkk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "...kppPPk...", "kkkkppPPkkkk", ".kppppppPPk.", "..kpppppPk..", "...kpppPk...", "....kppk....", ".....kk....."],m:{"k": "#3B2A3F", "p": "#9BE0AE", "P": "#55B27F"}};
+document.querySelectorAll("img[data-i]").forEach(el=>{
+  const n=el.dataset.i;
+  el.src=C[n]?gridSvg(centerGrid(C[n].g),C[n].m):gridSvg(centerGrid(I[n]),{"#":el.dataset.c||"#3B2A3F"});
+});
+// ---------- Thanh ngân sách ----------
+
+// ---------- Nút GHI: đồng xu pixel có vệt sáng quét + lấp lánh ----------
+(function(){const c=document.getElementById("coin").getContext("2d"),sp=document.getElementById("spk").getContext("2d");let f=0;
+ function draw(){c.clearRect(0,0,28,28);const sh=(f%24)-6;
+  for(let y=0;y<28;y++)for(let x=0;x<28;x++){const dx=x+.5-14,dy=y+.5-13,d=Math.hypot(dx,dy);let col=null;
+   if(d<=13){col="#FFD36E";
+    if(d>11.8)col="#3B2A3F";else if(d>9.8){col=(dx+dy<-4)?"#FFF3CC":(dx+dy>4?"#E0A23C":"#FFD36E")}else if(d>8.7)col="#E9B04E";
+    const band=(x+y)/2-sh;if(d<=11.8&&band>=0&&band<2.2)col="#FFFBEA"}
+   if(!col&&y>=26&&Math.abs(dx)<9)col="rgba(59,42,63,.35)";
+   if(col){c.fillStyle=col;c.fillRect(x,y,1,1)}}
+  c.fillStyle="#5A3D62";c.fillRect(12,7,3,13);c.fillRect(7,12,13,3);c.fillStyle="#3B2A3F";c.fillRect(12,19,3,1);c.fillRect(19,14,1,1);
+  sp.clearRect(0,0,28,28);const pts=[[3,4],[24,6],[25,20],[2,18],[14,0]];const k=Math.floor(f/3)%pts.length,ph=f%3;const [px,py]=pts[k];
+  sp.fillStyle="#FFFFFF";sp.fillRect(px,py,1,1);if(ph<2){sp.fillStyle="#FFF3CC";sp.fillRect(px-1,py,1,1);sp.fillRect(px+1,py,1,1);sp.fillRect(px,py-1,1,1);sp.fillRect(px,py+1,1,1)}
+  f++}
+ draw();if(!location.hash.includes("still"))(window._si||setInterval)(draw,110);
+ // LED chạy dọc mép dock
+ const L=document.querySelector(".leds");for(let i=0;i<24;i++)L.appendChild(document.createElement("i"));let g=0;
+ const led=()=>{L.querySelectorAll("i").forEach((e,i)=>{e.className=((i+g)%6<2)?"on":((i+g)%6===3?"on2":"")});g++};led();
+ if(!location.hash.includes("still"))(window._si||setInterval)(led,140);
+})();
+// ---------- TV CRT pixel dùng chung cho mọi mục (vẽ mới) ----------
+function decorate(root){
+  root.querySelectorAll("[data-f]").forEach(el=>{
+    const f=FR[el.dataset.f];
+    el.style.borderImageSource=`url("${gridSvg(FRAME,fcols(f))}")`;
+    el.style.borderImageSlice="5 6 7 5 fill";
+  });
+  root.querySelectorAll("img[data-i]").forEach(el=>{
+    const n=el.dataset.i;
+    el.src=C[n]?gridSvg(centerGrid(C[n].g),C[n].m):gridSvg(centerGrid(I[n]),{"#":el.dataset.c||"#3B2A3F"});
+  });
+}
+const pxl=(c,x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
+function drawAnt(a,t,body){a.clearRect(0,0,40,14);const sw=[0,1,0,-1][t%4];
+  for(let i=0;i<11;i++){pxl(a,8+i+Math.round(sw*i/10),2+i,"#3B2A3F");pxl(a,31-i+Math.round(-sw*i/10),2+i,"#3B2A3F")}
+  const on=t%2==0;[[7+sw,1],[32-sw,1]].forEach(([x,y])=>{a.fillStyle="#3B2A3F";a.fillRect(x-1,y-1,3,3);pxl(a,x,y,on?"#FFD36E":"#FF7D95")});
+  a.fillStyle="#3B2A3F";a.fillRect(16,11,8,3);a.fillStyle=body;a.fillRect(17,12,6,2)}
+function drawKnob(k){for(let y=0;y<14;y++)for(let x=0;x<14;x++){const d=Math.hypot(x+.5-7,y+.5-7);if(d<=7)pxl(k,x,y,d>6?"#3B2A3F":(x+y<10?"#FFFFFF":"#FCE6D2"))}
+  k.fillStyle="#3B2A3F";k.fillRect(6,2,2,5)}
+const TVS=[];
+function buildTV(el,cfg){
+  const body=FR[cfg.color].b;
+  el.style.setProperty("--h",cfg.h+"px");
+  if(!cfg.antenna)el.classList.add("noant");
+  const side=cfg.layout==="side";
+  el.innerHTML=`${cfg.antenna?'<canvas class="ant" width="40" height="14"></canvas>':''}
+  <div class="tvbody px" data-f="${cfg.color}">
+    <div class="${side?'tvtop':''}">
+      <div class="bezel px" data-f="paper"><div class="scr">
+        <div class="cnt"></div>
+        <canvas class="noise" width="80" height="50"></canvas>
+        <div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="roll"></div><div class="pwr"></div>
+      </div></div>
+      ${side?`<div class="side"><canvas class="knob" width="14" height="14"></canvas>
+        <div class="mini px up" data-f="paper">CH▲</div><div class="mini px dn" data-f="paper">CH▼</div>
+        <div class="grille"></div><i class="led"></i></div>`:
+      `<div class="ctrl"><i class="led"></i><span class="brand">${cfg.brand||"SPENDY"}</span>
+        <div class="mini px dn" data-f="paper">◀</div><div class="mini px up" data-f="paper">▶</div>
+        <div class="mini px" data-f="gold">${cfg.cta||"TẤT CẢ"}</div></div>`}
+    </div>
+  </div>${side?'<div class="feet"><span></span><span></span></div>':''}`;
+  decorate(el);
+  const q=s=>el.querySelector(s);
+  if(cfg.antenna){const a=q(".ant").getContext("2d");let t=0;drawAnt(a,0,body);setInterval(()=>drawAnt(a,++t,body),500)}
+  if(q(".knob"))drawKnob(q(".knob").getContext("2d"));
+  const nz=q(".noise"),n=nz.getContext("2d"),bars=q(".bars"),cnt=q(".cnt");
+  const noise=()=>{for(let y=0;y<50;y++)for(let x=0;x<80;x++){const v=Math.random();n.fillStyle=v<.33?"#2A2140":v<.66?"#8E7FA8":"#FFF2E2";n.fillRect(x,y,1,1)}};
+  let cur=0;
+  const show=i=>{cnt.innerHTML=cfg.ch[i]()+(cfg.ch.length>1?`<div class="chdots">${cfg.ch.map((_,j)=>`<i class="${j==i?'on':''}"></i>`).join("")}</div>`:"")};
+  const sw=d=>{cur=(cur+d+cfg.ch.length)%cfg.ch.length;noise();nz.classList.add("on");
+    let f=0;const iv=setInterval(()=>{noise();if(++f>3)clearInterval(iv)},60);
+    setTimeout(()=>{nz.classList.remove("on");bars.classList.add("on")},240);
+    setTimeout(()=>{bars.classList.remove("on");show(cur);decorate(cnt);cnt.classList.remove("glitch");void cnt.offsetWidth;cnt.classList.add("glitch")},330)};
+  el.querySelectorAll(".up").forEach(b=>b.onclick=()=>sw(1));
+  el.querySelectorAll(".dn").forEach(b=>b.onclick=()=>sw(-1));
+  show(0);decorate(cnt);
+  setTimeout(()=>q(".pwr").classList.add("go"),cfg.delay||150);
+  TVS.push(sw);
+}
+// ---------- Các màn hình: mỗi mục là một TV CRT ----------
+const TIMERS=[];const _si=window.setInterval.bind(window);
+window.setInterval=(f,t)=>{const id=_si(f,t);TIMERS.push(id);return id};
+const fmtCh=(n,t,r="04:15")=>`<div class="osd"><span>CH0${n} ${t}</span><span>${r}</span></div>`;
+const row=(ic,f,name,sub,m,col,cls="new")=>`<div class="it ${cls}"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<small>${sub}</small></div><div class="m" style="color:${col}">${m}</div></div>`;
+const RED="#FF9DB0",GRN="#9DF5C2";
+const bars=(arr,today)=>`<div class="cbar">${arr.map((h,i)=>`<i class="${i==today?'t':''}" style="height:${h}%;animation-delay:${i*30}ms"></i>`).join("")}</div>`;
+const meterRow=(ic,f,name,v,pct,col)=>`<div class="it new"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<div class="mbar"><i style="width:${pct}%;background:${col}"></i></div></div><div class="m" style="color:${RED}">${v}</div></div>`;
+// bánh pixel vẽ bằng canvas
+function pie(id,parts){setTimeout(()=>{const c=document.getElementById(id);if(!c)return;const g=c.getContext("2d"),R=15;let k=0;
+  const tot=parts.reduce((s,p)=>s+p[0],0);
+  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const dx=x+.5-16,dy=y+.5-16,d=Math.hypot(dx,dy);if(d>R)continue;
+    if(d>R-1.2){g.fillStyle="#FFF2E2";g.fillRect(x,y,1,1);continue}
+    if(d<6){if(d>4.8){g.fillStyle="#FFF2E2";g.fillRect(x,y,1,1)}continue}
+    let a=(Math.atan2(dx,-dy)/(2*Math.PI)+1)%1,acc=0,col=parts[0][1];
+    for(const p of parts){acc+=p[0]/tot;if(a<=acc){col=p[1];break}}
+    g.fillStyle=col;g.fillRect(x,y,1,1)}},360)}
+const sw=(on)=>`<span class="sw ${on?'on':''}"><i></i></span>`;
+const setRow=(ic,f,name,sub,on)=>`<div class="it new"><div class="tile px" data-f="${f}"><img class="ico sm" data-i="${ic}"></div><div class="t">${name}<small>${sub}</small></div>${sw(on)}</div>`;
+
+const SCREENS={
+home:{html:`
+  <div class="hud"><div class="chip px" data-f="hud"><img class="ico" data-i="coin"><div><small>TÀI SẢN</small>12.450.000đ</div></div><div class="sq px" data-f="paper"><img class="ico" data-i="gearc"></div></div>
+  <div class="tv" data-tv="a"></div>
+  <div class="keys"><div class="key px" data-f="pink"><img class="ico" data-i="upc">CHI</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">THU</div><div class="key px" data-f="sky"><img class="ico" data-i="camc">QUÉT</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">HẠN MỨC</div></div>
+  <div class="tv wide" data-tv="b"></div>`,
+ tvs:[
+ {color:"tvRose",antenna:true,layout:"side",h:196,ch:[
+  ()=>fmtCh(1,"TÀI SẢN")+`<div class="tvlbl">TÀI SẢN RÒNG</div><div class="tvbig">12.450.000đ<span class="cur"></span></div><div class="tvlbl">TRONG 3 VÍ · ▲2,4%</div>`,
+  ()=>fmtCh(2,"THÁNG 11")+`<div class="tvlbl">CHI MỖI NGÀY</div>`+bars([30,55,20,70,40,90,35,60,25,80,45,100,30,65],11),
+  ()=>fmtCh(3,"NGÂN SÁCH")+`<div class="tvlbl">CÒN LẠI</div><div class="tvbig">4.820.000đ</div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<9?'on'+(i>=7?' r':''):''}"></i>`).join("")}</div><div class="tvlbl">ĐÃ TIÊU 62% · CÒN 6 NGÀY</div>`]},
+ {color:"tvTeal",layout:"bottom",brand:"NHẬT KÝ",h:470,delay:500,ch:[
+  ()=>fmtCh(4,"HÔM NAY · −181.000")+`<div class="tvlist">${row("pho","pink","Phở bò","Ăn uống · MoMo · 07:42","−55.000",RED)}${row("coffee","gold","Cà phê sữa đá","Ăn uống · Tiền mặt · 09:10","−29.000",RED)}${row("pho","pink","Cơm tấm","Ăn uống · Tiền mặt · 12:05","−42.000",RED)}${row("coffee","gold","Trà sữa","Ăn uống · ShopeePay · 15:30","−30.000",RED)}${row("bag","mint","Hoàn tiền","Thu nhập · VCB · 16:02","+12.000",GRN)}${row("pho","pink","Bánh mì","Ăn uống · Tiền mặt · 18:20","−25.000",RED)}</div>`,
+  ()=>fmtCh(5,"HÔM QUA · +14.955.000")+`<div class="tvlist">${row("bag","mint","Lương tháng 11","Thu nhập · VCB · 08:00","+15.000.000",GRN)}${row("pho","pink","Bún chả","Ăn uống · Tiền mặt · 11:50","−45.000",RED)}</div>`]}]},
+
+report:{html:`
+  <div class="hud"><div class="chip px" data-f="hud"><img class="ico" data-i="chartc"><div><small>BÁO CÁO</small>THÁNG 11 / 2026</div></div><div class="sq px" data-f="paper"><img class="ico" data-i="targetc"></div></div>
+  <div class="tv" data-tv="a"></div>
+  <div class="keys"><div class="key px on" data-f="pink"><img class="ico" data-i="upc">CHI</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">THU</div><div class="key px" data-f="paper">THÁNG</div><div class="key px" data-f="paper">NĂM</div></div>
+  <div class="tv wide" data-tv="b"></div>`,
+ tvs:[
+ {color:"tvTeal",antenna:true,layout:"side",h:210,ch:[
+  ()=>fmtCh(1,"CƠ CẤU CHI")+`<div class="pie"><canvas id="pie1" width="32" height="32"></canvas><div class="leg"><span><i style="background:#FFA5BC"></i>Ăn uống 42%</span><span><i style="background:#FFD36E"></i>Di chuyển 18%</span><span><i style="background:#7DD3C6"></i>Nhà cửa 25%</span><span><i style="background:#B9A2F0"></i>Khác 15%</span></div></div>`,
+  ()=>fmtCh(2,"CHI MỖI NGÀY")+`<div class="tvlbl">TỔNG −10.180.000đ</div>`+bars([30,55,20,70,40,90,35,60,25,80,45,100,30,65,50,20,75,40],11),
+  ()=>fmtCh(3,"SO VỚI THÁNG TRƯỚC")+`<div class="tvlbl">CHI TIÊU</div><div class="tvbig" style="color:#9DF5C2">▼ 8%</div><div class="tvlbl">TIẾT KIỆM ĐƯỢC 890.000đ</div>`],
+  after:()=>pie("pie1",[[42,"#FFA5BC"],[18,"#FFD36E"],[25,"#7DD3C6"],[15,"#B9A2F0"]])},
+ {color:"tvWood",layout:"bottom",brand:"DANH MỤC",cta:"LỌC",h:380,delay:500,ch:[
+  ()=>fmtCh(4,"TOP CHI TIÊU")+`<div class="tvlist">${meterRow("pho","pink","Ăn uống","−4.276.000",90,"#FFA5BC")}${meterRow("bag","mint","Nhà cửa","−2.545.000",60,"#7DD3C6")}${meterRow("coffee","gold","Cà phê","−1.120.000",30,"#FFD36E")}${meterRow("pho","lilac","Giải trí","−860.000",22,"#B9A2F0")}${meterRow("bag","sky","Mua sắm","−640.000",16,"#8DC6F5")}</div>`]}]},
+
+auto:{html:`
+  <div class="hud"><div class="chip px" data-f="hud"><img class="ico" data-i="maic"><div><small>TRỢ LÝ MAI</small>ĐANG NGHE</div></div><div class="sq px" data-f="paper"><img class="ico" data-i="gearc"></div></div>
+  <div class="tv" data-tv="a"></div>
+  <div class="keys"><div class="key px" data-f="lilac"><img class="ico" data-i="maic">DUYỆT</div><div class="key px" data-f="sky"><img class="ico" data-i="camc">QUÉT</div><div class="key px" data-f="pink"><img class="ico" data-i="upc">DÁN</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">QUY TẮC</div></div>
+  <div class="tv wide" data-tv="b"></div>`,
+ tvs:[
+ {color:"tvIndigo",antenna:true,layout:"side",h:210,ch:[
+  ()=>fmtCh(1,"MAI")+`<div class="mai"><canvas id="maiface" width="24" height="16"></canvas><div><div class="tvlbl">TIN NHẮN MỚI</div><div class="say">"VCB −55.000đ<br>PHO THIN" <span class="cur sm"></span></div></div></div><div class="stat3"><div><b>32</b>ĐÃ GHI</div><div><b style="color:#FFD36E">2</b>CHỜ DUYỆT</div><div><b>0</b>LỖI</div></div>`,
+  ()=>fmtCh(2,"CHỜ DUYỆT")+`<div class="tvlist">${row("pho","pink","Phở bò · −55.000","VCB · 92% chắc chắn","✓",GRN)}${row("coffee","gold","Highlands · −45.000","MoMo · 71% chắc chắn","?","#FFD36E")}</div>`],
+  after:()=>maiFace("maiface")},
+ {color:"tvBlue",layout:"bottom",brand:"CÀI ĐẶT",cta:"LƯU",h:330,delay:500,ch:[
+  ()=>fmtCh(3,"TỰ ĐỘNG")+`<div class="tvlist">${setRow("maic","lilac","Đọc thông báo","Ngân hàng & ví điện tử",true)}${setRow("targetc","gold","Tự ghi khi chắc","Từ 80% trở lên",true)}${setRow("walletc","sky","Khớp số dư","Cập nhật số dư ví",true)}${setRow("upc","pink","Đọc to khi ghi","Giọng tiếng Việt",false)}</div>`]}]},
+
+wallet:{html:`
+  <div class="hud"><div class="chip px" data-f="hud"><img class="ico" data-i="walletc"><div><small>VÍ & NỢ</small>3 VÍ · 1 KHOẢN NỢ</div></div><div class="sq px" data-f="paper"><img class="ico" data-i="gearc"></div></div>
+  <div class="tv" data-tv="a"></div>
+  <div class="keys"><div class="key px" data-f="sky"><img class="ico" data-i="walletc">THÊM VÍ</div><div class="key px" data-f="mint"><img class="ico" data-i="downc">NẠP</div><div class="key px" data-f="pink"><img class="ico" data-i="upc">CHUYỂN</div><div class="key px" data-f="gold"><img class="ico" data-i="targetc">CHO VAY</div></div>
+  <div class="tv wide" data-tv="b"></div>`,
+ tvs:[
+ {color:"tvBlue",antenna:true,layout:"side",h:200,ch:[
+  ()=>fmtCh(1,"TIỀN MẶT")+card("CASH","Tiền mặt","1.250.000đ","#FFD36E"),
+  ()=>fmtCh(2,"VIETCOMBANK")+card("VCB","Vietcombank •• 4821","9.800.000đ","#9DF5C2"),
+  ()=>fmtCh(3,"MOMO")+card("MOMO","Ví MoMo","1.400.000đ","#FFA5BC")]},
+ {color:"tvWine",layout:"bottom",brand:"SỔ VAY NỢ",cta:"THÊM",h:300,delay:500,ch:[
+  ()=>fmtCh(4,"ĐANG THEO DÕI")+`<div class="tvlist">${debt("Anh Tuấn mượn","Hạn 30/11 · còn 6 ngày","+2.000.000",60,GRN)}${debt("Trả góp điện thoại","Kỳ 4/12 · 15/12","−1.200.000",33,RED)}${debt("Chị Lan","Đã trả xong","0",100,"#FFF2E2")}</div>`]}]},
+};
+function card(tag,name,bal,col){return `<div class="wcard"><div class="row" style="justify-content:space-between"><span class="chipt" style="background:${col}">${tag}</span><span class="tvlbl">SỐ DƯ</span></div><div class="tvlbl" style="margin-top:8px">${name}</div><div class="tvbig" style="color:${col}">${bal}<span class="cur"></span></div><div class="hp">${Array.from({length:14},(_,i)=>`<i class="${i<10?'on':''}" style="${i<10?'background:'+col:''}"></i>`).join("")}</div></div>`}
+function debt(n,s,v,pct,col){return `<div class="it new"><div class="t">${n}<small>${s}</small><div class="mbar"><i style="width:${pct}%;background:${col}"></i></div></div><div class="m" style="color:${col}">${v}</div></div>`}
+function maiFace(id){const c=document.getElementById(id);if(!c)return;const g=c.getContext("2d");let t=0;
+  const draw=()=>{g.clearRect(0,0,24,16);g.fillStyle="#3B2A3F";g.fillRect(0,0,24,16);g.fillStyle="#D3B9F2";g.fillRect(1,1,22,14);g.fillStyle="#2A2140";g.fillRect(3,3,18,10);
+    g.fillStyle="#9DF5C2";const blink=t%8==0;if(blink){g.fillRect(6,7,3,1);g.fillRect(15,7,3,1)}else{g.fillRect(6,5,3,3);g.fillRect(15,5,3,3)}
+    const talk=t%2;g.fillRect(9,10,6,1);if(talk)g.fillRect(10,11,4,1);g.fillStyle="#FFA5BC";g.fillRect(4,9,2,1);g.fillRect(18,9,2,1);t++};
+  draw();setInterval(draw,300)}
+
+const NAMES=["home","report","auto","wallet"];
+function go(name){
+  TIMERS.splice(0).forEach(clearInterval);TVS.length=0;
+  const app=document.getElementById("app");app.innerHTML=SCREENS[name].html;decorate(app);
+  const els=app.querySelectorAll("[data-tv]");
+  SCREENS[name].tvs.forEach((cfg,i)=>{buildTV(els[i],cfg);if(cfg.after)cfg.after()});
+  document.querySelectorAll(".dk").forEach((d,i)=>d.classList.toggle("on",NAMES[i]===name));
+  if(!location.hash.includes("still")){setInterval(()=>TVS[0]&&TVS[0](1),3200);setTimeout(()=>setInterval(()=>TVS[1]&&TVS[1](1),3200),1600)}
+}
+// buildTV vẽ lại kênh -> chạy lại hàm after (bánh/mặt Mai) sau mỗi lần đổi kênh
+const _build=buildTV;
+buildTV=function(el,cfg){if(cfg.after){cfg.ch=cfg.ch.map(f=>()=>{setTimeout(cfg.after,20);return f()})}return _build(el,cfg)};
+document.querySelectorAll(".dk").forEach((d,i)=>d.onclick=()=>go(NAMES[i]));
+go((location.hash.match(/s=(\w+)/)||[])[1]||"home");
+// ---------- Bầu trời: dải màu dithering, mặt trời, đồi nhiều lớp, mây trôi nhiều tầng, sao lấp lánh, sao băng, chim (vẽ mới) ----------
+(function(){const cv=document.getElementById("sky"),W=100,H=Math.ceil(document.body.scrollHeight/4)||325;cv.width=W;cv.height=H;
+ cv.style.width=W*4+"px";cv.style.height=H*4+"px";const g=cv.getContext("2d");
+ const base=document.createElement("canvas");base.width=W;base.height=H;const b=base.getContext("2d");
+ const P=(c,x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
+ const bands=["#E99AAE","#F1A4AE","#F7AFAD","#F9BCB2","#FAC9B9","#FBD5C1","#FCDFC9"];const bh=Math.ceil(H/bands.length);
+ for(let y=0;y<H;y++){const i=Math.min(bands.length-1,Math.floor(y/bh)),t=y%bh;for(let x=0;x<W;x++){let c=bands[i];
+   if(i<bands.length-1&&t>=bh-5){const k=bh-t;if((k<=2&&(x+y)%2===0)||(k>2&&(x%2===0&&y%2===0)))c=bands[i+1]}P(b,x,y,c)}}
+ // mặt trời hoàng hôn sau đồi, có viền sáng
+ const sx=72,sy=H-30;for(let y=-14;y<=14;y++)for(let x=-14;x<=14;x++){const d=Math.hypot(x,y);
+   if(d<=11)P(b,sx+x,sy+y,(y>3&&y%3===0)?"#FBD5C1":"#FFE7B0");else if(d<=13&&(x+y)%2===0)P(b,sx+x,sy+y,"#FFE2C2")}
+ // đồi 3 lớp
+ [[26,"#E7A3B0","#D98FA0",5,2,.07],[19,"#E39A9E","#CE8390",4,1,.11],[11,"#D58A8F","#BE7380",3,1,.15]].forEach(([off,c1,c2,a1,a2,f])=>{
+   for(let x=0;x<W;x++){const h=Math.round(off+a1*Math.sin(x*f+off)+a2*Math.sin(x*f*2.7));for(let y=H-h;y<H;y++)P(b,x,y,y===H-h?c2:c1)}});
+ // mây
+ const CL={big:["......wwww..............","....wwhhhhww....wwww....","...whhhhhhhhw..whhhhw...",".wwhhhhhhhhhhwwhhhhhhww.","whhhhhhhhhhhhhhhhhhhhhhw","whhhhhhhhhhhhhhhhhhhhhhw","wsssssssssssssssssssssss",".ssssssssssssssssssssss.","...ssssss......ssssss..."],
+   mid:["....wwww........","..wwhhhhww.www..",".whhhhhhhhwhhhw.","whhhhhhhhhhhhhhw","wsssssssssssssss",".ssssssssssssss."],
+   sm:["..www....",".whhhwww.","whhhhhhhw","sssssssss"]};
+ const CC={w:"#FFE9E3",h:"#FFF8F3",s:"#F6CFC8"};
+ const clouds=[];const add=(t,x,y,sp)=>clouds.push({t,x,y,sp});
+ add("big",4,14,.05);add("mid",60,34,.09);add("sm",30,6,.14);add("big",70,74,.05);add("sm",12,58,.14);add("mid",26,104,.09);add("sm",80,128,.14);add("mid",-4,150,.09);add("big",50,180,.05);add("sm",36,214,.14);add("mid",76,240,.09);
+ const stars=[];for(let i=0;i<60;i++)stars.push({x:(i*37+11)%W,y:(i*53+7)%Math.floor(H*.75),p:i%7,big:i%3===0});
+ const birds=[{x:20,y:46,sp:.25},{x:28,y:50,sp:.25},{x:24,y:43,sp:.25}];
+ let tick=0,shoot=null;
+ function draw(){g.drawImage(base,0,0);
+  stars.forEach(s=>{const ph=(tick+s.p*3)%21;if(ph>15)return;const c=ph<5?"#FFFFFF":"#FFEFD8";P(g,s.x,s.y,c);
+    if(s.big&&ph<8){[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>P(g,s.x+dx,s.y+dy,"#FFE9C8"));if(ph<3)[[2,0],[-2,0],[0,2],[0,-2]].forEach(([dx,dy])=>P(g,s.x+dx,s.y+dy,"rgba(255,255,255,.6)"))}});
+  if(!shoot&&tick%90===40)shoot={x:90,y:8,l:0};
+  if(shoot){for(let i=0;i<6;i++)P(g,shoot.x+i,shoot.y-Math.floor(i/2),i===0?"#FFFFFF":"rgba(255,246,233,"+(1-i/6)+")");shoot.x-=2;shoot.y+=1;if(shoot.x<-6)shoot=null}
+  clouds.forEach(c=>{const s=CL[c.t];const w=s[0].length;let x=Math.round(c.x)%(W+w);if(x<-w)x+=W+w;x=x>W?x-(W+w):x;
+    s.forEach((r,y)=>[...r].forEach((ch,i)=>{if(CC[ch])P(g,x+i,c.y+y,CC[ch])}));c.x+=c.sp});
+  birds.forEach(bd=>{const f=Math.floor(tick/3)%2,x=Math.round(bd.x)%(W+10)-5;
+    if(f){P(g,x,bd.y,"#8C5A70");P(g,x+1,bd.y+1,"#8C5A70");P(g,x+2,bd.y,"#8C5A70")}else{P(g,x,bd.y+1,"#8C5A70");P(g,x+1,bd.y,"#8C5A70");P(g,x+2,bd.y+1,"#8C5A70")}bd.x+=bd.sp});
+  tick++}
+ draw();if(!location.hash.includes("still"))_si?_si(draw,160):setInterval(draw,160);
+})();
+
+// ---------- Keycap pixel cho dock (vẽ mới): mặt phím, viền sáng, thành dày, bóng ----------
+(function(){
+ const COL=[["#FBC2C8","#E7798F"],["#BDEBC9","#55B27F"],["#E1CFF6","#9C7BD3"],["#C4E4FA","#6E9FDE"]];
+ document.querySelectorAll(".dk .cap").forEach((cap,i)=>{
+  const [face,side]=COL[i];const W=32,H=30,cv=document.createElement("canvas");cv.width=W;cv.height=H;cv.className="kc";
+  const g=cv.getContext("2d");const P=(x,y,c)=>{g.fillStyle=c;g.fillRect(x,y,1,1)};
+  const inR=(x,y,x0,y0,x1,y1,r)=>{if(x<x0||x>x1||y<y0||y>y1)return false;const cx=x<x0+r?x0+r:x>x1-r?x1-r:x,cy=y<y0+r?y0+r:y>y1-r?y1-r:y;return Math.hypot(x-cx,y-cy)<=r+.3};
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+   // bóng đổ
+   if(!inR(x,y,0,0,29,26,4)&&inR(x,y,2,2,31,29,4)){P(x,y,"rgba(59,42,63,.35)");continue}
+   if(!inR(x,y,0,0,29,26,4))continue;
+   if(!inR(x,y,1,1,28,25,3)){P(x,y,"#3B2A3F");continue}          // viền mực
+   if(y>=20){P(x,y,y==20?"#3B2A3F":side);continue}                 // thành dày
+   if(!inR(x,y,2,2,27,19,2)){P(x,y,x<6||y<6?"#FFFFFF":side);continue}// mép
+   let c=face;if(y<=4&&x>=4&&x<=24)c="#FFFFFF";                     // dải bóng loáng
+   if((x+y)%13==0&&y>5&&y<18)c="rgba(255,255,255,.35)";
+   P(x,y,c)}
+  // vạch gờ dưới
+  for(let x=4;x<26;x+=3)P(x,23,"rgba(255,255,255,.35)");
+  cap.prepend(cv);const led=document.createElement("i");led.className="led";cap.appendChild(led);
+ });
+})();
+</script>
+</body></html>

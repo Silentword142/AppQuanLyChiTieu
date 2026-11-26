@@ -9,6 +9,13 @@
     { id: "gemini-3.5-flash-lite", label: "3.5 Flash-Lite", thinking: { thinkingLevel: "low" }, timeout: 60000 },
     { id: "gemini-3.8-flash", label: "3.8 Flash", thinking: { thinkingLevel: "medium" }, timeout: 240000 },
   ];
+  // Ảnh hoá đơn/biên lai: thử thật 25/11/2026 với hoá đơn quán, biên lai CK và lịch sử GD – 3.5 Flash-Lite (thinking medium)
+  // đọc đúng hết số tiền, ngày giờ, chiều thu/chi trong 1–6 giây; 3.8 Flash hay quá tải (503) nên để dự phòng, chờ tối đa 90 giây.
+  var IMAGE_MODELS = [
+    { id: "gemini-3.5-flash-lite", label: "3.5 Flash-Lite", thinking: { thinkingLevel: "medium" }, timeout: 90000 },
+    { id: "gemini-3.8-flash", label: "3.8 Flash", thinking: { thinkingLevel: "medium" }, timeout: 90000 },
+    { id: "gemini-3.1-flash-lite", label: "3.1 Flash-Lite", thinking: { thinkingLevel: "low" }, timeout: 90000 },
+  ];
   var MODEL = MODELS[0].id;
   var BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
   // model đang hết lượt -> bỏ qua tới thời điểm này (lưu lại để mở app lại không gọi thừa)
@@ -34,6 +41,7 @@
         id: { type: "STRING" },
         is_transaction: { type: "BOOLEAN", description: "true chỉ khi tiền ĐÃ thực sự biến động vào/ra một tài khoản, thẻ hoặc ví của người dùng" },
         amount: { type: "INTEGER", description: "số tiền VND của giao dịch (không phải số dư)" },
+        amount_text: { type: "STRING", nullable: true, description: "chỉ với ảnh: chép NGUYÊN VĂN số tiền giao dịch đúng như in trong ảnh, kể cả dấu chấm/phẩy và đơn vị (ví dụ '-1.250.000 VND', '85,000đ')" },
         type: { type: "STRING", enum: ["INCOME", "EXPENSE"] },
         category: { type: "STRING", description: "đúng tên một hạng mục trong danh sách" },
         account: { type: "STRING", description: "tên tài khoản trong danh sách khớp với thông báo, hoặc tên ngân hàng/ví nếu không khớp" },
@@ -127,22 +135,31 @@
     lines.push("");
     lines.push("ẢNH ĐÍNH KÈM là ảnh chụp màn hình điện thoại hoặc ảnh chụp hoá đơn/biên lai.");
     lines.push("Liệt kê TỪNG giao dịch tiền nhìn thấy trong ảnh (ảnh lịch sử giao dịch có thể có nhiều dòng; biên lai/hoá đơn thường chỉ 1 giao dịch – lấy TỔNG TIỀN phải trả, không lấy từng món).");
-    lines.push("Đặt id lần lượt img1, img2, ... Đọc kỹ dấu +/-, chữ 'nhận', 'chuyển', 'thanh toán' để biết thu hay chi. Số dư, hạn mức, mã giao dịch KHÔNG phải số tiền giao dịch.");
+    lines.push("Ảnh chụp THANH THÔNG BÁO, danh sách thông báo hoặc tin nhắn SMS ngân hàng: MỖI thông báo biến động số dư là MỘT giao dịch riêng. Liệt kê ĐỦ TẤT CẢ, kể cả các thông báo cùng số tiền hoặc bị che một phần; mỗi thông báo lấy ngày giờ của chính nó (giờ trong nội dung, hoặc '5 phút trước'/'08:12' bên cạnh tên app).");
+    lines.push("Ảnh LỊCH SỬ GIAO DỊCH thường có TIÊU ĐỀ NGÀY (ví dụ '24/11/2026', 'Hôm nay', 'Thứ Hai, 22/11') đứng riêng một dòng phía trên một nhóm giao dịch: mọi dòng bên dưới tiêu đề đó (cho tới tiêu đề kế tiếp) đều thuộc NGÀY ĐÓ. Không có giờ thì dùng 12:00. TUYỆT ĐỐI không dùng ngày hôm nay cho các dòng này.");
+    lines.push("Đặt id lần lượt img1, img2, ... Đọc kỹ dấu +/-, chữ 'nhận', 'chuyển', 'thanh toán' để biết thu hay chi. Số dư, hạn mức, mã giao dịch, số tài khoản, số điện thoại KHÔNG phải số tiền giao dịch.");
+    lines.push("Cách đọc số tiền Việt Nam: dấu chấm hoặc dấu phẩy giữa các nhóm 3 chữ số là dấu NGĂN CÁCH HÀNG NGHÌN ('1.250.000' = '1,250,000' = 1250000; '85.000đ' = 85000). Không có số lẻ xu với VND. Đếm đủ số chữ số, đừng bỏ sót số 0.");
+    lines.push("Hoá đơn/bill nhà hàng, siêu thị: lấy dòng TỔNG CỘNG / THÀNH TIỀN / TỔNG THANH TOÁN / KHÁCH PHẢI TRẢ cuối cùng (đã gồm VAT, phí phục vụ, trừ giảm giá). KHÔNG lấy 'Tiền khách đưa' hay 'Tiền thối lại'.");
+    lines.push("amount_text: chép nguyên văn số tiền như trong ảnh. amount phải đúng bằng con số đó (đã quy đổi VND nếu là ngoại tệ).");
+    lines.push("note: tên cửa hàng/người nhận/người chuyển hoặc nội dung chuyển khoản trong ảnh.");
     lines.push("date: BẮT BUỘC đọc kỹ ngày và giờ giao dịch trên biên lai/hoá đơn/dòng lịch sử (ví dụ '14:25 - 22/11/2026', '22/11/2026 08:30:15', '20:05') và trả về đúng định dạng YYYY-MM-DDTHH:mm (24h, giờ Việt Nam). Nếu ảnh chỉ có giờ HH:mm mà không ghi ngày thì lấy ngày từ HÔM NAY; nếu chỉ có ngày mà không có giờ thì dùng 12:00; nếu không thấy cả ngày lẫn giờ thì dùng BÂY GIỜ.");
     lines.push("Nếu ảnh không có giao dịch nào thì trả về 1 phần tử id=img1, is_transaction=false và ghi lý do.");
     return lines.join("\n");
   }
 
-  async function callModel(m, key, userParts) {
+  // Gemini 3 trở lên: Google khuyên giữ temperature mặc định 1.0 (hạ thấp dễ bị lặp / kém chính xác) nên không đặt.
+  // Ảnh: mediaResolution HIGH (1120 token/ảnh) – mức Google khuyên cho ảnh, đọc chữ số nhỏ rõ hơn.
+  async function callModel(m, key, userParts, opts) {
+    var gen = {
+      thinkingConfig: m.thinking,
+      responseMimeType: "application/json",
+      responseSchema: SCHEMA,
+    };
+    if (opts && opts.mediaResolution) gen.mediaResolution = opts.mediaResolution;
     var body = {
       systemInstruction: { parts: [{ text: SYSTEM }] },
       contents: [{ role: "user", parts: userParts }],
-      generationConfig: {
-        temperature: 0.2,
-        thinkingConfig: m.thinking,
-        responseMimeType: "application/json",
-        responseSchema: SCHEMA,
-      },
+      generationConfig: gen,
     };
     var ctl = new AbortController();
     var timer = setTimeout(function () { ctl.abort(); }, m.timeout);
@@ -185,21 +202,43 @@
 
   // image: { mimeType, data (base64) } -> [{ id: img1.., is_transaction, amount, ... }]
   function analyzeImage(image, ctx) {
-    return run([{ inline_data: { mime_type: image.mimeType, data: image.data } }, { text: imagePrompt(ctx || {}) }]);
+    // Ảnh đặt trước, câu lệnh sau (theo hướng dẫn của Google cho prompt 1 ảnh)
+    return run([{ inline_data: { mime_type: image.mimeType, data: image.data } }, { text: imagePrompt(ctx || {}) }], { models: IMAGE_MODELS, mediaResolution: "MEDIA_RESOLUTION_HIGH" })
+      .then(function (arr) { return arr.map(checkImageAmount); });
   }
 
-  // Thu nhỏ ảnh (tối đa 1600px, JPEG) cho nhanh và đỡ tốn lượt
+  // Đối chiếu số tiền model trả về với số chép nguyên văn từ ảnh; lệch thì tin con số đọc được và hạ độ chắc chắn
+  function parseVnd(t) {
+    var s = String(t || "").toLowerCase();
+    // chỉ đối chiếu khi là số VND viết đầy đủ (bỏ qua ngoại tệ, '45k', '1,5tr'... để model tự quy đổi)
+    if (/[a-zà-ỹ$€¥£]/.test(s.replace(/vnd|vnđ|đ|₫/g, ""))) return null;
+    var nums = s.replace(/\s+/g, "").match(/\d[\d.,]*/g);
+    if (!nums || nums.length !== 1 || !/^\d{1,3}(?:([.,])\d{3}(?:\1\d{3})*)?$|^\d+$/.test(nums[0].replace(/[.,]$/, ""))) return null;
+    var n = parseInt(nums[0].replace(/[.,]/g, ""), 10);
+    return n > 0 ? n : null;
+  }
+  function checkImageAmount(g) {
+    if (!g || !g.is_transaction || !g.amount_text) return g;
+    var n = parseVnd(g.amount_text);
+    if (n && Math.abs(n) !== Math.abs(g.amount || 0)) {
+      g.amount = Math.abs(n);
+      g.confidence = Math.min(typeof g.confidence === "number" ? g.confidence : 1, 0.7);
+    }
+    return g;
+  }
+
+  // Thu nhỏ ảnh (tối đa 2560px, JPEG chất lượng cao để chữ số nhỏ vẫn nét) cho nhanh và đỡ tốn lượt
   function prepareImage(file) {
     return new Promise(function (resolve, reject) {
       var url = URL.createObjectURL(file);
       var img = new Image();
       img.onload = function () {
         try {
-          var max = 1600, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+          var max = 2560, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max / Math.max(w, h));
           var c = document.createElement("canvas");
           c.width = Math.round(w * k); c.height = Math.round(h * k);
           var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
-          var d = c.toDataURL("image/jpeg", 0.85);
+          var d = c.toDataURL("image/jpeg", 0.92);
           URL.revokeObjectURL(url);
           resolve({ mimeType: "image/jpeg", data: d.slice(d.indexOf(",") + 1) });
         } catch (e) { URL.revokeObjectURL(url); reject(e); }
@@ -209,15 +248,22 @@
     });
   }
 
-  async function run(userParts) {
+  async function run(userParts, opts) {
+    var list = (opts && opts.models) || MODELS;
     var key = getKey();
     if (!key) throw Object.assign(new Error("Chưa có Gemini API key"), { code: "no_key" });
     var b = blocked(), now = Date.now(), last = null, soonest = Infinity;
-    for (var i = 0; i < MODELS.length; i++) {
-      var m = MODELS[i];
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
       if (b[m.id] && b[m.id] > now) { soonest = Math.min(soonest, b[m.id] - now); continue; }
       try {
-        var out = await callModel(m, key, userParts);
+        var out;
+        try { out = await callModel(m, key, userParts, opts); }
+        catch (e1) {
+          // model nào chưa nhận mediaResolution thì gửi lại không kèm tuỳ chọn này
+          if (opts && opts.mediaResolution && e1.status === 400 && /media.?resolution/i.test(e1.message)) out = await callModel(m, key, userParts, null);
+          else throw e1;
+        }
         lastModel = m.id;
         try { localStorage.setItem("vina_gem_last_model", m.id); } catch (e) {}
         return out;
@@ -250,5 +296,5 @@
     return (e && e.message) || "Lỗi không rõ";
   }
 
-  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, analyzeImage: analyzeImage, analyzeSpeech: analyzeSpeech, prepareImage: prepareImage, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
+  window.VinaGemini = { MODEL: MODEL, MODELS: MODELS, lastModel: function () { try { return localStorage.getItem("vina_gem_last_model") || lastModel; } catch (e) { return lastModel; } }, blockedUntil: blocked, analyze: analyze, analyzeImage: analyzeImage, analyzeSpeech: analyzeSpeech, checkImageAmount: checkImageAmount, prepareImage: prepareImage, hasKey: hasKey, keySource: keySource, explain: explain, buildPrompt: buildPrompt };
 })();

@@ -116,6 +116,8 @@
     "com.grabtaxi.passenger", "com.gojek.app", "xyz.be.rider", "com.be.app", "com.deliverynow"
   ];
   var FINANCE_PKG_RE = /(vnpay|vietcombank|techcombank|vpbank|tpbank|sacombank|vietinbank|agribank|hdbank|bidv|seabank|shinhan|kienlong|bvbank|liobank|viettelmoney|vtpay|vnptpay|vnptmoney|zalopay|shopeepay|momo|fecredit|homecredit|kredivo|hdsaison|mirae|fundiin|hsbc|woori|cimb|ubank|tnex|mbanking|smartbanking|digibank|ebanking|ewallet|mobilebanking)/;
+  var SHOP_WALLET_RE = /(shopee ?pay|spay ?later|shop ?cash|vi shopee)/;
+  var TX_WORD_RE = /(giao dich|thanh toan|chuyen tien|nhan tien|hoan tien|ghi no|ghi co|so du|tru tien|cong tien|purchase|payment|transfer)/;
   var PHONE_SENDER_RE = /^\+?\d[\d\s.\-()]{6,16}\d$/;
   var STRICT_SMS_RE = /\b(sd ?tk|so du ?tk|bien dong so du|the tin dung|han muc kha dung|du no|ghi co|ghi no|so du:|sd:|sdc:)\b/;
 
@@ -158,6 +160,9 @@
     if (!input) return false;
     var pkg = input.packageName || null;
     if (!pkg || pkg === "share" || pkg === "paste") return true;
+    var lowerAll = fold((String(input.title || "").trim() ? String(input.title).trim() + "\n" : "") + String(input.text || input.body || ""));
+    // Shopee có ví/thẻ bên trong (ShopeePay, SPayLater, ShopCash): chỉ nhận tin biến động tiền rõ ràng
+    if (String(pkg).toLowerCase() === "com.shopee.vn") return SHOP_WALLET_RE.test(lowerAll) && TX_WORD_RE.test(lowerAll);
     if (isChatPkg(pkg) || isCommerceRidePkg(pkg)) return false;
     if (isFinancePkg(pkg)) return true;
     var title = String(input.title || "").trim();
@@ -168,7 +173,8 @@
       var lowerTitle = fold(title);
       return !!(lowerTitle === "mb" || bankFromText(lower) || STRICT_SMS_RE.test(lower));
     }
-    return !!(bankFromText(lower) && (STRICT_SMS_RE.test(lower) || /\b(tk|stk|tai khoan)\b/.test(lower)));
+    // app lạ: có dấu hiệu số dư rõ ràng, hoặc tên ngân hàng/ví + chữ giao dịch
+    return !!(STRICT_SMS_RE.test(lower) || (bankFromText(lower) && (/\b(tk|stk|tai khoan)\b/.test(lower) || TX_WORD_RE.test(lower))));
   }
 
   // ---------- Tiền ----------

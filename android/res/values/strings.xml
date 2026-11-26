@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Mai</string>
-    <string name="tile_name">Gọi Mai</string>
-    <string name="shortcut_voice_short">Nói với Mai</string>
-    <string name="shortcut_voice_long">Gọi trợ lý Mai ghi chi tiêu</string>
+    <string name="tile_name">Gọi Gemini</string>
+    <string name="shortcut_voice_short">Nói với Gemini</string>
+    <string name="shortcut_voice_long">Gọi Gemini ghi chi tiêu</string>
 </resources>
