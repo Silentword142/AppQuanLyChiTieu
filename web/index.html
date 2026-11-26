@@ -3094,6 +3094,16 @@
       const [gemPaste, setGemPaste] = useState("");
       const [maiLog, setMaiLog] = useState(() => safeJsonParse("vina_mai_log", []));
       const [maiDraft, setMaiDraft] = useState(null);
+      // Thông báo có tiền nhưng app chưa đọc (app ngân hàng/ví lạ) -> anh chọn "Đọc khoản này" / "Luôn đọc app này"
+      const [maiSkipped, setMaiSkipped] = useState([]);
+      const [maiAllowed, setMaiAllowed] = useState([]);
+      const refreshSkipped = React.useCallback(() => {
+        try {
+          if (!window.MaiBridge || !window.MaiBridge.recentSkipped) return;
+          setMaiSkipped(JSON.parse(window.MaiBridge.recentSkipped() || "[]"));
+          setMaiAllowed(JSON.parse(window.MaiBridge.allowedPackages() || "[]"));
+        } catch (e) {}
+      }, []);
       const [maiAccess, setMaiAccess] = useState(() => { try { return !!(window.MaiBridge && window.MaiBridge.hasNotificationAccess()); } catch(e) { return false; } });
       const maiSeenRef = React.useRef(safeJsonParse("vina_mai_seen", []));
       const stateRef = React.useRef({});
@@ -3361,7 +3371,8 @@
         const { maiSettings: st, maiMemory: mem, maiBrain: br, maiCommunity: com, accounts: accs } = stateRef.current;
         const n = typeof raw === "string" ? { packageName: null, title: "", text: raw, postTime: Date.now() } : { packageName: raw.packageName || null, title: raw.title || "", text: raw.text || raw.body || "", postTime: raw.postTime || Date.now() };
         // Phân tích 2 bước trên máy: vừa lọc chuẩn app tài chính/nội dung vừa chuẩn bị kết quả dự phòng khi mất mạng hoặc hết lượt Gemini
-        const r = window.MaiAgent.parse(n, { loose: source !== "notification", memory: mem, brain: br, community: st.community ? com : null });
+        // app anh đã chọn "Luôn đọc" (hoặc bấm "Đọc khoản này"): bỏ qua bộ lọc nguồn app tài chính
+        const r = window.MaiAgent.parse(raw && raw.allowed ? { ...n, packageName: "share" } : n, { loose: source !== "notification", memory: mem, brain: br, community: st.community ? com : null });
         const fxPass = r.reason === "no_amount" && r.hasForeignMoney && (source !== "notification" || window.MaiAgent.isFinancialSource(n)) && window.VinaGemini && window.VinaGemini.hasKey();
         if (!r.ok && !fxPass && GEM_SKIP[r.reason]) {
           return { status: "ignored", reason: r.reason };
@@ -3935,7 +3946,7 @@
             // câu nói nhận được khi khoá màn hình ("Mai ơi, ...") -> Gemini hiểu rồi ghi; còn lại là thông báo ngân hàng
             list.forEach(n => { if (n && n.packageName === "voice") { if (voiceRef.current.enqueue) voiceRef.current.enqueue(n.text, n.alts); } else maiIngest(n, "notification"); });
           } catch(e) { console.warn("Gemini drain error", e); }
-          try { setMaiAccess(!!window.MaiBridge.hasNotificationAccess()); } catch(e) {}
+          try { setMaiAccess(!!window.MaiBridge.hasNotificationAccess()); } catch(e) {} refreshSkipped();
         };
         window.onMaiNotification = (json) => { try { maiIngest(typeof json === "string" ? JSON.parse(json) : json, "notification"); } catch(e) { console.warn(e); } };
         window.onMaiResume = drain;
@@ -6875,6 +6886,26 @@
                         <button onClick={() => { try { window.MaiBridge.openAppInfo(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-[#2C2144] text-[#FFE08A]">Thông tin app</button>
                         <button onClick={() => { try { window.MaiBridge.openNotificationAccessSettings(); } catch(e) {} }} className="game-btn-sm flex-1 px-3 py-2 font-bold bg-theme-primary text-[var(--on-primary)]">Cấp quyền</button>
                       </div>
+                    </div>
+                  )}
+                  {canListen && maiAccess && (maiSkipped.length > 0 || maiAllowed.length > 0) && (
+                    <div className="rounded-lg border-2 border-dashed border-[var(--ink)]/30 p-3 space-y-2">
+                      <p className="font-bold text-sm text-theme-textPrimary">Thông báo có tiền app chưa đọc</p>
+                      <p className="text-xs text-theme-textSecondary">Đến từ app chưa có trong danh sách ngân hàng/ví. Nếu là giao dịch của anh, bấm "Luôn đọc app này" để lần sau app tự ghi.</p>
+                      {maiSkipped.slice(0, 8).map((it, i) => {
+                        const on = maiAllowed.includes(it.packageName);
+                        return (
+                          <div key={i} className="rounded-lg bg-theme-background p-2 space-y-1">
+                            <p className="text-xs font-bold text-theme-textPrimary truncate">{it.app || it.packageName} · {new Date(it.postTime).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                            <p className="text-xs text-theme-textSecondary line-clamp-2">{[it.title, it.text].filter(Boolean).join(" · ")}</p>
+                            <div className="flex gap-2 pt-1">
+                              <button onClick={() => { const res = maiIngest({ ...it, allowed: true }, "notification"); showToast(res.status === "queued" ? "Đã gửi phân tích khoản này" : res.status === "duplicate" ? "Khoản này đã ghi rồi" : "Khoản này không giống giao dịch", res.status === "queued" ? "success" : "info"); }} className="game-btn-sm flex-1 px-2 py-1.5 text-xs font-bold bg-theme-surface text-theme-textPrimary">Đọc khoản này</button>
+                              <button onClick={() => { try { window.MaiBridge.setPackageAllowed(it.packageName, !on); } catch (e) {} refreshSkipped(); showToast(on ? `Đã bỏ "${it.app || it.packageName}"` : `Từ giờ app sẽ đọc thông báo của "${it.app || it.packageName}"`, "success"); }} className={`game-btn-sm flex-1 px-2 py-1.5 text-xs font-bold ${on ? "bg-[var(--income-light)] text-[var(--income)]" : "bg-theme-primary text-[var(--on-primary)]"}`}>{on ? "✓ Đang luôn đọc" : "Luôn đọc app này"}</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {maiSkipped.length > 0 && <button onClick={() => { try { window.MaiBridge.clearSkipped(); } catch (e) {} refreshSkipped(); }} className="text-xs underline text-theme-textSecondary">Xoá danh sách</button>}
                     </div>
                   )}
                   <div className="retro-dash" />

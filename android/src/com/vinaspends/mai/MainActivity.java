@@ -664,6 +664,10 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public String drainQueue() { return MaiStore.drain(MainActivity.this); }
         @JavascriptInterface public int queueSize() { return MaiStore.size(MainActivity.this); }
+        @JavascriptInterface public String recentSkipped() { return MaiStore.skipped(MainActivity.this); }
+        @JavascriptInterface public void clearSkipped() { MaiStore.clearSkipped(MainActivity.this); }
+        @JavascriptInterface public String allowedPackages() { return MaiStore.allowed(MainActivity.this); }
+        @JavascriptInterface public void setPackageAllowed(String pkg, boolean on) { if (pkg != null && !pkg.isEmpty()) MaiStore.setAllowed(MainActivity.this, pkg, on); }
 
         @JavascriptInterface public void openNotificationAccessSettings() {
             ui.post(new Runnable() {

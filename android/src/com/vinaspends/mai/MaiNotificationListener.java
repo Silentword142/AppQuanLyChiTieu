@@ -92,7 +92,7 @@ public class MaiNotificationListener extends NotificationListenerService {
             "com.discord", "com.Slack", "com.microsoft.teams",
             "com.instagram.android", "com.ss.android.ugc.trill", "com.zhiliaoapp.musically",
             "com.snapchat.android", "com.twitter.android",
-            "com.shopee.vn", "com.lazada.android", "vn.tiki.app.tikiandroid", "com.sendo.buyer",
+            "com.lazada.android", "vn.tiki.app.tikiandroid", "com.sendo.buyer",
             "com.grabtaxi.passenger", "com.gojek.app", "xyz.be.rider", "com.be.app", "com.deliverynow",
             "com.google.android.gm", "com.microsoft.office.outlook",
             "com.android.chrome", "com.google.android.youtube"
@@ -118,6 +118,14 @@ public class MaiNotificationListener extends NotificationListenerService {
             "(?i)(\\b(sd\\s*tk|so du\\s*tk|số dư\\s*tk|bien dong so du|biến động số dư|the tin dung|thẻ tín dụng|han muc kha dung|hạn mức khả dụng|du no hien tai|dư nợ|ghi co|ghi no|tai khoan.{0,20}so du|số dư:|so du:|sd:|sdc:)\\b)"
     );
 
+    // App mua sắm có ví/thẻ bên trong (Shopee: ShopeePay, SPayLater, ShopCash): chỉ nhận tin có tên ví + chữ giao dịch
+    static final Set<String> WALLET_IN_SHOP_PKGS = new HashSet<String>(Arrays.asList("com.shopee.vn"));
+    private static final Pattern SHOP_WALLET_MSG_RE = Pattern.compile("(?i)(shopee ?pay|spay ?later|shop ?cash|ví shopee|vi shopee)");
+    // Dấu hiệu giao dịch thật (dùng cho app lạ chưa có trong danh sách)
+    private static final Pattern TX_MSG_RE = Pattern.compile(
+            "(?i)(giao dich|giao dịch|thanh toan|thanh toán|chuyen tien|chuyển tiền|nhan tien|nhận tiền|hoan tien|hoàn tiền|ghi no|ghi nợ|ghi co|ghi có|so du|số dư|tru tien|trừ tiền|cong tien|cộng tiền|purchase|payment|transfer)"
+    );
+
     private static final Pattern PHONE_TITLE_RE = Pattern.compile("^\\+?\\d[\\d\\s.\\-()]{6,16}\\d$");
 
     private static final Pattern PURE_OTP_RE = Pattern.compile(
@@ -136,7 +144,8 @@ public class MaiNotificationListener extends NotificationListenerService {
             if (ex == null) return;
 
             String pkg = sbn.getPackageName();
-            if (isNonFinancePkg(pkg)) return;
+            boolean allowed = MaiStore.isAllowed(this, pkg);
+            if (!allowed && isNonFinancePkg(pkg)) return;
 
             String title = str(ex.getCharSequence(Notification.EXTRA_TITLE)).trim();
             String sub = str(ex.getCharSequence(Notification.EXTRA_SUB_TEXT)).trim();
@@ -147,11 +156,17 @@ public class MaiNotificationListener extends NotificationListenerService {
             if (text.trim().isEmpty()) return;
 
             String combined = (title + "\n" + text).trim();
-            if (!isFinancialNotification(pkg, title, combined)) return;
-            if (!MONEY.matcher(combined).find()) return;
+            boolean money = MONEY.matcher(combined).find();
+            if (!allowed && !isFinancialNotification(pkg, title, combined)) {
+                // có tiền mà bị bỏ qua -> ghi nhật ký để anh bấm "Luôn đọc app này" trong app
+                if (money && !PURE_OTP_RE.matcher(combined).find()) MaiStore.logSkip(this, pkg, title, text, "not_finance_app");
+                return;
+            }
+            if (!money) return;
             if (PURE_OTP_RE.matcher(combined).find() && !STRICT_BANK_MSG_RE.matcher(combined).find()) return;
 
             JSONObject o = new JSONObject();
+            if (allowed) o.put("allowed", true);
             o.put("packageName", pkg);
             o.put("title", title);
             o.put("text", text.length() > 1500 ? text.substring(0, 1500) : text);
@@ -188,8 +203,13 @@ public class MaiNotificationListener extends NotificationListenerService {
                     || STRICT_BANK_MSG_RE.matcher(combined).find()
                     || BANK_BRAND_RE.matcher(combined).find();
         }
-        // App khác không nằm trong danh sách chat/mua sắm: chỉ nhận khi có tên ngân hàng/ví + dấu hiệu tài chính rõ ràng
-        return BANK_BRAND_RE.matcher(combined).find() && STRICT_BANK_MSG_RE.matcher(combined).find();
+        if (pkg != null && WALLET_IN_SHOP_PKGS.contains(pkg.toLowerCase(Locale.ROOT))) {
+            return SHOP_WALLET_MSG_RE.matcher(combined).find() && TX_MSG_RE.matcher(combined).find();
+        }
+        // App khác không nằm trong danh sách chat/mua sắm: nhận khi có dấu hiệu số dư rõ ràng,
+        // hoặc có tên ngân hàng/ví + chữ giao dịch (thanh toán, chuyển tiền, số dư…)
+        return STRICT_BANK_MSG_RE.matcher(combined).find()
+                || (BANK_BRAND_RE.matcher(combined).find() && TX_MSG_RE.matcher(combined).find());
     }
 
     private static String extractBody(Bundle ex, String title) {

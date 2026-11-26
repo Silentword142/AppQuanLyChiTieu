@@ -236,6 +236,18 @@ for (const [pkg, ti, b] of [["com.shopee.vn","Shopee","Đơn hàng 250.000đ đ�
 }
 if (!Mai.parse(n("com.mservice.momowallet", "MoMo", "Thanh toán thành công 55.000đ cho Highlands Coffee")).ok) { fail++; console.log("✗ MoMo thanh toán bị bỏ"); } else pass++;
 
+
+// ---- app lạ / ví trong Shopee: nhận khi có dấu hiệu giao dịch rõ ràng
+{
+  const ok = (pkg, ti, b, exp, name) => { if (Mai.isFinancialSource(n(pkg, ti, b)) !== exp) { fail++; console.log("✗", name); } else pass++; };
+  ok("com.shopee.vn", "ShopeePay", "Thanh toán thành công 524.800đ cho đơn hàng", true, "Shopee: ShopeePay thanh toán phải nhận");
+  ok("com.shopee.vn", "ShopCash", "Giao dich thanh toan -105,000 VND", true, "Shopee: ShopCash phải nhận");
+  ok("com.shopee.vn", "Flash sale", "Giảm 50.000đ cho đơn từ 0đ", false, "Shopee: khuyến mãi phải chặn");
+  ok("com.newbank.app", "Biến động số dư", "TK 1234 -500,000VND SD: 1,000,000VND", true, "app lạ có số dư phải nhận");
+  ok("com.some.app", "Cake", "Giao dịch thanh toán -105,000 VND", true, "app lạ có tên ngân hàng + giao dịch phải nhận");
+  ok("com.game.app", "Game", "Nhận 50.000 xu miễn phí", false, "app game phải chặn");
+}
+
 // ---- trò chuyện với Mai
 {
   const cats = ["Ăn uống", "Cà phê & Trà", "Di chuyển", "Quần áo & Giày dép", "Hóa đơn & Dịch vụ", "Lương & Thu nhập", "Khác"];

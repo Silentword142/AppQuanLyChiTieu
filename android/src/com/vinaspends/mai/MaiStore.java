@@ -65,4 +65,65 @@ final class MaiStore {
             return 0;
         }
     }
+
+    // ---- Nhật ký thông báo có tiền nhưng bị bỏ qua (để anh xem app nào chưa được đọc) ----
+    private static final String KEY_SKIP = "skipped";
+    private static final String KEY_ALLOW = "allow_pkgs";
+
+    static synchronized void logSkip(Context ctx, String pkg, String title, String text, String reason) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        try {
+            JSONArray arr = new JSONArray(sp.getString(KEY_SKIP, "[]"));
+            String label = pkg;
+            try { label = ctx.getPackageManager().getApplicationLabel(ctx.getPackageManager().getApplicationInfo(pkg, 0)).toString(); } catch (Exception ignored) {}
+            JSONObject o = new JSONObject();
+            o.put("packageName", pkg);
+            o.put("app", label);
+            o.put("title", title);
+            o.put("text", text.length() > 600 ? text.substring(0, 600) : text);
+            o.put("reason", reason);
+            o.put("postTime", System.currentTimeMillis());
+            JSONArray out = new JSONArray();
+            out.put(o);
+            for (int i = 0; i < arr.length() && out.length() < 30; i++) {
+                JSONObject r = arr.getJSONObject(i);
+                if (r.optString("packageName").equals(pkg) && r.optString("text").equals(o.optString("text"))) continue;
+                out.put(r);
+            }
+            sp.edit().putString(KEY_SKIP, out.toString()).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
+    static synchronized String skipped(Context ctx) {
+        return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_SKIP, "[]");
+    }
+
+    static synchronized void clearSkipped(Context ctx) {
+        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_SKIP, "[]").apply();
+    }
+
+    /** App anh chọn "Luôn đọc" – bỏ qua bộ lọc app tài chính. */
+    static synchronized boolean isAllowed(Context ctx, String pkg) {
+        if (pkg == null) return false;
+        try {
+            JSONArray a = new JSONArray(ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_ALLOW, "[]"));
+            for (int i = 0; i < a.length(); i++) if (pkg.equalsIgnoreCase(a.optString(i))) return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    static synchronized String allowed(Context ctx) {
+        return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_ALLOW, "[]");
+    }
+
+    static synchronized void setAllowed(Context ctx, String pkg, boolean on) {
+        SharedPreferences sp = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        try {
+            JSONArray a = new JSONArray(sp.getString(KEY_ALLOW, "[]")), out = new JSONArray();
+            for (int i = 0; i < a.length(); i++) if (!pkg.equalsIgnoreCase(a.optString(i))) out.put(a.optString(i));
+            if (on) out.put(pkg);
+            sp.edit().putString(KEY_ALLOW, out.toString()).apply();
+        } catch (Exception ignored) {}
+    }
 }
